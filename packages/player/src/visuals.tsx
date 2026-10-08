@@ -95,7 +95,8 @@ function HtmlFrame({
 
   React.useEffect(() => {
     const doc = ref.current?.contentDocument
-    if (!doc) return
+    // Before the srcDoc loads, the frame's document can be empty; this runs again on load.
+    if (!doc?.documentElement) return
     doc.documentElement.classList.toggle("dark", dark)
     doc.documentElement.dir = dir
   }, [loaded, dark, dir])
