@@ -136,6 +136,50 @@
         }
       ],
       "explanation": "A solid fill draws the eye most, an outline less, and plain text least."
+    },
+    {
+      "id": "p5",
+      "type": "choice",
+      "prompt": "Which of these dialog footers follow the button hierarchy? Pick all that apply.",
+      "options": [
+        {
+          "id": "a",
+          "text": "Filled Save, outlined Preview, text Cancel",
+          "visual": {
+            "kind": "html",
+            "html": "<div class='flex gap-2 flex-wrap'><button class='btn' data-size='sm'>Save</button><button class='btn' data-size='sm' data-variant='outline'>Preview</button><button class='btn' data-size='sm' data-variant='ghost'>Cancel</button></div>"
+          }
+        },
+        {
+          "id": "b",
+          "text": "Filled Save, filled Cancel",
+          "visual": {
+            "kind": "html",
+            "html": "<div class='flex gap-2 flex-wrap'><button class='btn' data-size='sm'>Save</button><button class='btn' data-size='sm'>Cancel</button></div>"
+          },
+          "feedback": "Cancel is filled too, so it competes with Save for attention."
+        },
+        {
+          "id": "c",
+          "text": "Filled Save, text Cancel",
+          "visual": {
+            "kind": "html",
+            "html": "<div class='flex gap-2 flex-wrap'><button class='btn' data-size='sm'>Save</button><button class='btn' data-size='sm' data-variant='ghost'>Cancel</button></div>"
+          }
+        },
+        {
+          "id": "d",
+          "text": "Text Save, filled Cancel",
+          "visual": {
+            "kind": "html",
+            "html": "<div class='flex gap-2 flex-wrap'><button class='btn' data-size='sm' data-variant='ghost'>Save</button><button class='btn' data-size='sm'>Cancel</button></div>"
+          },
+          "feedback": "This flips the hierarchy: the main action is the weakest button, and Cancel gets all the weight."
+        }
+      ],
+      "correct": ["a", "c"],
+      "multiple": true,
+      "explanation": "A good footer has one filled button for the main action and lighter styles for the rest. That works with two buttons or three."
     }
   ],
   "challenge": {

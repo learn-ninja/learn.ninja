@@ -141,6 +141,31 @@
       ],
       "correct": "a",
       "explanation": "Ana ends with about $252,000 and Ben with about $227,000. Starting early beats putting in more."
+    },
+    {
+      "id": "p5",
+      "type": "choice",
+      "prompt": "Both accounts start with $1,000 and earn 7% a year. Which line is the one that compounds?",
+      "visual": {
+        "kind": "html",
+        "html": "<svg viewBox='0 0 300 150' direction='ltr' class='w-full max-w-sm' font-size='10'><line x1='36' y1='132' x2='284' y2='132' class='stroke-border' /><line x1='36' y1='16' x2='36' y2='132' class='stroke-border' /><text x='30' y='19.0' text-anchor='end' class='fill-muted-foreground'>$8k</text><text x='30' y='77.0' text-anchor='end' class='fill-muted-foreground'>$4k</text><text x='30' y='135' text-anchor='end' class='fill-muted-foreground'>$0</text><text x='36' y='146' text-anchor='middle' class='fill-muted-foreground'>0</text><text x='280.0' y='146' text-anchor='middle' class='fill-muted-foreground'>30 yrs</text><polyline points='36.0,117.5 280.0,87.0' fill='none' stroke-width='2.5' class='stroke-muted-foreground' /><polyline points='36.0,117.5 52.3,115.4 68.5,113.0 84.8,110.2 101.1,107.1 117.3,103.5 133.6,99.3 149.9,94.6 166.1,89.2 182.4,83.0 198.7,75.9 214.9,67.8 231.2,58.5 247.5,47.8 263.7,35.6 280.0,21.6' fill='none' stroke-width='2.5' stroke-linejoin='round' class='stroke-primary' /><text x='286' y='25' font-weight='600' class='fill-foreground'>A</text><text x='286' y='90' font-weight='600' class='fill-foreground'>B</text></svg>"
+      },
+      "options": [
+        { "id": "a", "text": "Line A: it adds more each year" },
+        {
+          "id": "b",
+          "text": "Line B: it grows steadily",
+          "feedback": "Steady growth means the same amount every year. That's simple interest, paid on the first $1,000 only."
+        },
+        {
+          "id": "c",
+          "text": "Neither yet: compounding only kicks in after 20 years",
+          "feedback": "It starts in year one; it's just small at first. By year 10, A is already ahead, $1,967 to $1,700."
+        }
+      ],
+      "correct": ["a"],
+      "multiple": false,
+      "explanation": "Compound interest earns interest on past interest, so it adds more each year and the line curves up. Simple interest adds the same $70 every year: a straight line."
     }
   ],
   "challenge": {

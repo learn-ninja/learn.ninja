@@ -214,6 +214,7 @@ describe("flow", () => {
       "concept:c2",
       "practice:p3",
       "practice:p4",
+      "practice:p5",
       "challenge:ch",
       "fix",
       "wrap",
@@ -226,7 +227,7 @@ describe("flow", () => {
       p3: "second",
       ch: "first",
     })
-    expect(s).toEqual({ first: 2, hint: 1, second: 1, missed: 1, total: 5 })
+    expect(s).toEqual({ first: 2, hint: 1, second: 1, missed: 2, total: 6 })
   })
   it("records hints and second tries", () => {
     expect([

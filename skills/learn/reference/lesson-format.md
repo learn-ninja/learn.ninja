@@ -67,7 +67,7 @@ Brick ids are unique across the whole lesson, including the hook and the challen
 
 ## Options
 
-Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedback"? (required on wrong options), "lang"? }`. Give each option text or a visual.
+Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedback"? (required on wrong options), "lang"? }`. Give each option text or a visual. Options with visuals show as cards in two columns, with `text` as a caption under the visual; in a `choice`, give either every option a visual or none, and give each visual option a short `text` caption (screen readers announce the caption, not the visual).
 
 ## The question bricks
 

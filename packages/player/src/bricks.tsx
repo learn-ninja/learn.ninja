@@ -84,6 +84,15 @@ export function ConceptBrick({ brick }: { brick: ConceptBrickData }) {
 
 // ---------- choice, compare, scenario ----------
 
+/**
+ * Compare options, and choice options with visuals, show as cards in two columns: each card has an
+ * "Option n" label, the visual, and an optional caption. Other options are rows.
+ */
+export function hasOptionCards(brick: QuestionBrick): boolean {
+  if (brick.type === "compare") return true
+  return brick.type === "choice" && brick.options.some((o) => o.visual)
+}
+
 export function OptionsBrick({
   brick,
   answer,
@@ -140,12 +149,13 @@ export function OptionsBrick({
   }, [ids, locked])
 
   if (!isOptions) return null
+  const cards = hasOptionCards(brick)
 
   return (
     <div
       role="group"
       aria-label={brick.prompt}
-      className={cn("grid gap-3", brick.type === "compare" && "sm:grid-cols-2")}
+      className={cn("grid gap-3", cards && "sm:grid-cols-2")}
     >
       {options.map((raw, i) => {
         const o = raw as {
@@ -155,7 +165,6 @@ export function OptionsBrick({
           lang?: string
           outcome?: string
         }
-        const isCompare = brick.type === "compare"
         return (
           <Selectable
             key={o.id}
@@ -166,12 +175,12 @@ export function OptionsBrick({
             className={cn(
               "group",
               cardStyles,
-              isCompare
+              cards
                 ? "flex flex-col gap-2 p-3"
                 : "flex min-h-12 items-center gap-2 px-4 py-3"
             )}
           >
-            {isCompare ? (
+            {cards ? (
               <>
                 <span className="flex items-center gap-2 px-1 text-sm font-medium text-muted-foreground">
                   {t.optionLabel(String(i + 1))}

@@ -45,7 +45,7 @@ Before you keep a question brick, ask:
 Mechanics of each type:
 
 - **compare:** exactly 2 options. Great with HTML visuals (two UIs) or two short texts.
-- **choice:** 2–5 options, one correct (or `multiple: true` for "pick all that apply").
+- **choice:** 2–5 options, one correct (or `multiple: true` for "pick all that apply"). When the question is about something to look at (a chart, a screen, a diagram), put it in the brick's `visual`, above text options. When the answers themselves are something to look at (which layouts, charts, or components get it right), give every option an HTML visual and a short `text` caption: they show as cards in two columns, like `compare`.
 - **hotspot:** tap the part of a visual that matters. In HTML, mark tappable elements with `data-hotspot="id"`; in code, list `hotspots` by line number.
 - **sort:** 4–8 items into 2–3 groups. Every group should get at least one item.
 - **order:** 3–6 items written in the correct order (the player shuffles them). Use `alsoAccept` if another order is genuinely right too.
@@ -100,6 +100,7 @@ HTML visuals use **Basecoat** (shadcn/ui's design system as plain HTML) plus **T
 - **Keep visuals small and focused:** show just enough to make the point. Each visual must be under 20 KB.
 - **Not allowed** (the checker rejects them): `<script>`, event handlers like `onclick`, `<iframe>`, `<form>`, `<object>`, `<embed>`, `javascript:` links, and anything loaded from an external URL (images, fonts, stylesheets). Interactive components (dropdowns, tabs, dialogs) can be shown in a fixed state but can't be operated.
 - **No images or photos in v1.** Draw what you need with HTML/CSS or inline SVG.
+- **Charts in inline SVG:** color strokes and text with theme classes (`stroke-primary`, `stroke-muted-foreground`, `fill-muted-foreground`, `stroke-border`) so they work in both themes, and add `direction='ltr'` to the `<svg>` so axis labels don't flip when the player is right to left (SVG ignores `dir`).
 
 ## 7. Languages
 

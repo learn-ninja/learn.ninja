@@ -196,10 +196,24 @@ export const MultipleChoiceWithCode: Story = {
     wrong: { kind: "select", ids: ["b"] },
   },
 }
+export const MultipleChoiceVisual: Story = {
+  name: "Multiple Choice, visual",
+  args: {
+    brick: practice(compound, 1, 2),
+    wrong: { kind: "select", ids: ["b"] },
+  },
+}
 export const MultiSelect: Story = {
   args: {
     brick: practice(prd, 0, 1),
     wrong: { kind: "select", ids: ["a", "c"] },
+  },
+}
+export const MultiSelectVisual: Story = {
+  name: "Multi Select, visual",
+  args: {
+    brick: practice(buttons, 1, 2),
+    wrong: { kind: "select", ids: ["a", "b"] },
   },
 }
 export const CompareVisual: Story = {

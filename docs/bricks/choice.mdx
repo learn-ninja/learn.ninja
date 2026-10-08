@@ -12,22 +12,42 @@ The most common question brick. Two to five options, with one or more correct.
 - Facts, rules, and predictions ("What does this log?").
 - Numeric questions: v1 has no number input, so ask them as a choice whose wrong options come from real mistakes.
 - Set `multiple: true` for "pick all that apply".
+- Put a `visual` on the brick when the question is about something to look at, like a chart, a screen, or a diagram. It shows above the options.
+- Give the options visuals when the answers themselves are something to look at: which layouts, charts, or components get it right.
 
 ## Fields
 
-| Field | Required | Description |
-| --- | --- | --- |
-| `options` | yes | 2–5 options, each with `text` or a `visual` |
-| `correct` | yes | Ids of the correct options |
-| `multiple` | yes | `true` to allow several picks, `false` for one |
+| Field      | Required | Description                                    |
+| ---------- | -------- | ---------------------------------------------- |
+| `options`  | yes      | 2–5 options, each with `text` or a `visual`    |
+| `correct`  | yes      | Ids of the correct options                     |
+| `multiple` | yes      | `true` to allow several picks, `false` for one |
 
 Every wrong option needs `feedback` that explains the misconception.
+
+## Visual options
+
+When any option has a `visual`, the options show as cards in two columns, like [Compare](/docs/bricks/compare), each labelled "Option 1", "Option 2", and so on. A `text` on an option becomes a short caption under its visual.
+
+- Give every option a visual, so the cards line up and none of them stands out by format alone.
+- Give every option a short `text` caption too. Screen readers can't see inside a visual, so the caption is what they announce.
+- Keep each visual small and focused on the one difference that matters. Each must be under 20 KB.
+- HTML visuals are static HTML, CSS, and inline SVG, with the built-in UI kit and Tailwind utilities. No JavaScript, and nothing loaded from an external URL, so no linked images or photos.
+- On a phone, the cards stack in one column.
 
 ## More examples
 
 Pick all that apply:
 
 <BrickPreview lesson="writing-a-prd" brick="p2" />
+
+Pick all that apply, with visual options:
+
+<BrickPreview lesson="button-hierarchy" brick="p5" />
+
+With a visual (an inline SVG chart):
+
+<BrickPreview lesson="compound-interest" brick="p5" />
 
 With code:
 

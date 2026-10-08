@@ -26,6 +26,7 @@ import {
 } from "./check"
 import { PlayerProvider, usePlayer } from "./context"
 import {
+  hasOptionCards,
   BlankBrick,
   ConceptBrick,
   HotspotBrick,
@@ -467,7 +468,7 @@ function columnWidth(item: Item): string {
   const { brick } = item
   const wide =
     Boolean(brick.visual) ||
-    brick.type === "compare" ||
+    hasOptionCards(brick) ||
     brick.type === "sort" ||
     brick.type === "match" ||
     brick.type === "hotspot"
