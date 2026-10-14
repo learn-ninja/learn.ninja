@@ -20,6 +20,7 @@ import {
 import {
   buildSequence,
   outcomeFor,
+  type Item,
   progressAt,
   questionAt,
   summarize,
@@ -247,14 +248,45 @@ describe("flow", () => {
   })
   it("reports progress from 0 at the intro to 100 at the fix slot", () => {
     const items = buildSequence(buttons)
-    expect(progressAt(items, 0, false)).toBe(0)
+    expect(progressAt(items, 0, {}, [])).toBe(0)
     expect(
       progressAt(
         items,
         items.findIndex((i) => i.kind === "fix"),
-        false
+        {},
+        []
       )
     ).toBe(100)
+  })
+  it("holds back a missed question's progress until the fix round gets it right", () => {
+    const items = buildSequence(buttons)
+    const fixAt = items.findIndex((i) => i.kind === "fix")
+    const step = 100 / (fixAt - 1)
+    const [a, b] = items.filter(
+      (i): i is Extract<Item, { kind: "question" }> =>
+        i.kind === "question" && i.role !== "hook"
+    )
+    const results = {
+      [a!.brick.id]: "missed" as const,
+      [b!.brick.id]: "missed" as const,
+    }
+    expect(progressAt(items, fixAt, results, [])).toBe(
+      Math.round(100 - 2 * step)
+    )
+    const withRetries: Item[] = [
+      ...items.slice(0, fixAt + 1),
+      { ...a!, role: "fix" },
+      { ...b!, role: "fix" },
+      ...items.slice(fixAt + 1),
+    ]
+    // On the second retry: the first one counts only if it was answered right.
+    expect(progressAt(withRetries, fixAt + 2, results, [])).toBe(
+      Math.round(100 - 2 * step)
+    )
+    expect(progressAt(withRetries, fixAt + 2, results, [a!.brick.id])).toBe(
+      Math.round(100 - step)
+    )
+    expect(progressAt(withRetries, fixAt + 3, results, [])).toBe(100)
   })
   it("counts questions, warm-up and challenge included, and the next one on a concept", () => {
     const items = buildSequence(prd)

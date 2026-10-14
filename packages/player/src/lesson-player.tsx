@@ -256,6 +256,8 @@ export interface State {
   index: number
   results: Record<string, Outcome>
   mistakes: QuestionBrick[]
+  /** Ids of the fix round's questions answered right. */
+  fixed: string[]
   inFix: boolean
   fixQueued: boolean
   question: QuestionState | null
@@ -321,6 +323,7 @@ function start(lesson: Lesson, startAt?: string, run = 0): State {
     index,
     results: {},
     mistakes: [],
+    fixed: [],
     inFix: false,
     fixQueued: false,
     question: at < 0 ? null : freshQuestion(items[index], seeded(startAt!)),
@@ -514,6 +517,7 @@ export function reducer(state: State, action: Action): State {
         return {
           ...state,
           results,
+          fixed: role === "fix" ? [...state.fixed, brick.id] : state.fixed,
           question: { ...s, result, phase: "feedback" },
         }
       }
@@ -782,7 +786,12 @@ function Player({
       {chrome ? (
         <LessonHeader
           title={lesson.title}
-          progress={progressAt(state.items, state.index, state.inFix)}
+          progress={progressAt(
+            state.items,
+            state.index,
+            state.results,
+            state.fixed
+          )}
           count={questionAt(state.items, state.index, state.inFix)}
           startedAt={clock.start}
           endedAt={clock.end}

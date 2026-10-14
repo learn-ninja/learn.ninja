@@ -57,17 +57,37 @@ export function outcomeFor(attempts: number): Outcome {
   return attempts > 0 ? "second" : "first"
 }
 
-/** Progress as 0–100: the intro is 0, the wrap-up and fix round are 100. */
+/**
+ * Progress as 0–100: the intro is 0, the wrap-up 100. Each screen from the warm-up to the challenge
+ * fills its share once it's passed, except a question missed twice: its share waits until the fix
+ * round gets it right (`fixed` holds the ids it got right).
+ */
 export function progressAt(
   items: Item[],
   index: number,
-  inFix: boolean
+  results: Record<string, Outcome>,
+  fixed: string[]
 ): number {
   const item = items[index]
   if (!item || item.kind === "intro") return 0
-  if (inFix || item.kind === "wrap" || item.kind === "fix") return 100
+  if (item.kind === "wrap") return 100
   const fixAt = items.findIndex((i) => i.kind === "fix")
-  return Math.round(((index - 1) / Math.max(1, fixAt - 1)) * 100)
+  const missed = (i: Item) =>
+    i.kind === "question" &&
+    i.role !== "fix" &&
+    results[i.brick.id] === "missed"
+  const passed = items
+    .slice(1, Math.min(index, fixAt))
+    .filter((i) => !missed(i))
+  const retried = items
+    .slice(fixAt + 1, Math.max(index, fixAt + 1))
+    .filter(
+      (i) =>
+        i.kind === "question" && i.role === "fix" && fixed.includes(i.brick.id)
+    )
+  return Math.round(
+    ((passed.length + retried.length) / Math.max(1, fixAt - 1)) * 100
+  )
 }
 
 /**

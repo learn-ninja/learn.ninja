@@ -130,6 +130,7 @@ function begin(brick: Brick, checked?: Answer): State {
     index: 0,
     results: {},
     mistakes: [],
+    fixed: [],
     inFix: false,
     fixQueued: false,
     run: 0,
