@@ -9,7 +9,7 @@ export type Contributor = {
 }
 
 export const CONTRIBUTORS: Contributor[] = [
-  { name: "Gene Kamenez", github: "Halowe", x: "eugene_kamenets" },
+  { name: "Gene Kamenez", github: "halowe", x: "gkamenz" },
   { name: "Yan Sokalau", github: "yan-sokalau", x: "yan_sokalau" },
   { name: "Nadia Lipskaya", github: "nadiadrako-bit" },
 ]
