@@ -1884,7 +1884,7 @@ function useCoarsePointer(): boolean {
   return coarse
 }
 
-/** A short bar on the content's bottom edge: click, press, or drag it to close or open the tray. */
+/** A short bar floating on the content's bottom edge: click, press, or drag it to close or open the tray. */
 function TrayNotch({
   open,
   controls,
@@ -1915,8 +1915,9 @@ function TrayNotch({
   }
   return (
     // Capture-phase handlers: the button's own press handling stops pointer events from bubbling.
+    // It floats over the content's bottom edge (centred by the auto margins) instead of taking a row.
     <div
-      className="flex shrink-0 justify-center"
+      className="absolute inset-x-0 bottom-0 z-10 mx-auto w-fit"
       style={{ touchAction: "none" }}
       onPointerDownCapture={(e) => {
         start.current = e.clientY
