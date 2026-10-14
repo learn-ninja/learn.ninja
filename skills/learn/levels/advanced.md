@@ -34,8 +34,6 @@ Judgments and their grounds, not rules: "Treat a single-cause story as a claim t
 
 ## You've drifted if…
 
-- A concept brick explains the fundamentals the summary assumed.
-- In some question, one option is obviously right and the rest obviously wrong.
+- A concept brick explains the fundamentals the summary assumed, even as a one-line recap.
+- One option is obviously right and the rest obviously wrong, or the answer sits in the visual above.
 - A hint gives a step.
-
-Example: `examples/bronze-age-collapse.json`.

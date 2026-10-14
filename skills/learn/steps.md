@@ -9,9 +9,8 @@ Every path below is relative to the folder this file is in (`.learn/skill/` afte
 1. **Plan the lesson.** Read what the user gave you, then read `reference/planning.md`. It sets the scope (one lesson, or a path of several), the size, and the reading age, and lists the words people use for each choice. Usually decide without asking, and say what you decided at the end. Only when the request is just a bare topic ("how vaccines work") ask first: one short message with up to two questions and your defaults, as `reference/planning.md` describes.
 2. **Read the guides before writing.** Read `reference/teaching-guide.md` (how to teach well, which brick to use when, visuals) and `reference/lesson-format.md` (every field). Then:
    - **Level:** read `levels/index.md`, pick the level from its ranked signals, and read that level's file: it says what to assume, how hard to make the questions, and how much to help.
-   - **Examples:** look at one or two files in `examples/` closest to the topic, including the one your level file names.
 
-   Level guides add to this file and the teaching guide; where one disagrees, this file and the teaching guide win.
+   Level guides add to this file and the teaching guide; where one disagrees, this file and the teaching guide win. Design the lesson for its topic from the guides; don't look for a lesson to copy.
 
 3. **Write the lesson file**, e.g. `lesson.json` in the current folder, following the format exactly. `schema/lesson.schema.json` is the formal JSON Schema. For a path, write only the first lesson, in its own folder, as `reference/planning.md` describes.
 4. **Check it** and fix every issue it reports, then check again until it passes:
@@ -47,5 +46,4 @@ If a command prints that a newer version of the skill is available, tell the use
 - `reference/lesson-format.md`: every field of the lesson file, with short examples
 - `levels/index.md`: how to pick the lesson's level; `levels/{level}.md` is each level's guide
 - `schema/lesson.schema.json`: the formal JSON Schema (the checker also enforces cross-field rules it can't express)
-- `examples/*.json`: seven complete, valid lessons, one at each level (UI design, product management, finance, Spanish, JavaScript, data, history); all are standard-size lessons
 - `<skill-folder>/scripts/learn.mjs`: the checker and publisher (`sync`, `validate`, `publish`, `schema`; add `--json` for machine-readable output)

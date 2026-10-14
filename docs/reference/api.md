@@ -52,7 +52,7 @@ The body is the lesson file. Runs the checks publishing runs and stores nothing.
 GET /api/skill
 ```
 
-The skill's steps, guides, examples, and schema as one JSON bundle: `version` (the current skill), `minVersion` (the oldest skill the guides work with), `hash` (changes whenever a file does), and `files`, a map from path to text. `GET /api/skill/version` returns the same without `files`. The skill's `sync` command uses both.
+The skill's steps, guides, and schema as one JSON bundle: `version` (the current skill), `minVersion` (the oldest skill the guides work with), `hash` (changes whenever a file does), and `files`, a map from path to text. `GET /api/skill/version` returns the same without `files`. The skill's `sync` command uses both.
 
 ## Errors
 

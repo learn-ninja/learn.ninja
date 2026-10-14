@@ -34,8 +34,6 @@ When to use the method, and the one condition to check first.
 
 ## You've drifted if…
 
-- A concept brick defines a term the summary assumes.
-- Every question can be answered by rereading the concept.
+- A concept brick defines a term, or shows a form or table, the summary assumes.
+- A question can be answered by rereading the concept, or only recalls a list it showed.
 - Wrong options are silly instead of being the right idea misapplied.
-
-Example: `examples/correlation-vs-causation.json`.

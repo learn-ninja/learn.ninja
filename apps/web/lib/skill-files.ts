@@ -36,7 +36,7 @@ export function skillIndex() {
 export const SKILL_ROUTE_NAME = SKILL_NAME
 
 /**
- * The files `learn sync` downloads into a project's .learn/skill/: the steps, guides, levels, examples,
+ * The files `learn sync` downloads into a project's .learn/skill/: the steps, guides, levels,
  * and schema. Never the CLI (code stays with the install) and not SKILL.md (the short installed
  * bootstrap, which is what points at the synced copy).
  */

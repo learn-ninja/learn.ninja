@@ -21,15 +21,15 @@ describe("skills/learn", () => {
     )
   })
 
-  it("has every example lesson, unchanged", () => {
-    const examples = readdirSync(new URL("examples", root))
-      .filter((f) => f.endsWith(".json"))
-      .sort()
-    expect(readdirSync(new URL("skills/learn/examples", root)).sort()).toEqual(
-      examples
-    )
-    for (const f of examples)
-      expect(read(`skills/learn/examples/${f}`)).toBe(read(`examples/${f}`))
+  // Agents design each lesson from the guides; the example lessons stay in examples/ as fixtures and docs demos.
+  it("ships no example lessons, and the guides don't point at any", () => {
+    expect(readdirSync(new URL("skills/learn", root))).not.toContain("examples")
+    for (const f of [
+      "steps.md",
+      "levels/index.md",
+      ...LEVELS.map((l) => `levels/${l}.md`),
+    ])
+      expect(read(`skills/learn/${f}`), f).not.toMatch(/examples\//)
   })
 
   it("bundles the current CLI version", () => {
@@ -40,25 +40,20 @@ describe("skills/learn", () => {
   })
 
   // With no server to reach, `validate` falls back to the bundled rules: that's what this checks.
-  it.each(readdirSync(new URL("skills/learn/examples", root)))(
-    "bundled script validates %s",
-    (file) => {
-      const result = spawnSync(
-        process.execPath,
-        [
-          script,
-          "validate",
-          fileURLToPath(new URL(`skills/learn/examples/${file}`, root)),
-        ],
-        {
-          encoding: "utf8",
-          env: { ...process.env, LEARN_API_URL: "http://127.0.0.1:1" },
-        }
-      )
-      expect(result.status, result.stderr).toBe(0)
-      expect(result.stdout).toContain("Checked offline")
-    }
-  )
+  it.each(
+    readdirSync(new URL("examples", root)).filter((f) => f.endsWith(".json"))
+  )("bundled script validates %s", (file) => {
+    const result = spawnSync(
+      process.execPath,
+      [script, "validate", fileURLToPath(new URL(`examples/${file}`, root))],
+      {
+        encoding: "utf8",
+        env: { ...process.env, LEARN_API_URL: "http://127.0.0.1:1" },
+      }
+    )
+    expect(result.status, result.stderr).toBe(0)
+    expect(result.stdout).toContain("Checked offline")
+  })
 
   it("names the skill in SKILL.md", () => {
     expect(read("skills/learn/SKILL.md")).toMatch(
@@ -100,14 +95,6 @@ describe.each(LEVELS)("level %s", (name) => {
 
   it("ends with a drift check", () => {
     expect(guide).toContain("## You've drifted if")
-  })
-
-  it("names example lessons that exist", () => {
-    const examples = readdirSync(new URL("skills/learn/examples", root))
-    for (const [, slug] of guide.matchAll(/`examples\/([^`]+)\.json`/g))
-      expect(examples, `${name}: no example lesson ${slug}`).toContain(
-        `${slug}.json`
-      )
   })
 
   it("is listed in levels/index.md, the format reference, and the docs", () => {

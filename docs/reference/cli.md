@@ -13,7 +13,7 @@ node <skill-folder>/scripts/learn.mjs <command>
 
 ### `sync`
 
-Downloads the current steps, guides, examples, and schema from learn.ninja into `.learn/skill/` in the current folder. The agent runs it before each lesson, so a change on learn.ninja reaches every install without reinstalling. It downloads only when something changed, and only text: the tool itself never updates this way.
+Downloads the current steps, guides, and schema from learn.ninja into `.learn/skill/` in the current folder. The agent runs it before each lesson, so a change on learn.ninja reaches every install without reinstalling. It downloads only when something changed, and only text: the tool itself never updates this way.
 
 ```bash
 node scripts/learn.mjs sync

@@ -37,6 +37,4 @@ The rule and when to use it, in plain words. One can name the next idea.
 
 - A term appears before it's explained, or a concept relies on a method it never showed.
 - A wrong option could only be picked by someone who didn't read.
-- The challenge needs an idea the lesson didn't teach.
-
-Example: `examples/button-hierarchy.json`. Every lesson in `examples/` written before levels existed is beginner.
+- The challenge needs an idea the lesson didn't teach, or only restates a concept sentence instead of applying it to a new case.

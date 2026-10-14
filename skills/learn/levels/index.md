@@ -26,8 +26,8 @@ Tell the user which level you chose, and that you can remake the lesson at anoth
 
 Levels are relative to the subject, so each file says what to assume. Lessons drift to the middle: beginner lessons pick up jargon, advanced lessons re-teach the basics. Each file ends with a check for that.
 
-| Level          | For                                             | Guide                    | Example                                  |
-| -------------- | ----------------------------------------------- | ------------------------ | ---------------------------------------- |
-| `beginner`     | Never done this, or only a little               | `levels/beginner.md`     | `examples/button-hierarchy.json`         |
-| `intermediate` | Knows the basics; wants to use them             | `levels/intermediate.md` | `examples/correlation-vs-causation.json` |
-| `advanced`     | Significant prior learning; analyses and judges | `levels/advanced.md`     | `examples/bronze-age-collapse.json`      |
+| Level          | For                                             | Guide                    |
+| -------------- | ----------------------------------------------- | ------------------------ |
+| `beginner`     | Never done this, or only a little               | `levels/beginner.md`     |
+| `intermediate` | Knows the basics; wants to use them             | `levels/intermediate.md` |
+| `advanced`     | Significant prior learning; analyses and judges | `levels/advanced.md`     |

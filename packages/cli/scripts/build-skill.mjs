@@ -1,14 +1,8 @@
 /* global console */
 // Assembles skills/learn for distribution (`npx skills add https://learn.ninja`, served by apps/web):
-// bundles the CLI into one dependency-free file and copies in the JSON Schema and example lessons.
+// bundles the CLI into one dependency-free file and copies in the JSON Schema.
 // Run: npm run skill:build -w @workspace/cli (a test fails if skills/learn is out of date).
-import {
-  chmodSync,
-  copyFileSync,
-  mkdirSync,
-  readdirSync,
-  rmSync,
-} from "node:fs"
+import { chmodSync, copyFileSync, mkdirSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
@@ -39,13 +33,5 @@ copyFileSync(
   join(root, "packages/spec/schema/lesson.schema.json"),
   join(skill, "schema/lesson.schema.json")
 )
-
-rmSync(join(skill, "examples"), { recursive: true, force: true })
-mkdirSync(join(skill, "examples"))
-for (const f of readdirSync(join(root, "examples")).filter((f) =>
-  f.endsWith(".json")
-)) {
-  copyFileSync(join(root, "examples", f), join(skill, "examples", f))
-}
 
 console.log("Built skills/learn")

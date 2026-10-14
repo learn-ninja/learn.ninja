@@ -12,7 +12,7 @@ import {
 // The command the lesson skill runs: sync the guides, validate a lesson file, publish it, or update it.
 // Bundled into skills/learn/scripts/learn.mjs, so the skill works without installing anything.
 //
-// The guides, examples, and checker rules live on learn.ninja and change often, so `sync` downloads
+// The guides and checker rules live on learn.ninja and change often, so `sync` downloads
 // the current guides into .learn/skill/ (text only, never code), and `validate` checks the lesson on the
 // server. The copies that came with the install are the fallback when the server can't be reached.
 
