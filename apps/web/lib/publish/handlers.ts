@@ -181,8 +181,9 @@ export async function publishLesson(
     editTokenHash: hashToken(editToken),
     claimTokenHash: claimToken ? hashToken(claimToken) : null,
     ownerId: owner,
-    // Link-only until the owner lists it from their settings; anonymous lessons stay that way.
-    visibility: "unlisted",
+    // An owned lesson is listed in Explore straight away (the owner can unlist it from their
+    // settings); an anonymous one stays link-only until it's kept.
+    visibility: owner ? "public" : "unlisted",
     hidden: false,
     plays: 0,
     likes: 0,
@@ -320,7 +321,10 @@ export async function claimLesson(
     }
   }
   await deps.store.claim(existing.id, req.ownerId)
-  return kept({ ...existing, ownerId: req.ownerId, expiresAt: null }, deps.origin)
+  return kept(
+    { ...existing, ownerId: req.ownerId, expiresAt: null, visibility: "public" },
+    deps.origin
+  )
 }
 
 function kept(record: StoredLesson, origin: string): Reply {

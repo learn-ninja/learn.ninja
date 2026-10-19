@@ -1,3 +1,4 @@
+import { revalidateExplore } from "@/lib/explore/cache"
 import { publishLesson } from "@/lib/publish/handlers"
 import { actorFor, clientKey, depsFor } from "@/lib/publish/request"
 import { respond } from "@/lib/publish/respond"
@@ -7,15 +8,19 @@ import { respond } from "@/lib/publish/respond"
 // belongs to that account and never expires.
 
 export async function POST(req: Request) {
-  return respond(async () =>
-    publishLesson(
+  return respond(async () => {
+    const ownerId = (await actorFor(req))?.userId ?? null
+    const reply = await publishLesson(
       {
         text: await req.text(),
         client: clientKey(req),
         skillVersion: req.headers.get("x-learn-skill-version"),
-        ownerId: (await actorFor(req))?.userId ?? null,
+        ownerId,
       },
       await depsFor(req)
     )
-  )
+    // An owned lesson is listed straight away.
+    if (ownerId && reply.status === 201) revalidateExplore()
+    return reply
+  })
 }

@@ -24,7 +24,7 @@ export interface StoredLesson {
   claimTokenHash: string | null
   /** The user who owns it; null for anonymous lessons. */
   ownerId: string | null
-  /** Who sees it: in Explore ("public"), by link only ("unlisted"), or a team's later. Anonymous lessons are always unlisted. */
+  /** Who sees it: in Explore ("public"), by link only ("unlisted"), or a team's later. Owned lessons start listed; anonymous ones are always unlisted. */
   visibility: "public" | "unlisted" | "team"
   /** Set by hand after a report: out of Explore and profiles, and only the owner can open the link. */
   hidden: boolean
@@ -45,7 +45,7 @@ export interface LessonStore {
   getByClaimTokenHash(hash: string): Promise<StoredLesson | null>
   /** Replaces a lesson without changing when it expires or who owns it. */
   update(record: StoredLesson): Promise<void>
-  /** Gives a lesson to `ownerId`: it stops expiring and its claim token stops working. */
+  /** Gives a lesson to `ownerId`: it stops expiring, is listed in Explore, and its claim token stops working. */
   claim(id: string, ownerId: string): Promise<void>
   /** Deletes every lesson that has expired, and says how many. */
   deleteExpired(): Promise<number>
@@ -113,6 +113,7 @@ export class PostgresLessonStore implements LessonStore {
         ownerId,
         claimTokenHash: null,
         expiresAt: null,
+        visibility: "public",
         updatedAt: this.date(),
       })
       .where(eq(lesson.id, id))

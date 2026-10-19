@@ -1,3 +1,4 @@
+import { revalidateExplore } from "@/lib/explore/cache"
 import { claimLesson } from "@/lib/publish/handlers"
 import { actorFor, depsFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
@@ -25,9 +26,12 @@ export async function POST(
         },
       }
     }
-    return claimLesson(
+    const reply = await claimLesson(
       { id: (await params).id, claimToken: body.claimToken, ownerId: actor.userId },
       await depsFor(req)
     )
+    // A kept lesson is listed straight away.
+    if (reply.status === 200) revalidateExplore()
+    return reply
   })
 }

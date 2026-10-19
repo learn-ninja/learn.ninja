@@ -110,10 +110,11 @@ describe("publishing", () => {
     expect(stored?.prepared.visualsCss).toContain(".flex-wrap")
     expect(stored?.editTokenHash).not.toBe(reply.body.editToken)
     expect(stored?.claimTokenHash).toBe(hashToken(reply.body.claimToken as string))
+    expect(stored?.visibility).toBe("unlisted")
     expect(stored?.ownerId).toBeNull()
   })
 
-  it("publishes an owned lesson with no expiry and no claim token", async () => {
+  it("publishes an owned lesson listed, with no expiry and no claim token", async () => {
     const reply = await publishLesson(
       { text: buttons, client: "x", ownerId: "user_1" },
       deps
@@ -126,6 +127,7 @@ describe("publishing", () => {
       ownerId: "user_1",
       expiresAt: null,
       claimTokenHash: null,
+      visibility: "public",
     })
     // Never swept, and still there long after anonymous lessons are gone.
     now += 365 * 24 * 3.6e6
@@ -247,7 +249,7 @@ describe("publishing", () => {
 describe("claiming", () => {
   const anonymous = () => publishLesson({ text: buttons, client: "x" }, deps)
 
-  it("keeps a lesson with its id and claim token: owned, never expiring, token spent", async () => {
+  it("keeps a lesson with its id and claim token: owned, listed, never expiring, token spent", async () => {
     const { body } = await anonymous()
     const reply = await claimLesson(
       {
@@ -273,6 +275,7 @@ describe("claiming", () => {
       ownerId: "user_1",
       expiresAt: null,
       claimTokenHash: null,
+      visibility: "public",
     })
     // The token is spent: nobody else can use it, and the /keep page no longer finds the lesson.
     expect(

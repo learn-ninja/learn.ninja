@@ -36,7 +36,7 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Who can see my lesson?",
-    a: "Anyone with the link. Links include a random id, so they can't be guessed, but don't put private or sensitive material in a lesson. A lesson saved to an account can also be listed in Explore, if you switch that on in your settings; it's link-only until you do.",
+    a: "Anyone with the link. Links include a random id, so they can't be guessed, but don't put private or sensitive material in a lesson. A lesson saved to an account is also listed in Explore; switch it to unlisted in your settings to keep it link-only.",
   },
   {
     q: "What is Explore?",
