@@ -40,7 +40,7 @@ test("a bundled lesson plays", async ({ page }) => {
   ).toBeVisible()
 })
 
-test("a published lesson opens at its link, and a dead link is a 404", async ({
+test("a published lesson opens at its link, and a dead link shows the expired page", async ({
   page,
   request,
 }) => {
@@ -59,9 +59,23 @@ test("a published lesson opens at its link, and a dead link is a 404", async ({
   )
   await expect(page.getByRole("button", { name: "Start lesson" })).toBeVisible()
 
+  // A dead link answers 200 so chat apps and social sites show the expired card.
   const dead = await page.goto("/l/nothing-here-zzzzzzzz")
-  expect(dead?.status()).toBe(404)
+  expect(dead?.status()).toBe(200)
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "isn't available"
   )
+  await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute(
+    "content",
+    "This lesson has expired"
+  )
+  const image = await page
+    .locator('meta[property="og:image"]')
+    .getAttribute("content")
+  // The URL is absolute (the production site), so fetch its path from the test server.
+  const { pathname } = new URL(image!, "http://localhost")
+  expect(pathname).toBe("/l/nothing-here-zzzzzzzz/card")
+  const card = await request.get(pathname)
+  expect(card.status()).toBe(200)
+  expect(card.headers()["content-type"]).toBe("image/png")
 })
