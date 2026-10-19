@@ -3,6 +3,8 @@
 import * as React from "react"
 import { UserRoundIcon } from "lucide-react"
 
+import { cn } from "@workspace/ui/lib/utils"
+
 import { ButtonLink } from "@/components/site/button-link"
 import { forgetAccount, readAccount, rememberAccount } from "@/lib/auth/browser"
 
@@ -29,10 +31,17 @@ export function AccountLink({
     else rememberAccount(handle || null)
   }, [handle])
 
-  if (account === undefined) return null
-  if (account === null) {
+  // Until the cookie is read (after hydration), an invisible "Sign in" holds the space so the
+  // header doesn't shift for the many visitors who aren't signed in.
+  if (account === null || account === undefined) {
     return (
-      <ButtonLink href="/sign-in" variant="ghost" size="sm" className={className}>
+      <ButtonLink
+        href="/sign-in"
+        variant="ghost"
+        size="sm"
+        className={cn(className, account === undefined && "invisible")}
+        aria-hidden={account === undefined || undefined}
+      >
         Sign in
       </ButtonLink>
     )

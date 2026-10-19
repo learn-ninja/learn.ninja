@@ -3,8 +3,10 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import type { KeySummary } from "@/lib/auth/account"
 import type { AccountApi } from "@/lib/auth/browser"
 
+import { AccountLink } from "./account-link"
 import { ApiKeys } from "./api-keys"
 import { HandleForm } from "./handle-form"
+import { KeepForm, type KeepResult } from "./keep-form"
 import { SignInForm } from "./sign-in-form"
 import { SignOutButton } from "./sign-out-button"
 
@@ -144,4 +146,36 @@ export const KeysNone: Story = {
 
 export const SignOut: Story = {
   render: () => <SignOutButton api={fakeApi()} navigate={navigate} />,
+}
+
+/** A stand-in for the server action: keeps unless the token is "spent". */
+const keep = async (_: KeepResult | null, data: FormData): Promise<KeepResult> => {
+  await wait()
+  return data.get("token") === "spent"
+    ? { ok: false, message: "This lesson was already saved to an account." }
+    : { ok: true, message: "Kept.", url: "#", title: "Basic Spanish greetings" }
+}
+
+export const Keep: Story = {
+  render: () => (
+    <KeepForm token="fresh" title="Basic Spanish greetings" action={keep} />
+  ),
+}
+
+export const KeepFails: Story = {
+  name: "Keep, already kept",
+  render: () => (
+    <KeepForm token="spent" title="Basic Spanish greetings" action={keep} />
+  ),
+}
+
+export const HeaderLinks: Story = {
+  name: "Header link states",
+  render: () => (
+    <div className="flex flex-col items-start gap-2">
+      <AccountLink handle={null} />
+      <AccountLink handle="" />
+      <AccountLink handle="ada-lovelace" />
+    </div>
+  ),
 }

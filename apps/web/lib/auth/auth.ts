@@ -130,6 +130,12 @@ export function createAuth(deps: AuthDeps) {
       // Each code is an email we pay for: a per-address limit, checked before the code is made.
       // (Better Auth sends codes after replying, so sendVerificationOTP can't refuse.)
       before: createAuthMiddleware(async (ctx) => {
+        // A key may not mint keys: only a browser session can (POST /api/keys does the same).
+        if (ctx.path === "/api-key/create" && ctx.headers?.get("x-api-key")) {
+          throw new APIError("FORBIDDEN", {
+            message: "Make new keys from the website, signed in.",
+          })
+        }
         if (ctx.path !== "/email-otp/send-verification-otp") return
         const email = (ctx.body as { email?: unknown } | undefined)?.email
         if (typeof email !== "string" || !email) return

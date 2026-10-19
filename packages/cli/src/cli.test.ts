@@ -560,6 +560,35 @@ describe("learn publish", () => {
     })
   })
 
+  it("keeps an older anonymous lesson when updating it signed in", async () => {
+    t = setup({
+      "POST /api/lessons": created(),
+      "PUT /api/lessons/abcd1234": {
+        status: 200,
+        body: { ...created().body, editToken: undefined, claimToken: undefined },
+      },
+      "POST /api/lessons/abcd1234/claim": (call) =>
+        call.apiKey === KEY && JSON.parse(call.body!).claimToken === "claim-abcd1234"
+          ? { status: 200, body: { ok: true, expiresAt: null } }
+          : { status: 401, body: { ok: false } },
+    })
+    // Published anonymously, then signed in elsewhere.
+    await run(["publish", "lesson.json"], t.io)
+    writeCredentials(t, { "https://learn.ninja": { apiKey: KEY, email: "a" } })
+    expect(await run(["publish", "lesson.json"], t.io)).toBe(0)
+    expect(t.methods().filter((m) => m.includes("/api/lessons"))).toEqual([
+      "POST /api/lessons",
+      "PUT /api/lessons/abcd1234",
+      "POST /api/lessons/abcd1234/claim",
+    ])
+    expect(t.out.join("\n")).toMatch(/Updated: .*\nSaved to your account/)
+    const saved = JSON.parse(
+      readFileSync(join(t.cwd, ".learn/state.json"), "utf8")
+    ).lessons[join(t.cwd, "lesson.json")]
+    expect(saved).toMatchObject({ expiresAt: null })
+    expect(saved).not.toHaveProperty("claimToken")
+  })
+
   it("takes the key from LEARN_API_KEY too", async () => {
     t = setup({ "POST /api/lessons": createdOwned() })
     t.io.env.LEARN_API_KEY = KEY
@@ -664,6 +693,28 @@ describe("learn login", () => {
     expect(state.lessons[join(t.cwd, "other.json")]).not.toHaveProperty("claimToken")
   })
 
+  it("keeps a claim token when the claim fails for a passing reason", async () => {
+    const t = setup({
+      ...signInRoutes(),
+      "POST /api/lessons": [created("aaaa1111"), created("bbbb2222")],
+      "POST /api/lessons/aaaa1111/claim": offline,
+      "POST /api/lessons/bbbb2222/claim": {
+        status: 503,
+        body: { ok: false, error: "storage_not_configured" },
+      },
+    })
+    await run(["publish", "lesson.json"], t.io)
+    writeFileSync(join(t.cwd, "other.json"), lesson)
+    await run(["publish", "other.json"], t.io)
+    expect(
+      await run(["login", "--email", "ada@example.com", "--code", "123456"], t.io)
+    ).toBe(0)
+    expect(t.out.join("\n")).toMatch(/No lessons from this folder to keep/)
+    const state = JSON.parse(readFileSync(join(t.cwd, ".learn/state.json"), "utf8"))
+    for (const saved of Object.values(state.lessons) as { claimToken?: string }[])
+      expect(saved.claimToken).toMatch(/^claim-/)
+  })
+
   it("asks for the email and code at a terminal", async () => {
     const t = setup(signInRoutes())
     const answers = ["ada@example.com", "123456"]
@@ -745,5 +796,9 @@ describe("learn whoami and logout", () => {
     })
     expect(await run(["logout"], t.io)).toBe(0)
     expect(t.out.at(-1)).toBe("Not signed in.")
+    // A key from the environment can't be forgotten from here; say so.
+    t.io.env.LEARN_API_KEY = KEY
+    expect(await run(["logout"], t.io)).toBe(0)
+    expect(t.out.at(-1)).toMatch(/LEARN_API_KEY is set.*Unset it to sign out\./)
   })
 })

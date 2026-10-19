@@ -12,6 +12,7 @@ import { createKey, deleteKey, listKeys, setHandle, whoami } from "./account"
 import { getActor, InvalidApiKeyError } from "./actor"
 import { API_KEY_PREFIX, createAuth, type Auth } from "./auth"
 import { freeHandle, handleProblem, normalizeHandle } from "./handles"
+import { safeCallback } from "./session"
 
 // Better Auth over an in-memory Postgres: the email code flow the CLI and the sign-in page use,
 // API keys as sessions, and handles.
@@ -139,6 +140,22 @@ describe("API keys", () => {
     ).rejects.toBeInstanceOf(InvalidApiKeyError)
   })
 
+  it("won't let a key mint keys, even through Better Auth's own route", async () => {
+    const cookie = await signIn("minter@example.com")
+    const created = await createKey(auth, new Headers({ cookie }), "first")
+    const key = created.body.key as string
+    await expect(
+      auth.api.createApiKey({
+        headers: new Headers({ "x-api-key": key }),
+        body: { name: "second" },
+      })
+    ).rejects.toMatchObject({ status: "FORBIDDEN" })
+    // The key still works for everything else.
+    expect(await getActor(auth, new Headers({ "x-api-key": key }))).toMatchObject({
+      email: "minter@example.com",
+    })
+  })
+
   it("refuses a made-up key instead of treating the request as anonymous", async () => {
     await expect(
       getActor(auth, new Headers({ "x-api-key": "learn_" + "x".repeat(64) }))
@@ -262,5 +279,17 @@ describe("handles", () => {
     expect(await freeHandle(db, "Ada_Lovelace")).toBe("ada-lovelace-2")
     expect(await freeHandle(db, "someone-new")).toBe("someone-new")
     expect(await freeHandle(db, "settings")).toBe("settings-1")
+    // "ninja" itself is reserved, so the fallback is numbered.
+    expect(await freeHandle(db, "___")).toBe("ninja-1")
+    expect(await freeHandle(db, "ab")).toBe("ab0")
+  })
+
+  it("only sends the browser to site paths after signing in", () => {
+    expect(safeCallback("/keep/abc")).toBe("/keep/abc")
+    expect(safeCallback(["/settings", "/x"])).toBe("/settings")
+    expect(safeCallback(undefined)).toBe("/settings")
+    expect(safeCallback("https://evil.com")).toBe("/settings")
+    expect(safeCallback("//evil.com")).toBe("/settings")
+    expect(safeCallback("/\\evil.com")).toBe("/settings")
   })
 })

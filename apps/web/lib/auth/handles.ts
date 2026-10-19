@@ -23,7 +23,7 @@ export async function findByHandle(db: Db, handle: string) {
  * it ("colin", "colin-2", "colin-3"...). Used for GitHub logins at first sign-in.
  */
 export async function freeHandle(db: Db, wanted: string): Promise<string> {
-  const base = normalizeHandle(wanted).padEnd(3, "0") || "ninja"
+  const base = (normalizeHandle(wanted) || "ninja").padEnd(3, "0")
   const stem = RESERVED.has(base) ? `${base}-1` : base
   for (let n = 1; n < 1000; n++) {
     const candidate = n === 1 ? stem : `${stem.slice(0, 30 - 1 - String(n).length)}-${n}`

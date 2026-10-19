@@ -524,7 +524,7 @@ async function publish(
     return 1
   }
 
-  const owned = Boolean(body.owned)
+  let owned = Boolean(body.owned)
   const record: SavedLesson = {
     id: body.id as string,
     url: body.url as string,
@@ -535,6 +535,11 @@ async function publish(
   const claimToken =
     (body.claimToken as string | undefined) ?? (owned ? undefined : live?.claimToken)
   if (claimToken) record.claimToken = claimToken
+  // Signed in, but updating a lesson published before signing in (from another folder's login):
+  // keep it now rather than telling the user to sign in again.
+  if (credential && !owned && record.claimToken) {
+    owned = (await claimOne(io, o.api, credential, record)) === "kept"
+  }
   state.lessons[o.path] = record
   await writeState(statePath, state)
 
@@ -697,34 +702,66 @@ async function claimAll(
   const statePath = join(io.cwd, ".learn", "state.json")
   const state = await readState(statePath)
   const kept: { url: string }[] = []
+  let changed = false
   for (const saved of Object.values(state.lessons)) {
     if (!saved.claimToken) continue
-    try {
-      await fetchJson(io, `${api}/api/lessons/${saved.id}/claim`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-api-key": credential.apiKey,
-        },
-        body: JSON.stringify({ claimToken: saved.claimToken }),
-      })
-      saved.expiresAt = null
-      kept.push({ url: saved.url })
-    } catch {
-      // Expired, or already kept by someone: nothing more to do with this token.
-    }
-    delete saved.claimToken
+    const outcome = await claimOne(io, api, credential, saved)
+    if (outcome === "kept") kept.push({ url: saved.url })
+    if (outcome !== "retry") changed = true
   }
-  if (kept.length || Object.values(state.lessons).some((l) => l.claimToken))
-    await writeState(statePath, state)
+  if (changed) await writeState(statePath, state)
   return kept
+}
+
+/**
+ * Claims one saved lesson. "kept" moved it into the account; "spent" means the server refused the
+ * token for good (expired, or already kept), so it's dropped; "retry" is a network or server
+ * fault, and the token stays for the next `login`.
+ */
+async function claimOne(
+  io: Io,
+  api: string,
+  credential: Credential,
+  saved: SavedLesson
+): Promise<"kept" | "spent" | "retry"> {
+  let response: Response
+  try {
+    response = await io.fetch(`${api}/api/lessons/${saved.id}/claim`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": credential.apiKey,
+        "x-learn-skill-version": SKILL_VERSION,
+      },
+      body: JSON.stringify({ claimToken: saved.claimToken }),
+    })
+  } catch {
+    return "retry"
+  }
+  if (response.status >= 500 || response.status === 429) return "retry"
+  if (response.ok) {
+    saved.expiresAt = null
+    delete saved.claimToken
+    return "kept"
+  }
+  delete saved.claimToken
+  return "spent"
 }
 
 async function logout(io: Io, api: string, json: boolean): Promise<number> {
   const all = await readCredentials(io)
   const credential = all[api]
+  const envKey = Boolean(io.env.LEARN_API_KEY)
   if (!credential) {
-    report(io, json, { ok: true, signedIn: false }, () => "Not signed in.")
+    report(
+      io,
+      json,
+      { ok: true, signedIn: envKey, envKey },
+      () =>
+        envKey
+          ? "No saved key to forget, but LEARN_API_KEY is set in this shell, so publishing still uses it. Unset it to sign out."
+          : "Not signed in."
+    )
     return 0
   }
   let revoked = false
@@ -742,9 +779,16 @@ async function logout(io: Io, api: string, json: boolean): Promise<number> {
   report(
     io,
     json,
-    { ok: true, signedIn: false, revoked },
+    { ok: true, signedIn: envKey, revoked, envKey },
     () =>
-      `Signed out of ${api}.${revoked ? " The key was revoked." : " The key couldn't be revoked from here; revoke it at " + api + "/settings if it may have leaked."}`
+      [
+        `Signed out of ${api}.${revoked ? " The key was revoked." : " The key couldn't be revoked from here; revoke it at " + api + "/settings if it may have leaked."}`,
+        envKey
+          ? "LEARN_API_KEY is still set in this shell, so publishing keeps using it. Unset it to sign out."
+          : null,
+      ]
+        .filter(Boolean)
+        .join("\n")
   )
   return 0
 }

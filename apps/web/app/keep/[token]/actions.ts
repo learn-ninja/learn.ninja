@@ -1,5 +1,7 @@
 "use server"
 
+import { headers } from "next/headers"
+
 import { currentActor } from "@/lib/auth/session"
 import { claimLesson } from "@/lib/publish/handlers"
 import { getLessonStore } from "@/lib/publish/store"
@@ -21,12 +23,13 @@ export async function keepLesson(
   if (!actor) return { ok: false, message: "Sign in first." }
   if (typeof token !== "string" || !token)
     return { ok: false, message: "This keep link is incomplete." }
+  const h = await headers()
+  const origin =
+    process.env.LEARN_PUBLIC_URL ??
+    `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`
   const reply = await claimLesson(
     { claimToken: token, ownerId: actor.userId },
-    {
-      store: await getLessonStore(),
-      origin: process.env.LEARN_PUBLIC_URL ?? "",
-    }
+    { store: await getLessonStore(), origin }
   )
   if (!reply.body.ok)
     return { ok: false, message: reply.body.message as string }

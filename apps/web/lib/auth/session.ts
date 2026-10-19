@@ -10,8 +10,11 @@ export async function currentActor(): Promise<Actor | null> {
   return getActor(await getAuth(), await headers())
 }
 
-/** A safe place to send the browser after signing in: a site path, never another site. */
+/**
+ * A safe place to send the browser after signing in: a site path, never another site. One slash,
+ * then anything but a slash or backslash (browsers read "/\\evil.com" as "//evil.com").
+ */
 export function safeCallback(value: string | string[] | undefined): string {
   const path = Array.isArray(value) ? value[0] : value
-  return path && /^\/(?!\/)/.test(path) ? path : "/settings"
+  return path && /^\/(?![/\\])/.test(path) ? path : "/settings"
 }
