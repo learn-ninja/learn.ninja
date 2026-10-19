@@ -15,7 +15,10 @@ export const id: Strings = {
   picked: (parts) => `Dipilih: ${parts}`,
   hookNote: "Pertanyaan pertama ini pemanasan. Tidak dihitung dalam skor.",
   minutes: (n) => `${n} mnt`,
-  expires: (h) => `Berakhir dalam ${h} jam`,
+  expires: {
+    days: (n) => `Berakhir dalam ${n} hari`,
+    hours: (n) => `Berakhir dalam ${n} jam`,
+  },
   levels: {
     beginner: "Pemula",
     intermediate: "Menengah",

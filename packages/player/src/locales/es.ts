@@ -19,7 +19,10 @@ export const es: Strings = {
   picked: (parts) => `Elegido: ${parts}`,
   hookNote: "Esta primera es de calentamiento. No cuenta para tu puntuación.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),
-  expires: (h) => p(h, { one: "Caduca en # h", other: "Caduca en # h" }),
+  expires: {
+    days: (n) => p(n, { one: "Caduca en # día", other: "Caduca en # días" }),
+    hours: (n) => p(n, { one: "Caduca en # h", other: "Caduca en # h" }),
+  },
   levels: {
     beginner: "Principiante",
     intermediate: "Intermedio",

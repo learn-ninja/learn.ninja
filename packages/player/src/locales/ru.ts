@@ -19,8 +19,17 @@ export const ru: Strings = {
   picked: (parts) => `Выбрано: ${parts}`,
   hookNote: "Первый вопрос — разминка. Он не влияет на результат.",
   minutes: (n) => p(n, { one: "# мин", other: "# мин" }),
-  expires: (h) =>
-    p(h, { one: "Истекает через # ч", other: "Истекает через # ч" }),
+  expires: {
+    days: (n) =>
+      p(n, {
+        one: "Истекает через # день",
+        few: "Истекает через # дня",
+        many: "Истекает через # дней",
+        other: "Истекает через # дня",
+      }),
+    hours: (n) =>
+      p(n, { one: "Истекает через # ч", other: "Истекает через # ч" }),
+  },
   levels: {
     beginner: "Начальный",
     intermediate: "Средний",

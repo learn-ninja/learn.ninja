@@ -26,7 +26,8 @@ export type Strings = {
   picked: (parts: string) => string
   hookNote: string
   minutes: (n: number) => string
-  expires: (hours: number) => string
+  /** Time left on a published link: days from 24 hours up, hours below. */
+  expires: { days: (n: number) => string; hours: (n: number) => string }
   levels: Record<Level, string>
   objective: string
   warmUp: string

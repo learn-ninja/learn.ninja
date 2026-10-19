@@ -19,8 +19,11 @@ export const hi: Strings = {
   picked: (parts) => `चुना गया: ${parts}`,
   hookNote: "यह पहला सवाल वार्म-अप है। यह आपके स्कोर में नहीं गिना जाता।",
   minutes: (n) => p(n, { one: "# मिनट", other: "# मिनट" }),
-  expires: (h) =>
-    p(h, { one: "# घंटे में समाप्त", other: "# घंटे में समाप्त" }),
+  expires: {
+    days: (n) => p(n, { one: "# दिन में समाप्त", other: "# दिनों में समाप्त" }),
+    hours: (n) =>
+      p(n, { one: "# घंटे में समाप्त", other: "# घंटे में समाप्त" }),
+  },
   levels: { beginner: "शुरुआती", intermediate: "मध्यम", advanced: "उन्नत" },
   objective: "आप कर पाएँगे",
   warmUp: "वार्म-अप",

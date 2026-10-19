@@ -19,8 +19,10 @@ export const tr: Strings = {
   picked: (parts) => `Seçilen: ${parts}`,
   hookNote: "Bu ilk soru bir ısınma. Puanına sayılmaz.",
   minutes: (n) => p(n, { one: "# dk", other: "# dk" }),
-  expires: (h) =>
-    p(h, { one: "# saat içinde sona erer", other: "# saat içinde sona erer" }),
+  expires: {
+    days: (n) => `${n} gün içinde sona erer`,
+    hours: (n) => `${n} saat içinde sona erer`,
+  },
   levels: { beginner: "Başlangıç", intermediate: "Orta", advanced: "İleri" },
   objective: "Şunları yapabileceksin",
   warmUp: "Isınma",

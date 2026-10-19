@@ -19,12 +19,20 @@ export const he: Strings = {
   picked: (parts) => `נבחר: ${parts}`,
   hookNote: "השאלה הראשונה היא חימום. היא לא נספרת בניקוד.",
   minutes: (n) => p(n, { one: "דקה אחת", two: "# דקות", other: "# דק׳" }),
-  expires: (h) =>
-    p(h, {
-      one: "פג תוקף בעוד שעה",
-      two: "פג תוקף בעוד שעתיים",
-      other: "פג תוקף בעוד # שעות",
-    }),
+  expires: {
+    days: (n) =>
+      p(n, {
+        one: "פג תוקף בעוד יום",
+        two: "פג תוקף בעוד יומיים",
+        other: "פג תוקף בעוד # ימים",
+      }),
+    hours: (n) =>
+      p(n, {
+        one: "פג תוקף בעוד שעה",
+        two: "פג תוקף בעוד שעתיים",
+        other: "פג תוקף בעוד # שעות",
+      }),
+  },
   levels: { beginner: "מתחילים", intermediate: "בינוני", advanced: "מתקדם" },
   objective: "תוכלו",
   warmUp: "חימום",

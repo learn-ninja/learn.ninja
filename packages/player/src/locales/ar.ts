@@ -1,5 +1,9 @@
 import type { Strings } from "../strings"
 
+import { plural } from "./plural"
+
+const p = plural("ar")
+
 export const ar: Strings = {
   start: "ابدأ الدرس",
   check: "تحقّق من الإجابة",
@@ -15,7 +19,26 @@ export const ar: Strings = {
   picked: (parts) => `المختار: ${parts}`,
   hookNote: "هذا سؤال تمهيدي، ولا يُحتسب في نتيجتك.",
   minutes: (n) => `${n} دقائق`,
-  expires: (h) => `ينتهي خلال ${h} ساعة`,
+  expires: {
+    days: (n) =>
+      p(n, {
+        zero: "ينتهي خلال # يوم",
+        one: "ينتهي خلال يوم واحد",
+        two: "ينتهي خلال يومين",
+        few: "ينتهي خلال # أيام",
+        many: "ينتهي خلال # يومًا",
+        other: "ينتهي خلال # يوم",
+      }),
+    hours: (n) =>
+      p(n, {
+        zero: "ينتهي خلال # ساعة",
+        one: "ينتهي خلال ساعة واحدة",
+        two: "ينتهي خلال ساعتين",
+        few: "ينتهي خلال # ساعات",
+        many: "ينتهي خلال # ساعة",
+        other: "ينتهي خلال # ساعة",
+      }),
+  },
   levels: { beginner: "مبتدئ", intermediate: "متوسط", advanced: "متقدم" },
   objective: "ستتمكن من",
   warmUp: "تمهيد",

@@ -20,7 +20,11 @@ export const fr: Strings = {
   hookNote:
     "Cette première question est un échauffement. Elle ne compte pas dans ton score.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),
-  expires: (h) => p(h, { one: "Expire dans # h", other: "Expire dans # h" }),
+  expires: {
+    days: (n) =>
+      p(n, { one: "Expire dans # jour", other: "Expire dans # jours" }),
+    hours: (n) => p(n, { one: "Expire dans # h", other: "Expire dans # h" }),
+  },
   levels: {
     beginner: "Débutant",
     intermediate: "Intermédiaire",

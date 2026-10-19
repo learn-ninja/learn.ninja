@@ -20,8 +20,12 @@ export const nl: Strings = {
   hookNote:
     "Deze eerste vraag is een opwarmer. Hij telt niet mee voor je score.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),
-  expires: (h) =>
-    p(h, { one: "Verloopt over # u", other: "Verloopt over # u" }),
+  expires: {
+    days: (n) =>
+      p(n, { one: "Verloopt over # dag", other: "Verloopt over # dagen" }),
+    hours: (n) =>
+      p(n, { one: "Verloopt over # u", other: "Verloopt over # u" }),
+  },
   levels: {
     beginner: "Beginner",
     intermediate: "Gevorderd",
