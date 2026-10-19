@@ -14,7 +14,7 @@ export default defineConfig({
     command: "npm run start",
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
-    // Published lessons land in a local folder, not Upstash.
-    env: { LEARN_FILE_STORE: ".e2e-lessons" },
+    // Published lessons land in a local PGlite database, not Neon.
+    env: { LEARN_PGLITE_DIR: ".e2e-db" },
   },
 })

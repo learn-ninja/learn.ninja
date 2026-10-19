@@ -3,7 +3,7 @@ title: Introduction
 description: learn.ninja turns anything you give your agent into one short, interactive lesson, published as a link.
 ---
 
-learn.ninja is a skill for AI agents. The agent turns a topic, an article, notes, docs, a transcript, or code into one short lesson: usually 5 to 10 minutes of small interactive screens called **bricks**, with feedback on every answer. It checks the lesson and publishes it to a link like `https://learn.ninja/l/how-compound-interest-works-k3x9a2mq`, which anyone can open in a browser. Free, no account. Links last 24 hours.
+learn.ninja is a skill for AI agents. The agent turns a topic, an article, notes, docs, a transcript, or code into one short lesson: usually 5 to 10 minutes of small interactive screens called **bricks**, with feedback on every answer. It checks the lesson and publishes it to a link like `https://learn.ninja/l/how-compound-interest-works-k3x9a2mq`, which anyone can open in a browser. Free, no account. Links last 7 days.
 
 ## Install
 

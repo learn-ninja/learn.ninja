@@ -65,7 +65,7 @@ ${SITE.name} is a skill for AI agents. The agent turns what the user gives it (a
 ${INSTALL_COMMAND}
 \`\`\`
 
-Then read the skill's SKILL.md and follow it: write the lesson, run \`validate\` until it passes, then \`publish\`, and give the user the link. Lessons are free, need no account, and last 24 hours.
+Then read the skill's SKILL.md and follow it: write the lesson, run \`validate\` until it passes, then \`publish\`, and give the user the link. Lessons are free, need no account, and last 7 days.
 
 ## Docs
 

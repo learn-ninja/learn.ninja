@@ -1,0 +1,9 @@
+{
+  "extends": "@workspace/typescript-config/base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["src", "scripts", "drizzle.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

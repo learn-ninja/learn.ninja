@@ -660,7 +660,7 @@ export function expiredImage() {
         <div style={{ ...column, flex: 1 }}>
           <Headline
             title="This lesson has expired"
-            text="Lessons last 24 hours. Ask for a fresh link."
+            text="Lessons last 7 days. Ask for a fresh link."
           />
         </div>
         <Mark size={220} color={C.border} />

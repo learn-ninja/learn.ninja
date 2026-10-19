@@ -12,6 +12,7 @@ Planning doc (decisions, lesson spec, tech stack, test lessons): https://claude.
 - `docs/`: the docs pages as Markdown/MDX, outside `apps/` so anyone can contribute. Fumadocs (`fumadocs-core` + `fumadocs-mdx`, headless: our own shadcn UI, like ui.shadcn.com) reads them through `apps/web/source.config.ts`. Each folder's `meta.json` orders the sidebar (`"..."` picks up new files); the docs render as one page at `/docs`, each file a section reached by anchor, so `##` headings must be unique across files; the sidebar's sections are the separators in `docs/meta.json`, with each file's headings under them (`apps/web/lib/docs-nav.ts`); `<BrickPreview lesson="…" brick="…" />` embeds a playable brick from `examples/`
 - `apps/storybook`: Storybook 10 (Vite) for the player and UI components; stories live next to components as `*.stories.tsx`
 - `packages/ui`: shadcn/ui components on React Aria (`--base aria`), shared Tailwind styles and theme
+- `packages/db`: the Postgres schema (Drizzle) and its SQL migrations
 - `packages/spec`: the lesson spec v0.3: Zod schema, exported JSON Schema, validation rules, and the 0.2 → 0.3 upgrade (single source of truth)
 - `packages/player`: React components for every lesson screen and brick
 - `packages/cli`: the `learn` command (sync, validate, publish, schema) the skill runs; bundled into `skills/learn/scripts/learn.mjs`
@@ -59,8 +60,8 @@ A lesson is made of **bricks**, one per screen: `concept` bricks (theory) and qu
 
 ## Publishing
 
-- Storage goes through `LessonStore` (`apps/web/lib/publish/store.ts`): Upstash Redis when `UPSTASH_REDIS_REST_URL`/`TOKEN` (or Vercel's `KV_REST_API_URL`/`TOKEN`) are set, otherwise a local folder (`apps/web/.data/lessons`) in development.
-- Lessons expire 24 hours after publishing; updates keep the expiry. Edit tokens are only stored hashed.
+- Storage goes through `LessonStore` (`apps/web/lib/publish/store.ts`): Postgres through Drizzle, with the schema and migrations in `packages/db`. Neon (`DATABASE_URL`, migrated by the web app's build) in production; PGlite in `apps/web/.data/pglite` in development and in memory in tests, migrated on first use. After changing `packages/db/src/schema.ts`, run `npm run generate -w @workspace/db` and commit the migration. Upstash Redis is only for rate limits.
+- Lessons expire 7 days after publishing; updates keep the expiry. `/api/cron/expire` deletes expired rows daily (Vercel Cron, `CRON_SECRET`). Edit tokens are only stored hashed.
 - `prepareLesson()` runs at publish time: KaTeX, Shiki, and Tailwind utilities for the lesson's HTML. The result is stored with the lesson.
 - Guide, example, and checker changes need no version bump: they go live on deploy through `sync` and `/api/validate`. Bump `LATEST_SKILL_VERSION` (`apps/web/lib/skill-version.ts`) and `SKILL_VERSION` (`packages/cli/src/cli.ts`) together only when the CLI or the installed `SKILL.md` changes; older installs are then told to run `npx skills add https://learn.ninja -g`. Raise `MIN_SKILL_VERSION` only when a guide relies on new CLI behavior: `sync` refuses to run below it.
 
@@ -72,4 +73,4 @@ A lesson is made of **bricks**, one per screen: `concept` bricks (theory) and qu
 
 ## v1 scope reminders
 
-No accounts (progress is kept in the browser only, per lesson page), lessons expire after 24 hours, no typed answers (word chips instead), no `number` bricks (multiple choice instead), no images. Multiple languages and right-to-left matter from day one.
+No accounts (progress is kept in the browser only, per lesson page), lessons expire after 7 days, no typed answers (word chips instead), no `number` bricks (multiple choice instead), no images. Multiple languages and right-to-left matter from day one.

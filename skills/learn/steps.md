@@ -1,6 +1,6 @@
 # Learn: the steps
 
-You write one lesson as a JSON file that follows the lesson spec (v0.4), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links expire after 24 hours.
+You write one lesson as a JSON file that follows the lesson spec (v0.4), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links expire after 7 days.
 
 Every path below is relative to the folder this file is in (`.learn/skill/` after a sync, or the installed skill's folder). `<skill-folder>` is the installed skill's folder, the one `SKILL.md` is in; the commands run from there.
 
@@ -23,7 +23,7 @@ Every path below is relative to the folder this file is in (`.learn/skill/` afte
    node <skill-folder>/scripts/learn.mjs publish lesson.json
    ```
    Publishing needs network access.
-6. **Tell the user** the link and that it expires in 24 hours. Then, in one line, the three choices you made: level, size, and reading age (e.g. "Beginner · standard · adult"), and that you can remake it with any of them changed. For a path, list the lessons still to make and offer to make the next one; make it only when the user asks. To change a lesson, edit the same file and run `publish` again: it updates the same link (the edit token is saved in `.learn/state.json`; don't delete or share that file). Use `publish lesson.json --new` only if the user wants a separate copy with a new link.
+6. **Tell the user** the link and that it expires in 7 days. Then, in one line, the three choices you made: level, size, and reading age (e.g. "Beginner · standard · adult"), and that you can remake it with any of them changed. For a path, list the lessons still to make and offer to make the next one; make it only when the user asks. To change a lesson, edit the same file and run `publish` again: it updates the same link (the edit token is saved in `.learn/state.json`; don't delete or share that file). Use `publish lesson.json --new` only if the user wants a separate copy with a new link.
 
 If a command prints that a newer version of the skill is available, tell the user the update command it shows.
 

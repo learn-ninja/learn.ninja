@@ -171,7 +171,7 @@ export async function publishLesson(
     createdAt: now,
     expiresAt: now + LESSON_TTL_SECONDS * 1000,
   }
-  await deps.store.create(record, LESSON_TTL_SECONDS)
+  await deps.store.create(record)
   return {
     status: 201,
     body: {
@@ -179,7 +179,7 @@ export async function publishLesson(
       id: record.id,
       url: deps.origin + lessonPath(record.slug, record.id),
       editToken,
-      expiresAt: new Date(record.expiresAt).toISOString(),
+      expiresAt: isoOrNull(record.expiresAt),
       spec: record.spec,
       skill,
     },
@@ -241,9 +241,28 @@ export async function updateLesson(
       ok: true,
       id: record.id,
       url: deps.origin + lessonPath(record.slug, record.id),
-      expiresAt: new Date(record.expiresAt).toISOString(),
+      expiresAt: isoOrNull(record.expiresAt),
       spec: record.spec,
       skill,
     },
   }
+}
+
+/** Whether a request carries the CRON_SECRET as a bearer token, as Vercel Cron sends it. Refuses everything when no secret is set. */
+export function isCronRequest(
+  authorization: string | null,
+  secret = process.env.CRON_SECRET
+): boolean {
+  if (!secret || !authorization?.startsWith("Bearer ")) return false
+  return tokenMatches(authorization.slice(7), hashToken(secret))
+}
+
+/** GET /api/cron/expire: deletes lessons whose expiry has passed. */
+export async function expireLessons(deps: Pick<Deps, "store">): Promise<Reply> {
+  const deleted = await deps.store.deleteExpired()
+  return { status: 200, body: { ok: true, deleted } }
+}
+
+function isoOrNull(ms: number | null) {
+  return ms === null ? null : new Date(ms).toISOString()
 }

@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         <li>
           <strong>Published lessons.</strong> When an agent publishes a lesson,
           its title and content are stored on our servers so the link works.
-          Anyone with the link can read it. Lessons are deleted 24 hours after
+          Anyone with the link can read it. Lessons are deleted 7 days after
           publishing. The token that allows updating a lesson is stored only as
           a hash.
         </li>

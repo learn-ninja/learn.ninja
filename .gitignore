@@ -52,7 +52,7 @@ next-env.d.ts
 # browser tests
 playwright-report/
 test-results/
-apps/web/.e2e-lessons/
+apps/web/.e2e-db/
 
 # throwaway test builds (kept locally for reference)
 spikes/

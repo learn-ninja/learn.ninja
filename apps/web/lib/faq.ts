@@ -24,7 +24,7 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How long do lessons last?",
-    a: "24 hours for now. Ask your agent to publish again for a fresh link.",
+    a: "7 days for now. Ask your agent to publish again for a fresh link.",
   },
   {
     q: "Can I change a lesson after publishing?",

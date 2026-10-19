@@ -20,7 +20,7 @@ export default function TermsPage() {
       <h2>The service</h2>
       <p>
         {SITE.name} turns content into short interactive lessons and hosts them
-        at a shareable link for 24 hours. It is free, needs no account, and is
+        at a shareable link for 7 days. It is free, needs no account, and is
         provided as is, without any warranty. It may change or stop at any
         time.
       </p>
@@ -42,7 +42,7 @@ export default function TermsPage() {
           sites.
         </li>
         <li>
-          Lessons are deleted 24 hours after publishing. We may remove a lesson
+          Lessons are deleted 7 days after publishing. We may remove a lesson
           earlier if it breaks these terms or we are asked to by someone with a
           valid claim.
         </li>
