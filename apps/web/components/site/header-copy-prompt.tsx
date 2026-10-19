@@ -41,7 +41,7 @@ export function HeaderCopyPrompt({
         !shown && "pointer-events-none opacity-0 motion-safe:translate-y-2"
       )}
     >
-      <CopyButton text={AGENT_PROMPT} size="sm">
+      <CopyButton text={AGENT_PROMPT} variant="ghost" size="sm">
         <span className="sm:hidden">Copy prompt</span>
         <span className="max-sm:hidden">Copy prompt for agent</span>
       </CopyButton>
