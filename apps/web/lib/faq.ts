@@ -20,11 +20,11 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Do I need an account?",
-    a: "No. Not to make lessons, and not to play them.",
+    a: "No. Not to make lessons, and not to play them. Lessons last 7 days. If you'd like one to stay, your agent can save it to your email in a minute: say so, and it signs you in with a code.",
   },
   {
     q: "How long do lessons last?",
-    a: "7 days for now. Ask your agent to publish again for a fresh link.",
+    a: "7 days, or forever once saved to an account.",
   },
   {
     q: "Can I change a lesson after publishing?",

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms" updated="2026-10-09">
+    <LegalPage title="Terms" updated="2026-10-19">
       <p>
         By using {SITE.name}, its skill, or its API, you agree to these terms.
         They are written in plain language on purpose.
@@ -20,16 +20,15 @@ export default function TermsPage() {
       <h2>The service</h2>
       <p>
         {SITE.name} turns content into short interactive lessons and hosts them
-        at a shareable link for 7 days. It is free, needs no account, and is
-        provided as is, without any warranty. It may change or stop at any
-        time.
+        at a shareable link. It is free, needs no account, and is provided as
+        is, without any warranty. It may change or stop at any time.
       </p>
 
       <h2>Your lessons</h2>
       <ul>
         <li>
           You keep ownership of the content you publish. You give us permission
-          to store and show it at its link until it expires.
+          to store and show it at its link for as long as it is kept.
         </li>
         <li>
           You are responsible for what you publish. Only publish content you
@@ -42,9 +41,32 @@ export default function TermsPage() {
           sites.
         </li>
         <li>
-          Lessons are deleted 7 days after publishing. We may remove a lesson
-          earlier if it breaks these terms or we are asked to by someone with a
-          valid claim.
+          Lessons published without an account are deleted 7 days after
+          publishing. Lessons saved to an account stay until you delete them or
+          the account. We may remove a lesson earlier if it breaks these terms
+          or we are asked to by someone with a valid claim.
+        </li>
+      </ul>
+
+      <h2>Accounts</h2>
+      <ul>
+        <li>
+          An account is optional. It exists so lessons can be kept and credited
+          to you. You can sign in with GitHub or with a code sent to your
+          email.
+        </li>
+        <li>
+          Keep your API keys private. Anything published with your key counts
+          as published by you. Revoke a key you no longer trust from your
+          settings.
+        </li>
+        <li>
+          Pick a handle that is yours to use. We may change or reclaim a handle
+          that impersonates someone or is offensive.
+        </li>
+        <li>
+          We may suspend an account that breaks these terms. Its lessons may
+          be removed with it.
         </li>
       </ul>
 

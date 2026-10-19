@@ -39,12 +39,47 @@ Checks the lesson, then publishes it and prints the link. If this lesson was pub
 node scripts/learn.mjs publish lesson.json
 ```
 
-The edit token for each published lesson is saved in `.learn/state.json` next to where you run it. Don't delete or share that file. The tool adds a `.gitignore` to `.learn/` so none of it gets committed.
+An anonymous lesson lasts 7 days; the tool says so and how to keep it. Once you're signed in (`login`), every lesson you publish is saved to your account and never expires.
+
+The edit token for each published lesson is saved in `.learn/state.json` next to where you run it, along with the claim token that `login` uses to keep it. Don't delete or share that file. The tool adds a `.gitignore` to `.learn/` so none of it gets committed.
 
 Add `--new` to publish a separate copy with a new link:
 
 ```bash
 node scripts/learn.mjs publish lesson.json --new
+```
+
+### `login`
+
+Signs in with a six-digit code sent to your email, then keeps every lesson published from this folder, so they no longer expire. No password, no browser.
+
+```bash
+node scripts/learn.mjs login
+```
+
+At a terminal it asks for the email and the code. From an agent's shell, which can't ask, give the email first; it sends the code and says to run again with it:
+
+```bash
+node scripts/learn.mjs login --email you@example.com
+node scripts/learn.mjs login --email you@example.com --code 123456
+```
+
+Codes work for 5 minutes and three tries. The tool saves an API key for this machine in `~/.config/learn/credentials` (readable only by you; `$XDG_CONFIG_HOME/learn/credentials` if that's set). From then on, `publish` sends the key and lessons are saved to your account. You can also set `LEARN_API_KEY` instead, with a key made at [learn.ninja/settings](https://learn.ninja/settings).
+
+### `logout`
+
+Forgets the saved key and revokes it on the server. Lessons already saved to your account stay there.
+
+```bash
+node scripts/learn.mjs logout
+```
+
+### `whoami`
+
+Prints the signed-in email and handle, or says to sign in.
+
+```bash
+node scripts/learn.mjs whoami
 ```
 
 ### `schema`
