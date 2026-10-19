@@ -1,12 +1,14 @@
-import { mkdtempSync, readFileSync } from "node:fs"
-import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { readFileSync } from "node:fs"
 
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeAll, beforeEach, describe, expect, it } from "vitest"
+
+import { connectPglite, lesson, type Db } from "@workspace/db"
 
 import {
   checkLesson,
   compareVersions,
+  expireLessons,
+  isCronRequest,
   LATEST_SKILL_VERSION,
   publishLesson,
   updateLesson,
@@ -21,18 +23,25 @@ import {
   tokenMatches,
 } from "./ids"
 import { MemoryRateLimiter } from "./rate-limit"
-import { FileLessonStore, LESSON_TTL_SECONDS } from "./store"
+import { LESSON_TTL_SECONDS, PostgresLessonStore } from "./store"
 
 const example = (file: string) =>
   readFileSync(new URL(`../../../../examples/${file}`, import.meta.url), "utf8")
 const buttons = example("button-hierarchy.json")
+
+// One in-memory Postgres for the file, with the real migrations. Lesson ids are random, so tests
+// don't see each other's rows.
+let db: Db
+beforeAll(async () => {
+  db = await connectPglite()
+}, 30_000)
 
 let deps: Deps
 let now = 1_800_000_000_000
 beforeEach(() => {
   now = 1_800_000_000_000
   deps = {
-    store: new FileLessonStore(mkdtempSync(join(tmpdir(), "learn-test-"))),
+    store: new PostgresLessonStore(db, () => now),
     limiter: new MemoryRateLimiter(100),
     origin: "https://learn.test",
     now: () => now,
@@ -66,7 +75,7 @@ describe("links and tokens", () => {
 })
 
 describe("publishing", () => {
-  it("publishes a valid lesson with a link, an edit token, and a 24-hour expiry", async () => {
+  it("publishes a valid lesson with a link, an edit token, and a 7-day expiry", async () => {
     const reply = await publishLesson(
       { text: buttons, client: "1.2.3.4", skillVersion: LATEST_SKILL_VERSION },
       deps
@@ -171,16 +180,40 @@ describe("publishing", () => {
     ).toBe(201)
   })
 
-  it("expires lessons after 24 hours", async () => {
+  it("expires lessons after 7 days", async () => {
+    expect(LESSON_TTL_SECONDS).toBe(7 * 24 * 60 * 60)
     const { body } = await publishLesson({ text: buttons, client: "x" }, deps)
-    now += LESSON_TTL_SECONDS * 1000 + 1
-    const realNow = Date.now
-    Date.now = () => now
-    try {
-      expect(await deps.store.get(body.id as string)).toBeNull()
-    } finally {
-      Date.now = realNow
-    }
+    now += LESSON_TTL_SECONDS * 1000 - 1
+    expect(await deps.store.get(body.id as string)).not.toBeNull()
+    now += 1
+    expect(await deps.store.get(body.id as string)).toBeNull()
+  })
+})
+
+describe("the expiry sweep", () => {
+  it("sweeps expired lessons and keeps live ones", async () => {
+    const old = await publishLesson({ text: buttons, client: "x" }, deps)
+    now += LESSON_TTL_SECONDS * 1000 - 60_000
+    const fresh = await publishLesson({ text: buttons, client: "x" }, deps)
+    now += 60_000
+    const reply = await expireLessons(deps)
+    expect(reply.status).toBe(200)
+    expect(reply.body.deleted).toBeGreaterThanOrEqual(1)
+    const ids = (await db.select({ id: lesson.id }).from(lesson)).map(
+      (row) => row.id
+    )
+    expect(ids).not.toContain(old.body.id)
+    expect(ids).toContain(fresh.body.id)
+    expect(await deps.store.get(fresh.body.id as string)).not.toBeNull()
+  })
+
+  it("only runs with the cron secret", () => {
+    expect(isCronRequest("Bearer s3cret", "s3cret")).toBe(true)
+    expect(isCronRequest("Bearer guess", "s3cret")).toBe(false)
+    expect(isCronRequest("s3cret", "s3cret")).toBe(false)
+    expect(isCronRequest(null, "s3cret")).toBe(false)
+    // No secret configured: nobody can run it.
+    expect(isCronRequest("Bearer ", "")).toBe(false)
   })
 })
 

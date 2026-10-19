@@ -31,7 +31,7 @@ A topic with several ideas that each deserve teaching becomes a path: 2–6 less
 
 The agent plans the whole path, then makes and publishes only lesson 1, and lists the rest. Ask for the next one when you're ready: spreading lessons over several sessions teaches more than doing them back to back. It keeps the plan in a `path.md` file next to the lessons, each lesson in its own folder with its own link.
 
-Each lesson's link expires 24 hours after it's published, like any lesson, so an earlier lesson in a path may be gone by the time you finish a later one.
+Each lesson's link expires 7 days after it's published, like any lesson, so an earlier lesson in a path may be gone by the time you finish a later one.
 
 If you ask for one lesson on something big, you get one lesson on its central idea, with the rest named as follow-ups.
 

@@ -14,7 +14,7 @@
     "favicon": "node scripts/build-favicon.mjs",
     "share": "tsx --tsconfig scripts/tsconfig.json scripts/build-share-images.tsx",
     "predev": "npm run visuals:css",
-    "prebuild": "npm run visuals:css",
+    "prebuild": "npm run visuals:css && npm run migrate -w @workspace/db",
     "test": "vitest run",
     "postinstall": "fumadocs-mdx",
     "e2e": "playwright test"
@@ -22,9 +22,11 @@
   "dependencies": {
     "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.39.0",
+    "@workspace/db": "^0.0.0",
     "@workspace/player": "^0.0.0",
     "@workspace/spec": "^0.0.0",
     "@workspace/ui": "*",
+    "drizzle-orm": "0.45.4",
     "fumadocs-core": "^16.10.5",
     "fumadocs-mdx": "^15.0.12",
     "katex": "^0.19.0",

@@ -12,8 +12,8 @@ import { getLessonStore, type StoredLesson } from "./publish/store"
 export const loadPublished = cache(
   async (param: string): Promise<StoredLesson | null> => {
     const id = idFromParam(param)
-    const record = id ? await getLessonStore().get(id) : null
-    // Lessons published before spec 0.3 are still live for up to 24 hours.
+    const record = id ? await (await getLessonStore()).get(id) : null
+    // Lessons published before spec 0.3 may still be live.
     return record
       ? { ...record, lesson: upgradeLesson(record.lesson) as Lesson }
       : null

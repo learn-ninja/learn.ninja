@@ -70,7 +70,14 @@ function visualsCssUrl(): string {
 
 const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_VISUALS_CSS: visualsCssUrl() },
-  transpilePackages: ["@workspace/ui", "@workspace/player", "@workspace/spec"],
+  transpilePackages: [
+    "@workspace/ui",
+    "@workspace/player",
+    "@workspace/spec",
+    "@workspace/db",
+  ],
+  // PGlite (lesson storage in development) loads its WebAssembly and data files from its own folder.
+  serverExternalPackages: ["@electric-sql/pglite"],
   // prepareLesson() reads Tailwind's own stylesheets at runtime to compile each lesson's visuals CSS,
   // so they must ship with the server functions that publish and render lessons.
   outputFileTracingIncludes: {

@@ -11,7 +11,7 @@ export function clientKey(req: Request): string {
   )
 }
 
-export function depsFor(req: Request): Deps {
+export async function depsFor(req: Request): Promise<Deps> {
   const origin = process.env.LEARN_PUBLIC_URL ?? new URL(req.url).origin
-  return { store: getLessonStore(), limiter: getRateLimiter(), origin }
+  return { store: await getLessonStore(), limiter: getRateLimiter(), origin }
 }

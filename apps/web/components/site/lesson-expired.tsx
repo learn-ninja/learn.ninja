@@ -14,7 +14,7 @@ export function LessonExpired() {
           This lesson isn&apos;t available
         </h1>
         <p className="text-muted-foreground">
-          Lessons expire 24 hours after they&apos;re published. Ask whoever
+          Lessons expire 7 days after they&apos;re published. Ask whoever
           shared it to publish it again for a new link.
         </p>
       </div>

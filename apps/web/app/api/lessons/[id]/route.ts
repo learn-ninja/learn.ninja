@@ -19,7 +19,7 @@ export async function PUT(
         client: clientKey(req),
         skillVersion: req.headers.get("x-learn-skill-version"),
       },
-      depsFor(req)
+      await depsFor(req)
     )
   )
 }

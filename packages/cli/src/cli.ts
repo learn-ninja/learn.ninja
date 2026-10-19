@@ -16,7 +16,7 @@ import {
 // the current guides into .learn/skill/ (text only, never code), and `validate` checks the lesson on the
 // server. The copies that came with the install are the fallback when the server can't be reached.
 
-export const SKILL_VERSION = "0.9.0"
+export const SKILL_VERSION = "0.10.0"
 export const DEFAULT_API_URL = "https://learn.ninja"
 /** Where `sync` puts the guides, relative to the current folder. */
 export const SYNC_DIR = ".learn/skill"
@@ -471,7 +471,7 @@ async function publish(
     () =>
       [
         `${live ? "Updated" : "Published"}: ${record.url}`,
-        `Expires: ${new Date(record.expiresAt).toUTCString()} (24 hours after first publish).`,
+        `Expires: ${new Date(record.expiresAt).toUTCString()} (7 days after first publish).`,
         `Saved the edit token in .learn/state.json, so publishing ${o.file} again updates this same link.`,
         updateLine(skill),
       ]

@@ -6,7 +6,7 @@ import { shareMetadata } from "@/lib/metadata"
 import { OG_SIZE } from "@/lib/og"
 import { loadPublished } from "@/lib/published"
 
-// A published lesson, at /l/{slug}-{id}. Lessons expire 24 hours after they're published.
+// A published lesson, at /l/{slug}-{id}. Lessons expire 7 days after they're published.
 
 type Props = {
   params: Promise<{ slugId: string }>
@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 const EXPIRED_DESCRIPTION =
-  "Lessons expire 24 hours after they're published. Ask whoever shared it for a new link."
+  "Lessons expire 7 days after they're published. Ask whoever shared it for a new link."
 
 export default async function PublishedLessonPage({
   params,
@@ -60,7 +60,7 @@ export default async function PublishedLessonPage({
         lesson={record.lesson}
         prepared={record.prepared}
         uiLanguage={ui}
-        expiresAt={record.expiresAt}
+        expiresAt={record.expiresAt ?? undefined}
         progressKey={`l/${slugId}`}
       />
     </div>

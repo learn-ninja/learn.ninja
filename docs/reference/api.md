@@ -70,4 +70,4 @@ Errors return `"ok": false` with an `error` code and a `message`.
 ## Limits
 
 - 20 publishes or updates an hour from one place.
-- Lessons expire 24 hours after they're first published.
+- Lessons expire 7 days after they're first published.

@@ -64,7 +64,7 @@ A path is 2–6 lessons, each a complete lesson of its own, ordered from simple 
 3. **Link the lessons.** Set each lesson's `wrapup.next` to the next lesson's title. A later lesson can't assume the learner remembers an earlier one: if it needs an earlier idea, restate it in a sentence in its first concept brick.
 4. **Report the path.** After publishing lesson 1, list the remaining lessons by title and offer to make the next one. When the user asks, read `path.md`, write and publish the next lesson, and update its status.
 
-Each lesson's link expires 24 hours after it's published, like any lesson.
+Each lesson's link expires 7 days after it's published, like any lesson.
 
 ## Reading age
 
