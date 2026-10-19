@@ -2,6 +2,8 @@ import { createMcpHandler } from "mcp-handler"
 import type { McpServer } from "@modelcontextprotocol/server"
 import { z } from "zod"
 
+import { LIMITS } from "@workspace/spec"
+
 import {
   checkLesson,
   publishLesson,
@@ -9,9 +11,11 @@ import {
   type Deps,
   type Reply,
 } from "../publish/handlers"
+import { tokenMatches } from "../publish/ids"
 import type { RateLimiter } from "../publish/rate-limit"
 import { clientKey } from "../publish/request"
 import { StorageNotConfiguredError } from "../publish/store"
+import { applyPatches, PatchError, type DraftStore, type Patch } from "./drafts"
 
 // The learn.ninja MCP server at /mcp: the guide and the publish API as tools, for chat apps that
 // can't run the skill's CLI. No accounts: an anonymous lesson's claimUrl is how a user keeps it.
@@ -21,15 +25,26 @@ export interface McpDeps extends Deps {
   validateLimiter: RateLimiter
   /** The skill's synced files (steps, guides, levels, schema), by path. */
   guide: () => { files: Record<string, string> }
+  /** Lessons sent to the tools, kept so later calls can send patches. */
+  drafts: DraftStore
 }
 
 const INSTRUCTIONS =
-  "learn.ninja turns anything into one short, interactive lesson with a shareable link. Call `get_guide` with `steps` before writing a lesson, then follow it."
+  "learn.ninja turns anything into one short, interactive lesson with a shareable link. Call `get_guide` once before writing a lesson: it returns the whole guide, then follow its steps."
 
 const LEVELS = ["beginner", "intermediate", "advanced"]
 
 /** Which guide files each `get_guide` section returns. */
 export const GUIDE_SECTIONS = {
+  // Everything a lesson needs, in one call: each extra round trip costs the model a turn.
+  all: [
+    "steps.md",
+    "reference/planning.md",
+    "reference/teaching-guide.md",
+    "reference/lesson-format.md",
+    "levels/index.md",
+    ...LEVELS.map((l) => `levels/${l}.md`),
+  ],
   steps: ["steps.md"],
   planning: ["reference/planning.md"],
   teaching: ["reference/teaching-guide.md"],
@@ -41,16 +56,53 @@ export const GUIDE_SECTIONS = {
 type Section = keyof typeof GUIDE_SECTIONS
 const SECTIONS = Object.keys(GUIDE_SECTIONS) as [Section, ...Section[]]
 
-const lessonText = z
-  .string()
-  .describe("The whole lesson file as JSON text, following the lesson spec.")
+const PATH_HELP =
+  "A path in the checker's syntax, e.g. `bricks[2].options[0].feedback`: an issue's `path` works as is."
+
+const patch = z.discriminatedUnion("op", [
+  z.object({
+    op: z.literal("set"),
+    path: z.string().describe(PATH_HELP),
+    value: z
+      .unknown()
+      .describe("The new value: any JSON, such as a string or a whole brick."),
+  }),
+  z.object({
+    op: z.literal("insert"),
+    path: z.string().describe(`${PATH_HELP} The new item goes at that index.`),
+    value: z.unknown().describe("The new array item."),
+  }),
+  z.object({ op: z.literal("remove"), path: z.string().describe(PATH_HELP) }),
+])
+
+/** The ways a tool can be given a lesson: the whole file, or a draft and the changes to it. */
+const lessonInput = {
+  lesson: z
+    .string()
+    .optional()
+    .describe(
+      "The whole lesson file as JSON text, following the lesson spec. Send it once; after that, use `draftId` and `patches`."
+    ),
+  draftId: z
+    .string()
+    .optional()
+    .describe(
+      "A draft that `validate_lesson`, `publish_lesson`, or `update_lesson` returned, instead of `lesson`."
+    ),
+  patches: z
+    .array(patch)
+    .optional()
+    .describe(
+      "Changes to apply to the draft, in order: `set` a value, `insert` an array item, or `remove` one. Fix every issue in one call."
+    ),
+}
 
 /** Builds the /mcp request handler. Takes its dependencies so tests can pass an in-memory store. */
 export function createLearnMcp(
   deps: McpDeps
 ): (req: Request) => Promise<Response> {
   return createMcpHandler((server) => registerTools(server, deps), {
-    serverInfo: { name: "learn.ninja", version: "1.0.0" },
+    serverInfo: { name: "learn.ninja", version: "1.1.0" },
     instructions: INSTRUCTIONS,
   })
 }
@@ -61,13 +113,13 @@ function registerTools(server: McpServer, deps: McpDeps) {
     {
       title: "Read the lesson guide",
       description:
-        "Returns part of the guide for writing a learn.ninja lesson. Start with `steps` (the default): it says when to read each other section.",
+        "Returns the guide for writing a learn.ninja lesson. Call it once with `all` (the default) before writing: the steps, planning, teaching, format, and level guides together.",
       inputSchema: z.object({
         section: z
           .enum(SECTIONS)
-          .default("steps")
+          .default("all")
           .describe(
-            "steps: what to do, in order. planning: scope, size, reading age. teaching: how to teach, which brick to use, visuals. format: every field of the lesson file. levels: picking the level, and each level's guide. schema: the formal JSON Schema."
+            "all: every guide but the schema. steps: what to do, in order. planning: scope, size, reading age. teaching: how to teach, which brick to use, visuals. format: every field of the lesson file. levels: picking the level, and each level's guide. schema: the formal JSON Schema, rarely needed."
           ),
       }),
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -100,17 +152,22 @@ function registerTools(server: McpServer, deps: McpDeps) {
     {
       title: "Check a lesson",
       description:
-        "Checks a lesson file with the rules publishing uses, without storing anything. Fix every issue it reports and check again until it passes.",
-      inputSchema: z.object({ lesson: lessonText }),
-      annotations: { readOnlyHint: true, openWorldHint: false },
+        "Checks a lesson with the rules publishing uses, without publishing it. Usually skip this and call `publish_lesson`, which runs the same checks. Returns a `draftId` either way: fix the issues by sending `draftId` and `patches`, not the whole lesson.",
+      inputSchema: z.object(lessonInput),
+      annotations: { readOnlyHint: false, openWorldHint: false },
     },
-    ({ lesson }, ctx) =>
-      toolResult(
-        () =>
-          checkLesson(
-            { text: lesson, client: clientOf(ctx) },
+    (input, ctx) =>
+      withDraft(
+        deps,
+        input,
+        null,
+        async (text) => {
+          const reply = await checkLesson(
+            { text, client: clientOf(ctx) },
             { limiter: deps.validateLimiter }
-          ),
+          )
+          return { reply, keepDraft: true }
+        },
         ["ok", "spec"]
       )
   )
@@ -120,8 +177,8 @@ function registerTools(server: McpServer, deps: McpDeps) {
     {
       title: "Publish a lesson",
       description:
-        "Publishes a lesson and returns its link (`url`), which lasts 7 days. Keep the `id` and `editToken` to change it later with `update_lesson`. `claimUrl` keeps the lesson in a learn.ninja account: give it to the user only when they ask to keep the lesson.",
-      inputSchema: z.object({ lesson: lessonText }),
+        "Checks and publishes a lesson, and returns its link (`url`), which lasts 7 days. If the check fails, nothing is published: it returns the issues and a `draftId`, so call it again with `draftId` and `patches` that fix every issue, not the whole lesson. Keep the `id` and `editToken` to change it later with `update_lesson`. `claimUrl` keeps the lesson in a learn.ninja account: give it to the user only when they ask to keep the lesson.",
+      inputSchema: z.object(lessonInput),
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -129,13 +186,26 @@ function registerTools(server: McpServer, deps: McpDeps) {
         openWorldHint: true,
       },
     },
-    ({ lesson }, ctx) =>
-      toolResult(
-        () =>
-          publishLesson(
-            { text: lesson, client: clientOf(ctx), ownerId: null },
+    (input, ctx) =>
+      withDraft(
+        deps,
+        input,
+        null,
+        async (text) => {
+          const client = clientOf(ctx)
+          // Check first against the looser limit, so fixing a lesson doesn't use up publishes.
+          const checked = await checkLesson(
+            { text, client },
+            { limiter: deps.validateLimiter }
+          )
+          if (checked.body.ok !== true)
+            return { reply: checked, keepDraft: true }
+          const reply = await publishLesson(
+            { text, client, ownerId: null },
             deps
-          ),
+          )
+          return { reply, keepDraft: reply.body.ok !== true }
+        },
         ["ok", "id", "url", "editToken", "claimUrl", "expiresAt"]
       )
   )
@@ -145,13 +215,13 @@ function registerTools(server: McpServer, deps: McpDeps) {
     {
       title: "Update a published lesson",
       description:
-        "Replaces a published lesson with a new version at the same link. Pass the `id` and `editToken` that `publish_lesson` returned.",
+        "Replaces a published lesson with a new version at the same link. Pass the `id` and `editToken` that `publish_lesson` returned, and either `patches` alone (applied to the published lesson: the quickest way to change a few things), the whole `lesson`, or a `draftId` with `patches`. If the check fails, it returns the issues and a `draftId` to patch.",
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z
           .string()
           .describe("The secret edit token, from `publish_lesson`."),
-        lesson: lessonText,
+        ...lessonInput,
       }),
       annotations: {
         readOnlyHint: false,
@@ -160,16 +230,133 @@ function registerTools(server: McpServer, deps: McpDeps) {
         openWorldHint: true,
       },
     },
-    ({ id, editToken, lesson }, ctx) =>
-      toolResult(
-        () =>
-          updateLesson(
-            { id, editToken, text: lesson, client: clientOf(ctx) },
-            deps
-          ),
+    async ({ id, editToken, ...input }, ctx) => {
+      const client = clientOf(ctx)
+      const update = (text: string) =>
+        updateLesson({ id, editToken, text, client }, deps)
+      // Patches alone change the published lesson. Read it only for the right token, so a wrong
+      // one gets updateLesson's own not_found or unauthorized reply.
+      let base: string | null = null
+      if (!input.lesson && !input.draftId && input.patches) {
+        const existing = await deps.store.get(id)
+        if (!existing || !tokenMatches(editToken, existing.editTokenHash))
+          return toolResult(() => update(""), [])
+        base = JSON.stringify(existing.lesson)
+      }
+      return withDraft(
+        deps,
+        input,
+        base,
+        async (text) => {
+          const reply = await update(text)
+          return { reply, keepDraft: reply.body.ok !== true }
+        },
         ["ok", "id", "url", "expiresAt"]
       )
+    }
   )
+}
+
+interface LessonInput {
+  lesson?: string
+  draftId?: string
+  patches?: Patch[]
+}
+
+/**
+ * Works out the lesson's text from a tool's input (the whole file, a draft, or `base`, each with
+ * patches applied), runs `handle`, and keeps the text as a draft when `handle` says to, returning
+ * its id with the result so the next call can send patches instead of the whole lesson.
+ */
+async function withDraft(
+  deps: McpDeps,
+  input: LessonInput,
+  base: string | null,
+  handle: (text: string) => Promise<{ reply: Reply; keepDraft: boolean }>,
+  fields: string[]
+) {
+  return toolResult(async () => {
+    let text: string
+    try {
+      text = await lessonText(deps, input, base)
+    } catch (e) {
+      if (!(e instanceof InputError)) throw e
+      return {
+        status: 400,
+        body: { ok: false, error: e.code, message: e.message },
+      }
+    }
+    const { reply, keepDraft } = await handle(text)
+    const fits = new TextEncoder().encode(text).length <= LIMITS.lessonBytes
+    if (keepDraft && fits) {
+      const draftId = await deps.drafts.save(input.draftId ?? null, text)
+      const body: Record<string, unknown> = { ...reply.body, draftId }
+      if (body.ok !== true && Array.isArray(body.issues))
+        body.message =
+          `${String(body.message ?? "")} Send \`draftId\` with \`patches\` that fix every issue; don't resend the whole lesson.`.trim()
+      return { ...reply, body }
+    }
+    if (input.draftId) await deps.drafts.delete(input.draftId)
+    return reply
+  }, [...fields, "draftId"])
+}
+
+class InputError extends Error {
+  constructor(
+    public code: string,
+    message: string
+  ) {
+    super(message)
+  }
+}
+
+async function lessonText(
+  deps: McpDeps,
+  { lesson, draftId, patches }: LessonInput,
+  base: string | null
+): Promise<string> {
+  if (lesson !== undefined && draftId !== undefined)
+    throw new InputError(
+      "bad_input",
+      "Send either `lesson` or `draftId`, not both."
+    )
+  if (lesson !== undefined && patches?.length)
+    throw new InputError(
+      "bad_input",
+      "Put the changes in `lesson`, or send `draftId` with `patches`."
+    )
+  if (lesson !== undefined) return lesson
+  let source = base
+  if (draftId !== undefined) {
+    source = await deps.drafts.get(draftId)
+    if (source === null)
+      throw new InputError(
+        "draft_not_found",
+        "That draft doesn't exist or has expired (drafts last a day). Send the whole lesson as `lesson`."
+      )
+  }
+  if (source === null)
+    throw new InputError(
+      "bad_input",
+      "Send the lesson as `lesson`, or a `draftId` with `patches`."
+    )
+  if (!patches?.length) return source
+  let data: unknown
+  try {
+    data = JSON.parse(source)
+  } catch {
+    throw new InputError(
+      "bad_input",
+      "The draft isn't valid JSON, so it can't be patched. Send the whole lesson as `lesson`."
+    )
+  }
+  try {
+    return JSON.stringify(applyPatches(data, patches))
+  } catch (e) {
+    if (e instanceof PatchError)
+      throw new InputError("bad_patch", `${e.message} Nothing was changed.`)
+    throw e
+  }
 }
 
 /** The caller's IP for rate limits, from the HTTP request the tool call came in on. */
@@ -200,13 +387,7 @@ async function toolResult(handle: () => Promise<Reply>, fields: string[]) {
   }
   if (body.ok !== true) {
     const { skill: _skill, ...error } = body
-    return {
-      content: [
-        { type: "text" as const, text: JSON.stringify(error, null, 2) },
-      ],
-      structuredContent: error,
-      isError: true,
-    }
+    return errorResult(error)
   }
   const result = Object.fromEntries(
     fields.filter((f) => f in body).map((f) => [f, body[f]])
@@ -214,5 +395,13 @@ async function toolResult(handle: () => Promise<Reply>, fields: string[]) {
   return {
     content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
     structuredContent: result,
+  }
+}
+
+function errorResult(error: Record<string, unknown>) {
+  return {
+    content: [{ type: "text" as const, text: JSON.stringify(error, null, 2) }],
+    structuredContent: error,
+    isError: true,
   }
 }

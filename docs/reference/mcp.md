@@ -13,12 +13,14 @@ https://learn.ninja/mcp
 
 The server has four tools. The guide comes from the same files the skill uses, so both ways make the same lessons.
 
-| Tool              | What it does                                                                                                                              |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `get_guide`       | Returns the steps to follow, then each guide as the steps call for it: planning, teaching, the lesson format, levels, and the JSON Schema |
-| `validate_lesson` | Checks a lesson with the rules publishing uses and lists every issue. Nothing is stored                                                   |
-| `publish_lesson`  | Publishes a lesson and returns its link, an edit token, and a link that keeps it                                                          |
-| `update_lesson`   | Replaces a published lesson at the same link, with the edit token from publishing                                                         |
+| Tool              | What it does                                                                                                                                 |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_guide`       | Returns the whole guide in one call: the steps, planning, teaching, the lesson format, and levels. The JSON Schema is a separate section     |
+| `validate_lesson` | Checks a lesson with the rules publishing uses and lists every issue, without publishing it                                                  |
+| `publish_lesson`  | Checks and publishes a lesson, and returns its link, an edit token, and a link that keeps it. A lesson that fails the checks isn't published |
+| `update_lesson`   | Replaces a published lesson at the same link, with the edit token from publishing                                                            |
+
+Writing out the lesson is the slow part of a chat, so the model sends it only once. When a check fails, the tools return the issues and a `draftId`, and the model sends small `patches` against that draft instead of the whole lesson again; `update_lesson` takes patches against the published lesson too. A patch is `set`, `insert`, or `remove` at a path like `bricks[2].options[0].feedback`, the same paths the checker reports. Drafts last a day.
 
 Lessons made this way last 7 days. To keep one, tell the app you want to keep it: it gives you a link, and opening it signs you in on learn.ninja and saves the lesson to your account (see [Keep a lesson](/docs/keep)). The [limits](/docs/reference/api#limits) are the same as the API's.
 

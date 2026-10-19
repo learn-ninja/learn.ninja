@@ -2,28 +2,30 @@
 
 You write one lesson as a JSON file that follows the lesson spec (v0.4), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links last 7 days, or for good once the user keeps them in an account (step 7).
 
-There are two ways to follow these steps. In a terminal with the skill installed, run the commands shown; every path below is relative to the folder this file is in (`.learn/skill/` after a sync, or the installed skill's folder), and `<skill-folder>` is the installed skill's folder, the one `SKILL.md` is in. Through the learn.ninja MCP server, there are no files or commands: call the tool named beside each one instead (`get_guide` for a guide, `validate_lesson`, `publish_lesson`, `update_lesson`).
+There are two ways to follow these steps. In a terminal with the skill installed, run the commands shown; every path below is relative to the folder this file is in (`.learn/skill/` after a sync, or the installed skill's folder), and `<skill-folder>` is the installed skill's folder, the one `SKILL.md` is in. Through the learn.ninja MCP server, there are no files or commands: call the tool named beside each one instead (`publish_lesson`, `update_lesson`). The one `get_guide` call you started with already returned every guide below but the schema, so don't call it again for them.
 
 ## Steps
 
-1. **Plan the lesson.** Read what the user gave you, then read `reference/planning.md` (`get_guide` with `planning`). It sets the scope (one lesson, or a path of several), the size, and the reading age, and lists the words people use for each choice. Usually decide without asking, and say what you decided at the end. Only when the request is just a bare topic ("how vaccines work") ask first: up to two questions with your defaults, as clickable options when you have a tool for that, as `reference/planning.md` describes.
-2. **Read the guides before writing.** Read `reference/teaching-guide.md` (`get_guide` with `teaching`: how to teach well, which brick to use when, visuals) and `reference/lesson-format.md` (`get_guide` with `format`: every field). Then:
-   - **Level:** read `levels/index.md` (`get_guide` with `levels`, which returns every level's file too), pick the level from its ranked signals, and read that level's file: it says what to assume, how hard to make the questions, and how much to help.
+1. **Plan the lesson.** Read what the user gave you, then read `reference/planning.md`. It sets the scope (one lesson, or a path of several), the size, and the reading age, and lists the words people use for each choice. Usually decide without asking, and say what you decided at the end. Only when the request is just a bare topic ("how vaccines work") ask first: up to two questions with your defaults, as clickable options when you have a tool for that, as `reference/planning.md` describes.
+2. **Read the guides before writing.** Read `reference/teaching-guide.md` (how to teach well, which brick to use when, visuals) and `reference/lesson-format.md` (every field). Then:
+   - **Level:** read `levels/index.md`, pick the level from its ranked signals, and read that level's file: it says what to assume, how hard to make the questions, and how much to help.
 
    Level guides add to this file and the teaching guide; where one disagrees, this file and the teaching guide win. Design the lesson for its topic from the guides; don't look for a lesson to copy.
 
-3. **Write the lesson file**, e.g. `lesson.json` in the current folder, following the format exactly; over MCP, write it as JSON text to pass to the tools. `schema/lesson.schema.json` (`get_guide` with `schema`) is the formal JSON Schema. For a path, write only the first lesson, in its own folder, as `reference/planning.md` describes.
+3. **Write the lesson file**, e.g. `lesson.json` in the current folder, following the format exactly; over MCP, write it as JSON text to pass to the tools. `schema/lesson.schema.json` (`get_guide` with `schema`) is the formal JSON Schema, rarely needed. For a path, write only the first lesson, in its own folder, as `reference/planning.md` describes.
 4. **Check it** and fix every issue it reports, then check again until it passes:
    ```bash
    node <skill-folder>/scripts/learn.mjs validate lesson.json
    ```
-   Over MCP, call `validate_lesson` with the lesson's JSON text. Either way it checks on learn.ninja with the current rules (nothing is stored). Offline, the command falls back to the rules bundled with the install and says so.
+   Either way it checks on learn.ninja with the current rules (nothing is stored). Offline, the command falls back to the rules bundled with the install and says so.
+
+   Over MCP, skip this step: `publish_lesson` runs the same checks and publishes nothing if they fail. Writing out the lesson is the slow part, so send the whole lesson only once. When a check fails, the reply has the issues and a `draftId`: call `publish_lesson` again with that `draftId` and `patches` that fix every issue at once (each issue's `path` works as a patch path), never the whole lesson again.
 5. **Publish it:**
    ```bash
    node <skill-folder>/scripts/learn.mjs publish lesson.json
    ```
-   Over MCP, call `publish_lesson`. Publishing needs network access.
-6. **Tell the user** the link, and how long it lasts, as `publish` printed it: 7 days for an anonymous lesson, or "saved to your account" once they're signed in. Then, in one line, the three choices you made: level, size, and reading age (e.g. "Beginner · standard · adult"), and that you can remake it with any of them changed. For a path, list the lessons still to make and offer to make the next one; make it only when the user asks. To change a lesson, edit the same file and run `publish` again: it updates the same link (the edit token is saved in `.learn/state.json`; don't delete or share that file). Use `publish lesson.json --new` only if the user wants a separate copy with a new link. Over MCP, call `update_lesson` with the `id` and `editToken` that `publish_lesson` returned and the whole changed lesson; it updates the same link. Keep that token to yourself, and call `publish_lesson` again only if the user wants a separate copy.
+   Over MCP, call `publish_lesson` with the lesson's JSON text as `lesson`. Publishing needs network access.
+6. **Tell the user** the link, and how long it lasts, as `publish` printed it: 7 days for an anonymous lesson, or "saved to your account" once they're signed in. Then, in one line, the three choices you made: level, size, and reading age (e.g. "Beginner · standard · adult"), and that you can remake it with any of them changed. For a path, list the lessons still to make and offer to make the next one; make it only when the user asks. To change a lesson, edit the same file and run `publish` again: it updates the same link (the edit token is saved in `.learn/state.json`; don't delete or share that file). Use `publish lesson.json --new` only if the user wants a separate copy with a new link. Over MCP, call `update_lesson` with the `id` and `editToken` that `publish_lesson` returned and `patches` for just what changed (send the whole `lesson` only when most of it changed); it updates the same link. Keep that token to yourself, and call `publish_lesson` again only if the user wants a separate copy.
 7. **Offer to keep it, once.** When a lesson is anonymous, add one sentence after the link: "It lasts 7 days. If you'd like to keep it, say so and I'll save it under your email." Say this once per lesson and don't bring it up again. Never paste the keep link (`claimUrl`) into the chat on your own; the user can ask for it. Only when the user says they want to keep it:
    1. Ask for their email address, then run:
       ```bash
@@ -63,4 +65,4 @@ If a command prints that a newer version of the skill is available, tell the use
 - `schema/lesson.schema.json`: the formal JSON Schema (the checker also enforces cross-field rules it can't express)
 - `<skill-folder>/scripts/learn.mjs`: the checker and publisher (`sync`, `validate`, `publish`, `login`, `logout`, `whoami`, `schema`; add `--json` for machine-readable output)
 
-Over MCP, `get_guide` returns these by section: `planning`, `teaching`, `format`, `levels` (the index and every level), and `schema`.
+Over MCP, `get_guide` returns all of these but the schema in one call (`all`, the default); one section at a time is `planning`, `teaching`, `format`, `levels` (the index and every level), or `schema`.

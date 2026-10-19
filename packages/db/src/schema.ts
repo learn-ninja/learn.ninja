@@ -244,3 +244,23 @@ export const report = pgTable(
   },
   (t) => [index("report_lesson_id_idx").on(t.lessonId)]
 )
+
+// ---------- drafts ----------
+
+/**
+ * Lessons an MCP client sent to validate_lesson or publish_lesson, kept for a day so the model can
+ * fix them with small patches (or publish a checked one) instead of sending the whole file again.
+ * The id is a random secret the tool returns; anyone holding it could only publish the draft.
+ */
+export const lessonDraft = pgTable(
+  "lesson_draft",
+  {
+    id: text("id").primaryKey(),
+    /** The lesson file's text, as sent or as patched. */
+    text: text("text").notNull(),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+    expiresAt: time("expires_at").notNull(),
+  },
+  (t) => [index("lesson_draft_expires_at_idx").on(t.expiresAt)]
+)

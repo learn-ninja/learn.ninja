@@ -1,10 +1,11 @@
 import { getPlayCounter } from "@/lib/explore/cache"
+import { PostgresDraftStore } from "@/lib/mcp/drafts"
 import { flushPendingPlays } from "@/lib/explore/handlers"
 import { expireLessons, isCronRequest } from "@/lib/publish/handlers"
 import { respond } from "@/lib/publish/respond"
 import { getDb, getLessonStore } from "@/lib/publish/store"
 
-// GET /api/cron/expire: deletes expired lessons and adds the plays still pending in Redis to the
+// GET /api/cron/expire: deletes expired lessons and MCP drafts, and adds the plays still pending in Redis to the
 // lesson table. Vercel Cron calls it daily (vercel.json) with `Authorization: Bearer {CRON_SECRET}`;
 // lesson pages already treat expired rows as gone, and the Explore lists flush plays themselves
 // when they refresh, so this only frees space and catches up.
@@ -22,6 +23,7 @@ export async function GET(req: Request) {
       db: await getDb(),
       plays: await getPlayCounter(),
     })
-    return { ...reply, body: { ...reply.body, plays } }
+    const drafts = await new PostgresDraftStore(await getDb()).deleteExpired()
+    return { ...reply, body: { ...reply.body, plays, drafts } }
   })
 }
