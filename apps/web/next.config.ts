@@ -68,24 +68,28 @@ function visualsCssUrl(): string {
   }
 }
 
+/** Files prepareLesson() and the diagram check read at runtime (see outputFileTracingIncludes). */
+const PREPARE_FILES = [
+  "../../node_modules/tailwindcss/*.css",
+  "../../node_modules/tailwindcss/package.json",
+  "../../node_modules/@terrastruct/d2/package.json",
+  "../../node_modules/@terrastruct/d2/dist/node-esm/*",
+]
+
 const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_VISUALS_CSS: visualsCssUrl() },
   transpilePackages: ["@workspace/ui", "@workspace/player", "@workspace/spec"],
+  // D2.js finds its WASM build and worker next to its own file, which bundling would move.
+  serverExternalPackages: ["@terrastruct/d2"],
   // prepareLesson() reads Tailwind's own stylesheets at runtime to compile each lesson's visuals CSS,
-  // so they must ship with the server functions that publish and render lessons.
+  // and D2.js loads its WASM build and worker by path, so they must ship with the server functions
+  // that check, publish, and render lessons.
   outputFileTracingIncludes: {
-    "/api/lessons": [
-      "../../node_modules/tailwindcss/*.css",
-      "../../node_modules/tailwindcss/package.json",
-    ],
-    "/api/lessons/[id]": [
-      "../../node_modules/tailwindcss/*.css",
-      "../../node_modules/tailwindcss/package.json",
-    ],
-    "/lessons/[slug]": [
-      "../../node_modules/tailwindcss/*.css",
-      "../../node_modules/tailwindcss/package.json",
-    ],
+    "/api/lessons": PREPARE_FILES,
+    "/api/lessons/[id]": PREPARE_FILES,
+    "/api/validate": PREPARE_FILES,
+    "/lessons/[slug]": PREPARE_FILES,
+    "/docs": PREPARE_FILES,
     // The site's link preview card reads the agent logos from public/ (lib/og.tsx).
     "/opengraph-image": ["./public/agents/*.svg"],
   },

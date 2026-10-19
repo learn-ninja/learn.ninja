@@ -2,13 +2,23 @@
 
 import * as React from "react"
 
-import type { ChartVisual, Visual as VisualSpec } from "@workspace/spec"
+import type {
+  ChartVisual,
+  DiagramVisual,
+  Visual as VisualSpec,
+} from "@workspace/spec"
 import { Selectable } from "@workspace/ui/components/selectable"
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { Mark } from "./check"
 import { useIsDark, usePlayer } from "./context"
-import { chartKey, codeKey, mathKey, type CodeLines } from "./prepared"
+import {
+  chartKey,
+  codeKey,
+  diagramKey,
+  mathKey,
+  type CodeLines,
+} from "./prepared"
 
 /** Hotspot wiring for interactive visuals: which regions are selected or marked, and what a tap does. */
 export interface HotspotControl {
@@ -55,6 +65,8 @@ export function Visual({
     )
   if (visual.kind === "math")
     return <MathBlock tex={visual.tex} plain={plain} />
+  if (visual.kind === "diagram")
+    return <DiagramBlock diagram={visual} label={label} plain={plain} />
   return <ChartBlock chart={visual} label={label} plain={plain} />
 }
 
@@ -541,6 +553,41 @@ function ChartBlock({
           {alt}
         </p>
       )}
+    </div>
+  )
+}
+
+// ---------- Diagram: laid out and drawn by D2 on the server ----------
+
+/**
+ * The server draws the D2 into SVG in theme tokens (diagram.ts). It goes in the same sandboxed
+ * frame as HTML visuals, since D2's Markdown labels can carry HTML. Before it's drawn (a lesson
+ * without prepared data), the alt stands in.
+ */
+function DiagramBlock({
+  diagram,
+  label,
+  plain,
+}: {
+  diagram: DiagramVisual
+  label?: string
+  plain: boolean
+}) {
+  const { prepared, t } = usePlayer()
+  const svg = prepared.diagrams?.[diagramKey(diagram.d2)]
+  if (svg)
+    return (
+      <HtmlFrame html={svg} alt={diagram.alt} label={label} plain={plain} />
+    )
+  return (
+    <div
+      role="img"
+      aria-label={diagram.alt ?? label ?? t.visual}
+      className={cn(!plain && "rounded-xl border bg-background")}
+    >
+      <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+        {diagram.alt ?? label ?? t.visual}
+      </p>
     </div>
   )
 }

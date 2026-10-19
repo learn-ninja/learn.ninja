@@ -177,7 +177,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const { buttons, prd, compound, spanish, coding } = lessons
+const { buttons, prd, compound, spanish, coding, bronze } = lessons
 /** A lesson's nth concept brick. */
 const concept = (l: typeof buttons, n: number) =>
   l.bricks.filter((b) => b.type === "concept")[n]!
@@ -191,6 +191,11 @@ const noState = { mode: { table: { disable: true } } } as const
 export const Concept: Story = {
   name: "Concept, visual",
   args: { brick: concept(buttons, 0) },
+  argTypes: noState,
+}
+export const ConceptDiagram: Story = {
+  name: "Concept, diagram",
+  args: { brick: concept(bronze, 2) },
   argTypes: noState,
 }
 export const ConceptFormula: Story = {

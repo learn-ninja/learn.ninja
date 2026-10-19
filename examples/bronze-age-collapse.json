@@ -1,5 +1,5 @@
 {
-  "spec": "0.4",
+  "spec": "0.5",
   "title": "Why the Bronze Age collapsed",
   "summary": "Sea Peoples, drought, earthquakes, revolt, or a fragile trade web? Weigh the evidence for each and see why historians now blame all of them.",
   "objective": "Judge which evidence supports which proposed cause of the Late Bronze Age collapse, spot inferences the evidence can't carry, and explain the systems-collapse view.",
@@ -30,7 +30,10 @@
         "text": "An earthquake storm",
         "feedback": "Crushed skeletons at Mycenae and Tiryns support quakes there, but the destructions span decades, not a day."
       },
-      { "id": "d", "text": "No single cause" }
+      {
+        "id": "d",
+        "text": "No single cause"
+      }
     ],
     "correct": ["d"],
     "multiple": false,
@@ -154,9 +157,9 @@
       "title": "Systems collapse: a perfect storm",
       "body": "Eric Cline's reading, now the mainstream one: no single cause explains every site, and it didn't have to. The Late Bronze Age powers were tightly coupled: bronze needed Cypriot copper and tin from far to the east, and Egypt shipped grain to a hungry Hatti. A system like that absorbs one shock. Within a few decades it took drought, earthquakes, raids, and revolt together, and each failure made the next more likely.",
       "visual": {
-        "kind": "html",
-        "alt": "Diagram of copper from Cyprus, tin from the east, and grain from Egypt all flowing into the palace economies.",
-        "html": "<div class='flex flex-col items-center gap-3 text-sm font-medium'><div class='flex flex-wrap justify-center gap-2'><span class='badge' data-variant='outline'>Cyprus: copper</span><span class='badge' data-variant='outline'>The east: tin</span><span class='badge' data-variant='outline'>Egypt: grain</span></div><span class='text-muted-foreground'>↓ ↓ ↓</span><div class='rounded-md border bg-background px-4 py-2'>Palace economies</div></div>"
+        "kind": "diagram",
+        "alt": "Copper from Cyprus, tin from the east, and grain from Egypt all feed the palace economies, while drought, earthquakes, raids, and revolt hit them at once.",
+        "d2": "trade: Long-distance trade {\n  cyprus: \"Cyprus: copper\"\n  east: \"The east: tin\"\n  egypt: \"Egypt: grain\"\n}\npalace: Palace economies {style.bold: true; style.stroke-width: 2}\nshocks: \"Drought, earthquakes,\\nraids, revolt\" {style.stroke-dash: 4}\ntrade.cyprus -> palace\ntrade.east -> palace\ntrade.egypt -> palace\nshocks -> palace: all at once"
       }
     },
     {
@@ -164,7 +167,10 @@
       "type": "order",
       "prompt": "Put one plausible systems-collapse cascade in order.",
       "items": [
-        { "id": "a", "text": "Drought cuts harvests across several regions" },
+        {
+          "id": "a",
+          "text": "Drought cuts harvests across several regions"
+        },
         {
           "id": "b",
           "text": "Palaces import grain; letters plead for shipments"

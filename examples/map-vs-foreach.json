@@ -1,5 +1,5 @@
 {
-  "spec": "0.4",
+  "spec": "0.5",
   "title": "JavaScript map vs forEach",
   "summary": "Know when to use map and when to use forEach, and why it matters.",
   "objective": "Choose map when you need a new array and forEach when you only need to do something with each item.",

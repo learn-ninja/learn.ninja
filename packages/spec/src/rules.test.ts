@@ -98,7 +98,7 @@ describe("schema", () => {
   it("requires the current spec version", () => {
     const l = buttons()
     l.spec = "0.1"
-    expectIssue(l, { path: "spec", message: /0\.4/ })
+    expectIssue(l, { path: "spec", message: /0\.5/ })
   })
 })
 
@@ -238,6 +238,38 @@ describe("chart visuals", () => {
       path: "bricks[1].options[0].visual",
       message: /number for every point/,
     })
+  })
+})
+
+describe("diagram visuals", () => {
+  function withDiagram(over: Record<string, unknown> = {}) {
+    const l = buttons()
+    l.bricks[0].visual = {
+      kind: "diagram",
+      d2: "request -> server -> response",
+      alt: "A request goes to the server, which sends a response.",
+      ...over,
+    }
+    return l
+  }
+
+  it("accepts a diagram", () => {
+    expect(validateLesson(withDiagram()).ok).toBe(true)
+  })
+
+  it("wants alt text, like an HTML visual", () => {
+    const l = withDiagram()
+    delete l.bricks[0].visual.alt
+    expectIssue(l, {
+      path: "bricks[0].visual",
+      message: /diagram has no "alt"/,
+    })
+  })
+
+  it("keeps the source short", () => {
+    expect(validateLesson(withDiagram({ d2: "a -> b\n".repeat(600) })).ok).toBe(
+      false
+    )
   })
 })
 

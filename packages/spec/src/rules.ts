@@ -209,11 +209,11 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
   ]
   for (const { brick, path } of withVisuals) {
     const v = brick.visual
-    if ((v?.kind === "html" || v?.kind === "chart") && !v.alt)
+    if (v && v.kind !== "code" && v.kind !== "math" && !v.alt)
       add(
         "teaching",
         `${path}.visual`,
-        `This ${v.kind === "html" ? "HTML visual" : "chart"} has no "alt". Add one sentence saying what it shows, for people using a screen reader.`
+        `This ${visualName(v)} has no "alt". Add one sentence saying what it shows, for people using a screen reader.`
       )
   }
 
@@ -222,15 +222,12 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
   for (const { brick, path } of questions) {
     if (brick.type !== "choice" && brick.type !== "compare") continue
     brick.options.forEach((o, j) => {
-      if (
-        (o.visual?.kind === "html" || o.visual?.kind === "chart") &&
-        !o.visual.alt &&
-        !o.text
-      )
+      const v = o.visual
+      if (v && v.kind !== "code" && v.kind !== "math" && !v.alt && !o.text)
         add(
           "teaching",
           `${path}.options[${j}].visual`,
-          `This option's ${o.visual.kind === "html" ? "HTML visual" : "chart"} has no "alt" and no caption. Add an "alt": one sentence saying what it shows, for people using a screen reader.`
+          `This option's ${visualName(v)} has no "alt" and no caption. Add an "alt": one sentence saying what it shows, for people using a screen reader.`
         )
     })
   }
@@ -313,7 +310,7 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
   // ---------- formulas ----------
 
   walkStrings(lesson, "", (value, path) => {
-    if (/\.(html|css|code)$/.test(path)) return
+    if (/\.(html|css|code|d2)$/.test(path)) return
     if (path.endsWith(".tex")) return checkFormula(value, path, add)
     const opens = value.split("\\(").length - 1
     const closes = value.split("\\)").length - 1
@@ -690,8 +687,12 @@ function walkVisuals(lesson: Lesson, visit: (v: Visual, path: string) => void) {
   })
 }
 
+/** What a visual is called in messages. */
+const visualName = (v: Visual) =>
+  v.kind === "html" ? "HTML visual" : v.kind === "chart" ? "chart" : v.kind
+
 /** Every visual in the lesson with its path: on bricks, on options, and on items. */
-function everyVisual(lesson: Lesson): { visual: Visual; path: string }[] {
+export function everyVisual(lesson: Lesson): { visual: Visual; path: string }[] {
   const out: { visual: Visual; path: string }[] = []
   const bricks: { brick: Brick; path: string }[] = [
     { brick: lesson.hook, path: "hook" },

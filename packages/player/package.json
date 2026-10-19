@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@observablehq/plot": "^0.6.17",
+    "@terrastruct/d2": "^0.1.33",
     "@workspace/spec": "^0.0.0",
     "@workspace/ui": "^0.0.0",
     "katex": "^0.19.0",

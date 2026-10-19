@@ -20,7 +20,7 @@ function asV02(lesson: any) {
 }
 
 describe("upgradeLesson", () => {
-  it.each(exampleFiles())("turns %s back into the same 0.4 lesson", (file) => {
+  it.each(exampleFiles())("turns %s back into the same 0.5 lesson", (file) => {
     const lesson = loadExample(file)
     const upgraded = upgradeLesson(asV02(lesson))
     expect(upgraded).toEqual(lesson)
@@ -28,15 +28,18 @@ describe("upgradeLesson", () => {
     expect(validateLesson(upgraded).ok).toBe(true)
   })
 
-  it("brings a 0.3 lesson to 0.4 by its version alone", () => {
-    const lesson = loadExample("button-hierarchy.json")
-    const old = { ...lesson, spec: "0.3" }
-    expect(canUpgrade(old)).toBe(true)
-    const upgraded = upgradeLesson(old)
-    expect(upgraded).toEqual(lesson)
-    expect(JSON.stringify(upgraded)).toBe(JSON.stringify(lesson))
-    expect(canUpgrade(lesson)).toBe(false)
-  })
+  it.each(["0.3", "0.4"])(
+    "brings a %s lesson to 0.5 by its version alone",
+    (spec) => {
+      const lesson = loadExample("button-hierarchy.json")
+      const old = { ...lesson, spec }
+      expect(canUpgrade(old)).toBe(true)
+      const upgraded = upgradeLesson(old)
+      expect(upgraded).toEqual(lesson)
+      expect(JSON.stringify(upgraded)).toBe(JSON.stringify(lesson))
+      expect(canUpgrade(lesson)).toBe(false)
+    }
+  )
 
   it("drops the term from concept bricks, in 0.2 and 0.3 files", () => {
     const lesson = loadExample("button-hierarchy.json")

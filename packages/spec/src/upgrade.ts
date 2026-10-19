@@ -1,7 +1,7 @@
 // Older lesson files, brought up to the current spec. Published lessons and older skills can
-// still hand us spec 0.2, or 0.3 (with or without a concept brick's `term`, since dropped), so the
-// server upgrades them before validating or playing them. 0.3 to 0.4 only added the chart visual,
-// so a 0.3 lesson needs nothing but its version changed.
+// still hand us spec 0.2, 0.3 (with or without a concept brick's `term`, since dropped), or 0.4, so
+// the server upgrades them before validating or playing them. 0.3 to 0.4 only added the chart visual
+// and 0.4 to 0.5 the diagram visual, so those lessons need nothing but their version changed.
 
 import { SPEC_VERSION } from "./schema"
 
@@ -18,6 +18,7 @@ export function canUpgrade(data: unknown): boolean {
   return (
     spec === "0.2" ||
     spec === "0.3" ||
+    spec === "0.4" ||
     (Array.isArray(bricks) && bricks.some(hasTerm))
   )
 }

@@ -133,7 +133,7 @@ describe("publishing", () => {
     )
     expect(reply).toMatchObject({
       status: 201,
-      body: { spec: "0.4", skill: { updateAvailable: true } },
+      body: { spec: "0.5", skill: { updateAvailable: true } },
     })
     const stored = await deps.store.get(reply.body.id as string)
     expect(stored?.lesson).toEqual(JSON.parse(buttons))
@@ -189,7 +189,7 @@ describe("checking", () => {
     const reply = await checkLesson({ text: buttons, client: "x" }, deps)
     expect(reply).toMatchObject({
       status: 200,
-      body: { ok: true, spec: "0.4", skill: { updateAvailable: false } },
+      body: { ok: true, spec: "0.5", skill: { updateAvailable: false } },
     })
     expect(reply.body).not.toHaveProperty("id")
     expect(reply.body).not.toHaveProperty("editToken")
@@ -204,6 +204,36 @@ describe("checking", () => {
     expect(checked.status).toBe(422)
     expect(checked.body.issues).toEqual(published.body.issues)
   })
+
+  it("rejects a diagram whose D2 doesn't compile, and draws one that does", async () => {
+    const lesson = JSON.parse(buttons)
+    const diagram = {
+      kind: "diagram",
+      d2: "idea -> draft -> review",
+      alt: "An idea becomes a draft, then gets reviewed.",
+    }
+    lesson.bricks[0].visual = { ...diagram, d2: "idea -> {" }
+    const checked = await checkLesson(
+      { text: JSON.stringify(lesson), client: "x" },
+      deps
+    )
+    expect(checked.status).toBe(422)
+    expect(checked.body.issues).toEqual([
+      expect.objectContaining({
+        path: "bricks[0].visual.d2",
+        message: expect.stringMatching(/doesn't compile: line 1:/),
+      }),
+    ])
+
+    lesson.bricks[0].visual = diagram
+    const reply = await publishLesson(
+      { text: JSON.stringify(lesson), client: "x" },
+      deps
+    )
+    expect(reply.status).toBe(201)
+    const stored = await deps.store.get(reply.body.id as string)
+    expect(Object.values(stored!.prepared.diagrams!)[0]).toContain(">draft<")
+  }, 20_000)
 
   it("tells an old skill to update", async () => {
     const reply = await checkLesson(

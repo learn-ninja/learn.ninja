@@ -1,6 +1,6 @@
 # Learn: the steps
 
-You write one lesson as a JSON file that follows the lesson spec (v0.4), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links expire after 24 hours.
+You write one lesson as a JSON file that follows the lesson spec (v0.5), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links expire after 24 hours.
 
 Every path below is relative to the folder this file is in (`.learn/skill/` after a sync, or the installed skill's folder). `<skill-folder>` is the installed skill's folder, the one `SKILL.md` is in; the commands run from there.
 

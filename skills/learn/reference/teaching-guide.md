@@ -89,10 +89,11 @@ Mechanics of each type:
 
 ## 6. Visuals
 
-Visuals make lessons feel real. There are four kinds:
+Visuals make lessons feel real. There are five kinds:
 
 - **`chart`**: any data with axes: a scatter, bar, or line chart drawn by the player from the points you give, in the lesson's own style. Give the points, axis labels, and an `alt`. Never draw a chart by hand in HTML or SVG.
-- **`html`**: UI examples, diagrams, layouts. It runs in a sandbox with no scripts. Give it an `alt`: one sentence of at most 200 characters saying what it shows, as you'd describe it to someone who can't see it ("Two buttons: a filled Place order and an outlined Back to cart").
+- **`diagram`**: boxes and arrows, written in D2 and laid out for you: flows and processes, cause and effect, architecture (client, server, database), trees and hierarchies, state machines, any graph of things and how they connect. Give the D2 and an `alt`. Never place the boxes of a flow by hand in HTML or SVG.
+- **`html`**: UI examples, layouts, and pictures: an anatomy drawing, a map sketch, a geometry figure, anything whose layout is the point. It runs in a sandbox with no scripts. Give it an `alt`: one sentence of at most 200 characters saying what it shows, as you'd describe it to someone who can't see it ("Two buttons: a filled Place order and an outlined Back to cart").
 - **`code`**: code with syntax highlighting. Give the `language` (e.g. `javascript`, `python`, `css`).
 - **`math`**: a formula on its own line, in TeX: `{ "kind": "math", "tex": "A = P(1 + r)^n" }`.
 
@@ -141,7 +142,15 @@ Overlays render in place, sized to fit the visual, so you can show them open:
 - **Keep visuals small and focused:** show just enough to make the point. Each visual must be under 20 KB.
 - **Not allowed** (the checker rejects them): `<script>`, event handlers like `onclick`, `<iframe>`, `<form>`, `<object>`, `<embed>`, `javascript:` links, and anything loaded from an external URL (images, fonts, stylesheets). A visual is a still picture: components show the state you write (open, checked, selected, invalid) and can't be operated.
 - **No images or photos in v1.** Draw what you need with HTML/CSS or inline SVG.
-- **Diagrams in inline SVG** (not charts: those are `chart` visuals): color strokes and text with theme classes (`stroke-primary`, `stroke-muted-foreground`, `fill-muted-foreground`, `stroke-border`) so they work in both themes, and add `direction='ltr'` to the `<svg>` so labels don't flip when the player is right to left (SVG ignores `dir`).
+- **Drawings in inline SVG** (pictures, not graphs: boxes and arrows are `diagram` visuals, charts are `chart` visuals): color strokes and text with theme classes (`stroke-primary`, `stroke-muted-foreground`, `fill-muted-foreground`, `stroke-border`) so they work in both themes, and add `direction='ltr'` to the `<svg>` so labels don't flip when the player is right to left (SVG ignores `dir`).
+
+### Diagrams in D2
+
+- **Pick D2 when the picture is a graph**: things, and arrows or lines between them. The layout engine places the boxes and routes the arrows, so nothing overlaps or drifts. Pick inline SVG in an `html` visual when the picture is a drawing whose shapes and positions carry the meaning (the parts of a cell, a triangle with its angles, a floor plan).
+- **Keep it small:** 3 to 8 boxes, labels of 1 to 4 words, an arrow label only where the arrow's meaning isn't obvious. A diagram wider than the lesson column is scaled down, and its text with it: prefer `direction: down` (the default), and use `direction: right` only for a chain of 4 boxes or fewer. Split anything bigger into two bricks.
+- **Show the point, not everything:** one container for things that belong together, `style.bold: true` or `style.stroke-width: 3` on the one box the brick is about, `style.stroke-dash: 4` for something hypothetical or optional.
+- **Right-to-left lessons:** write `direction: left` for a flow that reads across, so it runs the way the text does.
+- **Not allowed** (publishing rejects them): colors (the player draws every diagram in the lesson's colors, in light and dark), `icon`, `link`, `tooltip`, `shape: image`, and HTML or images in Markdown labels.
 
 ## 7. Languages
 

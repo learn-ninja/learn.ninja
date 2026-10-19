@@ -1,4 +1,4 @@
-import { prepareLesson } from "@workspace/player/prepare"
+import { checkDiagrams, prepareLesson } from "@workspace/player/prepare"
 import {
   canUpgrade,
   LIMITS,
@@ -27,7 +27,7 @@ import {
 // The publish API's logic, independent of Next.js so it can be tested directly.
 
 /** Spec versions the server accepts. Older skills keep working while they're listed here; older files are upgraded first. */
-export const ACCEPTED_SPECS: string[] = [SPEC_VERSION, "0.3", "0.2"]
+export const ACCEPTED_SPECS: string[] = [SPEC_VERSION, "0.4", "0.3", "0.2"]
 
 export {
   compareVersions,
@@ -57,8 +57,8 @@ interface PublishRequest {
   skillVersion?: string | null
 }
 
-/** Checks size, JSON, spec version, and the spec's rules. Returns the lesson or an error reply. */
-function checkLessonText(text: string, skillVersion?: string | null) {
+/** Checks size, JSON, spec version, the spec's rules, and that diagrams draw. Returns the lesson or an error reply. */
+async function checkLessonText(text: string, skillVersion?: string | null) {
   const skill = skillInfo(skillVersion)
   if (new TextEncoder().encode(text).length > LIMITS.lessonBytes) {
     return {
@@ -99,7 +99,9 @@ function checkLessonText(text: string, skillVersion?: string | null) {
     }
   }
   const result = validateLesson(canUpgrade(data) ? upgradeLesson(data) : text)
-  if (!result.ok) {
+  // Diagrams are checked by compiling their D2, which needs the server, not just the spec's rules.
+  const issues = result.ok ? await checkDiagrams(result.lesson) : result.issues
+  if (!result.ok || issues.length) {
     return {
       error: {
         status: 422,
@@ -108,7 +110,7 @@ function checkLessonText(text: string, skillVersion?: string | null) {
           error: "invalid_lesson",
           message:
             "The lesson doesn't match the spec. Fix these issues and publish again.",
-          issues: result.issues satisfies Issue[],
+          issues: issues satisfies Issue[],
           skill,
         },
       },
@@ -132,7 +134,7 @@ export async function checkLesson(
       },
     }
   }
-  const checked = checkLessonText(req.text, req.skillVersion)
+  const checked = await checkLessonText(req.text, req.skillVersion)
   if ("error" in checked) return checked.error!
   return {
     status: 200,
@@ -156,7 +158,7 @@ export async function publishLesson(
       },
     }
   }
-  const checked = checkLessonText(req.text, req.skillVersion)
+  const checked = await checkLessonText(req.text, req.skillVersion)
   if ("error" in checked) return checked.error!
 
   const { lesson, skill } = checked
@@ -222,7 +224,7 @@ export async function updateLesson(
       },
     }
   }
-  const checked = checkLessonText(req.text, req.skillVersion)
+  const checked = await checkLessonText(req.text, req.skillVersion)
   if ("error" in checked) return checked.error!
 
   const { lesson, skill } = checked

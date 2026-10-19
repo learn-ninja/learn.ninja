@@ -7,12 +7,19 @@ import {
   type Highlighter,
 } from "shiki"
 
-import type { ChartVisual, Lesson } from "@workspace/spec"
+import {
+  everyVisual,
+  type ChartVisual,
+  type Issue,
+  type Lesson,
+} from "@workspace/spec"
 
 import { renderChart } from "./chart"
+import { checkDiagram, renderDiagram } from "./diagram"
 import {
   chartKey,
   codeKey,
+  diagramKey,
   INLINE_MATH,
   mathKey,
   type Prepared,
@@ -20,8 +27,8 @@ import {
 import { visualClasses, visualsCssFor } from "./visual-css"
 
 // Server-only: renders formulas with KaTeX, highlights code with Shiki, draws charts with Observable
-// Plot, and compiles the Tailwind CSS a lesson's visuals use, once per lesson, so the learner's
-// browser loads none of those libraries.
+// Plot and diagrams with D2, and compiles the Tailwind CSS a lesson's visuals use, once per lesson,
+// so the learner's browser loads none of those libraries.
 
 const THEMES = { light: "github-light", dark: "github-dark" } as const
 
@@ -52,11 +59,20 @@ export async function prepareLesson(lesson: Lesson): Promise<Prepared> {
     code: {},
     visualsCss: await visualsCssFor(visualClasses(lesson)),
     charts: {},
+    diagrams: {},
   }
   const codeBlocks: { language: string; code: string }[] = []
 
   for (const { chart, compact } of chartsIn(lesson))
     prepared.charts![chartKey(chart, compact)] = renderChart(chart, compact)
+
+  for (const d2 of diagramsIn(lesson)) {
+    try {
+      prepared.diagrams![diagramKey(d2)] = await renderDiagram(d2)
+    } catch {
+      // checkDiagrams() rejects D2 that doesn't compile; anything else shows its alt text instead.
+    }
+  }
 
   walk(lesson, (value, key, parent) => {
     if (typeof value === "string") {
@@ -65,7 +81,7 @@ export async function prepareLesson(lesson: Lesson): Promise<Prepared> {
           displayMode: true,
           throwOnError: false,
         })
-      } else if (key !== "html" && key !== "css" && key !== "code") {
+      } else if (!["html", "css", "code", "d2"].includes(key)) {
         for (const m of value.matchAll(INLINE_MATH)) {
           const tex = m[1]!.trim()
           prepared.math[mathKey(tex, false)] = katex.renderToString(tex, {
@@ -107,6 +123,28 @@ export async function prepareLesson(lesson: Lesson): Promise<Prepared> {
   }
 
   return prepared
+}
+
+/** The lesson's diagram sources, each once. */
+function diagramsIn(lesson: Lesson): string[] {
+  const sources = everyVisual(lesson).flatMap(({ visual }) =>
+    visual.kind === "diagram" ? [visual.d2] : []
+  )
+  return [...new Set(sources)]
+}
+
+/**
+ * The publish-time checks for diagram visuals, which need D2 itself and so can't live in the
+ * spec's rules: D2 that doesn't compile, and what the lesson page can't show (see checkDiagram).
+ */
+export async function checkDiagrams(lesson: Lesson): Promise<Issue[]> {
+  const issues: Issue[] = []
+  for (const { visual, path } of everyVisual(lesson)) {
+    if (visual.kind !== "diagram") continue
+    for (const message of await checkDiagram(visual.d2))
+      issues.push({ kind: "structure", path: `${path}.d2`, message })
+  }
+  return issues
 }
 
 /** The lesson's chart visuals: a brick's own at full size, an option's or item's compact. */

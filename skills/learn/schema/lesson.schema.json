@@ -4,7 +4,7 @@
   "properties": {
     "spec": {
       "type": "string",
-      "const": "0.4"
+      "const": "0.5"
     },
     "title": {
       "type": "string",
@@ -198,6 +198,9 @@
         },
         {
           "$ref": "#/$defs/ChartVisual"
+        },
+        {
+          "$ref": "#/$defs/DiagramVisual"
         }
       ]
     },
@@ -394,6 +397,30 @@
         "kind",
         "type",
         "data"
+      ],
+      "additionalProperties": false
+    },
+    "DiagramVisual": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "diagram"
+        },
+        "d2": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "kind",
+        "d2"
       ],
       "additionalProperties": false
     },
@@ -1173,5 +1200,5 @@
       ]
     }
   },
-  "title": "Lesson (spec 0.4)"
+  "title": "Lesson (spec 0.5)"
 }

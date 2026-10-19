@@ -1,5 +1,5 @@
 {
-  "spec": "0.4",
+  "spec": "0.5",
   "title": "Button hierarchy",
   "summary": "Learn how primary, secondary, and tertiary buttons tell people what to do next.",
   "objective": "Give each view one clear primary action and style the rest by importance.",

@@ -1,5 +1,5 @@
 {
-  "spec": "0.4",
+  "spec": "0.5",
   "title": "Correlation isn't causation",
   "summary": "You can read a scatter plot. Learn the three questions that tell you whether two things that move together are cause and effect.",
   "objective": "Given a correlation, name a plausible confounder or reverse cause, and say what evidence would support a causal claim.",

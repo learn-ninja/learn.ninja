@@ -1,10 +1,10 @@
 import { z } from "zod"
 
-// Lesson spec v0.4: the shape of a lesson file.
+// Lesson spec v0.5: the shape of a lesson file.
 // Structural limits that JSON Schema can express live here; cross-field and
 // teaching-quality rules live in rules.ts.
 
-export const SPEC_VERSION = "0.4" as const
+export const SPEC_VERSION = "0.5" as const
 
 /** Who a lesson is for, from least to most prior knowledge. The skill's `levels/` guides say how each one teaches. */
 export const LEVELS = ["beginner", "intermediate", "advanced"] as const
@@ -81,8 +81,24 @@ export const chartVisual = z
   })
   .meta({ id: "ChartVisual" })
 
+export const diagramVisual = z
+  .strictObject({
+    kind: z.literal("diagram"),
+    /** The diagram in D2 (https://d2lang.com): boxes, arrows, containers. Laid out and drawn at publish time. */
+    d2: z.string().min(1).max(4000),
+    /** One sentence saying what the diagram shows, for screen readers. Required (rules.ts). */
+    alt: z.string().min(1).max(200).optional(),
+  })
+  .meta({ id: "DiagramVisual" })
+
 export const visual = z
-  .discriminatedUnion("kind", [htmlVisual, codeVisual, mathVisual, chartVisual])
+  .discriminatedUnion("kind", [
+    htmlVisual,
+    codeVisual,
+    mathVisual,
+    chartVisual,
+    diagramVisual,
+  ])
   .meta({ id: "Visual" })
 
 // ---------- shared pieces ----------
@@ -339,3 +355,4 @@ export type QuestionBrick = z.infer<typeof questionBrick>
 export type ConceptBrick = z.infer<typeof conceptBrick>
 export type Visual = z.infer<typeof visual>
 export type ChartVisual = z.infer<typeof chartVisual>
+export type DiagramVisual = z.infer<typeof diagramVisual>
