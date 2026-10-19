@@ -6,6 +6,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { APIError, createAuthMiddleware } from "better-auth/api"
 import { emailOTP } from "better-auth/plugins/email-otp"
 import { eq } from "drizzle-orm"
+import { after } from "next/server"
 
 import type { SecondaryStorage } from "@better-auth/core/db"
 import { schema, user, type Db } from "@workspace/db"
@@ -199,6 +200,18 @@ export function createAuth(deps: AuthDeps) {
     advanced: {
       // Vercel sets x-forwarded-for; Better Auth's rate limits key on it.
       ipAddress: { ipAddressHeaders: ["x-forwarded-for", "x-real-ip"] },
+      // Better Auth sends the code after replying, as a background task. On Vercel the function is
+      // frozen the moment the response is out, so the task must be handed to Next's after(), which
+      // keeps the function alive until it settles. Outside a request (tests) it just runs.
+      backgroundTasks: {
+        handler: (task) => {
+          try {
+            after(task)
+          } catch {
+            void task
+          }
+        },
+      },
     },
   })
 }
