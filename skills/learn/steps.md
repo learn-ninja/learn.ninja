@@ -1,6 +1,6 @@
 # Learn: the steps
 
-You write one lesson as a JSON file that follows the lesson spec (v0.4), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links expire after 7 days.
+You write one lesson as a JSON file that follows the lesson spec (v0.4), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links last 7 days, or for good once the user keeps them in an account (step 7).
 
 Every path below is relative to the folder this file is in (`.learn/skill/` after a sync, or the installed skill's folder). `<skill-folder>` is the installed skill's folder, the one `SKILL.md` is in; the commands run from there.
 
@@ -23,7 +23,20 @@ Every path below is relative to the folder this file is in (`.learn/skill/` afte
    node <skill-folder>/scripts/learn.mjs publish lesson.json
    ```
    Publishing needs network access.
-6. **Tell the user** the link and that it expires in 7 days. Then, in one line, the three choices you made: level, size, and reading age (e.g. "Beginner · standard · adult"), and that you can remake it with any of them changed. For a path, list the lessons still to make and offer to make the next one; make it only when the user asks. To change a lesson, edit the same file and run `publish` again: it updates the same link (the edit token is saved in `.learn/state.json`; don't delete or share that file). Use `publish lesson.json --new` only if the user wants a separate copy with a new link.
+6. **Tell the user** the link, and how long it lasts, as `publish` printed it: 7 days for an anonymous lesson, or "saved to your account" once they're signed in. Then, in one line, the three choices you made: level, size, and reading age (e.g. "Beginner · standard · adult"), and that you can remake it with any of them changed. For a path, list the lessons still to make and offer to make the next one; make it only when the user asks. To change a lesson, edit the same file and run `publish` again: it updates the same link (the edit token is saved in `.learn/state.json`; don't delete or share that file). Use `publish lesson.json --new` only if the user wants a separate copy with a new link.
+7. **Offer to keep it, once.** When a lesson is anonymous, add one sentence after the link: "It lasts 7 days. If you'd like to keep it, say so and I'll save it under your email." Say this once per lesson and don't bring it up again. Never paste the keep link (`claimUrl`) into the chat on your own; the user can ask for it. Only when the user says they want to keep it:
+   1. Ask for their email address, then run:
+      ```bash
+      node <skill-folder>/scripts/learn.mjs login --email <address>
+      ```
+      It emails them a six-digit code.
+   2. Ask the user for the code, then run:
+      ```bash
+      node <skill-folder>/scripts/learn.mjs login --email <address> --code <code>
+      ```
+      It saves a key on this machine and keeps every lesson published from this folder; tell the user which ones it kept. From now on, every lesson you publish here is saved to their account and never expires, so skip the keep sentence.
+
+   `learn whoami` says who's signed in; `learn logout` forgets the key. Never tell the user to look in `.learn/` or in the credentials file.
 
 If a command prints that a newer version of the skill is available, tell the user the update command it shows.
 
@@ -46,4 +59,4 @@ If a command prints that a newer version of the skill is available, tell the use
 - `reference/lesson-format.md`: every field of the lesson file, with short examples
 - `levels/index.md`: how to pick the lesson's level; `levels/{level}.md` is each level's guide
 - `schema/lesson.schema.json`: the formal JSON Schema (the checker also enforces cross-field rules it can't express)
-- `<skill-folder>/scripts/learn.mjs`: the checker and publisher (`sync`, `validate`, `publish`, `schema`; add `--json` for machine-readable output)
+- `<skill-folder>/scripts/learn.mjs`: the checker and publisher (`sync`, `validate`, `publish`, `login`, `logout`, `whoami`, `schema`; add `--json` for machine-readable output)

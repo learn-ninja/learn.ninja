@@ -9,18 +9,21 @@ import {
   type Issue,
 } from "@workspace/spec"
 
-// The command the lesson skill runs: sync the guides, validate a lesson file, publish it, or update it.
+// The command the lesson skill runs: sync the guides, validate a lesson file, publish it, or update
+// it; and sign in, so published lessons are kept in an account instead of expiring.
 // Bundled into skills/learn/scripts/learn.mjs, so the skill works without installing anything.
 //
 // The guides and checker rules live on learn.ninja and change often, so `sync` downloads
 // the current guides into .learn/skill/ (text only, never code), and `validate` checks the lesson on the
 // server. The copies that came with the install are the fallback when the server can't be reached.
 
-export const SKILL_VERSION = "0.10.0"
+export const SKILL_VERSION = "0.11.0"
 export const DEFAULT_API_URL = "https://learn.ninja"
 /** Where `sync` puts the guides, relative to the current folder. */
 export const SYNC_DIR = ".learn/skill"
 const HASH_FILE = ".hash"
+/** Where `login` keeps the API key, under the user's config folder (~/.config by default). */
+export const CREDENTIALS_FILE = "learn/credentials"
 
 export interface Io {
   cwd: string
@@ -30,14 +33,34 @@ export interface Io {
   err: (line: string) => void
   /** The installed skill's folder (the one SKILL.md is in), for the bundled guides and schema. */
   skillDir: string
+  /** The user's config folder (~/.config, or $XDG_CONFIG_HOME), for the credentials file. */
+  configDir: string
+  /** Asks the user a question on the terminal; absent when there's no terminal (an agent's shell). */
+  prompt?: (question: string) => Promise<string>
+  /** This machine's name, to label the API key. */
+  hostname?: string
 }
 
 interface SavedLesson {
   id: string
   url: string
   editToken: string
-  expiresAt: string
+  /** Null once the lesson is owned by an account: it no longer expires. */
+  expiresAt: string | null
+  /** Moves the lesson into an account (`login`); absent once claimed or for owned lessons. */
+  claimToken?: string
 }
+
+/** One signed-in server, in the credentials file. */
+interface Credential {
+  apiKey: string
+  /** The key's id on the server, so `logout` can revoke it. */
+  keyId?: string
+  email: string
+}
+
+/** The credentials file: one entry per server, keyed by its URL. */
+type Credentials = Record<string, Credential>
 
 interface State {
   lessons: Record<string, SavedLesson>
@@ -63,22 +86,38 @@ Usage:
   learn validate <lesson.json>       Check a lesson against the spec and print every issue
   learn publish <lesson.json>        Check, then publish (or update the same link if published before)
   learn publish <lesson.json> --new  Publish as a new lesson with a new link
+  learn login                        Sign in with an email code, then keep the lessons published here
+  learn login --email <address>      Send the code without a terminal; then add --code <code>
+  learn logout                       Forget the saved key and revoke it
+  learn whoami                       Print the signed-in email and handle
   learn schema                       Print the path to the lesson JSON Schema
 
 Options:
   --api <url>   Server to use (default: $LEARN_API_URL or ${DEFAULT_API_URL})
-  --json        Print machine-readable JSON instead of text`
+  --json        Print machine-readable JSON instead of text
+
+Signed in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account and
+never expires. Anonymous lessons last 7 days.`
 
 export async function run(argv: string[], io: Io): Promise<number> {
-  const args = argv.filter((a) => !a.startsWith("--"))
   const flags = new Set(argv.filter((a) => a.startsWith("--")))
-  const apiIndex = argv.indexOf("--api")
+  // Options that take a value: their value isn't a positional argument.
+  const option = (name: string) => {
+    const i = argv.indexOf(name)
+    return i >= 0 ? argv[i + 1] : undefined
+  }
+  const valued = new Set(
+    ["--api", "--email", "--code"].flatMap((n) => {
+      const i = argv.indexOf(n)
+      return i >= 0 ? [i + 1] : []
+    })
+  )
+  const args = argv.filter((a, i) => !a.startsWith("--") && !valued.has(i))
   const api = (
-    (apiIndex >= 0 ? argv[apiIndex + 1] : undefined) ??
+    option("--api") ??
     io.env.LEARN_API_URL ??
     DEFAULT_API_URL
   ).replace(/\/+$/, "")
-  if (apiIndex >= 0) args.splice(args.indexOf(argv[apiIndex + 1]!), 1)
   const json = flags.has("--json")
   const [command, file] = args
 
@@ -100,6 +139,15 @@ export async function run(argv: string[], io: Io): Promise<number> {
     return 0
   }
   if (command === "sync") return sync(io, api, json)
+  if (command === "login")
+    return login(io, {
+      api,
+      json,
+      email: option("--email"),
+      code: option("--code"),
+    })
+  if (command === "logout") return logout(io, api, json)
+  if (command === "whoami") return whoami(io, api, json)
   if (command !== "validate" && command !== "publish") {
     io.err(`Unknown command "${command}".\n\n${HELP}`)
     return 1
@@ -246,6 +294,7 @@ async function refreshGuides(io: Io, api: string) {
   }
 }
 
+/** A JSON call to our API, which answers { ok, message } (Better Auth's own routes don't: see fetchAuth). */
 async function fetchJson<T>(io: Io, url: string, init?: RequestInit) {
   const response = await io.fetch(url, {
     ...init,
@@ -256,6 +305,25 @@ async function fetchJson<T>(io: Io, url: string, init?: RequestInit) {
   if (!response.ok || !body?.ok)
     throw new Error(body?.message ?? `HTTP ${response.status}`)
   return body
+}
+
+/**
+ * A JSON call to one of Better Auth's routes under /api/auth, judged by the status alone. Its CSRF
+ * check wants an Origin on requests from Node, so the call names the server itself.
+ */
+async function fetchAuth<T>(io: Io, url: string, init?: RequestInit) {
+  const response = await io.fetch(url, {
+    ...init,
+    headers: {
+      ...init?.headers,
+      origin: new URL(url).origin,
+      "x-learn-skill-version": SKILL_VERSION,
+    },
+  })
+  const body = (await response.json().catch(() => null)) as
+    ({ message?: string } & T) | null
+  if (!response.ok) throw new Error(body?.message ?? `HTTP ${response.status}`)
+  return { body, response }
 }
 
 async function readHash(dir: string) {
@@ -396,11 +464,12 @@ async function publish(
   const statePath = join(io.cwd, ".learn", "state.json")
   const state = await readState(statePath)
   const saved = o.forceNew ? undefined : state.lessons[o.path]
-  const live =
-    saved && Date.parse(saved.expiresAt) > Date.now() ? saved : undefined
-  const headers = {
+  const live = saved && isLive(saved) ? saved : undefined
+  const credential = await readCredential(io, o.api)
+  const headers: Record<string, string> = {
     "content-type": "application/json",
     "x-learn-skill-version": SKILL_VERSION,
+    ...(credential ? { "x-api-key": credential.apiKey } : {}),
   }
 
   let response: Response
@@ -423,17 +492,24 @@ async function publish(
     return 1
   }
 
+  const body = (await response.json().catch(() => ({}))) as Record<
+    string,
+    unknown
+  >
+
   // The saved lesson expired on the server, or its token no longer works: publish a new one instead.
-  if (live && (response.status === 404 || response.status === 401)) {
+  // (A bad API key is a different 401, reported below, so a signed-in publish never falls back to
+  // an anonymous one by accident.)
+  if (
+    live &&
+    (response.status === 404 ||
+      (response.status === 401 && body.error !== "invalid_api_key"))
+  ) {
     delete state.lessons[o.path]
     await writeState(statePath, state)
     return publish(io, { ...o, forceNew: true })
   }
 
-  const body = (await response.json().catch(() => ({}))) as Record<
-    string,
-    unknown
-  >
   if (!response.ok || !body.ok) {
     const issues = body.issues as Issue[] | undefined
     report(io, o.json, body, () =>
@@ -448,12 +524,17 @@ async function publish(
     return 1
   }
 
+  const owned = Boolean(body.owned)
   const record: SavedLesson = {
     id: body.id as string,
     url: body.url as string,
     editToken: (body.editToken as string | undefined) ?? live!.editToken,
-    expiresAt: body.expiresAt as string,
+    expiresAt: (body.expiresAt as string | null | undefined) ?? null,
   }
+  // The claim token is shown once: keep it until `login` spends it.
+  const claimToken =
+    (body.claimToken as string | undefined) ?? (owned ? undefined : live?.claimToken)
+  if (claimToken) record.claimToken = claimToken
   state.lessons[o.path] = record
   await writeState(statePath, state)
 
@@ -465,13 +546,16 @@ async function publish(
       ok: true,
       updated: Boolean(live),
       url: record.url,
+      owned,
       expiresAt: record.expiresAt,
       skill,
     },
     () =>
       [
         `${live ? "Updated" : "Published"}: ${record.url}`,
-        `Expires: ${new Date(record.expiresAt).toUTCString()} (7 days after first publish).`,
+        owned
+          ? "Saved to your account: it doesn't expire."
+          : `Lasts 7 days, until ${new Date(record.expiresAt!).toUTCString()}. To keep it for good, run \`learn login\` (it asks for an email and a code).`,
         `Saved the edit token in .learn/state.json, so publishing ${o.file} again updates this same link.`,
         updateLine(skill),
       ]
@@ -479,6 +563,288 @@ async function publish(
         .join("\n")
   )
   return 0
+}
+
+/** Whether a saved lesson is still on the server: owned lessons (no expiry) always are. */
+function isLive(saved: SavedLesson): boolean {
+  return saved.expiresAt === null || Date.parse(saved.expiresAt) > Date.now()
+}
+
+// --- login, logout, whoami ---
+
+/**
+ * Signs in with a six-digit email code and saves an API key, then keeps every lesson published
+ * from this folder. With a terminal it asks for the email and the code; without one (an agent's
+ * shell) it takes --email, sends the code, and says to run again with --code.
+ */
+async function login(
+  io: Io,
+  o: { api: string; json: boolean; email?: string; code?: string }
+): Promise<number> {
+  const email = (o.email ?? (await io.prompt?.("Email: ")))?.trim()
+  if (!email) {
+    io.err("Give the email address to sign in with: learn login --email <address>")
+    return 1
+  }
+
+  let code = o.code?.trim()
+  if (!code) {
+    try {
+      await fetchAuth(io, `${o.api}/api/auth/email-otp/send-verification-otp`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, type: "sign-in" }),
+      })
+    } catch (e) {
+      report(
+        io,
+        o.json,
+        { ok: false, error: "send_failed", message: (e as Error).message },
+        () => `Couldn't send a code to ${email}: ${(e as Error).message}`
+      )
+      return 1
+    }
+    if (io.prompt) {
+      code = (await io.prompt("Enter the six-digit code we emailed you: ")).trim()
+    } else {
+      const next = `learn login --email ${email} --code <code>`
+      report(
+        io,
+        o.json,
+        { ok: true, sent: true, email, next },
+        () =>
+          `Sent a six-digit code to ${email}. It works for 5 minutes. Ask the user for it, then run:\n  ${next}`
+      )
+      return 0
+    }
+  }
+
+  // Exchange the code for a session (its cookie), the session for a key, then drop the session.
+  let cookie: string
+  try {
+    const { response } = await fetchAuth(
+      io,
+      `${o.api}/api/auth/sign-in/email-otp`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, otp: code }),
+      }
+    )
+    cookie = cookieFrom(response)
+  } catch (e) {
+    report(
+      io,
+      o.json,
+      { ok: false, error: "sign_in_failed", message: (e as Error).message },
+      () =>
+        `Couldn't sign in: ${(e as Error).message}\nCodes work for 5 minutes and three tries. Run \`learn login\` to get a new one.`
+    )
+    return 1
+  }
+  let key: { id: string; key: string }
+  try {
+    key = await fetchJson<{ id: string; key: string }>(io, `${o.api}/api/keys`, {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie },
+      body: JSON.stringify({ name: `learn CLI on ${io.hostname ?? "this machine"}` }),
+    })
+    await fetchAuth(io, `${o.api}/api/auth/sign-out`, {
+      method: "POST",
+      headers: { cookie, "content-type": "application/json" },
+      body: "{}",
+    }).catch(() => {})
+  } catch (e) {
+    report(
+      io,
+      o.json,
+      { ok: false, error: "key_failed", message: (e as Error).message },
+      () => `Signed in, but couldn't make an API key: ${(e as Error).message}`
+    )
+    return 1
+  }
+  const credential: Credential = { apiKey: key.key, keyId: key.id, email }
+  await writeCredential(io, o.api, credential)
+  const handle = await fetchHandle(io, o.api, credential)
+
+  // Keep every lesson published from this folder.
+  const kept = await claimAll(io, o.api, credential)
+
+  report(
+    io,
+    o.json,
+    { ok: true, email, handle, credentials: credentialsPath(io), kept },
+    () =>
+      [
+        `Signed in as ${email}${handle ? ` (@${handle})` : ""}. Saved the key in ${credentialsPath(io)}.`,
+        kept.length
+          ? `Kept ${kept.length} lesson${kept.length === 1 ? "" : "s"} published from this folder (no longer expiring):\n${kept.map((k) => `  ${k.url}`).join("\n")}`
+          : "No lessons from this folder to keep. From now on, every lesson you publish is saved to your account.",
+        handle ? null : `Pick a handle at ${o.api}/settings whenever you like.`,
+      ]
+        .filter(Boolean)
+        .join("\n")
+  )
+  return 0
+}
+
+/** Claims every lesson in .learn/state.json that still has a claim token. */
+async function claimAll(
+  io: Io,
+  api: string,
+  credential: Credential
+): Promise<{ url: string }[]> {
+  const statePath = join(io.cwd, ".learn", "state.json")
+  const state = await readState(statePath)
+  const kept: { url: string }[] = []
+  for (const saved of Object.values(state.lessons)) {
+    if (!saved.claimToken) continue
+    try {
+      await fetchJson(io, `${api}/api/lessons/${saved.id}/claim`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": credential.apiKey,
+        },
+        body: JSON.stringify({ claimToken: saved.claimToken }),
+      })
+      saved.expiresAt = null
+      kept.push({ url: saved.url })
+    } catch {
+      // Expired, or already kept by someone: nothing more to do with this token.
+    }
+    delete saved.claimToken
+  }
+  if (kept.length || Object.values(state.lessons).some((l) => l.claimToken))
+    await writeState(statePath, state)
+  return kept
+}
+
+async function logout(io: Io, api: string, json: boolean): Promise<number> {
+  const all = await readCredentials(io)
+  const credential = all[api]
+  if (!credential) {
+    report(io, json, { ok: true, signedIn: false }, () => "Not signed in.")
+    return 0
+  }
+  let revoked = false
+  if (credential.keyId) {
+    revoked = await io
+      .fetch(`${api}/api/keys/${credential.keyId}`, {
+        method: "DELETE",
+        headers: { "x-api-key": credential.apiKey },
+      })
+      .then((r) => r.ok)
+      .catch(() => false)
+  }
+  delete all[api]
+  await writeCredentials(io, all)
+  report(
+    io,
+    json,
+    { ok: true, signedIn: false, revoked },
+    () =>
+      `Signed out of ${api}.${revoked ? " The key was revoked." : " The key couldn't be revoked from here; revoke it at " + api + "/settings if it may have leaked."}`
+  )
+  return 0
+}
+
+async function whoami(io: Io, api: string, json: boolean): Promise<number> {
+  const credential = await readCredential(io, api)
+  if (!credential) {
+    report(
+      io,
+      json,
+      { ok: false, error: "signed_out", message: "Not signed in." },
+      () => "Not signed in. Run `learn login` to keep lessons in an account."
+    )
+    return 1
+  }
+  let account: { email: string; handle: string | null }
+  try {
+    account = await fetchJson<{ email: string; handle: string | null }>(
+      io,
+      `${api}/api/account`,
+      { headers: { "x-api-key": credential.apiKey } }
+    )
+  } catch (e) {
+    report(
+      io,
+      json,
+      { ok: false, error: "invalid_api_key", message: (e as Error).message },
+      () => `The saved key for ${api} doesn't work (${(e as Error).message}). Run \`learn login\` again.`
+    )
+    return 1
+  }
+  report(
+    io,
+    json,
+    { ok: true, email: account.email, handle: account.handle },
+    () =>
+      `${account.email}${account.handle ? ` (@${account.handle})` : " (no handle yet)"}`
+  )
+  return 0
+}
+
+async function fetchHandle(io: Io, api: string, credential: Credential) {
+  try {
+    const account = await fetchJson<{ handle: string | null }>(
+      io,
+      `${api}/api/account`,
+      { headers: { "x-api-key": credential.apiKey } }
+    )
+    return account.handle
+  } catch {
+    return null
+  }
+}
+
+/** The session cookies a response sets, as one Cookie header value. */
+function cookieFrom(res: Response): string {
+  const headers = res.headers as Headers & { getSetCookie?: () => string[] }
+  const raw = headers.getSetCookie?.() ?? [res.headers.get("set-cookie") ?? ""]
+  return raw
+    .flatMap((line) => line.split(/,\s*(?=[^;,=\s]+=)/))
+    .map((c) => c.split(";")[0]!.trim())
+    .filter(Boolean)
+    .join("; ")
+}
+
+// --- credentials ---
+
+const credentialsPath = (io: Io) => join(io.configDir, CREDENTIALS_FILE)
+
+/** The key for `api`: $LEARN_API_KEY first, then the credentials file. */
+async function readCredential(io: Io, api: string): Promise<Credential | null> {
+  if (io.env.LEARN_API_KEY) return { apiKey: io.env.LEARN_API_KEY, email: "" }
+  return (await readCredentials(io))[api] ?? null
+}
+
+async function readCredentials(io: Io): Promise<Credentials> {
+  try {
+    const parsed = JSON.parse(await readFile(credentialsPath(io), "utf8"))
+    return typeof parsed === "object" && parsed ? (parsed as Credentials) : {}
+  } catch {
+    return {}
+  }
+}
+
+async function writeCredential(io: Io, api: string, credential: Credential) {
+  const all = await readCredentials(io)
+  all[api] = credential
+  await writeCredentials(io, all)
+}
+
+/** Only the user can read the file (mode 0600, in a 0700 folder). */
+async function writeCredentials(io: Io, all: Credentials) {
+  const path = credentialsPath(io)
+  if (!Object.keys(all).length) {
+    await rm(path, { force: true })
+    return
+  }
+  await mkdir(dirname(path), { recursive: true, mode: 0o700 })
+  await writeFile(path, JSON.stringify(all, null, 2) + "\n", { mode: 0o600 })
+  await chmod(path, 0o600)
 }
 
 // --- shared ---
