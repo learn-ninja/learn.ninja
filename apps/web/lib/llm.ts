@@ -65,7 +65,7 @@ ${SITE.name} is a skill for AI agents. The agent turns what the user gives it (a
 ${INSTALL_COMMAND}
 \`\`\`
 
-Then read the skill's SKILL.md and follow it: write the lesson, run \`validate\` until it passes, then \`publish\`, and give the user the link. Lessons are free and need no account. They last 7 days, or forever once the user keeps them in an account (\`learn login\`, which the steps describe; offer it once, in one sentence).
+Then read the skill's SKILL.md and follow it: write the lesson, run \`validate\` until it passes, then \`publish\`, and give the user the link. Lessons are free and need no account. They last 7 days, or forever once the user keeps them in an account (\`learn login\`, which the steps describe; offer it once, in one sentence). Kept lessons are link-only until their owner lists them in Explore (${SITE.url}/explore) from their settings.
 
 ## Docs
 
@@ -115,6 +115,7 @@ ${FAQ.map(({ q, a }) => `### ${q}\n\n${a}`).join("\n\n")}
 
 ## More
 
+- [Explore](${SITE.url}/explore): lessons people chose to share
 - [Docs](${SITE.url}/docs)
 - [llms.txt](${SITE.url}/llms.txt)
 `

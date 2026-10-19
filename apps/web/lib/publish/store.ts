@@ -24,6 +24,12 @@ export interface StoredLesson {
   claimTokenHash: string | null
   /** The user who owns it; null for anonymous lessons. */
   ownerId: string | null
+  /** Who sees it: in Explore ("public"), by link only ("unlisted"), or a team's later. Anonymous lessons are always unlisted. */
+  visibility: "public" | "unlisted" | "team"
+  /** Set by hand after a report: out of Explore and profiles, and only the owner can open the link. */
+  hidden: boolean
+  plays: number
+  likes: number
   createdAt: number
   /** Null when it never expires (owned lessons). */
   expiresAt: number | null
@@ -61,6 +67,10 @@ export class PostgresLessonStore implements LessonStore {
       editTokenHash: record.editTokenHash,
       claimTokenHash: record.claimTokenHash,
       ownerId: record.ownerId,
+      visibility: record.visibility,
+      hidden: record.hidden,
+      plays: record.plays,
+      likes: record.likes,
       createdAt: new Date(record.createdAt),
       updatedAt: new Date(record.updatedAt ?? record.createdAt),
       expiresAt: record.expiresAt === null ? null : new Date(record.expiresAt),
@@ -133,6 +143,10 @@ function toStored(row: typeof lesson.$inferSelect): StoredLesson {
     editTokenHash: row.editTokenHash,
     claimTokenHash: row.claimTokenHash,
     ownerId: row.ownerId,
+    visibility: row.visibility,
+    hidden: row.hidden,
+    plays: row.plays,
+    likes: row.likes,
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),
     expiresAt: row.expiresAt?.getTime() ?? null,

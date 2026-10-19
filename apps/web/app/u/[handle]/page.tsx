@@ -1,0 +1,104 @@
+import type { Metadata } from "next"
+import { notFound } from "next/navigation"
+import { HeartIcon, PlayIcon } from "lucide-react"
+
+import { LessonFeed } from "@/components/explore/lesson-feed"
+import { SiteFooter } from "@/components/site/site-footer"
+import { SiteHeader } from "@/components/site/site-header"
+import { normalizeHandle } from "@/lib/auth/handle-rules"
+import { currentActor } from "@/lib/auth/session"
+import { compact } from "@/lib/explore/browser"
+import { cachedProfile } from "@/lib/explore/cache"
+import { likedIds } from "@/lib/explore/queries"
+import { getDb } from "@/lib/publish/store"
+import { SITE } from "@/lib/site"
+
+// A person's public lessons at /u/{handle}, with plays and likes. Hidden and unlisted lessons
+// aren't here, nor is anything from an anonymous publish.
+
+type Props = { params: Promise<{ handle: string }> }
+
+export const dynamic = "force-dynamic"
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const handle = normalizeHandle((await params).handle)
+  const profile = handle ? await cachedProfile(handle) : null
+  if (!profile) return { title: "Profile" }
+  const n = profile.lessons.length
+  return {
+    title: profile.name.trim()
+      ? `${profile.name} (@${profile.handle})`
+      : `@${profile.handle}`,
+    description: `${n} ${n === 1 ? "lesson" : "lessons"} on ${SITE.name}.`,
+    alternates: { canonical: `/u/${profile.handle}` },
+  }
+}
+
+export default async function ProfilePage({ params }: Props) {
+  const handle = normalizeHandle((await params).handle)
+  const [actor, profile] = await Promise.all([
+    currentActor(),
+    handle ? cachedProfile(handle) : null,
+  ])
+  if (!profile) notFound()
+  const liked = actor
+    ? await likedIds(
+        await getDb(),
+        actor.userId,
+        profile.lessons.map((l) => l.id)
+      )
+    : new Set<string>()
+  const own = actor?.userId === profile.id
+  // Email-code accounts have no name until GitHub or a later setting gives them one.
+  const name = profile.name.trim()
+  const joined = new Date(profile.joinedAt).toLocaleDateString("en", {
+    month: "long",
+    year: "numeric",
+  })
+  return (
+    <div className="flex min-h-svh flex-col">
+      <SiteHeader handle={actor ? (actor.handle ?? "") : null} />
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-4 py-12 sm:px-6 sm:py-16">
+        <div className="flex flex-col gap-3">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            {name || <bdi dir="ltr">@{profile.handle}</bdi>}
+          </h1>
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-muted-foreground">
+            {name ? <bdi dir="ltr">@{profile.handle}</bdi> : null}
+            <span>
+              {profile.lessons.length}{" "}
+              {profile.lessons.length === 1 ? "lesson" : "lessons"}
+            </span>
+            <span className="flex items-center gap-1 tabular-nums">
+              <PlayIcon className="size-4" aria-hidden="true" />
+              {compact(profile.plays)}
+              <span className="sr-only">plays</span>
+            </span>
+            <span className="flex items-center gap-1 tabular-nums">
+              <HeartIcon className="size-4" aria-hidden="true" />
+              {compact(profile.likes)}
+              <span className="sr-only">likes</span>
+            </span>
+            <span>Joined {joined}</span>
+          </p>
+          {profile.bio ? (
+            <p className="max-w-xl text-base text-pretty">{profile.bio}</p>
+          ) : null}
+        </div>
+        {profile.lessons.length ? (
+          <LessonFeed
+            lessons={profile.lessons}
+            viewer={{ signedIn: actor !== null, liked }}
+          />
+        ) : (
+          <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+            {own
+              ? "None of your lessons are listed yet. Switch one on in your settings."
+              : "No listed lessons yet."}
+          </p>
+        )}
+      </main>
+      <SiteFooter className="max-w-2xl" />
+    </div>
+  )
+}

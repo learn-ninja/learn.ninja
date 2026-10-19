@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms" updated="2026-10-19">
+    <LegalPage title="Terms" updated="2026-10-20">
       <p>
         By using {SITE.name}, its skill, or its API, you agree to these terms.
         They are written in plain language on purpose.
@@ -45,6 +45,12 @@ export default function TermsPage() {
           publishing. Lessons saved to an account stay until you delete them or
           the account. We may remove a lesson earlier if it breaks these terms
           or we are asked to by someone with a valid claim.
+        </li>
+        <li>
+          A lesson you list in Explore is public and shown with your handle.
+          Anyone can report a listed lesson. A lesson that breaks these terms
+          is taken out of Explore and profiles; you can still open it from its
+          link while signed in.
         </li>
       </ul>
 

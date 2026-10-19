@@ -2,7 +2,12 @@
 
 import * as React from "react"
 import { createPortal } from "react-dom"
-import { LightbulbIcon, PanelRightIcon, RotateCcwIcon } from "lucide-react"
+import {
+  LightbulbIcon,
+  PanelRightIcon,
+  RotateCcwIcon,
+  UserRoundIcon,
+} from "lucide-react"
 
 import type {
   ConceptBrick as ConceptBrickData,
@@ -11,7 +16,7 @@ import type {
 } from "@workspace/spec"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
-import { Button } from "@workspace/ui/components/button"
+import { Button, LinkButton } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { DirectionProvider } from "@workspace/ui/components/direction"
 import { cn } from "@workspace/ui/lib/utils"
@@ -119,6 +124,10 @@ export interface LessonPlayerProps {
   termsHref?: string
   /** The link Share copies. Defaults to the current page. */
   shareUrl?: string
+  /** Who published the lesson, credited on the title screen with a link to their profile. */
+  author?: { handle: string; href: string }
+  /** The app's own entries for the lesson menu (the chevron by the title), after the player's. */
+  menuItems?: React.ReactNode
   /** The app's color theme. Pass both to show the theme setting in the footer. */
   theme?: Theme
   onThemeChange?: (theme: Theme) => void
@@ -148,6 +157,8 @@ export function LessonPlayer({
   privacyHref,
   termsHref,
   shareUrl,
+  author,
+  menuItems,
   theme,
   onThemeChange,
   onRename,
@@ -223,6 +234,8 @@ export function LessonPlayer({
             expiresAt={expiresAt}
             homeHref={homeHref}
             shareUrl={shareUrl}
+            author={author}
+            menuItems={menuItems}
             chrome={chrome}
           />
           {chrome ? (
@@ -588,6 +601,8 @@ function Player({
   expiresAt,
   homeHref,
   shareUrl,
+  author,
+  menuItems,
   progressKey,
 }: {
   lesson: Lesson
@@ -605,6 +620,8 @@ function Player({
   expiresAt?: number
   homeHref: string
   shareUrl?: string
+  author?: { handle: string; href: string }
+  menuItems?: React.ReactNode
   progressKey?: string
 }) {
   const { t, keyScope, lang = "en" } = usePlayer()
@@ -853,6 +870,7 @@ function Player({
           homeHref={homeHref}
           shareUrl={shareUrl}
           settings={headerSettings}
+          menuItems={menuItems}
           onRestart={() => {
             setTheoryOpen(false)
             dispatch({ type: "restart", lesson })
@@ -918,6 +936,7 @@ function Player({
                       item={item}
                       state={state}
                       dispatch={dispatch}
+                      author={author}
                       label={screenLabel(state, t)}
                       inBubble
                       ninja={ninja !== "off"}
@@ -1157,11 +1176,14 @@ export function Screen({
   inBubble = false,
   brief = null,
   paths = false,
+  author,
 }: {
   lesson: Lesson
   item: Item
   state: State
   dispatch: React.Dispatch<Action>
+  /** Who published the lesson, credited on the title screen. */
+  author?: { handle: string; href: string }
   /** A scenario's brief, while the ninja tells it (the player's story mode). */
   brief?: BriefProps | null
   /** A scenario after the right answer: every option's outcome (Every path, the player's Why?). */
@@ -1199,6 +1221,18 @@ export function Screen({
             </Badge>
             <Badge variant="outline">{t.levels[lesson.level]}</Badge>
           </div>
+          {author ? (
+            // The handle alone, no "by": it reads the same in every language.
+            <LinkButton
+              href={author.href}
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+            >
+              <UserRoundIcon data-icon="inline-start" />
+              <bdi dir="ltr">@{author.handle}</bdi>
+            </LinkButton>
+          ) : null}
         </div>
       )
     case "concept":

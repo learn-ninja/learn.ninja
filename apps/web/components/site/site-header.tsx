@@ -6,10 +6,10 @@ import { ButtonLink } from "./button-link"
 import { Wordmark } from "./wordmark"
 
 /**
- * The bar at the top of every page. `start` adds page-specific controls before the
- * wordmark (the docs menu), `action` a button after it (copy prompt). `handle` is what a page
- * that checked the session knows about the user; static pages leave it out and the account link
- * reads a cookie instead.
+ * The bar at the top of every page: Explore · Docs · Sign in (or the account once signed in).
+ * `start` adds page-specific controls before the wordmark (the docs menu), `action` a button after
+ * it (copy prompt). `handle` is what a page that checked the session knows about the user; static
+ * pages leave it out and the account link reads a cookie instead.
  */
 export function SiteHeader({
   start,
@@ -26,16 +26,21 @@ export function SiteHeader({
         {start}
         <Wordmark className="me-2" />
         {action}
-        {/* On phones the docs menu (`start`) stands in for this link. */}
-        <ButtonLink
-          href="/docs"
-          variant="outline"
-          size="sm"
-          className={cn("ms-auto", start && "max-sm:hidden")}
-        >
-          Docs
-        </ButtonLink>
-        <AccountLink handle={handle} className={cn(start && "max-sm:ms-auto")} />
+        <nav aria-label="Site" className="ms-auto flex items-center gap-1">
+          <ButtonLink href="/explore" variant="ghost" size="sm">
+            Explore
+          </ButtonLink>
+          {/* On phones the docs menu (`start`) stands in for this link. */}
+          <ButtonLink
+            href="/docs"
+            variant="ghost"
+            size="sm"
+            className={cn(start && "max-sm:hidden")}
+          >
+            Docs
+          </ButtonLink>
+          <AccountLink handle={handle} />
+        </nav>
       </div>
     </header>
   )

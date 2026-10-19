@@ -52,6 +52,38 @@ The body is `{ "claimToken": "…" }` from publishing. Needs a signed-in caller:
 
 `claimUrl` from publishing (`/keep/{claimToken}`) does the same thing in the browser: it signs the visitor in, then keeps that one lesson.
 
+## List a lesson in Explore
+
+```http
+PATCH /api/lessons/{id}
+Content-Type: application/json
+x-api-key: <key>
+```
+
+The body is `{ "visibility": "public" }` to list a lesson in [Explore](/explore) and on your profile, or `{ "visibility": "unlisted" }` to make it link-only again. Owner only (`403 not_owner` otherwise). Every lesson starts unlisted, kept ones included, so nothing is listed that you didn't choose to show. Returns `200` with `id`, `url`, and `visibility`. The same switch is on the [settings page](https://learn.ninja/settings).
+
+## Like a lesson
+
+```http
+POST /api/lessons/{id}/like
+DELETE /api/lessons/{id}/like
+```
+
+One like per account per lesson; needs a session cookie or an API key. Both return `200` with `{ "ok": true, "liked": true, "likes": 12 }`. Repeating either changes nothing.
+
+## Report a lesson
+
+```http
+POST /api/lessons/{id}/report
+Content-Type: application/json
+```
+
+The body is `{ "reason": "…" }`, up to 1,000 characters. No account needed; 5 reports an hour from one place. The report goes to the people who run learn.ninja with the link and the reason, and only a hash of the reporter's address is kept. Returns `201`. Lessons that break the [terms](https://learn.ninja/terms) are taken out of Explore and profiles; their owner can still open the link.
+
+## Plays
+
+Each lesson page counts a play once per browser per day, through `POST /api/lessons/{id}/play` (no body, no reply). Play and like counts show on Explore cards and profiles.
+
 ## API keys
 
 A key stands for an account on the terminal. `learn login` makes one; you can also make and revoke keys at [learn.ninja/settings](https://learn.ninja/settings). Send it as an `x-api-key` header. A key that doesn't work answers `401 invalid_api_key`, and the request isn't carried out anonymously.
@@ -99,17 +131,20 @@ Errors return `"ok": false` with an `error` code and a `message`.
 | 401    | `unauthorized`     | The edit or claim token doesn't match this lesson           |
 | 401    | `sign_in_required` | The call needs a session cookie or an `x-api-key` header    |
 | 401    | `invalid_api_key`  | The key was revoked or never existed; run `learn login`     |
+| 403    | `not_owner`        | Only the lesson's owner can change its visibility           |
 | 404    | `not_found`        | The lesson doesn't exist, has expired, or was already kept  |
 | 409    | `already_claimed`  | Another account already keeps this lesson                   |
 | 409    | `handle_taken`     | Someone already has that handle                             |
 | 413    | `too_large`        | The lesson file is too big                                  |
 | 422    | `invalid_lesson`   | The lesson breaks the format; the response lists each issue |
 | 422    | `invalid_handle`   | The handle breaks the rules or is reserved                  |
+| 422    | `invalid_visibility` | Visibility must be `public` or `unlisted`                 |
 | 422    | `unsupported_spec` | The lesson's `spec` version isn't supported                 |
-| 429    | `rate_limited`     | Too many publishes from one place; try again later          |
+| 429    | `rate_limited`     | Too many publishes or reports from one place; try later     |
 
 ## Limits
 
 - 20 publishes or updates an hour from one place.
 - 5 sign-in codes an hour to one email address, 3 a minute from one place; each code works for 5 minutes and three tries.
+- 5 reports an hour from one place.
 - Anonymous lessons expire 7 days after they're first published. Owned lessons never expire.

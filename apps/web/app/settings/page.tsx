@@ -6,10 +6,14 @@ import { AccountPage } from "@/components/account/account-page"
 import { ApiKeys } from "@/components/account/api-keys"
 import { HandleForm } from "@/components/account/handle-form"
 import { SignOutButton } from "@/components/account/sign-out-button"
+import { YourLessons } from "@/components/account/your-lessons"
+import { ButtonLink } from "@/components/site/button-link"
 import { listKeys } from "@/lib/auth/account"
 import { getAuth } from "@/lib/auth/auth"
 import { currentActor } from "@/lib/auth/session"
 import type { KeySummary } from "@/lib/auth/account"
+import { lessonsOwnedBy } from "@/lib/explore/queries"
+import { getDb } from "@/lib/publish/store"
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -24,8 +28,12 @@ export const dynamic = "force-dynamic"
 export default async function SettingsPage() {
   const actor = await currentActor()
   if (!actor) redirect("/sign-in?callback=/settings")
-  const keys = (await listKeys(await getAuth(), await headers())).body
-    .keys as KeySummary[]
+  const [keys, lessons] = await Promise.all([
+    listKeys(await getAuth(), await headers()).then(
+      (r) => r.body.keys as KeySummary[]
+    ),
+    lessonsOwnedBy(await getDb(), actor.userId),
+  ])
   return (
     <AccountPage handle={actor.handle ?? ""} wide>
       <div className="flex flex-col gap-2">
@@ -40,8 +48,24 @@ export default async function SettingsPage() {
       </div>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Handle</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-xl font-semibold tracking-tight">Handle</h2>
+          {actor.handle ? (
+            <ButtonLink
+              href={`/u/${actor.handle}`}
+              variant="outline"
+              size="sm"
+            >
+              View profile
+            </ButtonLink>
+          ) : null}
+        </div>
         <HandleForm initial={actor.handle} />
+      </section>
+
+      <section id="lessons" className="flex scroll-mt-20 flex-col gap-4">
+        <h2 className="text-xl font-semibold tracking-tight">Your lessons</h2>
+        <YourLessons initial={lessons} handle={actor.handle} />
       </section>
 
       <section className="flex flex-col gap-4">

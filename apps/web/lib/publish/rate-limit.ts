@@ -10,11 +10,17 @@ export const PUBLISH_LIMIT = { requests: 20, windowSeconds: 60 * 60 }
 export const VALIDATE_LIMIT = { requests: 120, windowSeconds: 60 * 60 }
 /** Sign-in codes per email address: each one is an email we pay for. Better Auth limits per IP on top. */
 export const CODE_LIMIT = { requests: 5, windowSeconds: 60 * 60 }
+/** Reports per client: each one is an email to the maker. */
+export const REPORT_LIMIT = { requests: 5, windowSeconds: 60 * 60 }
+/** Plays per client: a learner opens a few lessons an hour, a script opens thousands. */
+export const PLAY_LIMIT = { requests: 120, windowSeconds: 60 * 60 }
 
 const LIMITS = {
   publish: PUBLISH_LIMIT,
   validate: VALIDATE_LIMIT,
   code: CODE_LIMIT,
+  report: REPORT_LIMIT,
+  play: PLAY_LIMIT,
 }
 export type LimitName = keyof typeof LIMITS
 

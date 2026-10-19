@@ -5,6 +5,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -173,4 +174,39 @@ export const lesson = pgTable(
     index("lesson_claim_token_hash_idx").on(t.claimTokenHash),
     index("lesson_owner_id_idx").on(t.ownerId),
   ]
+)
+
+// ---------- Explore ----------
+
+/** One like per user per lesson; `lesson.likes` keeps the count. */
+export const like = pgTable(
+  "like",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lesson.id, { onDelete: "cascade" }),
+    createdAt: time("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.lessonId] }),
+    index("like_lesson_id_idx").on(t.lessonId),
+  ]
+)
+
+/** A report on a lesson, emailed to the maker when it's made. The reporter is kept only as a hash of their IP. */
+export const report = pgTable(
+  "report",
+  {
+    id: text("id").primaryKey(),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lesson.id, { onDelete: "cascade" }),
+    reason: text("reason").notNull(),
+    reporterIpHash: text("reporter_ip_hash").notNull(),
+    createdAt: time("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("report_lesson_id_idx").on(t.lessonId)]
 )

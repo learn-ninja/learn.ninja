@@ -181,6 +181,11 @@ export async function publishLesson(
     editTokenHash: hashToken(editToken),
     claimTokenHash: claimToken ? hashToken(claimToken) : null,
     ownerId: owner,
+    // Link-only until the owner lists it from their settings; anonymous lessons stay that way.
+    visibility: "unlisted",
+    hidden: false,
+    plays: 0,
+    likes: 0,
     createdAt: now,
     expiresAt: owner ? null : now + LESSON_TTL_SECONDS * 1000,
   }

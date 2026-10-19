@@ -36,6 +36,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -202,6 +203,7 @@ export function LessonHeader({
   homeHref,
   shareUrl,
   settings,
+  menuItems,
   onRestart,
   onRename,
   t,
@@ -220,6 +222,8 @@ export function LessonHeader({
   shareUrl?: string
   /** The app's settings menu, shown before Share. */
   settings?: React.ReactNode
+  /** The app's own entries for the lesson menu, after Restart. */
+  menuItems?: React.ReactNode
   onRestart: () => void
   /** Called with the new title when the learner renames the lesson in the header. */
   onRename?: (title: string) => void
@@ -263,6 +267,12 @@ export function LessonHeader({
                   {t.restart}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
+              {menuItems ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>{menuItems}</DropdownMenuGroup>
+                </>
+              ) : null}
             </DropdownMenu>
           </DropdownMenuTrigger>
         </div>

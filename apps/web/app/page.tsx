@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Faq } from "@/components/home/faq"
 import { GetStarted } from "@/components/home/get-started"
 import { Hero } from "@/components/home/hero"
+import { RecentLessons } from "@/components/home/recent-lessons"
 import { HeaderCopyPrompt } from "@/components/site/header-copy-prompt"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
@@ -20,6 +21,7 @@ export default function HomePage() {
       <SiteHeader action={<HeaderCopyPrompt afterHero />} />
       <main className="flex-1">
         <Hero />
+        <RecentLessons />
         <Faq />
         <GetStarted />
       </main>
