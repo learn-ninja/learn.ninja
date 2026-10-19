@@ -6,7 +6,7 @@ There are two ways to follow these steps. In a terminal with the skill installed
 
 ## Steps
 
-1. **Plan the lesson.** Read what the user gave you, then read `reference/planning.md` (`get_guide` with `planning`). It sets the scope (one lesson, or a path of several), the size, and the reading age, and lists the words people use for each choice. Usually decide without asking, and say what you decided at the end. Only when the request is just a bare topic ("how vaccines work") ask first: one short message with up to two questions and your defaults, as `reference/planning.md` describes.
+1. **Plan the lesson.** Read what the user gave you, then read `reference/planning.md` (`get_guide` with `planning`). It sets the scope (one lesson, or a path of several), the size, and the reading age, and lists the words people use for each choice. Usually decide without asking, and say what you decided at the end. Only when the request is just a bare topic ("how vaccines work") ask first: up to two questions with your defaults, as clickable options when you have a tool for that, as `reference/planning.md` describes.
 2. **Read the guides before writing.** Read `reference/teaching-guide.md` (`get_guide` with `teaching`: how to teach well, which brick to use when, visuals) and `reference/lesson-format.md` (`get_guide` with `format`: every field). Then:
    - **Level:** read `levels/index.md` (`get_guide` with `levels`, which returns every level's file too), pick the level from its ranked signals, and read that level's file: it says what to assume, how hard to make the questions, and how much to help.
 

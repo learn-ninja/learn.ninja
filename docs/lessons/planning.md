@@ -7,7 +7,7 @@ Before writing, the agent reads what you asked for and decides how big the lesso
 
 ## When the agent asks first
 
-Only when the request is just a topic, with nothing else to go on: "how vaccines work", "teach me budgeting". Then it sends one short message with up to two questions, each with the default it would use:
+Only when the request is just a topic, with nothing else to go on: "how vaccines work", "teach me budgeting". Then it asks up to two questions, each with the default it would use. In agents that can show options to pick from, like Claude, you answer with a click; elsewhere it sends one short message:
 
 > Before I make it:
 > 1. Who's it for: you, a child (what age?), or a group? (I'll assume you.)
