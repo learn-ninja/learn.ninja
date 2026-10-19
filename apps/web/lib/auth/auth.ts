@@ -15,7 +15,7 @@ import { getRateLimiter, type RateLimiter } from "@/lib/publish/rate-limit"
 import { getDb } from "@/lib/publish/store"
 
 import { codeSenderFromEnv, type CodeSender } from "./email"
-import { freeHandle } from "./handles"
+import { findByHandle, freeHandle, handleProblem, normalizeHandle } from "./handles"
 import { authStorageFromEnv } from "./storage"
 
 // Better Auth, as plans/accounts-v2.md describes: GitHub (website only) and a six-digit email code
@@ -68,17 +68,16 @@ export function createAuth(deps: AuthDeps) {
   return betterAuth({
     appName: SITE.name,
     secret: secretFromEnv(env),
-    // The site, a preview deployment, or a local server: whichever the request came to.
-    baseURL: env.BETTER_AUTH_URL ?? {
-      allowedHosts: [
-        "learn.ninja",
-        "www.learn.ninja",
-        "*.vercel.app",
-        "localhost:3000",
-        "127.0.0.1:3000",
-      ],
-      fallback: env.LEARN_PUBLIC_URL ?? "http://localhost:3000",
-    },
+    // The site or a preview deployment: whichever host the request came to. In development the
+    // origin comes from the request itself, so any local port works.
+    baseURL:
+      env.BETTER_AUTH_URL ??
+      (env.NODE_ENV === "production"
+        ? {
+            allowedHosts: ["learn.ninja", "www.learn.ninja", "*.vercel.app"],
+            fallback: env.LEARN_PUBLIC_URL ?? "https://learn.ninja",
+          }
+        : undefined),
     database: drizzleAdapter(deps.db, { provider: "pg", schema }),
     secondaryStorage: storage,
     session: {
@@ -87,7 +86,8 @@ export function createAuth(deps: AuthDeps) {
     },
     user: {
       additionalFields: {
-        handle: { type: "string", required: false, unique: true, input: false },
+        // Set through updateUser, so the cookie cache refreshes; the hook below checks it.
+        handle: { type: "string", required: false, unique: true, input: true },
         bio: { type: "string", required: false, input: false },
         banned: {
           type: "boolean",
@@ -149,6 +149,30 @@ export function createAuth(deps: AuthDeps) {
       },
     },
     databaseHooks: {
+      user: {
+        update: {
+          // Every handle change, from the settings page or anywhere else, follows the rules.
+          before: async (data, ctx) => {
+            if (!("handle" in data)) return
+            const handle = normalizeHandle(String(data.handle ?? ""))
+            const problem = handleProblem(handle)
+            if (problem) {
+              throw new APIError("UNPROCESSABLE_ENTITY", {
+                message: problem,
+                code: "INVALID_HANDLE",
+              })
+            }
+            const taken = await findByHandle(deps.db, handle)
+            if (taken && taken.id !== ctx?.context.session?.user.id) {
+              throw new APIError("CONFLICT", {
+                message: "Someone already has that handle.",
+                code: "HANDLE_TAKEN",
+              })
+            }
+            return { data: { ...data, handle } }
+          },
+        },
+      },
       session: {
         create: {
           // A banned user keeps the account but can't sign in.

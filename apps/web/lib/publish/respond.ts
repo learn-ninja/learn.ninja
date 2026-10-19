@@ -18,7 +18,10 @@ export const SIGN_IN_REQUIRED: Reply = {
 export async function respond(handle: () => Promise<Reply>): Promise<Response> {
   try {
     const reply = await handle()
-    return Response.json(reply.body, { status: reply.status })
+    return Response.json(reply.body, {
+      status: reply.status,
+      headers: reply.headers,
+    })
   } catch (e) {
     if (e instanceof StorageNotConfiguredError) {
       return Response.json(

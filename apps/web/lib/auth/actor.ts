@@ -1,5 +1,3 @@
-import { APIError } from "better-auth/api"
-
 import type { Auth } from "./auth"
 
 // Who's making a request: a signed-in user (session cookie) or a terminal (x-api-key), or nobody.
@@ -36,7 +34,9 @@ export async function getActor(
   try {
     result = await auth.api.getSession({ headers })
   } catch (e) {
-    if (viaApiKey && e instanceof APIError) throw new InvalidApiKeyError()
+    // Better Auth answers a bad key with an APIError (403 for an unknown key, 400 for a malformed
+    // one). Checked by shape: the bundler can hold more than one copy of the class.
+    if (viaApiKey && isApiError(e)) throw new InvalidApiKeyError()
     throw e
   }
   if (!result) {
@@ -52,4 +52,13 @@ export async function getActor(
     image: user.image ?? null,
     viaApiKey,
   }
+}
+
+function isApiError(e: unknown): e is { statusCode: number } {
+  return (
+    typeof e === "object" &&
+    e !== null &&
+    "statusCode" in e &&
+    typeof (e as { statusCode: unknown }).statusCode === "number"
+  )
 }

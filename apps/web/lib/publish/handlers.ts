@@ -49,6 +49,8 @@ export const keepPath = (claimToken: string) => `/keep/${claimToken}`
 export interface Reply {
   status: number
   body: Record<string, unknown>
+  /** Headers to send with the reply (Better Auth's Set-Cookie when a session changed). */
+  headers?: Headers
 }
 
 interface PublishRequest {

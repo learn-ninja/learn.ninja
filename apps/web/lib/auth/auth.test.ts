@@ -215,30 +215,47 @@ describe("handles", () => {
   })
 
   it("sets a handle once, refuses a taken one, and reports it in whoami", async () => {
-    const a = (await getActor(
-      auth,
-      new Headers({ cookie: await signIn("h1@example.com") })
-    ))!
-    const b = (await getActor(
-      auth,
-      new Headers({ cookie: await signIn("h2@example.com") })
-    ))!
-    expect((await setHandle(db, a, "Ada Lovelace")).body).toMatchObject({
-      ok: true,
+    const a = new Headers({ cookie: await signIn("h1@example.com") })
+    const b = new Headers({ cookie: await signIn("h2@example.com") })
+    const set = await setHandle(auth, a, "Ada Lovelace")
+    expect(set.body).toMatchObject({ ok: true, handle: "ada-lovelace" })
+    // The reply refreshes the session cookie, whose cached copy of the user had no handle.
+    const refreshed = set.headers!.getSetCookie().map((c) => c.split(";")[0])
+    expect(refreshed.join()).toContain("session_data")
+    a.set("cookie", refreshed.join("; "))
+    expect(await setHandle(auth, b, "ada-lovelace")).toMatchObject({
+      status: 409,
+      body: { error: "handle_taken" },
+    })
+    expect(await setHandle(auth, b, "api")).toMatchObject({
+      status: 422,
+      body: { error: "invalid_handle" },
+    })
+    // The same user may keep their own handle.
+    expect((await setHandle(auth, a, "ada-lovelace")).status).toBe(200)
+    // The session (and its cookie cache) sees the new handle at once.
+    expect(whoami((await getActor(auth, a))!).body).toMatchObject({
+      email: "h1@example.com",
       handle: "ada-lovelace",
     })
-    expect((await setHandle(db, b, "ada-lovelace")).status).toBe(409)
-    expect((await setHandle(db, b, "api")).status).toBe(422)
-    // The same user may keep their own handle.
-    expect((await setHandle(db, a, "ada-lovelace")).status).toBe(200)
+    // So does a fresh sign-in.
     const again = (await getActor(
       auth,
       new Headers({ cookie: await signIn("h1@example.com") })
     ))!
-    expect(whoami(again).body).toMatchObject({
-      email: "h1@example.com",
-      handle: "ada-lovelace",
-    })
+    expect(again.handle).toBe("ada-lovelace")
+  })
+
+  it("refuses a bad handle sent straight to Better Auth's update-user", async () => {
+    const headers = new Headers({ cookie: await signIn("h3@example.com") })
+    await expect(
+      auth.api.updateUser({ headers, body: { handle: "ada-lovelace" } })
+    ).rejects.toMatchObject({ status: "CONFLICT" })
+    await expect(
+      auth.api.updateUser({ headers, body: { handle: "x" } })
+    ).rejects.toMatchObject({ status: "UNPROCESSABLE_ENTITY" })
+    // Other updates still go through.
+    await auth.api.updateUser({ headers, body: { name: "H3" } })
   })
 
   it("finds a free handle near a GitHub login", async () => {
