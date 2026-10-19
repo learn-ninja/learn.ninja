@@ -24,8 +24,12 @@ export const emptyPrepared: Prepared = {
 
 export const mathKey = (tex: string, display: boolean) =>
   `${display ? "d" : "i"}:${tex}`
+/**
+ * A code block's key: the language, a newline, then the code. A newline can't appear in a language
+ * name, so the key is unambiguous; a NUL can't be stored (Postgres jsonb rejects it).
+ */
 export const codeKey = (language: string, code: string) =>
-  `${language}\u0000${code}`
+  `${language}\n${code}`
 /** A chart's key: its content hashed (FNV-1a), drawn full size or compact (on an option or item card). */
 export const chartKey = (chart: unknown, compact: boolean) => {
   const text = JSON.stringify(chart)

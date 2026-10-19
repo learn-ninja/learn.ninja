@@ -96,6 +96,23 @@ describe("publishing", () => {
     expect(stored?.editTokenHash).not.toBe(reply.body.editToken)
   })
 
+  it("stores highlighted code for a lesson with code visuals", async () => {
+    // Postgres jsonb rejects NUL in strings, so prepared.code keys must not contain one.
+    const reply = await publishLesson(
+      { text: example("map-vs-foreach.json"), client: "x" },
+      deps
+    )
+    expect(reply.status).toBe(201)
+    const stored = await deps.store.get(reply.body.id as string)
+    const keys = Object.keys(stored?.prepared.code ?? {})
+    expect(keys.length).toBeGreaterThan(0)
+    for (const key of keys) {
+      expect(key).not.toContain("\u0000")
+      expect(key.split("\n")[0]).toBe("javascript")
+      expect(stored?.prepared.code[key]?.length).toBeGreaterThan(0)
+    }
+  })
+
   it("rejects an invalid lesson with the spec's issues", async () => {
     const lesson = JSON.parse(buttons)
     delete lesson.bricks[1].options[1].feedback
