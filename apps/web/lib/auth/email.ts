@@ -1,9 +1,10 @@
 import { SITE } from "@/lib/site"
 
-// Sign-in codes go out through Resend (RESEND_API_KEY) from mail.learn.ninja. Without the key, the
+// Sign-in codes go out through Resend (RESEND_API_KEY) as sensei@learn.ninja, which is a real inbox
+// in the learn.ninja Google Workspace, so replies reach a person. Without the key, the
 // code is printed to the server console instead, so development needs no account.
 
-export const DEFAULT_FROM = `${SITE.name} <code@mail.learn.ninja>`
+export const DEFAULT_FROM = `${SITE.name} <sensei@learn.ninja>`
 
 export type CodeSender = (email: string, code: string) => Promise<void>
 

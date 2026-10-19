@@ -25,7 +25,7 @@ Plan agreed on 2026-10-19. Nothing here is built yet. The product keeps its prom
 | Moderation at launch | A report button on listed lessons that emails the maker, and a hidden flag flipped by hand. |
 | Profiles | A minimal `/u/{handle}` page ships with Explore: the person's public lessons with plays and likes. |
 | Handles | Default to the GitHub username; email-code users choose one the first time they open the site signed in. |
-| OAuth app and email domain | GitHub OAuth app under the learn-ninja org; email sent from mail.learn.ninja. |
+| OAuth app and email domain | GitHub OAuth app under the learn-ninja org; email sent from sensei@learn.ninja (learn.ninja is a secondary domain in the Google Workspace, verified in Resend). |
 | Hosting | Vercel plus managed services from its marketplace. Self-hosting stays possible through the same libraries, but isn't a v2 deliverable. |
 
 ## Flows
@@ -51,7 +51,7 @@ Plan agreed on 2026-10-19. Nothing here is built yet. The product keeps its prom
 | Auth | Better Auth 1.7 with the GitHub provider, the `emailOTP` plugin, and the `apiKey` plugin | Users live in our Postgres. `emailOTP` sends six-digit codes with a five-minute expiry and three attempts; store them hashed. `apiKey` issues the terminal keys, with `enableSessionForAPIKeys` so publish routes resolve a key the same way as a cookie. The `organization` and Stripe plugins are there for teams later. Watch its security advisories; it has shipped several fixes this year. |
 | Database | Neon Postgres from the Vercel Marketplace, Drizzle 0.45 over the HTTP driver | One database for users, sessions, lessons, likes, and later teams and courses. A preview branch per deployment. PGlite runs the same schema locally and in tests, replacing the file store. |
 | Redis | Upstash, kept | Rate limits, play counters, and Better Auth's secondary session storage. Play counts flush to Postgres on a schedule. |
-| Email | Resend with React Email, from mail.learn.ninja | Sign-in codes and report emails. 3,000 a month free. |
+| Email | Resend, from sensei@learn.ninja | Sign-in codes and report emails. 3,000 a month free. |
 | Next.js 16 | `proxy.ts` only redirects; pages and routes validate the session themselves. `after()` records plays. The Explore page is cached and revalidated on publish, like, and visibility changes; "liked by me" is a small dynamic island. |
 
 New environment variables: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `RESEND_API_KEY`, `REPORT_EMAIL`. All documented in `.env.example`.
