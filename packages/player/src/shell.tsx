@@ -36,6 +36,7 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -162,18 +163,31 @@ export function usePreferences() {
   return [prefs, update] as const
 }
 
-/** Hours until the link expires (at least 1), updated every minute. Null until mounted. */
-export function useHoursLeft(expiresAt?: number): number | null {
-  const [hours, setHours] = React.useState<number | null>(null)
+/** Time left on a published link. */
+export type TimeLeft = { unit: "days" | "hours"; count: number }
+
+/**
+ * Time until the link expires: whole days (rounded) from 24 hours up, hours (rounded down, at
+ * least 1) below.
+ */
+export function timeLeft(ms: number): TimeLeft {
+  const hours = ms / 3.6e6
+  return hours >= 24
+    ? { unit: "days", count: Math.round(hours / 24) }
+    : { unit: "hours", count: Math.max(1, Math.floor(hours)) }
+}
+
+/** Time until the link expires, updated every minute. Null until mounted. */
+export function useTimeLeft(expiresAt?: number): TimeLeft | null {
+  const [left, setLeft] = React.useState<TimeLeft | null>(null)
   React.useEffect(() => {
     if (!expiresAt) return
-    const update = () =>
-      setHours(Math.max(1, Math.floor((expiresAt - Date.now()) / 3.6e6)))
+    const update = () => setLeft(timeLeft(expiresAt - Date.now()))
     update()
     const id = setInterval(update, 60_000)
     return () => clearInterval(id)
   }, [expiresAt])
-  return expiresAt ? hours : null
+  return expiresAt ? left : null
 }
 
 // ---------- header ----------
@@ -189,6 +203,7 @@ export function LessonHeader({
   homeHref,
   shareUrl,
   settings,
+  menuItems,
   onRestart,
   onRename,
   t,
@@ -207,12 +222,14 @@ export function LessonHeader({
   shareUrl?: string
   /** The app's settings menu, shown before Share. */
   settings?: React.ReactNode
+  /** The app's own entries for the lesson menu, after Restart. */
+  menuItems?: React.ReactNode
   onRestart: () => void
   /** Called with the new title when the learner renames the lesson in the header. */
   onRename?: (title: string) => void
   t: Strings
 }) {
-  const hours = useHoursLeft(expiresAt)
+  const left = useTimeLeft(expiresAt)
   const [confirmRestart, setConfirmRestart] = React.useState(false)
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 px-4 sm:h-16 sm:px-8">
@@ -239,10 +256,10 @@ export function LessonHeader({
             </Button>
             <DropdownMenu className="w-auto">
               <DropdownMenuGroup>
-                {hours !== null ? (
+                {left ? (
                   <DropdownMenuLabel className="flex items-center gap-1.5">
                     <ClockIcon className="size-3.5" aria-hidden="true" />
-                    {t.expires(hours)}
+                    {t.expires[left.unit](left.count)}
                   </DropdownMenuLabel>
                 ) : null}
                 <DropdownMenuItem onAction={() => setConfirmRestart(true)}>
@@ -250,6 +267,12 @@ export function LessonHeader({
                   {t.restart}
                 </DropdownMenuItem>
               </DropdownMenuGroup>
+              {menuItems ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>{menuItems}</DropdownMenuGroup>
+                </>
+              ) : null}
             </DropdownMenu>
           </DropdownMenuTrigger>
         </div>

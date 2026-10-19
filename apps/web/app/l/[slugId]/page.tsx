@@ -1,12 +1,14 @@
 import type { Metadata } from "next"
 
+import { PlayBeacon } from "@/components/explore/play-beacon"
 import { LessonView } from "@/components/lesson-view"
 import { LessonExpired } from "@/components/site/lesson-expired"
 import { shareMetadata } from "@/lib/metadata"
 import { OG_SIZE } from "@/lib/og"
-import { loadPublished } from "@/lib/published"
+import { viewPublished } from "@/lib/published"
 
-// A published lesson, at /l/{slug}-{id}. Lessons expire 24 hours after they're published.
+// A published lesson, at /l/{slug}-{id}. Anonymous lessons expire 7 days after they're published;
+// lessons saved to an account stay, and listed ones are credited to their maker and indexed.
 
 type Props = {
   params: Promise<{ slugId: string }>
@@ -15,13 +17,14 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slugId } = await params
-  const record = await loadPublished(slugId)
+  const { record, listed, author } = await viewPublished(slugId)
   const share = shareMetadata(`/l/${slugId}`, record?.lesson.language)
   return {
     ...(record
       ? {
           title: record.lesson.title,
           description: record.lesson.summary,
+          ...(author?.handle ? { authors: [{ name: `@${author.handle}`, url: `/u/${author.handle}` }] } : {}),
         }
       : {
           title: "Lesson unavailable",
@@ -39,20 +42,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     // Anyone can publish a lesson, so it isn't credited to the site's maker.
     twitter: { card: "summary_large_image" },
-    robots: { index: false },
+    // Only lessons their makers chose to list are indexed; link-only ones stay out of search.
+    robots: { index: listed },
   }
 }
 
 const EXPIRED_DESCRIPTION =
-  "Lessons expire 24 hours after they're published. Ask whoever shared it for a new link."
+  "Lessons expire 7 days after they're published. Ask whoever shared it for a new link."
 
 export default async function PublishedLessonPage({
   params,
   searchParams,
 }: Props) {
   const { slugId } = await params
-  const record = await loadPublished(slugId)
-  if (!record) return <LessonExpired />
+  const view = await viewPublished(slugId)
+  if (!view.record) return <LessonExpired reason={view.reason ?? "expired"} />
+  const { record, author, isOwner, listed } = view
   const { ui } = await searchParams
   return (
     <div className="h-svh">
@@ -60,9 +65,22 @@ export default async function PublishedLessonPage({
         lesson={record.lesson}
         prepared={record.prepared}
         uiLanguage={ui}
-        expiresAt={record.expiresAt}
+        expiresAt={record.expiresAt ?? undefined}
         progressKey={`l/${slugId}`}
+        author={
+          author?.handle
+            ? { handle: author.handle, href: `/u/${author.handle}` }
+            : undefined
+        }
+        lessonId={record.id}
+        canReport={listed && !isOwner}
+        owner={
+          isOwner
+            ? { visibility: record.visibility, hidden: record.hidden }
+            : undefined
+        }
       />
+      <PlayBeacon id={record.id} />
     </div>
   )
 }

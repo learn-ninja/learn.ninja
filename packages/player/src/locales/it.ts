@@ -20,7 +20,11 @@ export const it: Strings = {
   hookNote:
     "Questa prima domanda è un riscaldamento. Non conta per il punteggio.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),
-  expires: (h) => p(h, { one: "Scade tra # h", other: "Scade tra # h" }),
+  expires: {
+    days: (n) =>
+      p(n, { one: "Scade tra # giorno", other: "Scade tra # giorni" }),
+    hours: (n) => p(n, { one: "Scade tra # h", other: "Scade tra # h" }),
+  },
   levels: {
     beginner: "Principiante",
     intermediate: "Intermedio",

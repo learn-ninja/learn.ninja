@@ -2,7 +2,7 @@ import type { InferPageType } from "fumadocs-core/source"
 
 import { FAQ } from "@/lib/faq"
 import { getLesson } from "@/lib/lessons"
-import { AGENTS, INSTALL_COMMAND, SITE } from "@/lib/site"
+import { AGENTS, INSTALL_COMMAND, MCP_URL, SITE } from "@/lib/site"
 import { docsPages } from "@/lib/docs-nav"
 import { source } from "@/lib/source"
 
@@ -65,7 +65,9 @@ ${SITE.name} is a skill for AI agents. The agent turns what the user gives it (a
 ${INSTALL_COMMAND}
 \`\`\`
 
-Then read the skill's SKILL.md and follow it: write the lesson, run \`validate\` until it passes, then \`publish\`, and give the user the link. Lessons are free, need no account, and last 24 hours.
+Then read the skill's SKILL.md and follow it: write the lesson, run \`validate\` until it passes, then \`publish\`, and give the user the link. Lessons are free and need no account. They last 7 days, or forever once the user keeps them in an account (\`learn login\`, which the steps describe; offer it once, in one sentence). Kept lessons are link-only until their owner lists them in Explore (${SITE.url}/explore) from their settings.
+
+No shell (a chat app, or a locked-down host)? Connect to the MCP server at ${MCP_URL} instead: call \`get_guide\` once first and follow it, then \`publish_lesson\`, which checks the lesson too. [How to connect each client](${SITE.url}/docs/reference/mcp.md).
 
 ## Docs
 
@@ -105,6 +107,8 @@ Then ask it for a lesson: "Make me a lesson from this article", "Teach me how ma
 
 Works with any agent that supports skills: ${AGENTS.map((a) => a.name).join(", ")}.
 
+In a chat app (Claude, ChatGPT) or any other MCP client, connect to the MCP server instead: ${MCP_URL}. [How to connect each client](${SITE.url}/docs/reference/mcp.md).
+
 ## What's in a lesson
 
 One idea in 3 to 15 minutes: a guess before any teaching, one to four short concepts each followed by practice, a final challenge, and takeaways. The agent picks a level and a size from what you ask, and splits a big topic into a path of lessons. Practice uses nine kinds of bricks: concept, choice, compare, hotspot, sort, order, match, blank, and scenario. Every wrong option explains the mistake behind it.
@@ -115,6 +119,7 @@ ${FAQ.map(({ q, a }) => `### ${q}\n\n${a}`).join("\n\n")}
 
 ## More
 
+- [Explore](${SITE.url}/explore): lessons people chose to share
 - [Docs](${SITE.url}/docs)
 - [llms.txt](${SITE.url}/llms.txt)
 `

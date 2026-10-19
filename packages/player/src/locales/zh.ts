@@ -15,7 +15,10 @@ export const zh: Strings = {
   picked: (parts) => `已选：${parts}`,
   hookNote: "第一题是热身，不计入得分。",
   minutes: (n) => `${n} 分钟`,
-  expires: (h) => `${h} 小时后过期`,
+  expires: {
+    days: (n) => `${n} 天后过期`,
+    hours: (n) => `${n} 小时后过期`,
+  },
   levels: { beginner: "入门", intermediate: "中级", advanced: "高级" },
   objective: "你将能够",
   warmUp: "热身",

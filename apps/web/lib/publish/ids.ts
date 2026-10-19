@@ -1,6 +1,9 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 
-// Lesson ids, readable links, and edit tokens.
+// Lesson ids, readable links, and edit tokens. The link helpers live in paths.ts (no Node there,
+// so the browser can use them) and are re-exported here.
+
+export { idFromParam, lessonPath, slugify } from "./paths"
 
 const ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
 
@@ -10,30 +13,8 @@ export function newLessonId(length = 8): string {
   return [...bytes].map((b) => ALPHABET[b % ALPHABET.length]).join("")
 }
 
-/** "How compound interest works!" → "how-compound-interest-works" */
-export function slugify(title: string): string {
-  const slug = title
-    .normalize("NFKD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48)
-    .replace(/-+$/, "")
-  return slug || "lesson"
-}
-
-/** The path a lesson is shared at: /l/{slug}-{id}. */
-export const lessonPath = (slug: string, id: string) => `/l/${slug}-${id}`
-
-/** The id from the last part of a lesson path ("writing-a-prd-k3x9a2mq" → "k3x9a2mq"). */
-export function idFromParam(param: string): string | null {
-  const id = param.slice(param.lastIndexOf("-") + 1)
-  return /^[0-9a-z]{6,16}$/.test(id) ? id : null
-}
-
-/** A secret that lets whoever published a lesson update it. Only its hash is stored. */
-export function newEditToken(): string {
+/** A secret that lets whoever published a lesson update it (edit token) or keep it (claim token). Only its hash is stored. */
+export function newToken(): string {
   return randomBytes(24).toString("base64url")
 }
 

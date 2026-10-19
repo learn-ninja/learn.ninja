@@ -1,7 +1,9 @@
+import Link from "next/link"
+
 import { ButtonLink } from "@/components/site/button-link"
 import { CopyButton } from "@/components/site/copy-button"
 import { LogoDivider } from "@/components/site/logo-divider"
-import { AGENT_PROMPT } from "@/lib/site"
+import { AGENT_PROMPT, MCP_URL } from "@/lib/site"
 
 export function GetStarted() {
   return (
@@ -22,6 +24,28 @@ export function GetStarted() {
           <ButtonLink href="/docs#install" variant="outline" size="lg">
             Install guide
           </ButtonLink>
+        </div>
+        <div className="flex w-full max-w-sm flex-col items-center gap-2">
+          <p className="text-sm text-pretty text-muted-foreground">
+            In Claude, ChatGPT, or another chat app, add the MCP server instead.{" "}
+            <Link
+              href="/docs#mcp"
+              className="underline underline-offset-3 hover:text-foreground"
+            >
+              How to connect
+            </Link>
+          </p>
+          <span className="flex w-full items-center gap-2">
+            <code
+              dir="ltr"
+              className="min-w-0 flex-1 truncate rounded-md border bg-background px-2 py-1 text-start font-mono text-sm shadow-xs dark:bg-input/30"
+            >
+              {MCP_URL}
+            </code>
+            <CopyButton text={MCP_URL} size="sm" variant="outline">
+              Copy
+            </CopyButton>
+          </span>
         </div>
       </div>
     </section>

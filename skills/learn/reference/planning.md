@@ -6,7 +6,11 @@ Before writing, read the user's input once for four choices: **scope** (one less
 
 Ask only when the request is just a topic, with nothing else to go on: no audience, no level or background, no length, and no source material. "How vaccines work", "the Roman Empire", and "teach me budgeting" are just topics; "teach me" and "make a lesson on" only say that a lesson is wanted.
 
-Then, before writing, send one short message with up to two questions, each with the default you'd use, so the user can answer in a few words or just say "go":
+Then, before writing, ask up to two questions, each with the default you'd use.
+
+**If you have a tool that asks the user to pick from options** (Claude's `ask_user_input` or `AskUserQuestion`, or a similar tool in other agents), use it so they can answer with a click instead of typing: one question per item, the default as the first option, marked "(default)". Who it's for: "Me", "A child", "A group". How long: "Standard (5–10 min)", "Quick (3–5 min)", "In depth (10–15 min)". Put the big-topic line below in the question's text or in your message.
+
+**Otherwise**, send one short message so the user can answer in a few words or just say "go":
 
 > Before I make it:
 > 1. Who's it for: you, a child (what age?), or a group? (I'll assume you.)
@@ -15,7 +19,7 @@ Then, before writing, send one short message with up to two questions, each with
 If the topic holds several ideas (a whole period of history, a field, a long framework), add one line after the questions: "It's a big topic, so I'll make one lesson on its central idea; say if you'd rather have a short series."
 
 - Ask who it's for, never "what's your level?": people rate their own level poorly, but they know who the lesson is for. If they say what they already know, use it for the level.
-- Ask once. Anything the reply leaves open takes its default. If there's no one to answer, use the defaults without asking.
+- Ask once. Anything the reply leaves open takes its default; "A child" with no age means about 8. If there's no one to answer, use the defaults without asking.
 - Map the answers with the table below: "for me" is an adult reader, the length is the size, and "a series" is a path. Saying "go" gives the same lesson as not asking.
 - One clear signal is enough to go without asking. "A quick one on vaccines" says how long; "quiz my 8-year-old on vaccines" says who. Fill the rest with defaults.
 
@@ -64,7 +68,7 @@ A path is 2–6 lessons, each a complete lesson of its own, ordered from simple 
 3. **Link the lessons.** Set each lesson's `wrapup.next` to the next lesson's title. A later lesson can't assume the learner remembers an earlier one: if it needs an earlier idea, restate it in a sentence in its first concept brick.
 4. **Report the path.** After publishing lesson 1, list the remaining lessons by title and offer to make the next one. When the user asks, read `path.md`, write and publish the next lesson, and update its status.
 
-Each lesson's link expires 24 hours after it's published, like any lesson.
+Each lesson's link expires 7 days after it's published, like any lesson.
 
 ## Reading age
 

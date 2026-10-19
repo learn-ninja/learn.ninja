@@ -1,0 +1,42 @@
+import { Skeleton } from "@workspace/ui/components/skeleton"
+import { cn } from "@workspace/ui/lib/utils"
+
+/** Row widths cycle so the placeholder reads as text rather than a grid. */
+const TITLE_WIDTHS = ["w-3/5", "w-2/3", "w-1/2", "w-3/4"]
+const LINE_WIDTHS = ["w-4/5", "w-2/3", "w-11/12", "w-3/5"]
+
+/**
+ * The feed's shape while its rows load: hairlines and line heights match LessonRow, so nothing
+ * shifts when the rows arrive. Decorative: the page's loading state names itself in its heading.
+ */
+export function FeedSkeleton({
+  rows = 8,
+  className,
+}: {
+  rows?: number
+  className?: string
+}) {
+  return (
+    <div aria-hidden="true" className={cn("flex flex-col divide-y", className)}>
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="flex flex-col py-4">
+          {/* The title: one 22px line of text-base. */}
+          <Skeleton className={cn("my-[3px] h-4", TITLE_WIDTHS[i % 4])} />
+          {/* The summary: two 20px lines of text-sm. */}
+          <Skeleton className="my-[3px] mt-0.5 h-3.5 w-full" />
+          <Skeleton className={cn("my-[3px] h-3.5", LINE_WIDTHS[i % 4])} />
+          {/* The meta line, as tall as the like button. */}
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <Skeleton className="my-[5px] h-3.5 w-1/3" />
+            <Skeleton className="my-[5px] h-3.5 w-16" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** The Explore tabs' footprint (New · Trending · Top) while the page can't yet say which is selected. */
+export function TabsSkeleton() {
+  return <Skeleton aria-hidden="true" className="h-8 w-40 rounded-lg" />
+}

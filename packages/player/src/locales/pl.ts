@@ -19,8 +19,11 @@ export const pl: Strings = {
   picked: (parts) => `Wybrano: ${parts}`,
   hookNote: "To pierwsze pytanie to rozgrzewka. Nie liczy się do wyniku.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),
-  expires: (h) =>
-    p(h, { one: "Wygasa za # godz.", other: "Wygasa za # godz." }),
+  expires: {
+    days: (n) => p(n, { one: "Wygasa za # dzień", other: "Wygasa za # dni" }),
+    hours: (n) =>
+      p(n, { one: "Wygasa za # godz.", other: "Wygasa za # godz." }),
+  },
   levels: {
     beginner: "Początkujący",
     intermediate: "Średniozaawansowany",

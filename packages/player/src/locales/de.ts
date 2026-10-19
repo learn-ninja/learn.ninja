@@ -20,8 +20,12 @@ export const de: Strings = {
   hookNote:
     "Die erste Frage ist zum Aufwärmen. Sie zählt nicht für deine Punktzahl.",
   minutes: (n) => p(n, { one: "# Min.", other: "# Min." }),
-  expires: (h) =>
-    p(h, { one: "Läuft in # Std. ab", other: "Läuft in # Std. ab" }),
+  expires: {
+    days: (n) =>
+      p(n, { one: "Läuft in # Tag ab", other: "Läuft in # Tagen ab" }),
+    hours: (n) =>
+      p(n, { one: "Läuft in # Std. ab", other: "Läuft in # Std. ab" }),
+  },
   levels: {
     beginner: "Anfänger",
     intermediate: "Fortgeschritten",

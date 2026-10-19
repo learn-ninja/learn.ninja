@@ -6,6 +6,7 @@ import { SITE } from "@/lib/site"
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: SITE.url },
+    { url: `${SITE.url}/explore` },
     { url: `${SITE.url}/docs` },
     { url: `${SITE.url}/contributors` },
     { url: `${SITE.url}/privacy` },

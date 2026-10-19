@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { EyeOffIcon, FlagIcon, GlobeIcon, LinkIcon, SettingsIcon } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import {
@@ -8,33 +9,102 @@ import {
   type LessonPlayerProps,
   type Theme,
 } from "@workspace/player"
+import {
+  DropdownMenuItem,
+  DropdownMenuLabel,
+} from "@workspace/ui/components/dropdown-menu"
+
+import { ReportDialog } from "@/components/explore/report-dialog"
+import type { Visibility } from "@/lib/explore/queries"
+
+export interface LessonViewProps extends LessonPlayerProps {
+  /** The published lesson's id, for the report and the owner's menu. */
+  lessonId?: string
+  /** Whether to offer "Report lesson" in the lesson menu: listed lessons, to anyone but their owner. */
+  canReport?: boolean
+  /** When the viewer owns the lesson: how it's listed, with a way to the settings page. */
+  owner?: { visibility: Visibility; hidden: boolean }
+}
 
 /**
  * The lesson player with the footer's theme setting connected to next-themes. A page that doesn't
  * pass `uiLanguage` (the prerendered /lessons pages) still honors ?ui=, read after mounting, the
- * same moment the player loads saved preferences, so the page can stay static.
+ * same moment the player loads saved preferences, so the page can stay static. Published lessons
+ * add the site's own items to the lesson menu: a report, or the owner's listing status.
  */
-export function LessonView(props: LessonPlayerProps) {
+export function LessonView({
+  lessonId,
+  canReport = false,
+  owner,
+  ...props
+}: LessonViewProps) {
   const { theme, setTheme } = useTheme()
   // next-themes only knows the saved theme after mounting; show "System" until then.
   const [mounted, setMounted] = React.useState(false)
   const [urlLanguage, setUrlLanguage] = React.useState<string>()
+  const [reportOpen, setReportOpen] = React.useState(false)
   React.useEffect(() => {
     setMounted(true)
     setUrlLanguage(
       new URLSearchParams(window.location.search).get("ui") ?? undefined
     )
   }, [])
+  const menuItems = lessonId ? (
+    <>
+      {owner ? (
+        <>
+          <DropdownMenuLabel className="flex items-center gap-1.5">
+            {owner.hidden ? (
+              <>
+                <EyeOffIcon className="size-3.5" aria-hidden="true" />
+                Hidden after a report
+              </>
+            ) : owner.visibility === "public" ? (
+              <>
+                <GlobeIcon className="size-3.5" aria-hidden="true" />
+                Listed in Explore
+              </>
+            ) : (
+              <>
+                <LinkIcon className="size-3.5" aria-hidden="true" />
+                Unlisted: link only
+              </>
+            )}
+          </DropdownMenuLabel>
+          <DropdownMenuItem href="/settings#lessons">
+            <SettingsIcon />
+            Your lessons
+          </DropdownMenuItem>
+        </>
+      ) : null}
+      {canReport ? (
+        <DropdownMenuItem onAction={() => setReportOpen(true)}>
+          <FlagIcon />
+          Report lesson
+        </DropdownMenuItem>
+      ) : null}
+    </>
+  ) : undefined
   return (
-    <LessonPlayer
-      visualsCss={process.env.NEXT_PUBLIC_VISUALS_CSS}
-      docsHref="/docs"
-      privacyHref="/privacy"
-      termsHref="/terms"
-      {...props}
-      uiLanguage={props.uiLanguage ?? urlLanguage}
-      theme={mounted ? ((theme as Theme | undefined) ?? "system") : "system"}
-      onThemeChange={setTheme}
-    />
+    <>
+      <LessonPlayer
+        visualsCss={process.env.NEXT_PUBLIC_VISUALS_CSS}
+        docsHref="/docs"
+        privacyHref="/privacy"
+        termsHref="/terms"
+        {...props}
+        uiLanguage={props.uiLanguage ?? urlLanguage}
+        theme={mounted ? ((theme as Theme | undefined) ?? "system") : "system"}
+        onThemeChange={setTheme}
+        menuItems={menuItems}
+      />
+      {lessonId && canReport ? (
+        <ReportDialog
+          id={lessonId}
+          isOpen={reportOpen}
+          onOpenChange={setReportOpen}
+        />
+      ) : null}
+    </>
   )
 }

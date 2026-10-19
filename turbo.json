@@ -4,8 +4,13 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*",
+        "$TURBO_ROOT$/packages/db/drizzle/**"
+      ],
+      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"],
+      "env": ["DATABASE_URL"]
     },
     "lint": {
       "dependsOn": ["^lint"]

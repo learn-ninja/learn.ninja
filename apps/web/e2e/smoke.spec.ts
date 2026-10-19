@@ -40,7 +40,43 @@ test("a bundled lesson plays", async ({ page }) => {
   ).toBeVisible()
 })
 
-test("a published lesson opens at its link, and a dead link is a 404", async ({
+test("Explore lists only lessons their makers chose to share", async ({
+  page,
+  request,
+}) => {
+  // An anonymous publish never shows up, whatever else is listed.
+  const res = await request.post("/api/lessons", {
+    headers: { "content-type": "application/json" },
+    data: example,
+  })
+  expect(res.status()).toBe(201)
+  const { id } = (await res.json()) as { id: string }
+
+  await page.goto("/explore?sort=trending")
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Explore")
+  await expect(page.getByRole("tab", { name: "Trending" })).toHaveAttribute(
+    "aria-selected",
+    "true"
+  )
+  await expect(page.locator(`a[href$="-${id}"]`)).toHaveCount(0)
+
+  // Liking needs an account; visibility needs the owner.
+  const like = await request.post(`/api/lessons/${id}/like`)
+  expect(like.status()).toBe(401)
+  const patch = await request.patch(`/api/lessons/${id}`, {
+    data: { visibility: "public" },
+  })
+  expect(patch.status()).toBe(401)
+  // Anyone can report, and the page counts a play.
+  const report = await request.post(`/api/lessons/${id}/report`, {
+    data: { reason: "Smoke test" },
+  })
+  expect(report.status()).toBe(201)
+  const play = await request.post(`/api/lessons/${id}/play`)
+  expect(play.status()).toBe(202)
+})
+
+test("a published lesson opens at its link, and a dead link shows the expired page", async ({
   page,
   request,
 }) => {
@@ -59,9 +95,23 @@ test("a published lesson opens at its link, and a dead link is a 404", async ({
   )
   await expect(page.getByRole("button", { name: "Start lesson" })).toBeVisible()
 
+  // A dead link answers 200 so chat apps and social sites show the expired card.
   const dead = await page.goto("/l/nothing-here-zzzzzzzz")
-  expect(dead?.status()).toBe(404)
+  expect(dead?.status()).toBe(200)
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "isn't available"
   )
+  await expect(page.locator('meta[property="og:image:alt"]')).toHaveAttribute(
+    "content",
+    "This lesson has expired"
+  )
+  const image = await page
+    .locator('meta[property="og:image"]')
+    .getAttribute("content")
+  // The URL is absolute (the production site), so fetch its path from the test server.
+  const { pathname } = new URL(image!, "http://localhost")
+  expect(pathname).toBe("/l/nothing-here-zzzzzzzz/card")
+  const card = await request.get(pathname)
+  expect(card.status()).toBe(200)
+  expect(card.headers()["content-type"]).toBe("image/png")
 })

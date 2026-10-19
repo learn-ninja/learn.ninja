@@ -6,11 +6,19 @@ import { lessons, prepared } from "./fixtures"
 
 // The whole player, playable end to end. Switch language and theme in the toolbar or the footer.
 
+const HOUR = 3.6e6
+const DAY = 24 * HOUR
+
 const meta = {
   title: "Player/Lesson player",
   component: LessonPlayer,
-  args: { lesson: lessons.buttons, prepared },
-  argTypes: { lesson: { control: false }, prepared: { control: false } },
+  // A freshly published link: the lesson menu (the chevron by the title) says it expires in 7 days.
+  args: { lesson: lessons.buttons, prepared, expiresAt: Date.now() + 7 * DAY },
+  argTypes: {
+    lesson: { control: false },
+    prepared: { control: false },
+    expiresAt: { control: "date" },
+  },
   render: function Render(args, { globals }) {
     const [, updateGlobals] = useGlobals()
     return (
@@ -19,7 +27,6 @@ const meta = {
           key={globals.ui}
           {...args}
           uiLanguage={globals.ui}
-          expiresAt={Date.now() + 14 * 3.6e6}
           homeHref="#"
           docsHref="#"
           privacyHref="#"
@@ -62,6 +69,10 @@ export const CorrelationVsCausation: Story = {
 export const BronzeAgeCollapse: Story = {
   name: "Bronze Age collapse",
   args: { lesson: lessons.bronze },
+}
+/** Under a day left: the lesson menu counts the link's time in hours instead of days. */
+export const ExpiresSoon: Story = {
+  args: { lesson: lessons.buttons, expiresAt: Date.now() + 14 * HOUR },
 }
 // The player reads its preferences on mount, so these stories save a choice before it renders.
 const withPrefs = (prefs: object) => [

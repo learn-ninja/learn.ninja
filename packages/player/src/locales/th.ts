@@ -15,7 +15,10 @@ export const th: Strings = {
   picked: (parts) => `เลือกแล้ว: ${parts}`,
   hookNote: "ข้อแรกเป็นการวอร์มอัป ไม่นับคะแนน",
   minutes: (n) => `${n} นาที`,
-  expires: (h) => `หมดอายุใน ${h} ชม.`,
+  expires: {
+    days: (n) => `หมดอายุใน ${n} วัน`,
+    hours: (n) => `หมดอายุใน ${n} ชม.`,
+  },
   levels: {
     beginner: "เริ่มต้น",
     intermediate: "ปานกลาง",

@@ -1,5 +1,9 @@
 import type { Strings } from "../strings"
 
+import { plural } from "./plural"
+
+const p = plural("en")
+
 export const en: Strings = {
   start: "Start lesson",
   check: "Check answer",
@@ -15,7 +19,10 @@ export const en: Strings = {
   picked: (parts) => `Picked: ${parts}`,
   hookNote: "This first one is a warm-up. It doesn't count toward your score.",
   minutes: (n) => `${n} min`,
-  expires: (h) => `Expires in ${h}h`,
+  expires: {
+    days: (n) => p(n, { one: "Expires in # day", other: "Expires in # days" }),
+    hours: (n) => `Expires in ${n}h`,
+  },
   levels: {
     beginner: "Beginner",
     intermediate: "Intermediate",

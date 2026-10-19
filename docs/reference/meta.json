@@ -1,4 +1,4 @@
 {
   "title": "Reference",
-  "pages": ["cli", "api", "json-schema", "..."]
+  "pages": ["cli", "mcp", "api", "json-schema", "..."]
 }

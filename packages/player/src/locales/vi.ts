@@ -15,7 +15,10 @@ export const vi: Strings = {
   picked: (parts) => `Đã chọn: ${parts}`,
   hookNote: "Câu đầu tiên này là khởi động. Nó không tính vào điểm của bạn.",
   minutes: (n) => `${n} phút`,
-  expires: (h) => `Hết hạn sau ${h} giờ`,
+  expires: {
+    days: (n) => `Hết hạn sau ${n} ngày`,
+    hours: (n) => `Hết hạn sau ${n} giờ`,
+  },
   levels: {
     beginner: "Cơ bản",
     intermediate: "Trung cấp",

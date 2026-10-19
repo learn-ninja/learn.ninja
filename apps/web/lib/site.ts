@@ -22,8 +22,12 @@ export const SITE = {
 
 export const INSTALL_COMMAND = "npx skills add https://learn.ninja -g"
 
+/** The MCP server, for chat apps and agents that can't run the skill's commands. */
+export const MCP_URL = `${SITE.url}/mcp`
+export const MCP_INSTALL_COMMAND = `claude mcp add --transport http learn ${MCP_URL}`
+
 /** What "Copy prompt for agent" copies. */
-export const AGENT_PROMPT = `Install the learn.ninja skill with \`${INSTALL_COMMAND}\`, then read ${SITE.url}/docs and make me a lesson about `
+export const AGENT_PROMPT = `Connect to the learn.ninja MCP server at ${MCP_URL} (or install the skill with \`${INSTALL_COMMAND}\`), then read ${SITE.url}/docs and make me a lesson about `
 
 /** The hero's copy button; the header shows its own once this scrolls under it. */
 export const HERO_CTA_ID = "hero-cta"

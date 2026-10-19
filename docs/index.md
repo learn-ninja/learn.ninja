@@ -3,7 +3,7 @@ title: Introduction
 description: learn.ninja turns anything you give your agent into one short, interactive lesson, published as a link.
 ---
 
-learn.ninja is a skill for AI agents. The agent turns a topic, an article, notes, docs, a transcript, or code into one short lesson: usually 5 to 10 minutes of small interactive screens called **bricks**, with feedback on every answer. It checks the lesson and publishes it to a link like `https://learn.ninja/l/how-compound-interest-works-k3x9a2mq`, which anyone can open in a browser. Free, no account. Links last 24 hours.
+learn.ninja is a skill for AI agents. The agent turns a topic, an article, notes, docs, a transcript, or code into one short lesson: usually 5 to 10 minutes of small interactive screens called **bricks**, with feedback on every answer. It checks the lesson and publishes it to a link like `https://learn.ninja/l/how-compound-interest-works-k3x9a2mq`, which anyone can open in a browser. Free, no account. Links last 7 days, or for good once you [keep them](/docs/keep) in an account: say so, and your agent signs you in with an email code. Kept lessons stay link-only until you list them in [Explore](/explore) from your settings, where they're credited to you.
 
 ## Install
 
@@ -31,9 +31,11 @@ You install once. The guides and the checks come from learn.ninja each time the 
 
 An agent that can't run commands (a chat app, or an agent on a locked-down host) can skip the skill:
 
-1. Read the [lesson format](/docs/lessons/lesson-format.md) and the [JSON Schema](/schema/lesson.schema.json).
-2. Write the lesson as JSON.
-3. Publish it with the [API](/docs/reference/api): `POST https://learn.ninja/api/lessons`. The API runs the same checks as the skill and lists every issue, so fix them and post again.
+- **Connect the MCP server** at `https://learn.ninja/mcp` ([how, for each app](/docs/reference/mcp)). Its `get_guide` tool returns the same steps and guides the skill follows, and `publish_lesson` checks and publishes the lesson. This is the way for Claude.ai, Claude Desktop, ChatGPT, and other chat apps.
+- **Or call the API** directly:
+  1. Read the [lesson format](/docs/lessons/lesson-format.md) and the [JSON Schema](/schema/lesson.schema.json).
+  2. Write the lesson as JSON.
+  3. Publish it with the [API](/docs/reference/api): `POST https://learn.ninja/api/lessons`. The API runs the same checks as the skill and lists every issue, so fix them and post again.
 
 ## Plain text
 

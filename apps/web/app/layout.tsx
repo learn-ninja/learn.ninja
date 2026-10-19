@@ -5,6 +5,7 @@ import "katex/dist/katex.min.css"
 import "@workspace/ui/globals.css"
 import "./site.css"
 import { AgentationToolbar } from "@/components/agentation-toolbar"
+import { ClientRouter } from "@/components/site/client-router"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SITE } from "@/lib/site"
 import { cn } from "@workspace/ui/lib/utils"
@@ -49,7 +50,9 @@ export default function RootLayout({
       )}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <ClientRouter>{children}</ClientRouter>
+        </ThemeProvider>
         {/* Visual feedback for Claude Code; renders nothing outside development. */}
         <AgentationToolbar />
       </body>

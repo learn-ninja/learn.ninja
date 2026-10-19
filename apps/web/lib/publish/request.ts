@@ -1,3 +1,6 @@
+import { getActor, type Actor } from "@/lib/auth/actor"
+import { getAuth } from "@/lib/auth/auth"
+
 import type { Deps } from "./handlers"
 import { getRateLimiter } from "./rate-limit"
 import { getLessonStore } from "./store"
@@ -11,7 +14,12 @@ export function clientKey(req: Request): string {
   )
 }
 
-export function depsFor(req: Request): Deps {
+export async function depsFor(req: Request): Promise<Deps> {
   const origin = process.env.LEARN_PUBLIC_URL ?? new URL(req.url).origin
-  return { store: getLessonStore(), limiter: getRateLimiter(), origin }
+  return { store: await getLessonStore(), limiter: getRateLimiter(), origin }
+}
+
+/** The signed-in user behind the request (cookie or x-api-key), or null. Throws InvalidApiKeyError for a bad key. */
+export async function actorFor(req: Request): Promise<Actor | null> {
+  return getActor(await getAuth(), req.headers)
 }

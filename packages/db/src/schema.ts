@@ -1,0 +1,266 @@
+import {
+  boolean,
+  customType,
+  index,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core"
+
+// The tables, as plans/accounts-v2.md lists them. Ownership, team, and visibility columns exist from
+// the start so later phases never migrate live data. After changing this file, run
+// `npm run generate -w @workspace/db` and commit the new migration.
+
+export const visibility = pgEnum("visibility", ["public", "unlisted", "team"])
+
+const time = (name: string) => timestamp(name, { withTimezone: true })
+
+/**
+ * Raw bytes. Handed to the driver as a Buffer, which Neon over HTTP and PGlite both encode for a
+ * bytea parameter; read back as whatever the driver returns (a Buffer, a Uint8Array, or hex text).
+ */
+const bytea = customType<{ data: Uint8Array; driverData: unknown }>({
+  dataType: () => "bytea",
+  toDriver: (value) => Buffer.from(value),
+  fromDriver: (value) => {
+    if (value instanceof Uint8Array) return value
+    if (typeof value === "string" && value.startsWith("\\x"))
+      return Buffer.from(value.slice(2), "hex")
+    throw new TypeError("Unexpected bytea value from the driver")
+  },
+})
+
+// ---------- accounts ----------
+// Better Auth owns user, session, account, verification, and apikey: the property names are the
+// field names it expects (its Drizzle adapter reads columns by property), the SQL names are ours.
+// We add handle, bio, and banned to user.
+
+export const user = pgTable(
+  "user",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    image: text("image"),
+    /** The public name in /u/{handle}. GitHub users get their login; email users pick one. */
+    handle: text("handle"),
+    bio: text("bio"),
+    /** Flipped by hand; a banned user can't sign in. */
+    banned: boolean("banned").notNull().default(false),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("user_email_idx").on(t.email),
+    uniqueIndex("user_handle_idx").on(t.handle),
+  ]
+)
+
+export const session = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: time("expires_at").notNull(),
+    token: text("token").notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("session_token_idx").on(t.token),
+    index("session_user_id_idx").on(t.userId),
+  ]
+)
+
+export const account = pgTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: time("access_token_expires_at"),
+    refreshTokenExpiresAt: time("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull(),
+  },
+  (t) => [index("account_user_id_idx").on(t.userId)]
+)
+
+/** Email codes (hashed) and OAuth state. */
+export const verification = pgTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: time("expires_at").notNull(),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("verification_identifier_idx").on(t.identifier)]
+)
+
+/** The terminal's keys (`learn login`). Only the hash is stored; `start` shows the first characters. */
+export const apikey = pgTable(
+  "apikey",
+  {
+    id: text("id").primaryKey(),
+    configId: text("config_id").notNull().default("default"),
+    name: text("name"),
+    start: text("start"),
+    prefix: text("prefix"),
+    key: text("key").notNull(),
+    /** The user the key belongs to. */
+    referenceId: text("reference_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    refillInterval: integer("refill_interval"),
+    refillAmount: integer("refill_amount"),
+    lastRefillAt: time("last_refill_at"),
+    enabled: boolean("enabled").notNull().default(true),
+    rateLimitEnabled: boolean("rate_limit_enabled").notNull().default(true),
+    rateLimitTimeWindow: integer("rate_limit_time_window").default(86_400_000),
+    rateLimitMax: integer("rate_limit_max").default(10),
+    requestCount: integer("request_count").notNull().default(0),
+    remaining: integer("remaining"),
+    lastRequest: time("last_request"),
+    expiresAt: time("expires_at"),
+    createdAt: time("created_at").notNull(),
+    updatedAt: time("updated_at").notNull(),
+    permissions: text("permissions"),
+    metadata: text("metadata"),
+  },
+  (t) => [
+    index("apikey_key_idx").on(t.key),
+    index("apikey_reference_id_idx").on(t.referenceId),
+    index("apikey_config_id_idx").on(t.configId),
+  ]
+)
+
+/**
+ * A profile picture, as uploaded through settings and resized to one small WebP. Each upload gets
+ * a fresh id, so its URL (/avatars/{id}, kept in user.image) can be cached forever; replacing or
+ * removing the picture deletes the row.
+ */
+export const avatar = pgTable(
+  "avatar",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    data: bytea("data").notNull(),
+    createdAt: time("created_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("avatar_user_id_idx").on(t.userId)]
+)
+
+// ---------- lessons ----------
+
+export const lesson = pgTable(
+  "lesson",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull(),
+    spec: text("spec").notNull(),
+    lesson: jsonb("lesson").notNull(),
+    /** Formulas, code, and visuals CSS, prepared once at publish time. */
+    prepared: jsonb("prepared").notNull(),
+    editTokenHash: text("edit_token_hash").notNull(),
+    /** Null once the lesson is claimed into an account. */
+    claimTokenHash: text("claim_token_hash"),
+    /** Null for anonymous lessons. */
+    ownerId: text("owner_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    /** Reserved for teams. */
+    orgId: text("org_id"),
+    visibility: visibility("visibility").notNull().default("unlisted"),
+    hidden: boolean("hidden").notNull().default(false),
+    plays: integer("plays").notNull().default(0),
+    likes: integer("likes").notNull().default(0),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+    /** Null means it never expires (owned lessons). */
+    expiresAt: time("expires_at"),
+  },
+  (t) => [
+    index("lesson_expires_at_idx").on(t.expiresAt),
+    index("lesson_listing_idx").on(t.visibility, t.hidden, t.createdAt),
+    index("lesson_claim_token_hash_idx").on(t.claimTokenHash),
+    index("lesson_owner_id_idx").on(t.ownerId),
+  ]
+)
+
+// ---------- Explore ----------
+
+/** One like per user per lesson; `lesson.likes` keeps the count. */
+export const like = pgTable(
+  "like",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lesson.id, { onDelete: "cascade" }),
+    createdAt: time("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.lessonId] }),
+    index("like_lesson_id_idx").on(t.lessonId),
+  ]
+)
+
+/** A report on a lesson, emailed to the maker when it's made. The reporter is kept only as a hash of their IP. */
+export const report = pgTable(
+  "report",
+  {
+    id: text("id").primaryKey(),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lesson.id, { onDelete: "cascade" }),
+    reason: text("reason").notNull(),
+    reporterIpHash: text("reporter_ip_hash").notNull(),
+    createdAt: time("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("report_lesson_id_idx").on(t.lessonId)]
+)
+
+// ---------- drafts ----------
+
+/**
+ * Lessons an MCP client sent to validate_lesson or publish_lesson, kept for a day so the model can
+ * fix them with small patches (or publish a checked one) instead of sending the whole file again.
+ * The id is a random secret the tool returns; anyone holding it could only publish the draft.
+ */
+export const lessonDraft = pgTable(
+  "lesson_draft",
+  {
+    id: text("id").primaryKey(),
+    /** The lesson file's text, as sent or as patched. */
+    text: text("text").notNull(),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+    expiresAt: time("expires_at").notNull(),
+  },
+  (t) => [index("lesson_draft_expires_at_idx").on(t.expiresAt)]
+)

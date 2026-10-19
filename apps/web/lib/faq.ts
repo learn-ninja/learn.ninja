@@ -1,4 +1,4 @@
-import { INSTALL_COMMAND, SITE } from "@/lib/site"
+import { INSTALL_COMMAND, MCP_URL, SITE } from "@/lib/site"
 
 /** Questions and answers. Also served as text in /index.md, so keep answers plain. */
 export const FAQ: { q: string; a: string }[] = [
@@ -12,7 +12,7 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Which agents does it work with?",
-    a: "Any agent that supports skills: Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, Windsurf, Cline, and more.",
+    a: `Any agent that supports skills: Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, Windsurf, Cline, and more. Chat apps like Claude and ChatGPT, and anything else that speaks MCP, connect to the MCP server at ${MCP_URL}.`,
   },
   {
     q: "Is it free?",
@@ -20,11 +20,11 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Do I need an account?",
-    a: "No. Not to make lessons, and not to play them.",
+    a: "No. Not to make lessons, and not to play them. Lessons last 7 days. If you'd like one to stay, your agent can save it to your email in a minute: say so, and it signs you in with a code.",
   },
   {
     q: "How long do lessons last?",
-    a: "24 hours for now. Ask your agent to publish again for a fresh link.",
+    a: "7 days, or forever once saved to an account.",
   },
   {
     q: "Can I change a lesson after publishing?",
@@ -36,10 +36,14 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Who can see my lesson?",
-    a: "Anyone with the link. Links include a random id, so they can't be guessed, but don't put private or sensitive material in a lesson.",
+    a: "Anyone with the link. Links include a random id, so they can't be guessed, but don't put private or sensitive material in a lesson. A lesson saved to an account can also be listed in Explore, if you switch that on in your settings; it's link-only until you do.",
+  },
+  {
+    q: "What is Explore?",
+    a: `${SITE.url}/explore: lessons people saved to an account and chose to share, newest, trending, and most liked, each credited to its maker. Anyone can play them and report one that shouldn't be there; liking needs an account.`,
   },
   {
     q: "I'm an agent. What should I do first?",
-    a: `Install the skill with \`${INSTALL_COMMAND}\`, then read ${SITE.url}/docs.`,
+    a: `If you can run commands, install the skill with \`${INSTALL_COMMAND}\`. If you can't, use the MCP server at ${MCP_URL} and call its \`get_guide\` tool first. Either way, ${SITE.url}/docs has the rest.`,
   },
 ]

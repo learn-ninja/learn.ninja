@@ -78,9 +78,15 @@ const PREPARE_FILES = [
 
 const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_VISUALS_CSS: visualsCssUrl() },
-  transpilePackages: ["@workspace/ui", "@workspace/player", "@workspace/spec"],
-  // D2.js finds its WASM build and worker next to its own file, which bundling would move.
-  serverExternalPackages: ["@terrastruct/d2"],
+  transpilePackages: [
+    "@workspace/ui",
+    "@workspace/player",
+    "@workspace/spec",
+    "@workspace/db",
+  ],
+  // PGlite (lesson storage in development) loads its WebAssembly and data files from its own folder;
+  // D2.js finds its WASM build and worker next to its own file. Bundling would move both.
+  serverExternalPackages: ["@electric-sql/pglite", "@terrastruct/d2"],
   // prepareLesson() reads Tailwind's own stylesheets at runtime to compile each lesson's visuals CSS,
   // and D2.js loads its WASM build and worker by path, so they must ship with the server functions
   // that check, publish, and render lessons.
@@ -88,6 +94,14 @@ const nextConfig: NextConfig = {
     "/api/lessons": PREPARE_FILES,
     "/api/lessons/[id]": PREPARE_FILES,
     "/api/validate": PREPARE_FILES,
+    // The MCP server also serves the skill's guides at runtime (get_guide reads skills/learn/).
+    "/mcp": [
+      ...PREPARE_FILES,
+      "../../skills/learn/*.md",
+      "../../skills/learn/levels/*.md",
+      "../../skills/learn/reference/*.md",
+      "../../skills/learn/schema/*.json",
+    ],
     "/lessons/[slug]": PREPARE_FILES,
     "/docs": PREPARE_FILES,
     // The site's link preview card reads the agent logos from public/ (lib/og.tsx).
