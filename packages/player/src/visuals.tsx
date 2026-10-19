@@ -114,6 +114,20 @@ function HtmlFrame({
     return () => observer.disconnect()
   }, [loaded, height])
 
+  // Drawings sit in the middle of their own canvas: a viewBox with empty space on one side would
+  // push the drawing off-center however the frame lays it out. Runs before the hotspots are measured.
+  React.useEffect(() => {
+    const doc = ref.current?.contentDocument
+    if (!doc?.body) return
+    for (const svg of doc.body.querySelectorAll<SVGSVGElement>("svg")) {
+      if (svg.parentElement?.closest("svg")) continue
+      const box = svg.viewBox.baseVal
+      if (!box || !box.width || !box.height) continue
+      const centered = centeredViewBox(box, svg.getBBox())
+      if (centered) svg.setAttribute("viewBox", centered)
+    }
+  }, [loaded])
+
   React.useEffect(() => {
     const doc = ref.current?.contentDocument
     // Before the srcDoc loads, the frame's document can be empty; this runs again on load.
@@ -280,6 +294,24 @@ interface SpotBox {
  * its box runs to the card's edges, and a frame outside it would sit outside the card. The whole box
  * stays the tap target either way.
  */
+type Box = { x: number; y: number; width: number; height: number }
+
+/**
+ * The viewBox that keeps the canvas's size and scale but moves its drawing to the middle, or null when
+ * it's already there, empty, or larger than the canvas (moving it would only change what's cut off).
+ */
+export function centeredViewBox(view: Box, drawing: Box): string | null {
+  if (!drawing.width || !drawing.height) return null
+  if (drawing.width > view.width || drawing.height > view.height) return null
+  const x = drawing.x + drawing.width / 2 - view.width / 2
+  const y = drawing.y + drawing.height / 2 - view.height / 2
+  const tolerance = Math.max(view.width, view.height) / 200
+  if (Math.abs(x - view.x) < tolerance && Math.abs(y - view.y) < tolerance)
+    return null
+  const round = (n: number) => Math.round(n * 100) / 100
+  return [x, y, view.width, view.height].map(round).join(" ")
+}
+
 function frameInset(el: HTMLElement) {
   const cs = getComputedStyle(el)
   const side = (padding: string, border: string) => {

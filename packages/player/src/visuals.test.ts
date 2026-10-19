@@ -2,7 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { Visual, VISUAL_SANDBOX } from "./visuals"
+import { centeredViewBox, Visual, VISUAL_SANDBOX } from "./visuals"
 
 // The HTML visual's frame is the only place lesson content touches the page, so its shape is pinned here.
 
@@ -46,5 +46,25 @@ describe("HTML visual frame", () => {
     expect(srcdoc).toContain('<\\/style><meta http-equiv="refresh"')
     // The body is still the lesson's HTML, and the document still closes properly.
     expect(srcdoc).toContain("<body><b>Hi</b></body></html>")
+  })
+})
+
+describe("centeredViewBox", () => {
+  const view = { x: 0, y: 0, width: 400, height: 300 }
+
+  it("moves a drawing that sits low in its canvas to the middle", () => {
+    expect(
+      centeredViewBox(view, { x: 100, y: 120, width: 200, height: 160 })
+    ).toBe("0 50 400 300")
+  })
+
+  it("leaves a centered, empty, or oversized drawing alone", () => {
+    expect(
+      centeredViewBox(view, { x: 100, y: 70, width: 200, height: 160 })
+    ).toBeNull()
+    expect(centeredViewBox(view, { x: 0, y: 0, width: 0, height: 0 })).toBeNull()
+    expect(
+      centeredViewBox(view, { x: -20, y: 0, width: 440, height: 100 })
+    ).toBeNull()
   })
 })
