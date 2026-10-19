@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   robots: { index: false },
 }
 
+// Always rendered per request: these pages read the session, and the lesson store, which don't
+// exist on a build machine.
+export const dynamic = "force-dynamic"
+
 /** The account: handle, API keys, and sign out. */
 export default async function SettingsPage() {
   const actor = await currentActor()

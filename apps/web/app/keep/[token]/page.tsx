@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   robots: { index: false },
 }
 
+// Always rendered per request: these pages read the session, and the lesson store, which don't
+// exist on a build machine.
+export const dynamic = "force-dynamic"
+
 /**
  * The claim link from publishing: /keep/{claimToken}. Signs the visitor in if needed, then one
  * button moves the lesson into their account.

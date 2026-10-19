@@ -5,9 +5,14 @@ import { getAuth } from "./auth"
 
 export type { Actor }
 
-/** The signed-in user behind the current server render, or null. Makes the page dynamic. */
+/**
+ * The signed-in user behind the current server render, or null. Reads the request headers first:
+ * that marks the page dynamic, so `next build` never prerenders it (and never opens the database
+ * on a build machine without one).
+ */
 export async function currentActor(): Promise<Actor | null> {
-  return getActor(await getAuth(), await headers())
+  const h = await headers()
+  return getActor(await getAuth(), h)
 }
 
 /**

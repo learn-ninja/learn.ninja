@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   robots: { index: false },
 }
 
+// Always rendered per request: these pages read the session, and the lesson store, which don't
+// exist on a build machine.
+export const dynamic = "force-dynamic"
+
 /** GitHub or an email code; `?callback=` says where to go afterwards (the /keep link uses it). */
 export default async function SignInPage({
   searchParams,
