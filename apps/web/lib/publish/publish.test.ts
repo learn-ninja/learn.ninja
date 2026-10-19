@@ -2,10 +2,11 @@ import { readFileSync } from "node:fs"
 
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 
-import { connectPglite, lesson, type Db } from "@workspace/db"
+import { connectPglite, lesson, user, type Db } from "@workspace/db"
 
 import {
   checkLesson,
+  claimLesson,
   compareVersions,
   expireLessons,
   isCronRequest,
@@ -34,6 +35,14 @@ const buttons = example("button-hierarchy.json")
 let db: Db
 beforeAll(async () => {
   db = await connectPglite()
+  // Owners must exist: lesson.owner_id references the user table.
+  await db.insert(user).values(
+    ["user_1", "user_2", "user_3"].map((id) => ({
+      id,
+      name: id,
+      email: `${id}@example.com`,
+    }))
+  )
 }, 30_000)
 
 let deps: Deps
@@ -87,13 +96,41 @@ describe("publishing", () => {
         /^https:\/\/learn\.test\/l\/button-hierarchy-[0-9a-z]{8}$/
       ),
       editToken: expect.any(String),
+      claimToken: expect.any(String),
+      claimUrl: expect.stringMatching(/^https:\/\/learn\.test\/keep\/[\w-]+$/),
+      owned: false,
       expiresAt: new Date(now + LESSON_TTL_SECONDS * 1000).toISOString(),
       skill: { latest: LATEST_SKILL_VERSION, updateAvailable: false },
     })
+    expect(reply.body.claimUrl).toBe(
+      `https://learn.test/keep/${reply.body.claimToken}`
+    )
     const stored = await deps.store.get(reply.body.id as string)
     expect(stored?.lesson.title).toBe("Button hierarchy")
     expect(stored?.prepared.visualsCss).toContain(".flex-wrap")
     expect(stored?.editTokenHash).not.toBe(reply.body.editToken)
+    expect(stored?.claimTokenHash).toBe(hashToken(reply.body.claimToken as string))
+    expect(stored?.ownerId).toBeNull()
+  })
+
+  it("publishes an owned lesson with no expiry and no claim token", async () => {
+    const reply = await publishLesson(
+      { text: buttons, client: "x", ownerId: "user_1" },
+      deps
+    )
+    expect(reply.body).toMatchObject({ owned: true, expiresAt: null })
+    expect(reply.body).not.toHaveProperty("claimToken")
+    expect(reply.body).not.toHaveProperty("claimUrl")
+    const stored = await deps.store.get(reply.body.id as string)
+    expect(stored).toMatchObject({
+      ownerId: "user_1",
+      expiresAt: null,
+      claimTokenHash: null,
+    })
+    // Never swept, and still there long after anonymous lessons are gone.
+    now += 365 * 24 * 3.6e6
+    await expireLessons(deps)
+    expect(await deps.store.get(reply.body.id as string)).not.toBeNull()
   })
 
   it("rejects an invalid lesson with the spec's issues", async () => {
@@ -187,6 +224,112 @@ describe("publishing", () => {
     expect(await deps.store.get(body.id as string)).not.toBeNull()
     now += 1
     expect(await deps.store.get(body.id as string)).toBeNull()
+  })
+})
+
+describe("claiming", () => {
+  const anonymous = () => publishLesson({ text: buttons, client: "x" }, deps)
+
+  it("keeps a lesson with its id and claim token: owned, never expiring, token spent", async () => {
+    const { body } = await anonymous()
+    const reply = await claimLesson(
+      {
+        id: body.id as string,
+        claimToken: body.claimToken as string,
+        ownerId: "user_1",
+      },
+      deps
+    )
+    expect(reply).toMatchObject({
+      status: 200,
+      body: {
+        ok: true,
+        id: body.id,
+        url: body.url,
+        title: "Button hierarchy",
+        owned: true,
+        expiresAt: null,
+      },
+    })
+    const stored = await deps.store.get(body.id as string)
+    expect(stored).toMatchObject({
+      ownerId: "user_1",
+      expiresAt: null,
+      claimTokenHash: null,
+    })
+    // The token is spent: nobody else can use it, and the /keep page no longer finds the lesson.
+    expect(
+      await deps.store.getByClaimTokenHash(hashToken(body.claimToken as string))
+    ).toBeNull()
+    const again = await claimLesson(
+      { id: body.id as string, claimToken: body.claimToken as string, ownerId: "user_2" },
+      deps
+    )
+    expect(again).toMatchObject({ status: 409, body: { error: "already_claimed" } })
+    // The owner asking again is fine.
+    const mine = await claimLesson(
+      { id: body.id as string, claimToken: "whatever", ownerId: "user_1" },
+      deps
+    )
+    expect(mine.status).toBe(200)
+  })
+
+  it("keeps a lesson from the token alone (the /keep link)", async () => {
+    const { body } = await anonymous()
+    const reply = await claimLesson(
+      { claimToken: body.claimToken as string, ownerId: "user_3" },
+      deps
+    )
+    expect(reply).toMatchObject({ status: 200, body: { id: body.id } })
+    expect((await deps.store.get(body.id as string))?.ownerId).toBe("user_3")
+  })
+
+  it("refuses a wrong token, an unknown lesson, and a dead link", async () => {
+    const { body } = await anonymous()
+    expect(
+      await claimLesson(
+        { id: body.id as string, claimToken: "wrong", ownerId: "user_1" },
+        deps
+      )
+    ).toMatchObject({ status: 401, body: { error: "unauthorized" } })
+    expect(
+      await claimLesson({ claimToken: "wrong", ownerId: "user_1" }, deps)
+    ).toMatchObject({ status: 404, body: { error: "not_found" } })
+    expect(
+      await claimLesson(
+        { id: "nope1234", claimToken: body.claimToken as string, ownerId: "u" },
+        deps
+      )
+    ).toMatchObject({ status: 404 })
+    // Expired lessons can't be claimed: there's nothing left to keep.
+    now += LESSON_TTL_SECONDS * 1000 + 1
+    expect(
+      await claimLesson(
+        { claimToken: body.claimToken as string, ownerId: "user_1" },
+        deps
+      )
+    ).toMatchObject({ status: 404 })
+  })
+
+  it("keeps the edit token working after a claim", async () => {
+    const { body } = await anonymous()
+    await claimLesson(
+      { claimToken: body.claimToken as string, ownerId: "user_1" },
+      deps
+    )
+    const reply = await updateLesson(
+      {
+        id: body.id as string,
+        editToken: body.editToken as string,
+        text: buttons,
+        client: "x",
+      },
+      deps
+    )
+    expect(reply).toMatchObject({
+      status: 200,
+      body: { owned: true, expiresAt: null },
+    })
   })
 })
 
@@ -322,6 +465,12 @@ describe("respond", () => {
     })
     expect(missing.status).toBe(503)
     expect((await missing.json()).error).toBe("storage_not_configured")
+    const { InvalidApiKeyError } = await import("../auth/actor")
+    const badKey = await respond(async () => {
+      throw new InvalidApiKeyError()
+    })
+    expect(badKey.status).toBe(401)
+    expect((await badKey.json()).error).toBe("invalid_api_key")
     const original = console.error
     console.error = () => {}
     const broken = await respond(async () => {

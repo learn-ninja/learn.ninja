@@ -20,8 +20,12 @@ export interface StoredLesson {
   /** Formulas, code, and visuals CSS, prepared once at publish time. */
   prepared: Prepared
   editTokenHash: string
+  /** The hash of the token that claims an anonymous lesson into an account; null once claimed or for owned lessons. */
+  claimTokenHash: string | null
+  /** The user who owns it; null for anonymous lessons. */
+  ownerId: string | null
   createdAt: number
-  /** Null when it never expires (owned lessons, from phase 2 of plans/accounts-v2.md). */
+  /** Null when it never expires (owned lessons). */
   expiresAt: number | null
   updatedAt?: number
 }
@@ -31,8 +35,12 @@ export interface LessonStore {
   create(record: StoredLesson): Promise<void>
   /** A lesson that hasn't expired, or null. */
   get(id: string): Promise<StoredLesson | null>
-  /** Replaces a lesson without changing when it expires. */
+  /** The unclaimed, unexpired lesson whose claim token hashes to `hash`, or null. */
+  getByClaimTokenHash(hash: string): Promise<StoredLesson | null>
+  /** Replaces a lesson without changing when it expires or who owns it. */
   update(record: StoredLesson): Promise<void>
+  /** Gives a lesson to `ownerId`: it stops expiring and its claim token stops working. */
+  claim(id: string, ownerId: string): Promise<void>
   /** Deletes every lesson that has expired, and says how many. */
   deleteExpired(): Promise<number>
 }
@@ -51,6 +59,8 @@ export class PostgresLessonStore implements LessonStore {
       lesson: record.lesson,
       prepared: record.prepared,
       editTokenHash: record.editTokenHash,
+      claimTokenHash: record.claimTokenHash,
+      ownerId: record.ownerId,
       createdAt: new Date(record.createdAt),
       updatedAt: new Date(record.updatedAt ?? record.createdAt),
       expiresAt: record.expiresAt === null ? null : new Date(record.expiresAt),
@@ -61,24 +71,16 @@ export class PostgresLessonStore implements LessonStore {
     const [row] = await this.db
       .select()
       .from(lesson)
-      .where(
-        and(
-          eq(lesson.id, id),
-          or(isNull(lesson.expiresAt), gt(lesson.expiresAt, this.date()))
-        )
-      )
-    if (!row) return null
-    return {
-      id: row.id,
-      slug: row.slug,
-      spec: row.spec,
-      lesson: row.lesson as Lesson,
-      prepared: row.prepared as Prepared,
-      editTokenHash: row.editTokenHash,
-      createdAt: row.createdAt.getTime(),
-      updatedAt: row.updatedAt.getTime(),
-      expiresAt: row.expiresAt?.getTime() ?? null,
-    }
+      .where(and(eq(lesson.id, id), this.live()))
+    return row ? toStored(row) : null
+  }
+
+  async getByClaimTokenHash(hash: string) {
+    const [row] = await this.db
+      .select()
+      .from(lesson)
+      .where(and(eq(lesson.claimTokenHash, hash), this.live()))
+    return row ? toStored(row) : null
   }
 
   async update(record: StoredLesson) {
@@ -94,6 +96,18 @@ export class PostgresLessonStore implements LessonStore {
       .where(eq(lesson.id, record.id))
   }
 
+  async claim(id: string, ownerId: string) {
+    await this.db
+      .update(lesson)
+      .set({
+        ownerId,
+        claimTokenHash: null,
+        expiresAt: null,
+        updatedAt: this.date(),
+      })
+      .where(eq(lesson.id, id))
+  }
+
   async deleteExpired() {
     const deleted = await this.db
       .delete(lesson)
@@ -104,7 +118,25 @@ export class PostgresLessonStore implements LessonStore {
     return deleted.length
   }
 
+  private live = () =>
+    or(isNull(lesson.expiresAt), gt(lesson.expiresAt, this.date()))
   private date = () => new Date(this.now())
+}
+
+function toStored(row: typeof lesson.$inferSelect): StoredLesson {
+  return {
+    id: row.id,
+    slug: row.slug,
+    spec: row.spec,
+    lesson: row.lesson as Lesson,
+    prepared: row.prepared as Prepared,
+    editTokenHash: row.editTokenHash,
+    claimTokenHash: row.claimTokenHash,
+    ownerId: row.ownerId,
+    createdAt: row.createdAt.getTime(),
+    updatedAt: row.updatedAt.getTime(),
+    expiresAt: row.expiresAt?.getTime() ?? null,
+  }
 }
 
 // ---------- choosing a database ----------
@@ -135,13 +167,27 @@ async function connect(env = process.env): Promise<Db> {
 }
 
 // Kept on globalThis so hot reloads in development reuse one PGlite instance: two on the same
-// folder would corrupt it.
-const shared = globalThis as { lessonStore?: Promise<LessonStore> }
+// folder would corrupt it. Lessons and accounts share the connection.
+const shared = globalThis as {
+  learnDb?: Promise<Db>
+  lessonStore?: Promise<LessonStore>
+}
+
+export function getDb(): Promise<Db> {
+  if (!shared.learnDb) {
+    const pending = connect()
+    // A failed connection isn't kept, so the next request tries again.
+    pending.catch(() => {
+      if (shared.learnDb === pending) shared.learnDb = undefined
+    })
+    shared.learnDb = pending
+  }
+  return shared.learnDb
+}
 
 export function getLessonStore(): Promise<LessonStore> {
   if (!shared.lessonStore) {
-    const pending = connect().then((db) => new PostgresLessonStore(db))
-    // A failed connection isn't kept, so the next request tries again.
+    const pending = getDb().then((db) => new PostgresLessonStore(db))
     pending.catch(() => {
       if (shared.lessonStore === pending) shared.lessonStore = undefined
     })

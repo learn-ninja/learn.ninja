@@ -11,8 +11,8 @@ import {
 import {
   hashToken,
   lessonPath,
-  newEditToken,
   newLessonId,
+  newToken,
   slugify,
   tokenMatches,
 } from "./ids"
@@ -43,6 +43,9 @@ export interface Deps {
   now?: () => number
 }
 
+/** The path a claim link lives at. */
+export const keepPath = (claimToken: string) => `/keep/${claimToken}`
+
 export interface Reply {
   status: number
   body: Record<string, unknown>
@@ -55,6 +58,8 @@ interface PublishRequest {
   client: string
   /** The installed skill's version, from the x-learn-skill-version header. */
   skillVersion?: string | null
+  /** The signed-in user (session cookie or API key), or null for an anonymous publish. */
+  ownerId?: string | null
 }
 
 /** Checks size, JSON, spec version, and the spec's rules. Returns the lesson or an error reply. */
@@ -160,7 +165,11 @@ export async function publishLesson(
   if ("error" in checked) return checked.error!
 
   const { lesson, skill } = checked
-  const editToken = newEditToken()
+  const editToken = newToken()
+  // An owned lesson never expires and needs no claim token; an anonymous one lasts 7 days and
+  // carries a token that moves it into an account later (`learn login`, or the /keep link).
+  const owner = req.ownerId ?? null
+  const claimToken = owner ? null : newToken()
   const record: StoredLesson = {
     id: newLessonId(),
     slug: slugify(lesson.title),
@@ -168,8 +177,10 @@ export async function publishLesson(
     lesson,
     prepared: await prepareLesson(lesson),
     editTokenHash: hashToken(editToken),
+    claimTokenHash: claimToken ? hashToken(claimToken) : null,
+    ownerId: owner,
     createdAt: now,
-    expiresAt: now + LESSON_TTL_SECONDS * 1000,
+    expiresAt: owner ? null : now + LESSON_TTL_SECONDS * 1000,
   }
   await deps.store.create(record)
   return {
@@ -179,6 +190,10 @@ export async function publishLesson(
       id: record.id,
       url: deps.origin + lessonPath(record.slug, record.id),
       editToken,
+      ...(claimToken
+        ? { claimToken, claimUrl: deps.origin + keepPath(claimToken) }
+        : {}),
+      owned: Boolean(owner),
       expiresAt: isoOrNull(record.expiresAt),
       spec: record.spec,
       skill,
@@ -241,9 +256,76 @@ export async function updateLesson(
       ok: true,
       id: record.id,
       url: deps.origin + lessonPath(record.slug, record.id),
+      owned: Boolean(record.ownerId),
       expiresAt: isoOrNull(record.expiresAt),
       spec: record.spec,
       skill,
+    },
+  }
+}
+
+/**
+ * Moves an anonymous lesson into `ownerId`'s account: POST /api/lessons/{id}/claim with the claim
+ * token, or the /keep/{token} page, which has only the token. The lesson then never expires.
+ */
+export async function claimLesson(
+  req: { id?: string; claimToken: string; ownerId: string },
+  deps: Pick<Deps, "store" | "origin">
+): Promise<Reply> {
+  const hash = hashToken(req.claimToken)
+  const existing = req.id
+    ? await deps.store.get(req.id)
+    : await deps.store.getByClaimTokenHash(hash)
+  if (!existing) {
+    return {
+      status: 404,
+      body: {
+        ok: false,
+        error: "not_found",
+        message:
+          "This lesson doesn't exist, has expired, or was already saved to an account.",
+      },
+    }
+  }
+  if (existing.ownerId) {
+    return existing.ownerId === req.ownerId
+      ? kept(existing, deps.origin)
+      : {
+          status: 409,
+          body: {
+            ok: false,
+            error: "already_claimed",
+            message: "This lesson already belongs to another account.",
+          },
+        }
+  }
+  if (
+    !existing.claimTokenHash ||
+    !tokenMatches(req.claimToken, existing.claimTokenHash)
+  ) {
+    return {
+      status: 401,
+      body: {
+        ok: false,
+        error: "unauthorized",
+        message: "The claim token doesn't match this lesson.",
+      },
+    }
+  }
+  await deps.store.claim(existing.id, req.ownerId)
+  return kept({ ...existing, ownerId: req.ownerId, expiresAt: null }, deps.origin)
+}
+
+function kept(record: StoredLesson, origin: string): Reply {
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      id: record.id,
+      url: origin + lessonPath(record.slug, record.id),
+      title: record.lesson.title,
+      owned: true,
+      expiresAt: null,
     },
   }
 }

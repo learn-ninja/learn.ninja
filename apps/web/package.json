@@ -20,12 +20,14 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@better-auth/api-key": "^1.7.11",
     "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.39.0",
     "@workspace/db": "^0.0.0",
     "@workspace/player": "^0.0.0",
     "@workspace/spec": "^0.0.0",
     "@workspace/ui": "*",
+    "better-auth": "^1.7.11",
     "drizzle-orm": "0.45.4",
     "fumadocs-core": "^16.10.5",
     "fumadocs-mdx": "^15.0.12",

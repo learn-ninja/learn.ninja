@@ -1,5 +1,18 @@
+import { InvalidApiKeyError } from "@/lib/auth/actor"
+
 import type { Reply } from "./handlers"
 import { StorageNotConfiguredError } from "./store"
+
+/** A reply for a request that needs a signed-in user and has none. */
+export const SIGN_IN_REQUIRED: Reply = {
+  status: 401,
+  body: {
+    ok: false,
+    error: "sign_in_required",
+    message:
+      "Sign in first: send a session cookie or an x-api-key header (run `learn login`).",
+  },
+}
 
 /** Turns a handler's reply into a response, and unexpected failures into JSON errors the skill can show. */
 export async function respond(handle: () => Promise<Reply>): Promise<Response> {
@@ -11,6 +24,12 @@ export async function respond(handle: () => Promise<Reply>): Promise<Response> {
       return Response.json(
         { ok: false, error: "storage_not_configured", message: e.message },
         { status: 503 }
+      )
+    }
+    if (e instanceof InvalidApiKeyError) {
+      return Response.json(
+        { ok: false, error: "invalid_api_key", message: e.message },
+        { status: 401 }
       )
     }
     console.error("Publish API failed:", e)

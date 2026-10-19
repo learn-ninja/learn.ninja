@@ -8,8 +8,14 @@ import { redisFromEnv } from "./store"
 export const PUBLISH_LIMIT = { requests: 20, windowSeconds: 60 * 60 }
 /** Checks are cheap and agents re-check after every fix, so this one is looser. */
 export const VALIDATE_LIMIT = { requests: 120, windowSeconds: 60 * 60 }
+/** Sign-in codes per email address: each one is an email we pay for. Better Auth limits per IP on top. */
+export const CODE_LIMIT = { requests: 5, windowSeconds: 60 * 60 }
 
-const LIMITS = { publish: PUBLISH_LIMIT, validate: VALIDATE_LIMIT }
+const LIMITS = {
+  publish: PUBLISH_LIMIT,
+  validate: VALIDATE_LIMIT,
+  code: CODE_LIMIT,
+}
 export type LimitName = keyof typeof LIMITS
 
 export interface RateLimiter {

@@ -32,8 +32,8 @@ export function idFromParam(param: string): string | null {
   return /^[0-9a-z]{6,16}$/.test(id) ? id : null
 }
 
-/** A secret that lets whoever published a lesson update it. Only its hash is stored. */
-export function newEditToken(): string {
+/** A secret that lets whoever published a lesson update it (edit token) or keep it (claim token). Only its hash is stored. */
+export function newToken(): string {
   return randomBytes(24).toString("base64url")
 }
 

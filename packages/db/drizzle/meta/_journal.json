@@ -8,6 +8,13 @@
       "when": 1792404890978,
       "tag": "0000_lesson",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792407297681,
+      "tag": "0001_accounts",
+      "breakpoints": true
     }
   ]
 }

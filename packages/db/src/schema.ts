@@ -7,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core"
 
 // The tables, as plans/accounts-v2.md lists them. Ownership, team, and visibility columns exist from
@@ -16,6 +17,128 @@ import {
 export const visibility = pgEnum("visibility", ["public", "unlisted", "team"])
 
 const time = (name: string) => timestamp(name, { withTimezone: true })
+
+// ---------- accounts ----------
+// Better Auth owns user, session, account, verification, and apikey: the property names are the
+// field names it expects (its Drizzle adapter reads columns by property), the SQL names are ours.
+// We add handle, bio, and banned to user.
+
+export const user = pgTable(
+  "user",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    image: text("image"),
+    /** The public name in /u/{handle}. GitHub users get their login; email users pick one. */
+    handle: text("handle"),
+    bio: text("bio"),
+    /** Flipped by hand; a banned user can't sign in. */
+    banned: boolean("banned").notNull().default(false),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("user_email_idx").on(t.email),
+    uniqueIndex("user_handle_idx").on(t.handle),
+  ]
+)
+
+export const session = pgTable(
+  "session",
+  {
+    id: text("id").primaryKey(),
+    expiresAt: time("expires_at").notNull(),
+    token: text("token").notNull(),
+    ipAddress: text("ip_address"),
+    userAgent: text("user_agent"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("session_token_idx").on(t.token),
+    index("session_user_id_idx").on(t.userId),
+  ]
+)
+
+export const account = pgTable(
+  "account",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id").notNull(),
+    providerId: text("provider_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    accessToken: text("access_token"),
+    refreshToken: text("refresh_token"),
+    idToken: text("id_token"),
+    accessTokenExpiresAt: time("access_token_expires_at"),
+    refreshTokenExpiresAt: time("refresh_token_expires_at"),
+    scope: text("scope"),
+    password: text("password"),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull(),
+  },
+  (t) => [index("account_user_id_idx").on(t.userId)]
+)
+
+/** Email codes (hashed) and OAuth state. */
+export const verification = pgTable(
+  "verification",
+  {
+    id: text("id").primaryKey(),
+    identifier: text("identifier").notNull(),
+    value: text("value").notNull(),
+    expiresAt: time("expires_at").notNull(),
+    createdAt: time("created_at").notNull().defaultNow(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("verification_identifier_idx").on(t.identifier)]
+)
+
+/** The terminal's keys (`learn login`). Only the hash is stored; `start` shows the first characters. */
+export const apikey = pgTable(
+  "apikey",
+  {
+    id: text("id").primaryKey(),
+    configId: text("config_id").notNull().default("default"),
+    name: text("name"),
+    start: text("start"),
+    prefix: text("prefix"),
+    key: text("key").notNull(),
+    /** The user the key belongs to. */
+    referenceId: text("reference_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    refillInterval: integer("refill_interval"),
+    refillAmount: integer("refill_amount"),
+    lastRefillAt: time("last_refill_at"),
+    enabled: boolean("enabled").notNull().default(true),
+    rateLimitEnabled: boolean("rate_limit_enabled").notNull().default(true),
+    rateLimitTimeWindow: integer("rate_limit_time_window").default(86_400_000),
+    rateLimitMax: integer("rate_limit_max").default(10),
+    requestCount: integer("request_count").notNull().default(0),
+    remaining: integer("remaining"),
+    lastRequest: time("last_request"),
+    expiresAt: time("expires_at"),
+    createdAt: time("created_at").notNull(),
+    updatedAt: time("updated_at").notNull(),
+    permissions: text("permissions"),
+    metadata: text("metadata"),
+  },
+  (t) => [
+    index("apikey_key_idx").on(t.key),
+    index("apikey_reference_id_idx").on(t.referenceId),
+    index("apikey_config_id_idx").on(t.configId),
+  ]
+)
+
+// ---------- lessons ----------
 
 export const lesson = pgTable(
   "lesson",
@@ -29,8 +152,10 @@ export const lesson = pgTable(
     editTokenHash: text("edit_token_hash").notNull(),
     /** Null once the lesson is claimed into an account. */
     claimTokenHash: text("claim_token_hash"),
-    /** Null for anonymous lessons. References the user table once accounts exist. */
-    ownerId: text("owner_id"),
+    /** Null for anonymous lessons. */
+    ownerId: text("owner_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
     /** Reserved for teams. */
     orgId: text("org_id"),
     visibility: visibility("visibility").notNull().default("unlisted"),
@@ -45,5 +170,7 @@ export const lesson = pgTable(
   (t) => [
     index("lesson_expires_at_idx").on(t.expiresAt),
     index("lesson_listing_idx").on(t.visibility, t.hidden, t.createdAt),
+    index("lesson_claim_token_hash_idx").on(t.claimTokenHash),
+    index("lesson_owner_id_idx").on(t.ownerId),
   ]
 )
