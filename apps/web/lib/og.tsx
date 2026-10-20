@@ -624,8 +624,9 @@ export function lessonImage(lesson: Lesson) {
   const t = stringsFor(lesson.language)
   const dir = /^(ar|he|fa|ur)\b/i.test(lesson.language) ? "rtl" : "ltr"
   const shown = peek(lesson)
+  // The first two tags (the lesson's label, then its product or field), then length and level.
   const facts = [
-    t.subjects[lesson.subject],
+    ...lesson.tags.slice(0, 2),
     t.minutes(lesson.estimatedMinutes),
     t.levels[lesson.level],
   ]
@@ -636,8 +637,8 @@ export function lessonImage(lesson: Lesson) {
         <div style={{ ...column, flex: 1, gap: 28 }}>
           <Headline title={lesson.title} text={lesson.summary} />
           <div style={{ ...row, gap: 10, flexWrap: "wrap" }}>
-            {facts.map((f) => (
-              <Pill key={f}>{f}</Pill>
+            {facts.map((f, i) => (
+              <Pill key={i}>{f}</Pill>
             ))}
           </div>
         </div>

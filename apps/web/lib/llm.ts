@@ -113,7 +113,7 @@ In a chat app (Claude, ChatGPT) or any other MCP client, connect to the MCP serv
 
 ## What's in a lesson
 
-One idea in 3 to 15 minutes: a guess before any teaching, one to four short concepts each followed by practice, a final challenge, and takeaways. The agent picks a level and a size from what you ask, and splits a big topic into a path of lessons. Practice uses nine kinds of bricks: concept, choice, compare, hotspot, sort, order, match, blank, and scenario. Every wrong option explains the mistake behind it. Every lesson names one \`subject\` from a fixed list (${SUBJECTS.join(", ")}), picked by what the learner will do afterwards; the format reference has each one's scope. Up to five free \`tags\` say what it's specifically about.
+One idea in 3 to 15 minutes: a guess before any teaching, one to four short concepts each followed by practice, a final challenge, and takeaways. The agent picks a level and a size from what you ask, and splits a big topic into a path of lessons. Practice uses nine kinds of bricks: concept, choice, compare, hotspot, sort, order, match, blank, and scenario. Every wrong option explains the mistake behind it. Every lesson names one \`subject\` from a fixed list (${SUBJECTS.join(", ")}), picked by what the learner will do afterwards; the format reference has each one's scope. One to five \`tags\`, short labels as a reader should see them ("Claude Code", "Compound interest"), say what it's specifically about; the first is the lesson's label on Explore and the title screen.
 
 ## Questions
 

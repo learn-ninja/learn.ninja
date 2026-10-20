@@ -11,12 +11,26 @@ import {
   type Db,
 } from "@workspace/db"
 import type { Prepared } from "@workspace/player"
-import type { Lesson } from "@workspace/spec"
+import { normalizeTag, type Lesson } from "@workspace/spec"
 
 // Where published lessons live. The app only talks to LessonStore, which keeps them in Postgres:
 // Neon in production (DATABASE_URL), PGlite in a local folder in development and in memory in tests.
 
 export const LESSON_TTL_SECONDS = 7 * 24 * 60 * 60
+
+/**
+ * A lesson's tag labels as lesson_tag rows: each label's key with the label itself, one row per
+ * key (the checker refuses duplicate keys, so a second label for a key is only possible in data
+ * from before the rule; the first one wins).
+ */
+export function tagRows(labels: string[]): { tag: string; label: string }[] {
+  const rows: { tag: string; label: string }[] = []
+  for (const label of labels) {
+    const tag = normalizeTag(label)
+    if (tag && !rows.some((r) => r.tag === tag)) rows.push({ tag, label })
+  }
+  return rows
+}
 
 export interface StoredLesson {
   id: string
@@ -120,13 +134,16 @@ export class PostgresLessonStore implements LessonStore {
     await this.writeTags(record)
   }
 
-  /** The lesson's tags as rows of lesson_tag, for counting and filtering. The JSON stays the truth; this is its index. */
+  /**
+   * The lesson's tags as rows of lesson_tag (the key each label derives to, and the label as
+   * written), for counting and filtering. The JSON stays the truth; this is its index.
+   */
   private async writeTags(record: StoredLesson) {
-    const tags = record.lesson.tags ?? []
-    if (!tags.length) return
+    const rows = tagRows(record.lesson.tags ?? [])
+    if (!rows.length) return
     await this.db
       .insert(lessonTag)
-      .values(tags.map((tag) => ({ lessonId: record.id, tag })))
+      .values(rows.map((row) => ({ lessonId: record.id, ...row })))
   }
 
   async claim(id: string, ownerId: string) {

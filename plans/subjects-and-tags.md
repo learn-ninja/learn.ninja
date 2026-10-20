@@ -1,6 +1,8 @@
 # Subjects and tags: how lessons get categorized
 
-Plan written on 2026-10-20. Nothing here is built yet. It replaces the free-text `topic` label with a fixed list of **subjects** that the agent must pick from and the checker enforces, plus a few free **tags** per lesson that stay out of the way until there are enough lessons to need them.
+Plan written on 2026-10-20. Phases 1 and 2 shipped the same day (spec 0.6 and 0.7). It replaces the free-text `topic` label with a fixed list of **subjects** that the agent must pick from and the checker enforces, plus a few free **tags** per lesson.
+
+**Revised the same evening (spec 0.8).** The first live rows under 0.6 read "Tools & productivity" and "Business & startups" where they used to read "Claude Code" and "Startups", because the subject took the label's place and tags were hidden. Colin's call: **tags are the visible label and subjects are shown nowhere.** Tags became required (1–5) labels written as a reader should see them ("Claude Code", "Compound interest"), each with a derived key (`claude-code`) that the rules and the `lesson_tag` index compare; the first two show on Explore rows, the title screen, and link previews, before the length and level. Subjects stay in the data for the aura, filters, and subject pages, and their translated names stay in the locales for those. The "What the player and the site show" section below and the "Are tags shown" decision describe 0.6 and are superseded by the Decisions table's 0.8 rows.
 
 ## The problem
 
@@ -171,11 +173,13 @@ Each phase ships on its own and leaves the product whole.
 | How many subjects | 16; wide on purpose, no "Other" |
 | Primary and secondary subjects | No; a second subject becomes a tag |
 | Who assigns | The agent, from the format reference, at write time; the checker refuses anything else; no server-side classifier |
-| Are tags shown | Not until a tag earns a filter in a subject; stored and indexed from day one |
-| Tag governance | Normalization and a hand-kept synonym table in the spec; a weekly tag report; single-use tags are fine, they just aren't shown |
-| Where the subject lives in the database | In the lesson JSON with an expression index; tags also in a `lesson_tag` table for counting |
-| What happens to `topic` | Removed from the spec; the upgrade maps old labels to a subject and keeps the label as a tag |
-| Spec version | 0.6, upgraded on read like 0.2–0.5; no skill version bump (SKILL.md and the CLI don't change) |
+| Are tags shown | **Yes, since 0.8**: the first two tags are the lesson's label on Explore rows, the title screen, and link previews. (0.6 said: not until a tag earns a filter.) |
+| Are subjects shown | **No, since 0.8**: no subject name appears on any screen. The subject drives the aura's hue, Explore filters, and subject pages; the locale strings are kept for those. (0.6 showed the translated name where the topic was.) |
+| What a tag is | **Since 0.8**, a label as a reader should see it, 2–30 characters, any script, letters, digits, spaces, and `- + # . & / '`, proper nouns as written and common nouns in sentence case; the checker derives a key (`normalizeTag`: folded spelling, `c++` → `cpp`, synonyms) and compares keys for the redundancy and duplicate rules and in `lesson_tag` (`tag` key, `label` as written). Required, 1–5; the first is what the lesson is filed under, the second its product or field |
+| Tag governance | A hand-kept synonym table in the spec over keys; a weekly tag report showing each key's most common label; single-use tags are fine |
+| Where the subject lives in the database | In the lesson JSON with an expression index; tags also in a `lesson_tag` table (key and label) for counting |
+| What happens to `topic` | Removed from the spec; the upgrade maps old labels to a subject and keeps the label as tags, one per part of a compound label ("Git & Claude Code" → "Git", "Claude Code"); 0.6 and 0.7 slug tags become labels on upgrade (known spelling or sentence case) |
+| Spec version | 0.6, then 0.7 (math/data split) and 0.8 (tags as labels), upgraded on read like 0.2–0.5; skill 0.13.0 with 0.8, since the CLI's bundled rules changed |
 | Translations | Subject names in every player locale, typed so none can be missing |
 | URLs | `/explore/{subject}` now, `/explore/{subject}/{tag}` when phase 4 comes |
 

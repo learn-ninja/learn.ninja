@@ -491,7 +491,7 @@ describe("subjects and tags", () => {
       text: JSON.stringify({ ...rest, spec: "0.5", topic: "Startups" }),
     })
     const [row] = await listLessons(db, "new", 10, { now })
-    expect(row).toMatchObject({ id, subject: "business" })
+    expect(row).toMatchObject({ id, subject: "business", tags: ["Startups"] })
     // The stored JSON was upgraded, so the subject index and the tag table see it too.
     expect(
       (await listLessons(db, "new", 10, { subject: "business", now })).map(
@@ -505,14 +505,39 @@ describe("subjects and tags", () => {
     ).toEqual([id])
   })
 
+  it("shows a 0.7 lesson's slug tags as labels on its row without rewriting it", async () => {
+    // Stored as spec 0.7 wrote it: slug tags. The row and the lesson page upgrade on read.
+    await db.insert(lesson).values({
+      id: "cc000001",
+      slug: "claude-code-basics",
+      spec: "0.7",
+      lesson: {
+        ...JSON.parse(buttons),
+        spec: "0.7",
+        subject: "tools",
+        tags: ["claude-code", "remote-work"],
+      },
+      prepared: {},
+      editTokenHash: "x",
+      ownerId: "ada",
+      visibility: "public",
+    })
+    const [row] = await listLessons(db, "new", 10, { now })
+    expect(row).toMatchObject({
+      id: "cc000001",
+      subject: "tools",
+      tags: ["Claude Code", "Remote work"],
+    })
+  })
+
   it("reports subjects by lesson count, the top tags in each, and tags used once", async () => {
     await published("ada", { visibility: "public" })
     await published("ada", {
       visibility: "public",
-      text: withTags(buttons, ["buttons", "forms"]),
+      text: withTags(buttons, ["Buttons", "Forms"]),
     })
     await published("bob", { visibility: "public", text: spanish })
-    await published("bob", { text: withTags(buttons, ["ignored"]) })
+    await published("bob", { text: withTags(buttons, ["Ignored"]) })
     const report = await tagReport(db, { now, top: 2 })
     expect(report.lessons).toBe(3)
     expect(report.subjects.slice(0, 2)).toEqual([
@@ -520,16 +545,16 @@ describe("subjects and tags", () => {
         subject: "design",
         lessons: 2,
         tags: [
-          { tag: "buttons", lessons: 2 },
-          { tag: "forms", lessons: 1 },
+          { tag: "buttons", label: "Buttons", lessons: 2 },
+          { tag: "forms", label: "Forms", lessons: 1 },
         ],
       },
       {
         subject: "languages",
         lessons: 1,
         tags: [
-          { tag: "greetings", lessons: 1 },
-          { tag: "phrases", lessons: 1 },
+          { tag: "greetings", label: "Greetings", lessons: 1 },
+          { tag: "phrases", label: "Phrases", lessons: 1 },
         ],
       },
     ])
@@ -537,20 +562,62 @@ describe("subjects and tags", () => {
       Array(15).fill(0)
     )
     expect(report.singles).toEqual([
-      { tag: "forms", subject: "design" },
-      { tag: "greetings", subject: "languages" },
-      { tag: "phrases", subject: "languages" },
-      { tag: "small-talk", subject: "languages" },
-      { tag: "user-interface", subject: "design" },
-      { tag: "visual-hierarchy", subject: "design" },
+      { tag: "forms", label: "Forms", subject: "design" },
+      { tag: "greetings", label: "Greetings", subject: "languages" },
+      { tag: "phrases", label: "Phrases", subject: "languages" },
+      { tag: "small-talk", label: "Small talk", subject: "languages" },
+      { tag: "user-interface", label: "User interface", subject: "design" },
+      {
+        tag: "visual-hierarchy",
+        label: "Visual hierarchy",
+        subject: "design",
+      },
     ])
     const text = formatTagReport(report, new Date(now))
     expect(text).toContain("Tag report, 2027-01-15: 3 listed lessons")
     expect(text).toMatch(/^ {2}design {2,}2 {2}Design$/m)
     expect(text).toMatch(/^ {2}history {2,}0 {2}History$/m)
-    expect(text).toContain("    buttons 2, forms 1")
+    expect(text).toContain("    Buttons 2, Forms 1")
     expect(text).toContain("Tags used once (6)")
-    expect(text).toContain("forms (design)")
+    expect(text).toContain("Forms (design)")
+  })
+
+  it("shows a key's most common label, and the key when the label doesn't spell it", async () => {
+    await published("ada", {
+      visibility: "public",
+      text: withTags(buttons, ["JS", "Modals"]),
+    })
+    await published("ada", {
+      visibility: "public",
+      text: withTags(buttons, ["JavaScript", "modals"]),
+    })
+    await published("bob", {
+      visibility: "public",
+      text: withTags(buttons, ["JavaScript"]),
+    })
+    const report = await tagReport(db, { now })
+    expect(report.subjects[0]?.tags).toEqual([
+      { tag: "javascript", label: "JavaScript", lessons: 3 },
+      // A tie between spellings goes by name, capitals first, so the report is stable.
+      { tag: "modals", label: "Modals", lessons: 2 },
+    ])
+    const text = formatTagReport(report, new Date(now))
+    expect(text).toContain("    JavaScript 3, Modals 2")
+    // A label that doesn't spell its key (a synonym at work) shows the key too, since that's what
+    // the synonym table maps.
+    const lone = formatTagReport({
+      lessons: 1,
+      subjects: [
+        {
+          subject: "programming",
+          lessons: 1,
+          tags: [{ tag: "javascript", label: "JS", lessons: 1 }],
+        },
+      ],
+      singles: [{ tag: "javascript", label: "JS", subject: "programming" }],
+    })
+    expect(lone).toContain("    JS [javascript] 1")
+    expect(lone).toContain("  JS [javascript] (programming)")
   })
 
   it("keeps the tag table in step with the JSON on publish, update, and expiry", async () => {
@@ -613,7 +680,7 @@ describe("tag backfill", () => {
           id: "old12345",
           from: "0.5",
           subject: "data",
-          tags: ["statistics"],
+          tags: ["Statistics"],
         },
       ],
       tagRows: 4,
@@ -629,14 +696,20 @@ describe("tag backfill", () => {
       .select()
       .from(lesson)
       .where(eq(lesson.id, "old12345"))
-    expect(row?.spec).toBe("0.7")
+    expect(row?.spec).toBe("0.8")
     expect(row?.lesson).toMatchObject({
-      spec: "0.7",
+      spec: "0.8",
       subject: "data",
-      tags: ["statistics"],
+      tags: ["Statistics"],
     })
     expect(row?.lesson).not.toHaveProperty("topic")
     expect(await tagsOf("old12345")).toEqual(["statistics"])
+    expect(
+      await db
+        .select({ label: lessonTag.label })
+        .from(lessonTag)
+        .where(eq(lessonTag.lessonId, "old12345"))
+    ).toEqual([{ label: "Statistics" }])
     expect(await tagsOf(current)).toEqual([
       "buttons",
       "user-interface",

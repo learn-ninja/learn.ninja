@@ -14,8 +14,9 @@ export type ValidationResult =
 
 /**
  * Check a lesson file (as JSON text or an already-parsed value) against the current spec and the v1 rules.
- * Tags are normalized first (and the lesson returned carries the normalized ones, with a note for
- * each change); then the schema; the cross-field rules run only on a lesson that matches it.
+ * Tag labels are tidied first (trimmed, whitespace collapsed, a leading # gone; the lesson returned
+ * carries the tidied ones, with a note for each change); then the schema; the cross-field rules run
+ * only on a lesson that matches it.
  */
 export function validateLesson(input: string | unknown): ValidationResult {
   let raw: string

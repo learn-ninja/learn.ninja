@@ -1,5 +1,5 @@
 {
-  "spec": "0.7",
+  "spec": "0.8",
   "title": "Basic Spanish greetings",
   "summary": "Say hello the right way for the time of day, and ask how someone is.",
   "objective": "Greet someone in Spanish at any time of day and ask how they are, formally or informally.",
@@ -8,7 +8,7 @@
   "level": "beginner",
   "estimatedMinutes": 6,
   "subject": "languages",
-  "tags": ["greetings", "small-talk", "phrases"],
+  "tags": ["Greetings", "Small talk", "Phrases"],
   "hook": {
     "id": "hook",
     "type": "choice",

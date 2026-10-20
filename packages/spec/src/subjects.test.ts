@@ -5,8 +5,13 @@ import { describe, expect, it } from "vitest"
 import { LEVELS } from "./schema"
 import { isSubject, SUBJECT_INFO, SUBJECTS } from "./subjects"
 import {
+  isTagLabel,
+  labelForTag,
+  normalizeLabel,
   normalizeLessonTags,
   normalizeTag,
+  TAG_LABEL_PATTERN,
+  TAG_LABELS,
   TAG_PATTERN,
   TAG_SYNONYMS,
 } from "./tags"
@@ -86,7 +91,36 @@ describe("tags", () => {
       expect(TAG_PATTERN.test(bad), bad).toBe(false)
   })
 
-  it("normalize spelling, then map synonyms", () => {
+  it("labels are short, readable, in any script, and never start with #", () => {
+    for (const ok of [
+      "Git",
+      "Claude Code",
+      "C++",
+      "C#",
+      "A/B testing",
+      "Node.js",
+      ".NET",
+      "Ohm's law",
+      "Rule of 72",
+      "Higher-order functions",
+      "Tom & Jerry",
+      "历史",
+      "تاريخ",
+    ])
+      expect(TAG_LABEL_PATTERN.test(ok), ok).toBe(true)
+    for (const bad of [
+      "#git",
+      "claude_code",
+      "Buttons!",
+      " Git",
+      "Git ",
+      "(x)",
+      "",
+    ])
+      expect(TAG_LABEL_PATTERN.test(bad), bad).toBe(false)
+  })
+
+  it("derive one key from a label, whatever its spelling, then map synonyms", () => {
     expect(normalizeTag(" Claude Code ")).toBe("claude-code")
     expect(normalizeTag("claude_code")).toBe("claude-code")
     expect(normalizeTag("#git")).toBe("git")
@@ -95,9 +129,41 @@ describe("tags", () => {
     expect(normalizeTag("UX")).toBe("user-experience")
     expect(normalizeTag("claudecode")).toBe("claude-code")
     expect(normalizeTag("compound-interest")).toBe("compound-interest")
+    expect(normalizeTag("Compound interest")).toBe("compound-interest")
+    // Names whose symbols mean something keep a key of their own.
+    expect(normalizeTag("C++")).toBe("cpp")
+    expect(normalizeTag("c++")).toBe("cpp")
+    expect(normalizeTag("C#")).toBe("csharp")
+    expect(normalizeTag("F#")).toBe("fsharp")
+    expect(normalizeTag(".NET")).toBe("dotnet")
+    // Apostrophes are dropped, not hyphenated.
+    expect(normalizeTag("Ohm's law")).toBe("ohms-law")
+    expect(normalizeTag("Ohm’s law")).toBe("ohms-law")
+    expect(normalizeTag("Node.js")).toBe("nodejs")
+    expect(normalizeTag("A/B testing")).toBe("a-b-testing")
   })
 
-  it("keep the synonym table normalized and pointing at canonical tags", () => {
+  it("tidy a label without touching its casing", () => {
+    expect(normalizeLabel("  Claude  Code ")).toBe("Claude Code")
+    expect(normalizeLabel("#Git")).toBe("Git")
+    expect(normalizeLabel("## Git")).toBe("Git")
+    expect(normalizeLabel("JavaScript")).toBe("JavaScript")
+    expect(isTagLabel("Git")).toBe(true)
+    expect(isTagLabel("x")).toBe(false)
+    expect(isTagLabel("x".repeat(31))).toBe(false)
+  })
+
+  it("write a key as a label: the known spelling, else sentence case", () => {
+    expect(labelForTag("javascript")).toBe("JavaScript")
+    expect(labelForTag("claude-code")).toBe("Claude Code")
+    expect(labelForTag("a-b-testing")).toBe("A/B testing")
+    expect(labelForTag("ios")).toBe("iOS")
+    expect(labelForTag("compound-interest")).toBe("Compound interest")
+    expect(labelForTag("startups")).toBe("Startups")
+    expect(labelForTag("historia")).toBe("Historia")
+  })
+
+  it("keep the synonym table normalized and pointing at canonical keys", () => {
     for (const [from, to] of Object.entries(TAG_SYNONYMS)) {
       expect(from, from).toMatch(TAG_PATTERN)
       expect(to, to).toMatch(TAG_PATTERN)
@@ -111,14 +177,23 @@ describe("tags", () => {
     }
   })
 
+  it("keep every known label a valid label whose key is its own entry", () => {
+    for (const [key, label] of Object.entries(TAG_LABELS)) {
+      expect(key, key).toMatch(TAG_PATTERN)
+      expect(TAG_SYNONYMS[key], `${key} is a synonym, not a key`).toBeUndefined()
+      expect(isTagLabel(label), label).toBe(true)
+      expect(normalizeTag(label), `${label} → ${key}`).toBe(key)
+    }
+  })
+
   it("report what changed on a lesson's tags and leave the rest alone", () => {
     const { data, changes } = normalizeLessonTags({
       title: "x",
-      tags: ["Git", "claude-code", 3],
+      tags: [" Git", "Claude Code", 3],
     })
-    expect(data).toEqual({ title: "x", tags: ["git", "claude-code", 3] })
-    expect(changes).toEqual([{ path: "tags[0]", from: "Git", to: "git" }])
-    const same = { title: "x", tags: ["git"] }
+    expect(data).toEqual({ title: "x", tags: ["Git", "Claude Code", 3] })
+    expect(changes).toEqual([{ path: "tags[0]", from: " Git", to: "Git" }])
+    const same = { title: "x", tags: ["Git"] }
     expect(normalizeLessonTags(same).data).toBe(same)
     expect(normalizeLessonTags("nope").data).toBe("nope")
     expect(normalizeLessonTags({ tags: "git" }).changes).toEqual([])

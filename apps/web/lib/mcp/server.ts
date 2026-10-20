@@ -188,7 +188,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
           )
           return { reply, keepDraft: true }
         },
-        ["ok", "spec"]
+        ["ok", "spec", "notes"]
       )
   )
 
@@ -329,7 +329,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
       }
       return toolResult(
         () => reissueClaimToken({ id, editToken, client }, limited),
-        ["ok", "id", "url", "claimUrl", "expiresAt"]
+        ["ok", "id", "url", "claimUrl", "expiresAt", "notes"]
       )
     }
   )
@@ -392,7 +392,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
           const reply = await update(text)
           return { reply, keepDraft: reply.body.ok !== true }
         },
-        ["ok", "id", "url", "expiresAt", "owner", "visibility"]
+        ["ok", "id", "url", "expiresAt", "owner", "visibility", "notes"]
       )
     }
   )

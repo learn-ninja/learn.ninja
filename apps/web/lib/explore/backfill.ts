@@ -3,19 +3,22 @@ import { eq } from "drizzle-orm"
 import { lesson, lessonTag, type Db } from "@workspace/db"
 import {
   canUpgrade,
-  normalizeTag,
+  isTagLabel,
+  normalizeLabel,
   SPEC_VERSION,
   TAG_LIMITS,
-  TAG_PATTERN,
   upgradeLesson,
   type Lesson,
 } from "@workspace/spec"
 
-// A one-off for lessons published before the tag table existed (`npm run tags:backfill -w web`):
-// brings every stored lesson's JSON up to the current spec, the way the lesson page does on read,
-// and rebuilds its lesson_tag rows. Rewriting the JSON matters because Explore's subject index
-// reads `lesson->>'subject'`, which older rows don't have. Safe to run again: it only writes what
-// the current code would write on an update.
+import { tagRows } from "../publish/store"
+
+// A one-off for lessons published before the tag table existed, or before tags were labels
+// (`npm run tags:backfill -w web`): brings every stored lesson's JSON up to the current spec, the
+// way the lesson page does on read, and rebuilds its lesson_tag rows (key and label). Rewriting
+// the JSON matters because Explore's subject index reads `lesson->>'subject'`, which older rows
+// don't have, and rows read their labels from the JSON. Safe to run again: it only writes what the
+// current code would write on an update.
 
 export interface BackfillChange {
   id: string
@@ -23,6 +26,7 @@ export interface BackfillChange {
   /** The spec the row had; the row now has SPEC_VERSION. */
   from: string
   subject: string
+  /** The tag labels the row now has. */
   tags: string[]
 }
 
@@ -38,19 +42,14 @@ export interface BackfillSummary {
   bySubject: Record<string, number>
 }
 
-/** The tags the store would write for a lesson: normalized, valid, unique, at most five. */
-function tagsOf(data: Lesson): string[] {
+/** The labels the store would keep for a lesson: tidied, valid, one per key, at most five. */
+function labelsOf(data: Lesson): string[] {
   const out: string[] = []
   for (const raw of data.tags ?? []) {
     if (typeof raw !== "string") continue
-    const tag = normalizeTag(raw)
-    if (
-      tag.length >= TAG_LIMITS.min &&
-      tag.length <= TAG_LIMITS.max &&
-      TAG_PATTERN.test(tag) &&
-      !out.includes(tag)
-    )
-      out.push(tag)
+    const label = normalizeLabel(raw)
+    if (isTagLabel(label) && tagRows([...out, label]).length > out.length)
+      out.push(label)
     if (out.length === TAG_LIMITS.perLesson) break
   }
   return out
@@ -73,7 +72,7 @@ export async function backfillTags(
   for (const row of rows) {
     const stored = row.lesson as Lesson
     const data = (canUpgrade(stored) ? upgradeLesson(stored) : stored) as Lesson
-    const tags = tagsOf(data)
+    const tags = labelsOf(data)
     const subject = String(data.subject)
     summary.bySubject[subject] = (summary.bySubject[subject] ?? 0) + 1
     summary.tagRows += tags.length
@@ -96,7 +95,7 @@ export async function backfillTags(
       if (tags.length)
         await db
           .insert(lessonTag)
-          .values(tags.map((tag) => ({ lessonId: row.id, tag })))
+          .values(tagRows(tags).map((r) => ({ lessonId: row.id, ...r })))
     }
   }
   return summary

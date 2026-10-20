@@ -1,4 +1,4 @@
-// The lesson spec v0.7: the single definition of a valid lesson.
+// The lesson spec v0.8: the single definition of a valid lesson.
 export * from "./schema"
 export {
   everyVisual,
@@ -22,4 +22,14 @@ export {
   type Subject,
   type SubjectInfo,
 } from "./subjects"
-export { normalizeTag, TAG_LIMITS, TAG_PATTERN, TAG_SYNONYMS } from "./tags"
+export {
+  isTagLabel,
+  labelForTag,
+  normalizeLabel,
+  normalizeTag,
+  TAG_LABEL_PATTERN,
+  TAG_LABELS,
+  TAG_LIMITS,
+  TAG_PATTERN,
+  TAG_SYNONYMS,
+} from "./tags"

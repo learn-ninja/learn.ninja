@@ -20,7 +20,7 @@ function asV02(lesson: any) {
 }
 
 describe("upgradeLesson", () => {
-  it.each(exampleFiles())("turns %s back into the same 0.7 lesson", (file) => {
+  it.each(exampleFiles())("turns %s back into the same 0.8 lesson", (file) => {
     const lesson = loadExample(file)
     const upgraded = upgradeLesson(asV02(lesson))
     expect(upgraded).toEqual(lesson)
@@ -28,8 +28,8 @@ describe("upgradeLesson", () => {
     expect(validateLesson(upgraded).ok).toBe(true)
   })
 
-  it.each(["0.3", "0.4", "0.5", "0.6"])(
-    "brings a %s lesson to 0.7 by its version alone",
+  it.each(["0.3", "0.4", "0.5", "0.6", "0.7"])(
+    "brings a %s lesson to 0.8 by its version alone",
     (spec) => {
       const lesson = loadExample("button-hierarchy.json")
       const old = { ...lesson, spec }
@@ -65,10 +65,10 @@ describe("upgradeLesson", () => {
     const old = { ...rest, spec: "0.5", topic: "UI design" }
     expect(canUpgrade(old)).toBe(true)
     const upgraded = upgradeLesson(old) as Record<string, unknown>
-    expect(upgraded.spec).toBe("0.7")
+    expect(upgraded.spec).toBe("0.8")
     expect(upgraded.subject).toBe("design")
-    // "ui-design" is a synonym of "user-interface"
-    expect(upgraded.tags).toEqual(["user-interface"])
+    // The label is kept as written; its key, "ui-design", is a synonym of "user-interface".
+    expect(upgraded.tags).toEqual(["UI design"])
     expect("topic" in upgraded).toBe(false)
     // The field order of a hand-written file: subject and tags right after estimatedMinutes.
     expect(Object.keys(upgraded).slice(0, 10)).toEqual([
@@ -87,16 +87,34 @@ describe("upgradeLesson", () => {
     expect(result.ok).toBe(true)
   })
 
+  /** Only the tags are missing: what an old file with a redundant or absent label comes to. */
+  function expectOnlyTagsMissing(upgraded: unknown) {
+    const result = validateLesson(upgraded)
+    expect(result.ok).toBe(false)
+    expect(result.issues).toEqual([
+      {
+        kind: "structure",
+        path: "tags",
+        message: expect.stringMatching(/expected array|>=1/),
+      },
+    ])
+  }
+
   it.each([
-    ["Startups", "business", ["startups"]],
-    ["Git & Claude Code", "tools", ["git-claude-code"]],
-    ["Claude Code", "tools", ["claude-code"]],
-    ["Personal finance", "money", ["personal-finance"]],
-    ["JavaScript", "programming", ["javascript"]],
+    // The three lessons live when 0.6 shipped, as they were labelled.
+    ["Startups", "business", ["Startups"]],
+    ["Git & Claude Code", "tools", ["Git", "Claude Code"]],
+    ["Claude Code", "tools", ["Claude Code"]],
+    ["Personal finance", "money", ["Personal finance"]],
+    ["JavaScript", "programming", ["JavaScript"]],
+    // Compound labels split on &, commas, "and", and a spaced slash, each part kept as written
+    // (a lowercase word is in slug form, so it gets sentence case like any slug tag).
+    ["Git, GitHub and CI/CD", "life", ["Git", "GitHub", "CI/CD"]],
+    ["Typography / color", "life", ["Typography", "Color"]],
     // The label is the subject itself, so it isn't worth a tag.
     ["History", "history", undefined],
     // Unknown labels land in life, with the label kept.
-    ["Beekeeping", "life", ["beekeeping"]],
+    ["Beekeeping", "life", ["Beekeeping"]],
   ])("maps the topic %j to %s with tags %j", (topic, subject, tags) => {
     const {
       subject: _subject,
@@ -107,9 +125,15 @@ describe("upgradeLesson", () => {
       string,
       unknown
     >
+    expect(upgraded.spec).toBe("0.8")
     expect(upgraded.subject).toBe(subject)
     expect(upgraded.tags).toEqual(tags)
-    expect(validateLesson(upgraded).ok).toBe(true)
+    // Tags are required from 0.8, so a lesson left without them has that one thing to fix.
+    if (tags) expect(validateLesson(upgraded).ok).toBe(true)
+    else expectOnlyTagsMissing(upgraded)
+    // Upgrading again changes nothing.
+    expect(canUpgrade(upgraded)).toBe(false)
+    expect(upgradeLesson(upgraded)).toBe(upgraded)
   })
 
   it("drops a label that only repeats a language the lesson sets", () => {
@@ -125,7 +149,7 @@ describe("upgradeLesson", () => {
     }) as Record<string, unknown>
     expect(upgraded.subject).toBe("languages")
     expect(upgraded.tags).toBeUndefined()
-    expect(validateLesson(upgraded).ok).toBe(true)
+    expectOnlyTagsMissing(upgraded)
   })
 
   it("gives a 0.5 lesson without a topic the widest subject", () => {
@@ -140,7 +164,7 @@ describe("upgradeLesson", () => {
     >
     expect(upgraded.subject).toBe("life")
     expect(upgraded.tags).toBeUndefined()
-    expect(validateLesson(upgraded).ok).toBe(true)
+    expectOnlyTagsMissing(upgraded)
   })
 
   it("keeps a subject an older file already has, and adds the topic as a tag", () => {
@@ -151,16 +175,54 @@ describe("upgradeLesson", () => {
       topic: "Call to action",
     }) as Record<string, unknown>
     expect(upgraded.subject).toBe("design")
-    expect(upgraded.tags).toEqual([...lesson.tags, "call-to-action"])
-    // A label already among the tags isn't added twice.
+    expect(upgraded.tags).toEqual([...lesson.tags, "Call to action"])
+    // A label already among the tags (by key, whatever its casing) isn't added twice.
     expect(
       (
-        upgradeLesson({ ...lesson, spec: "0.5", topic: "Buttons" }) as Record<
+        upgradeLesson({ ...lesson, spec: "0.5", topic: "buttons" }) as Record<
           string,
           unknown
         >
       ).tags
     ).toEqual(lesson.tags)
+  })
+
+  it("turns the slug tags of a 0.6 or 0.7 lesson into labels", () => {
+    const lesson = loadExample("map-vs-foreach.json")
+    const slugs = {
+      ...lesson,
+      spec: "0.7",
+      tags: ["javascript", "arrays", "higher-order-functions"],
+    }
+    // A slug's hyphens are word breaks, so the one inside "higher-order" can't come back.
+    const labels = {
+      ...lesson,
+      tags: ["JavaScript", "Arrays", "Higher order functions"],
+    }
+    expect(upgradeLesson(slugs)).toEqual(labels)
+    expect(JSON.stringify(upgradeLesson(slugs))).toBe(JSON.stringify(labels))
+    expect(validateLesson(labels).ok).toBe(true)
+    const known = upgradeLesson({
+      ...slugs,
+      spec: "0.6",
+      tags: ["claude-code", "a-b-testing", "cpp", "vs-code", "remote-work"],
+    }) as Record<string, unknown>
+    expect(known.tags).toEqual([
+      "Claude Code",
+      "A/B testing",
+      "C++",
+      "VS Code",
+      "Remote work",
+    ])
+    expect(validateLesson(known).ok).toBe(true)
+    // The live lesson tagged `claude-code` under 0.7 shows "Claude Code" once upgraded.
+    const live = upgradeLesson({
+      ...slugs,
+      subject: "tools",
+      tags: ["claude-code"],
+    }) as Record<string, unknown>
+    expect(live.tags).toEqual(["Claude Code"])
+    expect(upgradeLesson(live)).toBe(live)
   })
 
   it("moves a 0.6 math lesson to data when its tags say so, and leaves other math alone", () => {
@@ -170,7 +232,11 @@ describe("upgradeLesson", () => {
     expect(canUpgrade(asMath)).toBe(true)
     expect(upgradeLesson(asMath)).toEqual(lesson)
     const algebra = { ...asMath, tags: ["algebra", "equations"] }
-    expect(upgradeLesson(algebra)).toEqual({ ...algebra, spec: "0.7" })
+    expect(upgradeLesson(algebra)).toEqual({
+      ...algebra,
+      spec: "0.8",
+      tags: ["Algebra", "Equations"],
+    })
     // The same split applies to older files, whose topic lands in math first.
     const { subject: _s, tags: _t, ...rest } = lesson
     expect(

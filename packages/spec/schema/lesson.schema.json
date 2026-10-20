@@ -4,7 +4,7 @@
   "properties": {
     "spec": {
       "type": "string",
-      "const": "0.7"
+      "const": "0.8"
     },
     "title": {
       "type": "string",
@@ -66,13 +66,14 @@
       ]
     },
     "tags": {
+      "minItems": 1,
       "maxItems": 5,
       "type": "array",
       "items": {
         "type": "string",
         "minLength": 2,
         "maxLength": 30,
-        "pattern": "^[\\p{Ll}\\p{Lo}\\p{Lm}\\p{M}\\p{N}]+(?:-[\\p{Ll}\\p{Lo}\\p{Lm}\\p{M}\\p{N}]+)*$"
+        "pattern": "^[\\p{L}\\p{M}\\p{N}\\-+.&/'’](?:[\\p{L}\\p{M}\\p{N}\\-+#.&/'’ ]*[\\p{L}\\p{M}\\p{N}\\-+#.&/'’])?$"
       }
     },
     "source": {
@@ -138,6 +139,7 @@
     "level",
     "estimatedMinutes",
     "subject",
+    "tags",
     "hook",
     "bricks",
     "challenge",
@@ -1229,5 +1231,5 @@
       ]
     }
   },
-  "title": "Lesson (spec 0.7)"
+  "title": "Lesson (spec 0.8)"
 }

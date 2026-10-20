@@ -1235,7 +1235,8 @@ export function Screen({
           </div>
           <div className="vanish-fade">
             <MetaLine
-              subject={t.subjects[lesson.subject]}
+              tags={lesson.tags.slice(0, 2)}
+              lang={lesson.language}
               minutes={t.minutes(lesson.estimatedMinutes)}
               level={t.levels[lesson.level]}
             />
@@ -1293,20 +1294,28 @@ function screenLabel(state: State, t: Strings): string | undefined {
     : undefined
 }
 
-/** The title screen's meta line under the summary, as in Explore: the subject, length, and level, dot-separated. All three are in the player's language. */
+/**
+ * The title screen's meta line under the summary, as in Explore: the lesson's first two tags (its
+ * label, then its product or field, as the agent wrote them, in the lesson's language), then the
+ * length and level in the player's language, dot-separated. The subject is never shown.
+ */
 function MetaLine({
-  subject,
+  tags,
+  lang,
   minutes,
   level,
 }: {
-  subject: string
+  tags: string[]
+  lang: string
   minutes: string
   level: string
 }) {
   const facts: React.ReactNode[] = [
-    <span key="subject" className="min-w-0 truncate">
-      {subject}
-    </span>,
+    ...tags.map((tag, i) => (
+      <bdi key={`tag-${i}`} lang={lang} className="min-w-0 truncate">
+        {tag}
+      </bdi>
+    )),
     <span key="minutes" className="shrink-0">
       {minutes}
     </span>,

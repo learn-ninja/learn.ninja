@@ -31,7 +31,7 @@ export type Strings = {
   /** Time left on a published link: days from 24 hours up, hours below. */
   expires: { days: (n: number) => string; hours: (n: number) => string }
   levels: Record<Level, string>
-  /** The subject's name in the player's language, shown on the title screen and Explore rows. */
+  /** The subject's name in the player's language. Shown nowhere since spec 0.8 (rows and the title screen show tags); kept for Explore filters and subject pages. */
   subjects: Record<Subject, string>
   objective: string
   warmUp: string

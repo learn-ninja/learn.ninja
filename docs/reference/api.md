@@ -26,11 +26,13 @@ The body is the lesson file. A valid lesson returns `201`:
   "expiresAt": "2026-10-26T09:00:00.000Z",
   "owner": null,
   "visibility": "unlisted",
-  "spec": "0.7"
+  "spec": "0.8"
 }
 ```
 
 Keep `editToken` private: it's the way to update the lesson, and it's shown once. `claimToken` is shown once too; it moves the lesson into an account later (see [Keep a lesson](#keep-a-lesson)), and so does the edit token. With an `x-api-key` header or a session cookie, the lesson belongs to that account from the start: `owned` is `true`, `expiresAt` is `null`, `owner` is `{ "handle": "…" }` (the handle is `null` until the account picks one), `visibility` says whether Explore lists it, and there's no claim token. The same four fields come back from updating and keeping, so a client can say "saved to @handle and listed in Explore" in one place.
+
+When the checker tidied something that didn't stop the publish, the reply also has `notes`: an array of `{ "path": "tags[0]", "message": "Kept the tag \" Git\" as \"Git\"." }`, the same shape as `issues`. Today that's a tag label it trimmed, whose whitespace it collapsed, or whose leading `#` it dropped. The field is absent when there's nothing to say. Updating and validating reply with it the same way.
 
 ## Update a lesson
 
@@ -40,7 +42,7 @@ Content-Type: application/json
 Authorization: Bearer <editToken>
 ```
 
-The body is the new lesson file. The link, the owner, and the expiry stay the same. Returns `200` with the same fields as publishing, without `editToken` or `claimToken`.
+The body is the new lesson file. The link, the owner, and the expiry stay the same. Returns `200` with the same fields as publishing (including `notes` when there are any), without `editToken` or `claimToken`.
 
 ## Keep a lesson
 
@@ -128,7 +130,7 @@ POST /api/validate
 Content-Type: application/json
 ```
 
-The body is the lesson file. Runs the checks publishing runs and stores nothing. A valid lesson returns `200` with `{ "ok": true, "spec": "0.7" }`; an invalid one returns the same errors as publishing. The skill's `validate` command uses this.
+The body is the lesson file. Runs the checks publishing runs and stores nothing. A valid lesson returns `200` with `{ "ok": true, "spec": "0.8" }`, plus `notes` when the checker tidied something (see [Publish a lesson](#publish-a-lesson)); an invalid one returns the same errors as publishing. The skill's `validate` command uses this.
 
 ## The skill's guides
 

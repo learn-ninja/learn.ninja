@@ -99,7 +99,7 @@ describe("schema", () => {
   it("requires the current spec version", () => {
     const l = buttons()
     l.spec = "0.1"
-    expectIssue(l, { path: "spec", message: /0\.7/ })
+    expectIssue(l, { path: "spec", message: /0\.8/ })
   })
 
   it("requires a subject from the list, and names every subject when it's wrong or missing", () => {
@@ -127,56 +127,74 @@ describe("tags", () => {
     expectIssue(l, { path: "tags[0]", message: /<=30/ })
     l.tags = ["one", "two", "three", "four", "five", "six"]
     expectIssue(l, { path: "tags", message: /<=5/ })
-    // Normalization folds symbols to hyphens first, so "c++" arrives as "c".
-    l.tags = ["c++"]
-    expectIssue(l, { path: "tags[0]", message: />=2/ })
-    l.tags = ["buttons", "call-to-action", "user-interface", "forms", "ui-kit"]
+    // Labels keep their punctuation where it means something; the key folds it.
+    l.tags = ["C++", "C#", "Node.js", "A/B testing", "Ohm's law"]
     expect(validateLesson(l).ok).toBe(true)
+    l.tags = ["claude_code"]
+    expectIssue(l, { path: "tags[0]", message: /short label/ })
+    l.tags = ["Buttons!"]
+    expectIssue(l, { path: "tags[0]", message: /short label/ })
+    l.tags = ["Buttons", "Call to action", "User interface", "Forms", "UI kit"]
+    expect(validateLesson(l).ok).toBe(true)
+    // At least one: the first tag is the lesson's label.
+    l.tags = []
+    expectIssue(l, { path: "tags", message: />=1/ })
     delete l.tags
-    expect(validateLesson(l).ok).toBe(true)
+    expectIssue(l, { path: "tags", message: /expected array/ })
   })
 
-  it("normalizes spelling and synonyms, keeps the result, and says so in a note", () => {
+  it("tidies labels, keeps the result, and says so in a note, but leaves casing alone", () => {
     const l = buttons()
-    l.tags = ["Buttons", "UX", "forms"]
+    l.tags = ["  Claude  Code ", "#Git", "forms"]
     const result = validateLesson(l)
     expect(result.ok).toBe(true)
     if (!result.ok) return
-    expect(result.lesson.tags).toEqual(["buttons", "user-experience", "forms"])
+    expect(result.lesson.tags).toEqual(["Claude Code", "Git", "forms"])
     expect(result.notes).toEqual([
-      { path: "tags[0]", message: 'Kept the tag "Buttons" as "buttons".' },
-      { path: "tags[1]", message: 'Kept the tag "UX" as "user-experience".' },
+      {
+        path: "tags[0]",
+        message: 'Kept the tag "  Claude  Code " as "Claude Code".',
+      },
+      { path: "tags[1]", message: 'Kept the tag "#Git" as "Git".' },
     ])
     expect(validateLesson(buttons()).notes).toEqual([])
   })
 
-  it("rejects a tag that repeats the subject, a level, or a language", () => {
+  it("rejects a tag whose key repeats the subject, a level, or a language", () => {
     const l = buttons()
-    l.tags = ["design"]
-    expectIssue(l, { path: "tags[0]", message: /repeats the subject/ })
-    l.tags = ["beginner"]
+    l.tags = ["Design"]
+    expectIssue(l, {
+      path: "tags[0]",
+      message: /The tag "Design" repeats the subject/,
+    })
+    l.tags = ["Beginner"]
     expectIssue(l, { path: "tags[0]", message: /is a level/ })
-    l.tags = ["english"]
+    l.tags = ["English"]
     expectIssue(l, { path: "tags[0]", message: /names a language.*"language"/ })
     l.tags = ["en"]
     expectIssue(l, { path: "tags[0]", message: /language code/ })
     const greetings = loadExample("spanish-greetings.json")
-    greetings.tags = ["spanish"]
+    greetings.tags = ["Spanish"]
     expectIssue(greetings, { path: "tags[0]", message: /"targetLanguage"/ })
-    // Another subject's slug is fine: that's where a lesson's second subject goes.
-    l.tags = ["marketing"]
+    // Another subject's name is fine: that's where a lesson's second subject goes.
+    l.tags = ["Marketing"]
     expect(validateLesson(l).ok).toBe(true)
   })
 
-  it("rejects duplicates, including ones the synonym table folds together", () => {
+  it("rejects duplicates by key, including ones the synonym table folds together", () => {
     const l = buttons()
-    l.tags = ["javascript", "js"]
+    l.tags = ["JavaScript", "JS"]
     expectIssue(l, {
       path: "tags",
-      message: /"javascript" appears more than once/,
+      message: /The tags "JavaScript" and "JS" are the same tag \("javascript"\)/,
     })
-    l.tags = ["forms", "forms"]
-    expectIssue(l, { path: "tags", message: /"forms" appears more than once/ })
+    l.tags = ["Forms", "forms"]
+    expectIssue(l, {
+      path: "tags",
+      message: /The tags "Forms" and "forms" are the same tag \("forms"\)/,
+    })
+    l.tags = ["Forms", "Forms"]
+    expectIssue(l, { path: "tags", message: /"Forms" appears more than once/ })
   })
 })
 

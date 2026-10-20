@@ -1,13 +1,13 @@
 import { z } from "zod"
 
 import { SUBJECTS } from "./subjects"
-import { TAG_LIMITS, TAG_PATTERN } from "./tags"
+import { TAG_LABEL_PATTERN, TAG_LIMITS } from "./tags"
 
-// Lesson spec v0.7: the shape of a lesson file.
+// Lesson spec v0.8: the shape of a lesson file.
 // Structural limits that JSON Schema can express live here; cross-field and
 // teaching-quality rules live in rules.ts.
 
-export const SPEC_VERSION = "0.7" as const
+export const SPEC_VERSION = "0.8" as const
 
 /** Who a lesson is for, from least to most prior knowledge. The skill's `levels/` guides say how each one teaches. */
 export const LEVELS = ["beginner", "intermediate", "advanced"] as const
@@ -24,14 +24,14 @@ const subject = z.enum(SUBJECTS, {
   error: `"subject" must be one of: ${SUBJECTS.join(", ")}. Pick by what the learner will do afterwards; the format reference's subject table has the scope of each.`,
 })
 
-/** A tag as the lesson keeps it: already normalized by the checker (tags.ts), so it must match the pattern as written. */
+/** A tag as the lesson keeps it: a short label as a reader sees it, already trimmed by the checker (tags.ts). */
 const tag = z
   .string()
   .min(TAG_LIMITS.min)
   .max(TAG_LIMITS.max)
-  .regex(TAG_PATTERN, {
+  .regex(TAG_LABEL_PATTERN, {
     error:
-      'Tags are lowercase words joined by single hyphens, like "claude-code" or "compound-interest".',
+      'A tag is a short label as a reader should see it, like "Claude Code" or "Compound interest": letters, digits, spaces, and - + # . & / \', not starting with #.',
   })
 
 // ---------- visuals ----------
@@ -351,8 +351,11 @@ export const lesson = z.strictObject({
   level: z.enum(LEVELS),
   estimatedMinutes: z.int().min(3).max(15),
   subject,
-  /** Up to five specifics, from the thing taught to the field it sits in; checked further in rules.ts. */
-  tags: z.array(tag).max(TAG_LIMITS.perLesson).optional(),
+  /**
+   * One to five labels, from the thing taught to the field it sits in; the first is the lesson's
+   * label on Explore rows and the title screen. Checked further in rules.ts.
+   */
+  tags: z.array(tag).min(1).max(TAG_LIMITS.perLesson),
   source: z
     .strictObject({ title: z.string().min(1), url: z.url().optional() })
     .optional(),

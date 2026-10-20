@@ -7,6 +7,7 @@ import {
   type QuestionBrick,
   type Visual,
 } from "./schema"
+import { normalizeTag } from "./tags"
 
 // Rules the schema can't express: cross-references, teaching quality, v1 limits, and safety.
 // Every message says what's wrong and how to fix it, so an LLM can correct the lesson on its own.
@@ -194,20 +195,25 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
 
   // ---------- tags ----------
 
-  // Tags are the specifics; the subject, level, and languages are fields already, so a tag that
-  // repeats one says nothing. Duplicates are checked after the synonym mapping (validate.ts runs it
-  // before the schema), so "js" next to "javascript" counts as one tag twice.
-  const tags = lesson.tags ?? []
-  tags.forEach((tag, i) => {
-    const why = redundantTag(tag, lesson)
+  // Tags are labels; the rules compare their keys (normalizeTag: spelling folded, synonyms mapped),
+  // never the labels, so "JavaScript" next to "JS" is one tag twice. The subject, level, and
+  // languages are fields already, so a tag whose key repeats one says nothing.
+  const keys = lesson.tags.map((label) => normalizeTag(label))
+  lesson.tags.forEach((label, i) => {
+    const why = redundantTag(keys[i]!, lesson, label)
     if (why) add("structure", `tags[${i}]`, why)
   })
-  for (const dupe of duplicates(tags))
+  for (const dupe of duplicates(keys)) {
+    const labels = lesson.tags.filter((_, i) => keys[i] === dupe)
+    const same = labels.every((l) => l === labels[0])
     add(
       "structure",
       "tags",
-      `The tag "${dupe}" appears more than once (spelling variants count as the same tag). Keep it once.`
+      same
+        ? `The tag "${labels[0]}" appears more than once. Keep it once.`
+        : `The tags ${labels.map((l) => `"${l}"`).join(" and ")} are the same tag ("${dupe}"). Keep one.`
     )
+  }
 
   // ---------- v1 limits ----------
 
@@ -502,27 +508,29 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
 }
 
 /**
- * Why `tag` says nothing on this lesson, or null when it's fine: it repeats the subject, a level,
- * or a language the lesson already names (by code, or by its English name: "spanish" on a lesson
- * with `targetLanguage: "es"`). The upgrade uses it too, to drop an old label that became redundant.
+ * Why a tag with key `key` says nothing on this lesson, or null when it's fine: it repeats the
+ * subject, a level, or a language the lesson already names (by code, or by its English name:
+ * "Spanish" on a lesson with `targetLanguage: "es"`). The message quotes `label`, the tag as
+ * written. The upgrade uses it too, to drop an old label that became redundant.
  */
 export function redundantTag(
-  tag: string,
-  lesson: Pick<Lesson, "subject" | "language" | "targetLanguage">
+  key: string,
+  lesson: Pick<Lesson, "subject" | "language" | "targetLanguage">,
+  label = key
 ): string | null {
-  if (tag === lesson.subject)
-    return `The tag "${tag}" repeats the subject. Tags are for the specifics: the thing taught, then the product or field.`
-  if ((LEVELS as readonly string[]).includes(tag))
-    return `The tag "${tag}" is a level; "level" already says who the lesson is for. Use tags for what it teaches.`
+  if (key === lesson.subject)
+    return `The tag "${label}" repeats the subject. Tags are for the specifics: the thing taught, then the product or field.`
+  if ((LEVELS as readonly string[]).includes(key))
+    return `The tag "${label}" is a level; "level" already says who the lesson is for. Use tags for what it teaches.`
   const codes = [lesson.language, lesson.targetLanguage].filter(
     (c): c is string => typeof c === "string"
   )
   for (const code of codes) {
-    if (tag === code.toLowerCase())
-      return `The tag "${tag}" is a language code; "language" and "targetLanguage" already say that. Use tags for what the lesson teaches.`
+    if (key === code.toLowerCase())
+      return `The tag "${label}" is a language code; "language" and "targetLanguage" already say that. Use tags for what the lesson teaches.`
     const name = languageName(code)
-    if (name && tag === name)
-      return `The tag "${tag}" names a language the lesson already sets in "${code === lesson.language ? "language" : "targetLanguage"}". Use tags for what it teaches: "greetings", "verb-tenses".`
+    if (name && key === name)
+      return `The tag "${label}" names a language the lesson already sets in "${code === lesson.language ? "language" : "targetLanguage"}". Use tags for what it teaches: "Greetings", "Verb tenses".`
   }
   return null
 }

@@ -20,8 +20,9 @@ import {
   type Db,
 } from "@workspace/db"
 import {
+  canUpgrade,
   isSubject,
-  subjectForTopic,
+  upgradeLesson,
   type Level,
   type Subject,
 } from "@workspace/spec"
@@ -40,8 +41,10 @@ export interface LessonSummary {
   slug: string
   title: string
   summary: string
-  /** The lesson's subject; the card shows its translated name. */
+  /** The lesson's subject, for filtering; no card shows it. */
   subject: Subject
+  /** The lesson's tag labels as written, in the lesson's language; the card shows the first two. */
+  tags: string[]
   level: Level
   minutes: number
   /** The lesson's BCP 47 language, so the card can set `lang` and direction. */
@@ -76,14 +79,17 @@ const field = (name: string) => sql<string>`${lesson.lesson}->>${name}`
 const columns = {
   id: lesson.id,
   slug: lesson.slug,
+  spec: lesson.spec,
   title: field("title"),
   summary: field("summary"),
   subject: field("subject"),
+  tags: sql<unknown>`${lesson.lesson}->'tags'`,
   // Lessons published before spec 0.6 are stored with a `topic` label instead; see toSummary.
   topic: field("topic"),
   level: field("level"),
   minutes: field("estimatedMinutes"),
   language: field("language"),
+  targetLanguage: field("targetLanguage"),
   plays: lesson.plays,
   likes: lesson.likes,
   visibility: lesson.visibility,
@@ -98,13 +104,17 @@ const columns = {
 interface Row {
   id: string
   slug: string
+  spec: string
   title: string
   summary: string
   subject: string | null
+  /** The JSON array, or its text, depending on the driver; null when the row predates tags. */
+  tags: unknown
   topic: string | null
   level: string
   minutes: string | number
   language: string
+  targetLanguage: string | null
   plays: number
   likes: number
   visibility: Visibility
@@ -116,14 +126,41 @@ interface Row {
   authorImage: string | null
 }
 
+/**
+ * A row's subject and tag labels, as the lesson page would show them: a row from before the
+ * current spec goes through the same upgrade as a lesson page's JSON (an old `topic` becomes a
+ * subject and labels, slug tags become labels), so nothing shows a slug. Only the fields the
+ * upgrade reads are passed, not the whole JSON.
+ */
+function metaOf(row: Row): { subject: Subject; tags: string[] } {
+  const raw = typeof row.tags === "string" ? JSON.parse(row.tags) : row.tags
+  const stored = {
+    spec: row.spec,
+    subject: row.subject ?? undefined,
+    tags: Array.isArray(raw) ? raw : undefined,
+    topic: row.topic ?? undefined,
+    language: row.language,
+    targetLanguage: row.targetLanguage ?? undefined,
+  }
+  const meta = (canUpgrade(stored) ? upgradeLesson(stored) : stored) as {
+    subject?: unknown
+    tags?: unknown
+  }
+  return {
+    subject: isSubject(meta.subject) ? meta.subject : "life",
+    tags: Array.isArray(meta.tags)
+      ? meta.tags.filter((t): t is string => typeof t === "string")
+      : [],
+  }
+}
+
 function toSummary(row: Row): LessonSummary {
   return {
     id: row.id,
     slug: row.slug,
     title: row.title,
     summary: row.summary,
-    // Rows aren't upgraded on read like a lesson page is, so an older row's label is mapped here.
-    subject: isSubject(row.subject) ? row.subject : subjectForTopic(row.topic),
+    ...metaOf(row),
     level: row.level as Level,
     minutes: Number(row.minutes),
     language: row.language,

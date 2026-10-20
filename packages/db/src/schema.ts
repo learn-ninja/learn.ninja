@@ -229,7 +229,10 @@ export const lessonTag = pgTable(
     lessonId: text("lesson_id")
       .notNull()
       .references(() => lesson.id, { onDelete: "cascade" }),
+    /** The tag's key (`claude-code`), derived from the label; what counts and filters compare. */
     tag: text("tag").notNull(),
+    /** The label as this lesson wrote it ("Claude Code"); the report shows the most common one per key. */
+    label: text("label").notNull(),
   },
   (t) => [
     primaryKey({ columns: [t.lessonId, t.tag] }),

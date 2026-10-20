@@ -17,7 +17,10 @@ import { listed } from "./queries"
 // is swallowing everything, and decides when a tag has earned a filter (plans/subjects-and-tags.md).
 
 export interface TagCount {
+  /** The key the lessons share. */
   tag: string
+  /** How the key is most often written on those lessons (ties by name); what a filter chip would say. */
+  label: string
   lessons: number
 }
 
@@ -34,7 +37,7 @@ export interface TagReport {
   /** Every subject, most lessons first; ties in the list's order. */
   subjects: SubjectReport[]
   /** Tags on exactly one lesson, with that lesson's subject: the raw material for synonyms. */
-  singles: { tag: string; subject: Subject }[]
+  singles: { tag: string; label: string; subject: Subject }[]
 }
 
 /** Counts listed lessons and their tags. `top` caps the tags shown per subject. */
@@ -56,7 +59,11 @@ export async function tagReport(
     )
 
   const tagged = await db
-    .select({ lessonId: lessonTag.lessonId, tag: lessonTag.tag })
+    .select({
+      lessonId: lessonTag.lessonId,
+      tag: lessonTag.tag,
+      label: lessonTag.label,
+    })
     .from(lessonTag)
     .innerJoin(lesson, eq(lesson.id, lessonTag.lessonId))
     .where(listed(now))
@@ -70,13 +77,24 @@ export async function tagReport(
   for (const subject of subjectOf.values())
     lessonsPerSubject.set(subject, lessonsPerSubject.get(subject)! + 1)
   const overall = new Map<string, { count: number; subject: Subject }>()
-  for (const { lessonId, tag } of tagged) {
+  // How often each key is written each way, across all listed lessons.
+  const spellings = new Map<string, Map<string, number>>()
+  for (const { lessonId, tag, label } of tagged) {
     const subject = subjectOf.get(lessonId)!
     const counts = perSubject.get(subject)!
     counts.set(tag, (counts.get(tag) ?? 0) + 1)
     const seen = overall.get(tag)
     overall.set(tag, { count: (seen?.count ?? 0) + 1, subject })
+    const written = spellings.get(tag) ?? new Map<string, number>()
+    written.set(label, (written.get(label) ?? 0) + 1)
+    spellings.set(tag, written)
   }
+  /** The most common label for a key; ties by name with capitals first, so the report is stable. */
+  const labelOf = (tag: string) =>
+    [...(spellings.get(tag) ?? [])].sort(
+      (a, b) =>
+        b[1] - a[1] || a[0].localeCompare(b[0], "en", { caseFirst: "upper" })
+    )[0]?.[0] ?? tag
 
   const byCount = (a: TagCount, b: TagCount) =>
     b.lessons - a.lessons || a.tag.localeCompare(b.tag)
@@ -84,7 +102,7 @@ export async function tagReport(
     subject,
     lessons: lessonsPerSubject.get(subject)!,
     tags: [...perSubject.get(subject)!]
-      .map(([tag, lessons]) => ({ tag, lessons }))
+      .map(([tag, lessons]) => ({ tag, label: labelOf(tag), lessons }))
       .sort(byCount)
       .slice(0, top),
   })).sort(
@@ -94,7 +112,7 @@ export async function tagReport(
   )
   const singles = [...overall]
     .filter(([, { count }]) => count === 1)
-    .map(([tag, { subject }]) => ({ tag, subject }))
+    .map(([tag, { subject }]) => ({ tag, label: labelOf(tag), subject }))
     .sort((a, b) => a.tag.localeCompare(b.tag))
   return { lessons: lessons.length, subjects, singles }
 }
@@ -111,13 +129,13 @@ export function formatTagReport(report: TagReport, at = new Date()): string {
     lines.push(
       `  ${subject.padEnd(width)}  ${String(lessons).padStart(5)}  ${SUBJECT_INFO[subject].name}`
     )
-  lines.push("", "Top tags by subject")
+  lines.push("", "Top tags by subject (the key's most common label, then its lesson count)")
   for (const { subject, lessons, tags } of report.subjects) {
     if (!lessons) continue
     lines.push(`  ${subject} (${lessons})`)
     lines.push(
       tags.length
-        ? `    ${tags.map((t) => `${t.tag} ${t.lessons}`).join(", ")}`
+        ? `    ${tags.map((t) => `${shown(t)} ${t.lessons}`).join(", ")}`
         : "    no tags"
     )
   }
@@ -127,10 +145,19 @@ export function formatTagReport(report: TagReport, at = new Date()): string {
   )
   if (report.singles.length)
     lines.push(
-      `  ${report.singles.map((s) => `${s.tag} (${s.subject})`).join(", ")}`
+      `  ${report.singles.map((s) => `${shown(s)} (${s.subject})`).join(", ")}`
     )
   else lines.push("  none")
   return lines.join("\n")
+}
+
+/**
+ * A tag as the report prints it: its label, with the key in brackets when that isn't just the
+ * label's spelling ("JS [javascript]": a synonym at work, or a label from before the backfill).
+ */
+function shown({ tag, label }: { tag: string; label: string }): string {
+  const plain = label.toLowerCase().replace(/\s+/g, "-")
+  return plain === tag ? label : `${label} [${tag}]`
 }
 
 const plural = (n: number, word: string) => (n === 1 ? word : `${word}s`)

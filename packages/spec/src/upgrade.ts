@@ -1,16 +1,25 @@
 // Older lesson files, brought up to the current spec. Published lessons and older skills can
-// still hand us spec 0.2, 0.3 (with or without a concept brick's `term`, since dropped), 0.4, or
-// 0.5, so the server upgrades them before validating or playing them. 0.3 to 0.4 only added the
-// chart visual and 0.4 to 0.5 the diagram visual, so those lessons need nothing but their version
-// changed. 0.6 replaced the free-text `topic` label with a `subject` from a fixed list and `tags`:
-// the old label is mapped to a subject by a small lookup (and otherwise to `life`), and kept as a
-// tag so nothing is lost. 0.7 split `math` into `math` and `data`: a math lesson whose tags say it's
-// about data moves over.
+// still hand us spec 0.2, 0.3 (with or without a concept brick's `term`, since dropped), 0.4, 0.5,
+// 0.6, or 0.7, so the server upgrades them before validating or playing them. 0.3 to 0.4 only added
+// the chart visual and 0.4 to 0.5 the diagram visual, so those lessons need nothing but their
+// version changed. 0.6 replaced the free-text `topic` label with a `subject` from a fixed list and
+// `tags`: the old label is mapped to a subject by a small lookup (and otherwise to `life`), and kept
+// as tags so nothing is lost. 0.7 split `math` into `math` and `data`: a math lesson whose tags say
+// it's about data moves over. 0.8 made tags labels as a reader sees them ("Claude Code") instead of
+// slugs (`claude-code`): a compound old label splits into one tag per part ("Git & Claude Code" →
+// "Git", "Claude Code"), and slug tags get their known spelling or sentence case.
 
 import { redundantTag } from "./rules"
 import { SPEC_VERSION } from "./schema"
 import { isSubject, type Subject } from "./subjects"
-import { normalizeTag, TAG_LIMITS, TAG_PATTERN } from "./tags"
+import {
+  isTagLabel,
+  labelForTag,
+  normalizeLabel,
+  normalizeTag,
+  TAG_LIMITS,
+  TAG_PATTERN,
+} from "./tags"
 
 interface LessonV02 {
   spec: "0.2"
@@ -18,7 +27,7 @@ interface LessonV02 {
   [key: string]: unknown
 }
 
-const OLD_SPECS = ["0.2", "0.3", "0.4", "0.5", "0.6"]
+const OLD_SPECS = ["0.2", "0.3", "0.4", "0.5", "0.6", "0.7"]
 
 /** True for data that claims an older spec, or has a concept `term`, that this module can upgrade. */
 export function canUpgrade(data: unknown): boolean {
@@ -42,25 +51,23 @@ function hasTerm(brick: unknown): boolean {
 /**
  * Brings a lesson up to the current spec. From 0.2, each loop's concept becomes a concept brick,
  * followed by its practice bricks. Concept bricks lose their `term`. A `topic` becomes a subject
- * and a tag. Anything else comes back unchanged, for validateLesson to judge.
+ * and tags; slug tags become labels. Anything else comes back unchanged, for validateLesson to
+ * judge. Running it on its own result changes nothing.
  */
 export function upgradeLesson(data: unknown): unknown {
   if (!canUpgrade(data)) return data
   if ((data as { spec?: unknown }).spec !== "0.2") {
     const lesson = data as { bricks?: unknown[] }
-    return withDataSubject(
-      withSubject({
-        ...lesson,
-        spec: SPEC_VERSION,
-        bricks: Array.isArray(lesson.bricks)
-          ? lesson.bricks.map(withoutTerm)
-          : lesson.bricks,
-      })
-    )
+    return upgradeMeta({
+      ...lesson,
+      spec: SPEC_VERSION,
+      bricks: Array.isArray(lesson.bricks)
+        ? lesson.bricks.map(withoutTerm)
+        : lesson.bricks,
+    })
   }
   const { loops, ...rest } = data as LessonV02
-  if (!Array.isArray(loops))
-    return withDataSubject(withSubject({ ...rest, spec: SPEC_VERSION }))
+  if (!Array.isArray(loops)) return upgradeMeta({ ...rest, spec: SPEC_VERSION })
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(rest)) {
     if (key === "challenge")
@@ -70,7 +77,12 @@ export function upgradeLesson(data: unknown): unknown {
       ])
     out[key] = key === "spec" ? SPEC_VERSION : value
   }
-  return withDataSubject(withSubject(out))
+  return upgradeMeta(out)
+}
+
+/** The subject and tag steps, in order: the subject from a topic, the math/data split, then labels. */
+function upgradeMeta(lesson: Record<string, unknown>): Record<string, unknown> {
+  return withLabels(withDataSubject(withSubject(lesson)))
 }
 
 /**
@@ -106,9 +118,39 @@ function withDataSubject(
   lesson: Record<string, unknown>
 ): Record<string, unknown> {
   if (lesson.subject !== "math" || !Array.isArray(lesson.tags)) return lesson
-  return lesson.tags.some((t) => DATA_TAGS.has(t as string))
+  return lesson.tags.some(
+    (t) => typeof t === "string" && DATA_TAGS.has(normalizeTag(t))
+  )
     ? { ...lesson, subject: "data" }
     : lesson
+}
+
+/**
+ * Spec 0.8 made tags labels: a slug tag from 0.6 or 0.7 (`claude-code`, `compound-interest`) becomes
+ * its known spelling or the words in sentence case ("Claude Code", "Compound interest"). Tags that
+ * aren't in slug form are already labels and stay as written.
+ */
+function withLabels(lesson: Record<string, unknown>): Record<string, unknown> {
+  const { tags } = lesson
+  if (!Array.isArray(tags)) return lesson
+  const labels = tags.map((t) =>
+    typeof t === "string" && TAG_PATTERN.test(t) ? labelForTag(t) : t
+  )
+  return labels.some((t, i) => t !== tags[i])
+    ? { ...lesson, tags: labels }
+    : lesson
+}
+
+/**
+ * The parts of an old `topic` label, each a tag of its own: "Git & Claude Code" → "Git", "Claude
+ * Code". Splits on &, commas, " and ", and a slash between spaces (so "CI/CD" stays one), and
+ * keeps each part as written.
+ */
+export function splitTopic(topic: string): string[] {
+  return topic
+    .split(/\s*[&,]\s*|\s+\/\s+|\s+and\s+/i)
+    .map(normalizeLabel)
+    .filter(Boolean)
 }
 
 function conceptBrick(concept: Record<string, unknown> | undefined) {
@@ -213,8 +255,8 @@ export function subjectForTopic(topic: unknown): Subject {
 }
 
 /**
- * Gives a pre-0.6 lesson its `subject` (from its `topic`, or `life`) and keeps the old label as a
- * tag when it's a valid one and says something the fields don't. A lesson that already has a
+ * Gives a pre-0.6 lesson its `subject` (from its `topic`, or `life`) and keeps the old label's parts
+ * as tags when they're valid labels and say something the fields don't. A lesson that already has a
  * subject keeps it; `topic` goes either way.
  */
 function withSubject(lesson: Record<string, unknown>): Record<string, unknown> {
@@ -224,11 +266,7 @@ function withSubject(lesson: Record<string, unknown>): Record<string, unknown> {
     : subjectForTopic(topic)
   const tags = Array.isArray(rest.tags) ? [...rest.tags] : []
   if (typeof topic === "string") {
-    const tag = normalizeTag(topic)
-    const fits =
-      tag.length >= TAG_LIMITS.min &&
-      tag.length <= TAG_LIMITS.max &&
-      TAG_PATTERN.test(tag)
+    const keys = tags.map((t) => (typeof t === "string" ? normalizeTag(t) : ""))
     const fields = {
       subject,
       language: typeof rest.language === "string" ? rest.language : "",
@@ -237,13 +275,19 @@ function withSubject(lesson: Record<string, unknown>): Record<string, unknown> {
           ? rest.targetLanguage
           : undefined,
     }
-    if (
-      fits &&
-      !tags.includes(tag) &&
-      tags.length < TAG_LIMITS.perLesson &&
-      !redundantTag(tag, fields)
-    )
-      tags.push(tag)
+    for (const label of splitTopic(topic)) {
+      const key = normalizeTag(label)
+      if (
+        isTagLabel(label) &&
+        TAG_PATTERN.test(key) &&
+        !keys.includes(key) &&
+        tags.length < TAG_LIMITS.perLesson &&
+        !redundantTag(key, fields, label)
+      ) {
+        tags.push(label)
+        keys.push(key)
+      }
+    }
   }
   // Keep the field order a hand-written file has: subject and tags after estimatedMinutes.
   const out: Record<string, unknown> = {}

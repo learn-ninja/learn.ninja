@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs"
 
+import { eq } from "drizzle-orm"
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 
-import { connectPglite, lesson, user, type Db } from "@workspace/db"
+import { connectPglite, lesson, lessonTag, user, type Db } from "@workspace/db"
 import { SUBJECTS } from "@workspace/spec"
 
 import { handleOf } from "../auth/handles"
@@ -227,7 +228,7 @@ describe("publishing", () => {
     )
     expect(reply).toMatchObject({
       status: 201,
-      body: { spec: "0.7", skill: { updateAvailable: true } },
+      body: { spec: "0.8", skill: { updateAvailable: true } },
     })
     const stored = await deps.store.get(reply.body.id as string)
     expect(stored?.lesson).toEqual(JSON.parse(buttons))
@@ -243,14 +244,74 @@ describe("publishing", () => {
       },
       deps
     )
-    expect(reply).toMatchObject({ status: 201, body: { spec: "0.7" } })
+    expect(reply).toMatchObject({ status: 201, body: { spec: "0.8" } })
     const stored = await deps.store.get(reply.body.id as string)
     expect(stored?.lesson).toMatchObject({
-      spec: "0.7",
+      spec: "0.8",
       subject: "business",
-      tags: ["startups"],
+      tags: ["Startups"],
     })
     expect(stored?.lesson).not.toHaveProperty("topic")
+  })
+
+  it("splits a compound 0.5 topic into one label per part", async () => {
+    const { subject: _subject, tags: _tags, ...rest } = JSON.parse(buttons)
+    const reply = await publishLesson(
+      {
+        text: JSON.stringify({
+          ...rest,
+          spec: "0.5",
+          topic: "Git & Claude Code",
+        }),
+        client: "x",
+      },
+      deps
+    )
+    expect(reply.status).toBe(201)
+    const stored = await deps.store.get(reply.body.id as string)
+    expect(stored?.lesson).toMatchObject({
+      subject: "tools",
+      tags: ["Git", "Claude Code"],
+    })
+  })
+
+  it("indexes each label under its key, so C++ is cpp and JS a duplicate of JavaScript", async () => {
+    const reply = await publishLesson(
+      {
+        text: JSON.stringify({ ...JSON.parse(buttons), tags: ["C++"] }),
+        client: "x",
+      },
+      deps
+    )
+    expect(reply.status).toBe(201)
+    expect(reply.body).not.toHaveProperty("notes")
+    const rows = await db
+      .select({ tag: lessonTag.tag, label: lessonTag.label })
+      .from(lessonTag)
+      .where(eq(lessonTag.lessonId, reply.body.id as string))
+    expect(rows).toEqual([{ tag: "cpp", label: "C++" }])
+
+    const twice = await publishLesson(
+      {
+        text: JSON.stringify({
+          ...JSON.parse(buttons),
+          tags: ["JavaScript", "JS"],
+        }),
+        client: "x",
+      },
+      deps
+    )
+    expect(twice.status).toBe(422)
+    expect(twice.body).toMatchObject({
+      issues: [
+        {
+          path: "tags",
+          message: expect.stringContaining(
+            'The tags "JavaScript" and "JS" are the same tag ("javascript")'
+          ),
+        },
+      ],
+    })
   })
 
   it("refuses a subject outside the list, naming every subject", async () => {
@@ -273,12 +334,12 @@ describe("publishing", () => {
     })
   })
 
-  it("keeps normalized tags and reports them as notes, not issues", async () => {
+  it("keeps tidied tag labels and reports them as notes, not issues", async () => {
     const reply = await publishLesson(
       {
         text: JSON.stringify({
           ...JSON.parse(buttons),
-          tags: ["Buttons", "UX"],
+          tags: [" Buttons", "#UX"],
         }),
         client: "x",
       },
@@ -286,11 +347,11 @@ describe("publishing", () => {
     )
     expect(reply.status).toBe(201)
     expect(reply.body.notes).toEqual([
-      { path: "tags[0]", message: 'Kept the tag "Buttons" as "buttons".' },
-      { path: "tags[1]", message: 'Kept the tag "UX" as "user-experience".' },
+      { path: "tags[0]", message: 'Kept the tag " Buttons" as "Buttons".' },
+      { path: "tags[1]", message: 'Kept the tag "#UX" as "UX".' },
     ])
     const stored = await deps.store.get(reply.body.id as string)
-    expect(stored?.lesson.tags).toEqual(["buttons", "user-experience"])
+    expect(stored?.lesson.tags).toEqual(["Buttons", "UX"])
     const clean = await publishLesson({ text: buttons, client: "x" }, deps)
     expect(clean.body).not.toHaveProperty("notes")
   })
@@ -657,7 +718,7 @@ describe("checking", () => {
     const reply = await checkLesson({ text: buttons, client: "x" }, deps)
     expect(reply).toMatchObject({
       status: 200,
-      body: { ok: true, spec: "0.7", skill: { updateAvailable: false } },
+      body: { ok: true, spec: "0.8", skill: { updateAvailable: false } },
     })
     expect(reply.body).not.toHaveProperty("id")
     expect(reply.body).not.toHaveProperty("editToken")

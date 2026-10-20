@@ -1,5 +1,5 @@
 {
-  "spec": "0.7",
+  "spec": "0.8",
   "title": "Writing a PRD",
   "summary": "Learn the core parts of a product requirements document and why each one matters.",
   "objective": "Write a PRD that starts with the problem, sets measurable goals, and keeps solutions out of requirements.",
@@ -7,7 +7,7 @@
   "level": "beginner",
   "estimatedMinutes": 8,
   "subject": "business",
-  "tags": ["prd", "product-management", "requirements"],
+  "tags": ["PRD", "Product management", "Requirements"],
   "hook": {
     "id": "hook",
     "type": "choice",
