@@ -41,6 +41,8 @@ export interface Deps {
   /** Origin for the links the API returns, e.g. https://learn.example.com */
   origin: string
   now?: () => number
+  /** The handle of a user, or null when they haven't picked one. Replies name the owner with it. */
+  handleOf?: (userId: string) => Promise<string | null>
 }
 
 /** The path a claim link lives at. */
@@ -202,8 +204,7 @@ export async function publishLesson(
       ...(claimToken
         ? { claimToken, claimUrl: deps.origin + keepPath(claimToken) }
         : {}),
-      owned: Boolean(owner),
-      expiresAt: isoOrNull(record.expiresAt),
+      ...(await ownership(record, deps)),
       spec: record.spec,
       skill,
     },
@@ -265,8 +266,7 @@ export async function updateLesson(
       ok: true,
       id: record.id,
       url: deps.origin + lessonPath(record.slug, record.id),
-      owned: Boolean(record.ownerId),
-      expiresAt: isoOrNull(record.expiresAt),
+      ...(await ownership(record, deps)),
       spec: record.spec,
       skill,
     },
@@ -275,16 +275,24 @@ export async function updateLesson(
 
 /**
  * Moves an anonymous lesson into `ownerId`'s account: POST /api/lessons/{id}/claim with the claim
- * token, or the /keep/{token} page, which has only the token. The lesson then never expires.
+ * token or the edit token, or the /keep/{token} page, which has only the claim token. The lesson
+ * then never expires. The edit token counts as proof because whoever can rewrite a lesson is its
+ * author in every way that matters; it's how a lesson is kept once the claim token is gone.
  */
 export async function claimLesson(
-  req: { id?: string; claimToken: string; ownerId: string },
-  deps: Pick<Deps, "store" | "origin">
+  req: {
+    id?: string
+    claimToken?: string | null
+    editToken?: string | null
+    ownerId: string
+  },
+  deps: Pick<Deps, "store" | "origin" | "handleOf">
 ): Promise<Reply> {
-  const hash = hashToken(req.claimToken)
   const existing = req.id
     ? await deps.store.get(req.id)
-    : await deps.store.getByClaimTokenHash(hash)
+    : req.claimToken
+      ? await deps.store.getByClaimTokenHash(hashToken(req.claimToken))
+      : null
   if (!existing) {
     return {
       status: 404,
@@ -298,7 +306,7 @@ export async function claimLesson(
   }
   if (existing.ownerId) {
     return existing.ownerId === req.ownerId
-      ? kept(existing, deps.origin)
+      ? kept(existing, deps)
       : {
           status: 409,
           body: {
@@ -308,34 +316,128 @@ export async function claimLesson(
           },
         }
   }
-  if (
-    !existing.claimTokenHash ||
-    !tokenMatches(req.claimToken, existing.claimTokenHash)
-  ) {
+  const byClaim =
+    Boolean(req.claimToken) &&
+    Boolean(existing.claimTokenHash) &&
+    tokenMatches(req.claimToken!, existing.claimTokenHash!)
+  const byEdit =
+    Boolean(req.editToken) &&
+    tokenMatches(req.editToken!, existing.editTokenHash)
+  if (!byClaim && !byEdit) {
     return {
       status: 401,
       body: {
         ok: false,
         error: "unauthorized",
-        message: "The claim token doesn't match this lesson.",
+        message: `The ${req.editToken && !req.claimToken ? "edit" : "claim"} token doesn't match this lesson.`,
       },
     }
   }
   await deps.store.claim(existing.id, req.ownerId)
-  return kept({ ...existing, ownerId: req.ownerId, expiresAt: null }, deps.origin)
+  return kept({ ...existing, ownerId: req.ownerId, expiresAt: null }, deps)
 }
 
-function kept(record: StoredLesson, origin: string): Reply {
+async function kept(
+  record: StoredLesson,
+  deps: Pick<Deps, "origin" | "handleOf">
+): Promise<Reply> {
   return {
     status: 200,
     body: {
       ok: true,
       id: record.id,
-      url: origin + lessonPath(record.slug, record.id),
+      url: deps.origin + lessonPath(record.slug, record.id),
       title: record.lesson.title,
-      owned: true,
-      expiresAt: null,
+      ...(await ownership(record, deps)),
     },
+  }
+}
+
+/**
+ * Issues a new claim token for an anonymous lesson to whoever holds its edit token, so the lesson
+ * can still be kept when the one from publishing is gone (a closed chat, a deleted state file, or
+ * an older tool that never saved it). The MCP `keep_lesson` tool is built on it. The old claim
+ * token stops working.
+ */
+export async function reissueClaimToken(
+  req: { id: string; editToken: string | null; client: string },
+  deps: Pick<Deps, "store" | "origin" | "limiter">
+): Promise<Reply> {
+  if (!(await deps.limiter.allow(req.client))) {
+    return {
+      status: 429,
+      body: {
+        ok: false,
+        error: "rate_limited",
+        message: "Too many requests from here recently. Try again later.",
+      },
+    }
+  }
+  const existing = await deps.store.get(req.id)
+  if (!existing) {
+    return {
+      status: 404,
+      body: {
+        ok: false,
+        error: "not_found",
+        message:
+          "This lesson doesn't exist or has expired. Publish it again to get a new link.",
+      },
+    }
+  }
+  if (!req.editToken || !tokenMatches(req.editToken, existing.editTokenHash)) {
+    return {
+      status: 401,
+      body: {
+        ok: false,
+        error: "unauthorized",
+        message: "The edit token doesn't match this lesson.",
+      },
+    }
+  }
+  if (existing.ownerId) {
+    return {
+      status: 409,
+      body: {
+        ok: false,
+        error: "already_claimed",
+        message: "This lesson is already saved to an account.",
+      },
+    }
+  }
+  const claimToken = newToken()
+  await deps.store.setClaimToken(existing.id, hashToken(claimToken))
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      id: existing.id,
+      url: deps.origin + lessonPath(existing.slug, existing.id),
+      title: existing.lesson.title,
+      claimToken,
+      claimUrl: deps.origin + keepPath(claimToken),
+      expiresAt: isoOrNull(existing.expiresAt),
+    },
+  }
+}
+
+/**
+ * The reply fields that say where a lesson stands: `owned`, when it expires, who owns it
+ * (`owner.handle`, so a client can say "saved to @handle"), and whether it's listed in Explore
+ * (`visibility`).
+ */
+async function ownership(
+  record: Pick<StoredLesson, "ownerId" | "expiresAt" | "visibility">,
+  deps: Pick<Deps, "handleOf">
+) {
+  const owner = record.ownerId
+    ? { handle: (await deps.handleOf?.(record.ownerId)) ?? null }
+    : null
+  return {
+    owned: owner !== null,
+    expiresAt: isoOrNull(record.expiresAt),
+    owner,
+    visibility: record.visibility,
   }
 }
 

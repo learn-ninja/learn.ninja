@@ -7,6 +7,7 @@ import { LIMITS } from "@workspace/spec"
 import {
   checkLesson,
   publishLesson,
+  reissueClaimToken,
   updateLesson,
   type Deps,
   type Reply,
@@ -18,7 +19,8 @@ import { StorageNotConfiguredError } from "../publish/store"
 import { applyPatches, PatchError, type DraftStore, type Patch } from "./drafts"
 
 // The learn.ninja MCP server at /mcp: the guide and the publish API as tools, for chat apps that
-// can't run the skill's CLI. No accounts: an anonymous lesson's claimUrl is how a user keeps it.
+// can't run the skill's CLI. No accounts: lessons publish anonymously, and a user keeps one by
+// opening the link `keep_lesson` (or `publish_lesson`) returns, which signs them in on learn.ninja.
 
 export interface McpDeps extends Deps {
   /** The looser limit checks use, as /api/validate does. */
@@ -102,7 +104,7 @@ export function createLearnMcp(
   deps: McpDeps
 ): (req: Request) => Promise<Response> {
   return createMcpHandler((server) => registerTools(server, deps), {
-    serverInfo: { name: "learn.ninja", version: "1.1.0" },
+    serverInfo: { name: "learn.ninja", version: "1.2.0" },
     instructions: INSTRUCTIONS,
   })
 }
@@ -177,7 +179,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
     {
       title: "Publish a lesson",
       description:
-        "Checks and publishes a lesson, and returns its link (`url`), which lasts 7 days. If the check fails, nothing is published: it returns the issues and a `draftId`, so call it again with `draftId` and `patches` that fix every issue, not the whole lesson. Keep the `id` and `editToken` to change it later with `update_lesson`. `claimUrl` keeps the lesson in a learn.ninja account: give it to the user only when they ask to keep the lesson.",
+        "Checks and publishes a lesson, and returns its link (`url`), which lasts 7 days. If the check fails, nothing is published: it returns the issues and a `draftId`, so call it again with `draftId` and `patches` that fix every issue, not the whole lesson. Keep the `id` and `editToken` to change it later with `update_lesson`. After the link, tell the user once, in one sentence: \"It lasts 7 days. To keep it, say so and I'll give you a link that saves it.\" Don't repeat it, and don't paste the keep link (`claimUrl`) until they say they want to keep the lesson; then paste it, or call `keep_lesson` for a fresh one. When `owner` is set, say instead that it's saved to @handle and, if `visibility` is public, listed in Explore.",
       inputSchema: z.object(lessonInput),
       annotations: {
         readOnlyHint: false,
@@ -206,7 +208,42 @@ function registerTools(server: McpServer, deps: McpDeps) {
           )
           return { reply, keepDraft: reply.body.ok !== true }
         },
-        ["ok", "id", "url", "editToken", "claimUrl", "expiresAt"]
+        [
+          "ok",
+          "id",
+          "url",
+          "editToken",
+          "claimUrl",
+          "expiresAt",
+          "owner",
+          "visibility",
+        ]
+      )
+  )
+
+  server.registerTool(
+    "keep_lesson",
+    {
+      title: "Get a link that keeps a lesson",
+      description:
+        "Returns a link (`claimUrl`) that saves a published lesson to the user's learn.ninja account, so it stops expiring and is listed in Explore under their handle. Call it only when the user says they want to keep the lesson, then paste the link into the chat: opening it signs them in and keeps the lesson. Pass the `id` and `editToken` from `publish_lesson`. Each call makes a new link and the previous one stops working; a lesson already saved to an account answers `already_claimed`.",
+      inputSchema: z.object({
+        id: z.string().describe("The lesson's id, from `publish_lesson`."),
+        editToken: z
+          .string()
+          .describe("The secret edit token, from `publish_lesson`."),
+      }),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
+    },
+    ({ id, editToken }, ctx) =>
+      toolResult(
+        () => reissueClaimToken({ id, editToken, client: clientOf(ctx) }, deps),
+        ["ok", "id", "url", "claimUrl", "expiresAt"]
       )
   )
 
@@ -251,7 +288,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
           const reply = await update(text)
           return { reply, keepDraft: reply.body.ok !== true }
         },
-        ["ok", "id", "url", "expiresAt"]
+        ["ok", "id", "url", "expiresAt", "owner", "visibility"]
       )
     }
   )

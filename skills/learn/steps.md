@@ -25,8 +25,13 @@ There are two ways to follow these steps. In a terminal with the skill installed
    node <skill-folder>/scripts/learn.mjs publish lesson.json
    ```
    Over MCP, call `publish_lesson` with the lesson's JSON text as `lesson`. Publishing needs network access.
-6. **Tell the user** the link, and how long it lasts, as `publish` printed it: 7 days for an anonymous lesson, or "saved to your account" once they're signed in. Then, in one line, the three choices you made: level, size, and reading age (e.g. "Beginner · standard · adult"), and that you can remake it with any of them changed. For a path, list the lessons still to make and offer to make the next one; make it only when the user asks. To change a lesson, edit the same file and run `publish` again: it updates the same link (the edit token is saved in `.learn/state.json`; don't delete or share that file). Use `publish lesson.json --new` only if the user wants a separate copy with a new link. Over MCP, call `update_lesson` with the `id` and `editToken` that `publish_lesson` returned and `patches` for just what changed (send the whole `lesson` only when most of it changed); it updates the same link. Keep that token to yourself, and call `publish_lesson` again only if the user wants a separate copy.
-7. **Offer to keep it, once.** When a lesson is anonymous, add one sentence after the link: "It lasts 7 days. If you'd like to keep it, say so and I'll save it under your email." Say this once per lesson and don't bring it up again. Never paste the keep link (`claimUrl`) into the chat on your own; the user can ask for it. Only when the user says they want to keep it:
+6. **Tell the user** the link and where the lesson stands, in one sentence, as `publish` printed it (over MCP, from the reply's `owned`, `owner`, and `visibility`):
+   - Anonymous: "Published: {url}. It lasts 7 days. To keep it, say so and I'll save it under your email." Over MCP, end with "…say so and I'll give you a link that saves it" instead.
+   - Saved to an account and listed (`owner.handle` set, `visibility` public): "Saved to @{handle} and listed in Explore. Unlist it any time at learn.ninja/settings."
+   - Saved but not listed yet: "Saved to @{handle}; list it in Explore at learn.ninja/settings." With no handle yet: "Saved to your account; pick a handle at learn.ninja/settings and it'll show in Explore."
+
+   Then, in one line, the three choices you made: level, size, and reading age (e.g. "Beginner · standard · adult"), and that you can remake it with any of them changed. For a path, list the lessons still to make and offer to make the next one; make it only when the user asks. To change a lesson, edit the same file and run `publish` again: it updates the same link (the edit token is saved in `.learn/state.json`; don't delete or share that file). Use `publish lesson.json --new` only if the user wants a separate copy with a new link. Over MCP, call `update_lesson` with the `id` and `editToken` that `publish_lesson` returned and `patches` for just what changed (send the whole `lesson` only when most of it changed); it updates the same link. Keep that token to yourself, and call `publish_lesson` again only if the user wants a separate copy.
+7. **Keep it, once.** The keep sentence in step 6 is said once per lesson; don't bring it up again, and never paste the keep link (`claimUrl`) into the chat on your own. Only when the user says they want to keep the lesson:
    1. Ask for their email address, then run:
       ```bash
       node <skill-folder>/scripts/learn.mjs login --email <address>
@@ -36,11 +41,11 @@ There are two ways to follow these steps. In a terminal with the skill installed
       ```bash
       node <skill-folder>/scripts/learn.mjs login --email <address> --code <code>
       ```
-      It saves a key on this machine and keeps every lesson published from this folder; tell the user which ones it kept. From now on, every lesson you publish here is saved to their account and never expires, so skip the keep sentence.
+      It saves a key on this machine and keeps every lesson published from this folder; tell the user which ones it kept, and where they stand, as it printed (saved to @handle and listed in Explore). From now on, every lesson you publish here is saved to their account, so skip the keep sentence and say the saved-and-listed sentence instead.
 
-   `learn whoami` says who's signed in; `learn logout` forgets the key. Never tell the user to look in `.learn/` or in the credentials file.
+   Already signed in on this machine, but the lesson was published anonymously (an earlier folder, or before the login)? Run `learn keep`: it saves every lesson published from this folder without a new code. `learn whoami` says who's signed in; `learn logout` forgets the key. Never tell the user to look in `.learn/` or in the credentials file.
 
-   Over MCP there is no login: only when the user says they want to keep it, give them the `claimUrl` from `publish_lesson`. Opening it signs them in on learn.ninja and keeps the lesson. Say "I'll give you a link that saves it" in the keep sentence instead of "under your email".
+   Over MCP there is no login. When the user says they want to keep the lesson, call `keep_lesson` with its `id` and `editToken` and paste the `claimUrl` it returns (the `claimUrl` from `publish_lesson` works too, while it's still at hand). Opening it signs them in on learn.ninja and saves the lesson, which is then listed in Explore under their handle. Each link works once; call `keep_lesson` again for a fresh one.
 
 If a command prints that a newer version of the skill is available, tell the user the update command it shows.
 
@@ -63,6 +68,6 @@ If a command prints that a newer version of the skill is available, tell the use
 - `reference/lesson-format.md`: every field of the lesson file, with short examples
 - `levels/index.md`: how to pick the lesson's level; `levels/{level}.md` is each level's guide
 - `schema/lesson.schema.json`: the formal JSON Schema (the checker also enforces cross-field rules it can't express)
-- `<skill-folder>/scripts/learn.mjs`: the checker and publisher (`sync`, `validate`, `publish`, `login`, `logout`, `whoami`, `schema`; add `--json` for machine-readable output)
+- `<skill-folder>/scripts/learn.mjs`: the checker and publisher (`sync`, `validate`, `publish`, `login`, `keep`, `logout`, `whoami`, `schema`; add `--json` for machine-readable output)
 
 Over MCP, `get_guide` returns all of these but the schema in one call (`all`, the default); one section at a time is `planning`, `teaching`, `format`, `levels` (the index and every level), or `schema`.

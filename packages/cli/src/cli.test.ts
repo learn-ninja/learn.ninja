@@ -11,13 +11,7 @@ import { join } from "node:path"
 
 import { beforeEach, describe, expect, it } from "vitest"
 
-import {
-  CREDENTIALS_FILE,
-  run,
-  SKILL_VERSION,
-  SYNC_DIR,
-  type Io,
-} from "./cli"
+import { CREDENTIALS_FILE, run, SKILL_VERSION, SYNC_DIR, type Io } from "./cli"
 
 const lesson = readFileSync(
   new URL("../../../examples/button-hierarchy.json", import.meta.url),
@@ -121,16 +115,43 @@ const created = (id = "abcd1234") => ({
     claimUrl: `https://learn.test/keep/claim-${id}`,
     owned: false,
     expiresAt: new Date(Date.now() + 864e5).toISOString(),
+    owner: null,
+    visibility: "unlisted",
     skill: { latest: SKILL_VERSION, updateAvailable: false },
   },
 })
 
-/** What the server answers a signed-in publish with: owned, no expiry, no claim token. */
-const createdOwned = (id = "own12345") => {
+/** What the server answers a signed-in publish with: owned, no expiry, no claim token, listed under @ada. */
+const createdOwned = (
+  id = "own12345",
+  handle: string | null = "ada",
+  visibility = "public"
+) => {
   const reply = created(id)
   const { claimToken: _c, claimUrl: _u, ...body } = reply.body
-  return { status: 201, body: { ...body, owned: true, expiresAt: null } }
+  return {
+    status: 201,
+    body: {
+      ...body,
+      owned: true,
+      expiresAt: null,
+      owner: { handle },
+      visibility,
+    },
+  }
 }
+
+/** What the server answers a claim with. */
+const keptReply = (handle: string | null = "ada", visibility = "public") => ({
+  status: 200,
+  body: {
+    ok: true,
+    owned: true,
+    expiresAt: null,
+    owner: { handle },
+    visibility,
+  },
+})
 
 const KEY = "learn_" + "k".repeat(64)
 /** The sign-in routes a `login` goes through, ending with a key for ada@example.com. */
@@ -154,14 +175,25 @@ const signInRoutes = (): Routes => ({
     call.cookie?.includes("better-auth.session_token=sess.sig")
       ? {
           status: 201,
-          body: { ok: true, id: "key1", key: KEY, name: "learn CLI on test-mac" },
+          body: {
+            ok: true,
+            id: "key1",
+            key: KEY,
+            name: "learn CLI on test-mac",
+          },
         }
       : { status: 401, body: { ok: false, error: "sign_in_required" } },
   "POST /api/auth/sign-out": { status: 200, body: { success: true } },
   "GET /api/account": (call) =>
     call.apiKey === KEY
-      ? { status: 200, body: { ok: true, email: "ada@example.com", handle: "ada" } }
-      : { status: 401, body: { ok: false, error: "invalid_api_key", message: "Bad key." } },
+      ? {
+          status: 200,
+          body: { ok: true, email: "ada@example.com", handle: "ada" },
+        }
+      : {
+          status: 401,
+          body: { ok: false, error: "invalid_api_key", message: "Bad key." },
+        },
 })
 
 describe("learn sync", () => {
@@ -519,7 +551,7 @@ describe("learn publish", () => {
   it("keeps the claim token and says how long an anonymous lesson lasts", async () => {
     expect(await run(["publish", "lesson.json"], t.io)).toBe(0)
     expect(t.out.join("\n")).toMatch(
-      /Lasts 7 days, until .*\. To keep it for good, run `learn login`/
+      /Lasts 7 days, until .*\. Tell the user once: "It lasts 7 days\. To keep it, say so and I'll save it under your email\." When they say so, run `learn login`\./
     )
     expect(t.out.join("\n")).not.toMatch(/keep\/claim-/)
     const saved = JSON.parse(
@@ -545,7 +577,9 @@ describe("learn publish", () => {
     writeCredentials(t, { "https://learn.ninja": { apiKey: KEY, email: "a" } })
     expect(await run(["publish", "lesson.json"], t.io)).toBe(0)
     expect(t.calls.at(-1)).toMatchObject({ method: "POST", apiKey: KEY })
-    expect(t.out.join("\n")).toMatch(/Saved to your account: it doesn't expire\./)
+    expect(t.out.join("\n")).toMatch(
+      /Saved to @ada and listed in Explore\. Unlist it any time at https:\/\/learn\.ninja\/settings\./
+    )
     const saved = JSON.parse(
       readFileSync(join(t.cwd, ".learn/state.json"), "utf8")
     ).lessons[join(t.cwd, "lesson.json")]
@@ -560,16 +594,41 @@ describe("learn publish", () => {
     })
   })
 
+  it("says what's left to do for an owned lesson without a handle, or not listed yet", async () => {
+    t = setup({
+      "POST /api/lessons": createdOwned("own12345", null, "unlisted"),
+    })
+    writeCredentials(t, { "https://learn.ninja": { apiKey: KEY, email: "a" } })
+    await run(["publish", "lesson.json"], t.io)
+    expect(t.out.join("\n")).toMatch(
+      /Saved to your account: it doesn't expire\. Pick a handle at https:\/\/learn\.ninja\/settings and it'll show in Explore\./
+    )
+    t = setup({
+      "POST /api/lessons": createdOwned("own12345", "ada", "unlisted"),
+    })
+    writeCredentials(t, { "https://learn.ninja": { apiKey: KEY, email: "a" } })
+    await run(["publish", "lesson.json"], t.io)
+    expect(t.out.join("\n")).toMatch(
+      /Saved to @ada: it doesn't expire\. List it in Explore at https:\/\/learn\.ninja\/settings\./
+    )
+  })
+
   it("keeps an older anonymous lesson when updating it signed in", async () => {
     t = setup({
       "POST /api/lessons": created(),
       "PUT /api/lessons/abcd1234": {
         status: 200,
-        body: { ...created().body, editToken: undefined, claimToken: undefined },
+        body: {
+          ...created().body,
+          editToken: undefined,
+          claimToken: undefined,
+        },
       },
       "POST /api/lessons/abcd1234/claim": (call) =>
-        call.apiKey === KEY && JSON.parse(call.body!).claimToken === "claim-abcd1234"
-          ? { status: 200, body: { ok: true, expiresAt: null } }
+        call.apiKey === KEY &&
+        JSON.parse(call.body!).claimToken === "claim-abcd1234" &&
+        JSON.parse(call.body!).editToken === "tok-abcd1234"
+          ? keptReply()
           : { status: 401, body: { ok: false } },
     })
     // Published anonymously, then signed in elsewhere.
@@ -581,12 +640,45 @@ describe("learn publish", () => {
       "PUT /api/lessons/abcd1234",
       "POST /api/lessons/abcd1234/claim",
     ])
-    expect(t.out.join("\n")).toMatch(/Updated: .*\nSaved to your account/)
+    expect(t.out.join("\n")).toMatch(
+      /Updated: .*\nSaved to @ada and listed in Explore/
+    )
     const saved = JSON.parse(
       readFileSync(join(t.cwd, ".learn/state.json"), "utf8")
     ).lessons[join(t.cwd, "lesson.json")]
     expect(saved).toMatchObject({ expiresAt: null })
     expect(saved).not.toHaveProperty("claimToken")
+  })
+
+  it("keeps an older anonymous lesson by its edit token when the claim token is gone", async () => {
+    t = setup({
+      "POST /api/lessons": created(),
+      "PUT /api/lessons/abcd1234": {
+        status: 200,
+        body: {
+          ...created().body,
+          editToken: undefined,
+          claimToken: undefined,
+        },
+      },
+      "POST /api/lessons/abcd1234/claim": (call) =>
+        call.apiKey === KEY &&
+        JSON.parse(call.body!).editToken === "tok-abcd1234"
+          ? keptReply()
+          : { status: 401, body: { ok: false } },
+    })
+    await run(["publish", "lesson.json"], t.io)
+    // An older tool never saved a claim token.
+    const statePath = join(t.cwd, ".learn/state.json")
+    const state = JSON.parse(readFileSync(statePath, "utf8"))
+    delete state.lessons[join(t.cwd, "lesson.json")].claimToken
+    writeFileSync(statePath, JSON.stringify(state))
+    writeCredentials(t, { "https://learn.ninja": { apiKey: KEY, email: "a" } })
+    expect(await run(["publish", "lesson.json"], t.io)).toBe(0)
+    expect(JSON.parse(t.calls.at(-1)!.body!)).toEqual({
+      editToken: "tok-abcd1234",
+    })
+    expect(t.out.join("\n")).toMatch(/Saved to @ada and listed in Explore/)
   })
 
   it("takes the key from LEARN_API_KEY too", async () => {
@@ -607,7 +699,9 @@ describe("learn publish", () => {
         },
       },
     })
-    writeCredentials(t, { "https://learn.ninja": { apiKey: "learn_old", email: "a" } })
+    writeCredentials(t, {
+      "https://learn.ninja": { apiKey: "learn_old", email: "a" },
+    })
     expect(await run(["publish", "lesson.json"], t.io)).toBe(1)
     expect(t.err.join("\n")).toMatch(/API key doesn't work/)
     expect(t.methods().filter((m) => m.includes("/api/lessons"))).toEqual([
@@ -634,8 +728,9 @@ describe("learn login", () => {
       ...signInRoutes(),
       "POST /api/lessons": [created("aaaa1111"), created("bbbb2222")],
       "POST /api/lessons/aaaa1111/claim": (call) =>
-        call.apiKey === KEY && JSON.parse(call.body!).claimToken === "claim-aaaa1111"
-          ? { status: 200, body: { ok: true, expiresAt: null } }
+        call.apiKey === KEY &&
+        JSON.parse(call.body!).claimToken === "claim-aaaa1111"
+          ? keptReply()
           : { status: 401, body: { ok: false } },
       // Expired before it was kept.
       "POST /api/lessons/bbbb2222/claim": {
@@ -650,7 +745,9 @@ describe("learn login", () => {
 
     // Without a terminal, the first run only sends the code.
     expect(await run(["login", "--email", "ada@example.com"], t.io)).toBe(0)
-    expect(t.methods()).toEqual(["POST /api/auth/email-otp/send-verification-otp"])
+    expect(t.methods()).toEqual([
+      "POST /api/auth/email-otp/send-verification-otp",
+    ])
     expect(t.calls[0]!.body).toBe(
       JSON.stringify({ email: "ada@example.com", type: "sign-in" })
     )
@@ -662,7 +759,10 @@ describe("learn login", () => {
     t.out.length = 0
 
     expect(
-      await run(["login", "--email", "ada@example.com", "--code", "123456"], t.io)
+      await run(
+        ["login", "--email", "ada@example.com", "--code", "123456"],
+        t.io
+      )
     ).toBe(0)
     expect(t.methods()).toEqual([
       "POST /api/auth/sign-in/email-otp",
@@ -678,19 +778,29 @@ describe("learn login", () => {
     const path = join(t.io.configDir, CREDENTIALS_FILE)
     expect(statSync(path).mode & 0o777).toBe(0o600)
     expect(readCredentials(t)).toEqual({
-      "https://learn.ninja": { apiKey: KEY, keyId: "key1", email: "ada@example.com" },
+      "https://learn.ninja": {
+        apiKey: KEY,
+        keyId: "key1",
+        email: "ada@example.com",
+      },
     })
     expect(t.out.join("\n")).toMatch(
-      /Signed in as ada@example\.com \(@ada\)\. Saved the key in .*learn\/credentials\.\nKept 1 lesson published from this folder \(no longer expiring\):\n  https:\/\/learn\.test\/l\/button-hierarchy-aaaa1111/
+      /Signed in as ada@example\.com \(@ada\)\. Saved the key in .*learn\/credentials\.\nKept 1 lesson published from this folder, saved to @ada and listed in Explore \(unlist it any time at https:\/\/learn\.ninja\/settings\):\n  https:\/\/learn\.test\/l\/button-hierarchy-aaaa1111/
     )
-    const state = JSON.parse(readFileSync(join(t.cwd, ".learn/state.json"), "utf8"))
+    const state = JSON.parse(
+      readFileSync(join(t.cwd, ".learn/state.json"), "utf8")
+    )
     expect(state.lessons[join(t.cwd, "lesson.json")]).toMatchObject({
       expiresAt: null,
     })
-    expect(state.lessons[join(t.cwd, "lesson.json")]).not.toHaveProperty("claimToken")
+    expect(state.lessons[join(t.cwd, "lesson.json")]).not.toHaveProperty(
+      "claimToken"
+    )
     // The expired one lost its token too, and still expires.
     expect(state.lessons[join(t.cwd, "other.json")].expiresAt).not.toBeNull()
-    expect(state.lessons[join(t.cwd, "other.json")]).not.toHaveProperty("claimToken")
+    expect(state.lessons[join(t.cwd, "other.json")]).not.toHaveProperty(
+      "claimToken"
+    )
   })
 
   it("keeps a claim token when the claim fails for a passing reason", async () => {
@@ -707,11 +817,18 @@ describe("learn login", () => {
     writeFileSync(join(t.cwd, "other.json"), lesson)
     await run(["publish", "other.json"], t.io)
     expect(
-      await run(["login", "--email", "ada@example.com", "--code", "123456"], t.io)
+      await run(
+        ["login", "--email", "ada@example.com", "--code", "123456"],
+        t.io
+      )
     ).toBe(0)
     expect(t.out.join("\n")).toMatch(/No lessons from this folder to keep/)
-    const state = JSON.parse(readFileSync(join(t.cwd, ".learn/state.json"), "utf8"))
-    for (const saved of Object.values(state.lessons) as { claimToken?: string }[])
+    const state = JSON.parse(
+      readFileSync(join(t.cwd, ".learn/state.json"), "utf8")
+    )
+    for (const saved of Object.values(state.lessons) as {
+      claimToken?: string
+    }[])
       expect(saved.claimToken).toMatch(/^claim-/)
   })
 
@@ -721,13 +838,18 @@ describe("learn login", () => {
     t.io.prompt = async () => answers.shift()!
     expect(await run(["login"], t.io)).toBe(0)
     expect(readCredentials(t)["https://learn.ninja"].apiKey).toBe(KEY)
-    expect(t.out.join("\n")).toMatch(/No lessons from this folder to keep/)
+    expect(t.out.join("\n")).toMatch(
+      /No lessons from this folder to keep\. From now on, every lesson you publish is saved to your account and listed in Explore under @ada\./
+    )
   })
 
   it("explains a wrong code", async () => {
     const t = setup(signInRoutes())
     expect(
-      await run(["login", "--email", "ada@example.com", "--code", "000000"], t.io)
+      await run(
+        ["login", "--email", "ada@example.com", "--code", "000000"],
+        t.io
+      )
     ).toBe(1)
     expect(t.err.join("\n")).toMatch(/Couldn't sign in: Invalid OTP/)
     expect(existsSync(join(t.io.configDir, CREDENTIALS_FILE))).toBe(false)
@@ -765,13 +887,137 @@ describe("learn login", () => {
   })
 })
 
+describe("learn keep", () => {
+  it("needs a login first", async () => {
+    const t = setup()
+    expect(await run(["keep"], t.io)).toBe(1)
+    expect(t.err.join("\n")).toMatch(/Not signed in\. Run `learn login`/)
+    expect(t.methods()).toEqual([])
+  })
+
+  it("keeps the folder's lessons with the saved key and no new code", async () => {
+    const t = setup({
+      ...signInRoutes(),
+      "POST /api/lessons": [
+        created("aaaa1111"),
+        created("bbbb2222"),
+        createdOwned("cccc3333"),
+      ],
+      "POST /api/lessons/aaaa1111/claim": (call) =>
+        call.apiKey === KEY &&
+        JSON.parse(call.body!).claimToken === "claim-aaaa1111" &&
+        JSON.parse(call.body!).editToken === "tok-aaaa1111"
+          ? keptReply()
+          : { status: 401, body: { ok: false } },
+      // No claim token saved (an older tool): the edit token does it.
+      "POST /api/lessons/bbbb2222/claim": (call) =>
+        JSON.parse(call.body!).editToken === "tok-bbbb2222" &&
+        !("claimToken" in JSON.parse(call.body!))
+          ? keptReply()
+          : { status: 401, body: { ok: false } },
+    })
+    await run(["publish", "lesson.json"], t.io)
+    writeFileSync(join(t.cwd, "other.json"), lesson)
+    await run(["publish", "other.json"], t.io)
+    const statePath = join(t.cwd, ".learn/state.json")
+    const state = JSON.parse(readFileSync(statePath, "utf8"))
+    delete state.lessons[join(t.cwd, "other.json")].claimToken
+    writeFileSync(statePath, JSON.stringify(state))
+    writeCredentials(t, {
+      "https://learn.ninja": { apiKey: KEY, email: "ada@example.com" },
+    })
+    writeFileSync(join(t.cwd, "third.json"), lesson)
+    await run(["publish", "third.json"], t.io)
+    t.calls.length = 0
+
+    expect(await run(["keep"], t.io)).toBe(0)
+    // Only the two anonymous lessons are claimed; the owned one is skipped, and no code is sent.
+    expect(t.methods()).toEqual([
+      "POST /api/lessons/aaaa1111/claim",
+      "POST /api/lessons/bbbb2222/claim",
+    ])
+    expect(t.out.join("\n")).toMatch(
+      /Kept 2 lessons published from this folder, saved to @ada and listed in Explore \(unlist them any time at https:\/\/learn\.ninja\/settings\):\n  https:\/\/learn\.test\/l\/button-hierarchy-aaaa1111\n  https:\/\/learn\.test\/l\/button-hierarchy-bbbb2222/
+    )
+    const after = JSON.parse(readFileSync(statePath, "utf8"))
+    for (const saved of Object.values(after.lessons) as {
+      expiresAt: string | null
+      claimToken?: string
+    }[]) {
+      expect(saved.expiresAt).toBeNull()
+      expect(saved).not.toHaveProperty("claimToken")
+    }
+
+    // Nothing left to keep the second time.
+    t.calls.length = 0
+    t.out.length = 0
+    expect(await run(["keep"], t.io)).toBe(0)
+    expect(t.methods()).toEqual(["GET /api/account"])
+    expect(t.out.join("\n")).toMatch(
+      /Every lesson published from this folder is already saved to your account\./
+    )
+    // An empty folder says so.
+    const empty = setup(signInRoutes())
+    writeCredentials(empty, {
+      "https://learn.ninja": { apiKey: KEY, email: "a" },
+    })
+    expect(await run(["keep"], empty.io)).toBe(0)
+    expect(empty.out.join("\n")).toMatch(
+      /No lessons have been published from this folder yet/
+    )
+  })
+
+  it("says when the lessons are already saved or gone, and when to retry", async () => {
+    const t = setup({
+      ...signInRoutes(),
+      "POST /api/lessons": [created("aaaa1111"), created("bbbb2222")],
+      "POST /api/lessons/aaaa1111/claim": {
+        status: 404,
+        body: { ok: false, error: "not_found", message: "Gone." },
+      },
+      "POST /api/lessons/bbbb2222/claim": offline,
+    })
+    await run(["publish", "lesson.json"], t.io)
+    writeFileSync(join(t.cwd, "other.json"), lesson)
+    await run(["publish", "other.json"], t.io)
+    writeCredentials(t, {
+      "https://learn.ninja": { apiKey: KEY, email: "ada@example.com" },
+    })
+    expect(await run(["keep", "--json"], t.io)).toBe(0)
+    expect(JSON.parse(t.out.at(-1)!)).toMatchObject({
+      ok: true,
+      kept: [],
+      retry: 1,
+    })
+    t.out.length = 0
+    expect(await run(["keep"], t.io)).toBe(0)
+    expect(t.out.join("\n")).toMatch(
+      /Nothing new to keep: the lessons published from this folder are already saved, or have expired\.\nCouldn't reach the server for 1 lesson; run `learn keep` again in a minute\./
+    )
+    // The unreachable one keeps its token for next time; the expired one lost it.
+    const state = JSON.parse(
+      readFileSync(join(t.cwd, ".learn/state.json"), "utf8")
+    )
+    expect(state.lessons[join(t.cwd, "lesson.json")]).not.toHaveProperty(
+      "claimToken"
+    )
+    expect(state.lessons[join(t.cwd, "other.json")].claimToken).toBe(
+      "claim-bbbb2222"
+    )
+  })
+})
+
 describe("learn whoami and logout", () => {
   it("prints the account, or says to sign in", async () => {
     const t = setup(signInRoutes())
     expect(await run(["whoami"], t.io)).toBe(1)
     expect(t.err.join("\n")).toMatch(/Not signed in\. Run `learn login`/)
     writeCredentials(t, {
-      "https://learn.ninja": { apiKey: KEY, keyId: "key1", email: "ada@example.com" },
+      "https://learn.ninja": {
+        apiKey: KEY,
+        keyId: "key1",
+        email: "ada@example.com",
+      },
     })
     expect(await run(["whoami"], t.io)).toBe(0)
     expect(t.out.at(-1)).toBe("ada@example.com (@ada)")
@@ -781,15 +1027,23 @@ describe("learn whoami and logout", () => {
     const t = setup({
       ...signInRoutes(),
       "DELETE /api/keys/key1": (call) =>
-        call.apiKey === KEY ? { status: 200, body: { ok: true } } : { status: 401, body: {} },
+        call.apiKey === KEY
+          ? { status: 200, body: { ok: true } }
+          : { status: 401, body: {} },
     })
     writeCredentials(t, {
-      "https://learn.ninja": { apiKey: KEY, keyId: "key1", email: "ada@example.com" },
+      "https://learn.ninja": {
+        apiKey: KEY,
+        keyId: "key1",
+        email: "ada@example.com",
+      },
       "https://other.test": { apiKey: "learn_other", email: "b" },
     })
     expect(await run(["logout"], t.io)).toBe(0)
     expect(t.methods()).toEqual(["DELETE /api/keys/key1"])
-    expect(t.out.at(-1)).toBe("Signed out of https://learn.ninja. The key was revoked.")
+    expect(t.out.at(-1)).toBe(
+      "Signed out of https://learn.ninja. The key was revoked."
+    )
     // Other servers' keys stay.
     expect(readCredentials(t)).toEqual({
       "https://other.test": { apiKey: "learn_other", email: "b" },

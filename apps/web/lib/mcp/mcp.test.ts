@@ -2,8 +2,10 @@ import { readFileSync } from "node:fs"
 
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 
-import { connectPglite, type Db } from "@workspace/db"
+import { connectPglite, user, type Db } from "@workspace/db"
 
+import { claimLesson } from "../publish/handlers"
+import { hashToken } from "../publish/ids"
 import { MemoryRateLimiter } from "../publish/rate-limit"
 import { PostgresLessonStore } from "../publish/store"
 import { skillBundle } from "../skill-files"
@@ -17,6 +19,9 @@ const buttons = example("button-hierarchy.json")
 let db: Db
 beforeAll(async () => {
   db = await connectPglite()
+  await db
+    .insert(user)
+    .values({ id: "keeper", name: "keeper", email: "keeper@example.com" })
 }, 30_000)
 
 let deps: McpDeps
@@ -71,10 +76,11 @@ const call = (
 ): Promise<ToolResult> => rpc("tools/call", { name, arguments: args }, client)
 
 describe("tools", () => {
-  it("lists the four tools, each with a title and annotations", async () => {
+  it("lists the five tools, each with a title and annotations", async () => {
     const { tools } = await rpc("tools/list", {})
     expect(tools.map((t: { name: string }) => t.name).sort()).toEqual([
       "get_guide",
+      "keep_lesson",
       "publish_lesson",
       "update_lesson",
       "validate_lesson",
@@ -182,6 +188,8 @@ describe("publish_lesson and update_lesson", () => {
       editToken: expect.any(String),
       claimUrl: expect.stringMatching(/^https:\/\/learn\.test\/keep\//),
       expiresAt: expect.any(String),
+      owner: null,
+      visibility: "unlisted",
     })
     expect((await deps.store.get(body.id as string))?.ownerId).toBeNull()
 
@@ -200,6 +208,16 @@ describe("publish_lesson and update_lesson", () => {
     expect((await deps.store.get(body.id as string))?.lesson.title).toBe(
       "Buttons, ranked"
     )
+  })
+
+  it("carries the keep sentence in publish_lesson's description, and the once-only rule", async () => {
+    const { tools } = await rpc("tools/list", {})
+    const publish = tools.find(
+      (t: { name: string }) => t.name === "publish_lesson"
+    )
+    expect(publish.description).toContain("It lasts 7 days. To keep it, say so")
+    expect(publish.description).toMatch(/once/)
+    expect(publish.description).not.toContain("only when they ask")
   })
 
   it("refuses an update with the wrong token", async () => {
@@ -225,6 +243,55 @@ describe("publish_lesson and update_lesson", () => {
     const other = await call("publish_lesson", { lesson: buttons }, "9.9.9.9")
     expect(other.isError).toBeFalsy()
   }, 30_000)
+})
+
+describe("keep_lesson", () => {
+  it("returns a fresh keep link for the edit token, and only for it", async () => {
+    const published = await call("publish_lesson", { lesson: buttons })
+    const { id, editToken, claimUrl } = published.structuredContent as {
+      id: string
+      editToken: string
+      claimUrl: string
+    }
+    const wrong = await call("keep_lesson", { id, editToken: "not-the-token" })
+    expect(wrong.isError).toBe(true)
+    expect(wrong.structuredContent).toMatchObject({ error: "unauthorized" })
+
+    const result = await call("keep_lesson", { id, editToken })
+    expect(result.isError).toBeFalsy()
+    expect(result.structuredContent).toEqual({
+      ok: true,
+      id,
+      url: published.structuredContent.url,
+      claimUrl: expect.stringMatching(/^https:\/\/learn\.test\/keep\//),
+      expiresAt: published.structuredContent.expiresAt,
+    })
+    // The token in the chat from publishing is dead; the new link keeps the lesson.
+    const fresh = (result.structuredContent.claimUrl as string).split(
+      "/keep/"
+    )[1]!
+    expect(result.structuredContent.claimUrl).not.toBe(claimUrl)
+    expect(
+      await deps.store.getByClaimTokenHash(
+        hashToken(claimUrl.split("/keep/")[1]!)
+      )
+    ).toBeNull()
+    const kept = await claimLesson(
+      { claimToken: fresh, ownerId: "keeper" },
+      deps
+    )
+    expect(kept.status).toBe(200)
+    expect((await deps.store.get(id))?.ownerId).toBe("keeper")
+
+    // Nothing left to keep.
+    const again = await call("keep_lesson", { id, editToken })
+    expect(again.structuredContent).toMatchObject({ error: "already_claimed" })
+  })
+
+  it("says when the lesson is gone", async () => {
+    const gone = await call("keep_lesson", { id: "nope1234", editToken: "x" })
+    expect(gone.structuredContent).toMatchObject({ error: "not_found" })
+  })
 })
 
 describe("drafts and patches", () => {

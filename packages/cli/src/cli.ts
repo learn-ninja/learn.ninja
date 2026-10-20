@@ -10,14 +10,15 @@ import {
 } from "@workspace/spec"
 
 // The command the lesson skill runs: sync the guides, validate a lesson file, publish it, or update
-// it; and sign in, so published lessons are kept in an account instead of expiring.
+// it; and sign in, so published lessons are kept in an account instead of expiring (`keep` moves
+// the ones published before signing in).
 // Bundled into skills/learn/scripts/learn.mjs, so the skill works without installing anything.
 //
 // The guides and checker rules live on learn.ninja and change often, so `sync` downloads
 // the current guides into .learn/skill/ (text only, never code), and `validate` checks the lesson on the
 // server. The copies that came with the install are the fallback when the server can't be reached.
 
-export const SKILL_VERSION = "0.11.0"
+export const SKILL_VERSION = "0.12.0"
 export const DEFAULT_API_URL = "https://learn.ninja"
 /** Where `sync` puts the guides, relative to the current folder. */
 export const SYNC_DIR = ".learn/skill"
@@ -88,6 +89,7 @@ Usage:
   learn publish <lesson.json> --new  Publish as a new lesson with a new link
   learn login                        Sign in with an email code, then keep the lessons published here
   learn login --email <address>      Send the code without a terminal; then add --code <code>
+  learn keep                         Save the lessons published here to the signed-in account
   learn logout                       Forget the saved key and revoke it
   learn whoami                       Print the signed-in email and handle
   learn schema                       Print the path to the lesson JSON Schema
@@ -96,8 +98,9 @@ Options:
   --api <url>   Server to use (default: $LEARN_API_URL or ${DEFAULT_API_URL})
   --json        Print machine-readable JSON instead of text
 
-Signed in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account and
-never expires. Anonymous lessons last 7 days.`
+Signed in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account, never
+expires, and is listed in Explore under your handle. Anonymous lessons last 7 days; \`login\` and
+\`keep\` save the ones published from this folder.`
 
 export async function run(argv: string[], io: Io): Promise<number> {
   const flags = new Set(argv.filter((a) => a.startsWith("--")))
@@ -146,6 +149,7 @@ export async function run(argv: string[], io: Io): Promise<number> {
       email: option("--email"),
       code: option("--code"),
     })
+  if (command === "keep") return keep(io, api, json)
   if (command === "logout") return logout(io, api, json)
   if (command === "whoami") return whoami(io, api, json)
   if (command !== "validate" && command !== "publish") {
@@ -525,6 +529,7 @@ async function publish(
   }
 
   let owned = Boolean(body.owned)
+  let standing = standingOf(body)
   const record: SavedLesson = {
     id: body.id as string,
     url: body.url as string,
@@ -533,12 +538,17 @@ async function publish(
   }
   // The claim token is shown once: keep it until `login` spends it.
   const claimToken =
-    (body.claimToken as string | undefined) ?? (owned ? undefined : live?.claimToken)
+    (body.claimToken as string | undefined) ??
+    (owned ? undefined : live?.claimToken)
   if (claimToken) record.claimToken = claimToken
   // Signed in, but updating a lesson published before signing in (from another folder's login):
   // keep it now rather than telling the user to sign in again.
-  if (credential && !owned && record.claimToken) {
-    owned = (await claimOne(io, o.api, credential, record)) === "kept"
+  if (credential && !owned) {
+    const claimed = await claimOne(io, o.api, credential, record)
+    if (claimed.outcome === "kept") {
+      owned = true
+      standing = claimed
+    }
   }
   state.lessons[o.path] = record
   await writeState(statePath, state)
@@ -559,8 +569,8 @@ async function publish(
       [
         `${live ? "Updated" : "Published"}: ${record.url}`,
         owned
-          ? "Saved to your account: it doesn't expire."
-          : `Lasts 7 days, until ${new Date(record.expiresAt!).toUTCString()}. To keep it for good, run \`learn login\` (it asks for an email and a code).`,
+          ? ownedLine(standing, o.api)
+          : `Lasts 7 days, until ${new Date(record.expiresAt!).toUTCString()}. Tell the user once: "It lasts 7 days. To keep it, say so and I'll save it under your email." When they say so, run \`learn login\`.`,
         `Saved the edit token in .learn/state.json, so publishing ${o.file} again updates this same link.`,
         updateLine(skill),
       ]
@@ -573,6 +583,49 @@ async function publish(
 /** Whether a saved lesson is still on the server: owned lessons (no expiry) always are. */
 function isLive(saved: SavedLesson): boolean {
   return saved.expiresAt === null || Date.parse(saved.expiresAt) > Date.now()
+}
+
+/** Where an owned lesson stands, from a publish or claim reply: whose it is, and whether Explore lists it. */
+interface Standing {
+  handle: string | null
+  listed: boolean
+}
+
+function standingOf(body: Record<string, unknown>): Standing {
+  const owner = body.owner as { handle?: string | null } | null | undefined
+  return {
+    handle: owner?.handle ?? null,
+    listed: body.visibility === "public",
+  }
+}
+
+/**
+ * The sentence for an owned lesson, the same one the keep page and the MCP guide use: saved to
+ * the handle and listed in Explore, or what's left to do for that (a handle, or listing it).
+ */
+function ownedLine({ handle, listed }: Standing, api: string): string {
+  if (handle && listed)
+    return `Saved to @${handle} and listed in Explore. Unlist it any time at ${api}/settings.`
+  if (handle)
+    return `Saved to @${handle}: it doesn't expire. List it in Explore at ${api}/settings.`
+  return `Saved to your account: it doesn't expire. Pick a handle at ${api}/settings and it'll show in Explore.`
+}
+
+/** The lines `login` and `keep` print for the lessons they kept: the links, then where they stand. */
+function keptLines(kept: Kept[], api: string): string {
+  const n = kept.length
+  const handle = kept[0]!.handle
+  const them = n === 1 ? "it" : "them"
+  const where =
+    handle && kept.every((k) => k.listed)
+      ? `saved to @${handle} and listed in Explore (unlist ${them} any time at ${api}/settings)`
+      : handle
+        ? `saved to @${handle} (list ${them} in Explore at ${api}/settings)`
+        : `saved to your account (pick a handle at ${api}/settings and ${n === 1 ? "it'll" : "they'll"} show in Explore)`
+  return [
+    `Kept ${n} lesson${n === 1 ? "" : "s"} published from this folder, ${where}:`,
+    ...kept.map((k) => `  ${k.url}`),
+  ].join("\n")
 }
 
 // --- login, logout, whoami ---
@@ -588,7 +641,9 @@ async function login(
 ): Promise<number> {
   const email = (o.email ?? (await io.prompt?.("Email: ")))?.trim()
   if (!email) {
-    io.err("Give the email address to sign in with: learn login --email <address>")
+    io.err(
+      "Give the email address to sign in with: learn login --email <address>"
+    )
     return 1
   }
 
@@ -610,7 +665,9 @@ async function login(
       return 1
     }
     if (io.prompt) {
-      code = (await io.prompt("Enter the six-digit code we emailed you: ")).trim()
+      code = (
+        await io.prompt("Enter the six-digit code we emailed you: ")
+      ).trim()
     } else {
       const next = `learn login --email ${email} --code <code>`
       report(
@@ -649,11 +706,17 @@ async function login(
   }
   let key: { id: string; key: string }
   try {
-    key = await fetchJson<{ id: string; key: string }>(io, `${o.api}/api/keys`, {
-      method: "POST",
-      headers: { "content-type": "application/json", cookie },
-      body: JSON.stringify({ name: `learn CLI on ${io.hostname ?? "this machine"}` }),
-    })
+    key = await fetchJson<{ id: string; key: string }>(
+      io,
+      `${o.api}/api/keys`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", cookie },
+        body: JSON.stringify({
+          name: `learn CLI on ${io.hostname ?? "this machine"}`,
+        }),
+      }
+    )
     await fetchAuth(io, `${o.api}/api/auth/sign-out`, {
       method: "POST",
       headers: { cookie, "content-type": "application/json" },
@@ -673,7 +736,7 @@ async function login(
   const handle = await fetchHandle(io, o.api, credential)
 
   // Keep every lesson published from this folder.
-  const kept = await claimAll(io, o.api, credential)
+  const { kept } = await claimAll(io, o.api, credential)
 
   report(
     io,
@@ -683,9 +746,11 @@ async function login(
       [
         `Signed in as ${email}${handle ? ` (@${handle})` : ""}. Saved the key in ${credentialsPath(io)}.`,
         kept.length
-          ? `Kept ${kept.length} lesson${kept.length === 1 ? "" : "s"} published from this folder (no longer expiring):\n${kept.map((k) => `  ${k.url}`).join("\n")}`
-          : "No lessons from this folder to keep. From now on, every lesson you publish is saved to your account.",
-        handle ? null : `Pick a handle at ${o.api}/settings whenever you like.`,
+          ? keptLines(kept, o.api)
+          : `No lessons from this folder to keep. From now on, every lesson you publish is saved to your account${handle ? ` and listed in Explore under @${handle}` : ""}.`,
+        handle
+          ? null
+          : `Pick a handle at ${o.api}/settings and your lessons will show in Explore.`,
       ]
         .filter(Boolean)
         .join("\n")
@@ -693,37 +758,86 @@ async function login(
   return 0
 }
 
-/** Claims every lesson in .learn/state.json that still has a claim token. */
+/**
+ * Saves every lesson published from this folder to the signed-in account, without a new code:
+ * for the folder a `login` elsewhere didn't cover, and for lessons an older tool published
+ * without a claim token (the edit token is proof enough).
+ */
+async function keep(io: Io, api: string, json: boolean): Promise<number> {
+  const credential = await readCredential(io, api)
+  if (!credential) {
+    report(
+      io,
+      json,
+      { ok: false, error: "signed_out", message: "Not signed in." },
+      () =>
+        "Not signed in. Run `learn login`: it signs in with an email code and keeps the lessons published here too."
+    )
+    return 1
+  }
+  const { kept, total, tried, retry } = await claimAll(io, api, credential)
+  const handle = kept[0]?.handle ?? (await fetchHandle(io, api, credential))
+  report(io, json, { ok: true, handle, kept, retry }, () =>
+    [
+      kept.length
+        ? keptLines(kept, api)
+        : tried
+          ? "Nothing new to keep: the lessons published from this folder are already saved, or have expired."
+          : total
+            ? "Every lesson published from this folder is already saved to your account."
+            : "No lessons have been published from this folder yet; signed in, `learn publish` saves them to your account as it goes.",
+      retry
+        ? `Couldn't reach the server for ${retry} lesson${retry === 1 ? "" : "s"}; run \`learn keep\` again in a minute.`
+        : null,
+    ]
+      .filter(Boolean)
+      .join("\n")
+  )
+  return 0
+}
+
+/** A lesson `login` or `keep` moved into the account. */
+interface Kept extends Standing {
+  url: string
+}
+
+/** Claims every lesson in .learn/state.json that isn't owned yet: with its claim token when there is one, else its edit token. */
 async function claimAll(
   io: Io,
   api: string,
   credential: Credential
-): Promise<{ url: string }[]> {
+): Promise<{ kept: Kept[]; total: number; tried: number; retry: number }> {
   const statePath = join(io.cwd, ".learn", "state.json")
   const state = await readState(statePath)
-  const kept: { url: string }[] = []
+  const kept: Kept[] = []
+  const total = Object.keys(state.lessons).length
+  let tried = 0
+  let retry = 0
   let changed = false
   for (const saved of Object.values(state.lessons)) {
-    if (!saved.claimToken) continue
-    const outcome = await claimOne(io, api, credential, saved)
-    if (outcome === "kept") kept.push({ url: saved.url })
-    if (outcome !== "retry") changed = true
+    if (saved.expiresAt === null) continue
+    tried++
+    const claimed = await claimOne(io, api, credential, saved)
+    if (claimed.outcome === "kept") kept.push({ url: saved.url, ...claimed })
+    if (claimed.outcome === "retry") retry++
+    else changed = true
   }
   if (changed) await writeState(statePath, state)
-  return kept
+  return { kept, total, tried, retry }
 }
 
 /**
- * Claims one saved lesson. "kept" moved it into the account; "spent" means the server refused the
- * token for good (expired, or already kept), so it's dropped; "retry" is a network or server
- * fault, and the token stays for the next `login`.
+ * Claims one saved lesson, with its claim token and its edit token (the server takes either).
+ * "kept" moved it into the account; "spent" means the server refused for good (expired, or kept
+ * by another account), so the claim token is dropped; "retry" is a network or server fault, and
+ * the token stays for the next `login` or `keep`.
  */
 async function claimOne(
   io: Io,
   api: string,
   credential: Credential,
   saved: SavedLesson
-): Promise<"kept" | "spent" | "retry"> {
+): Promise<{ outcome: "spent" | "retry" } | ({ outcome: "kept" } & Standing)> {
   let response: Response
   try {
     response = await io.fetch(`${api}/api/lessons/${saved.id}/claim`, {
@@ -733,19 +847,27 @@ async function claimOne(
         "x-api-key": credential.apiKey,
         "x-learn-skill-version": SKILL_VERSION,
       },
-      body: JSON.stringify({ claimToken: saved.claimToken }),
+      body: JSON.stringify({
+        ...(saved.claimToken ? { claimToken: saved.claimToken } : {}),
+        editToken: saved.editToken,
+      }),
     })
   } catch {
-    return "retry"
+    return { outcome: "retry" }
   }
-  if (response.status >= 500 || response.status === 429) return "retry"
-  if (response.ok) {
+  if (response.status >= 500 || response.status === 429)
+    return { outcome: "retry" }
+  const body = (await response.json().catch(() => ({}))) as Record<
+    string,
+    unknown
+  >
+  if (response.ok && body.ok) {
     saved.expiresAt = null
     delete saved.claimToken
-    return "kept"
+    return { outcome: "kept", ...standingOf(body) }
   }
   delete saved.claimToken
-  return "spent"
+  return { outcome: "spent" }
 }
 
 async function logout(io: Io, api: string, json: boolean): Promise<number> {
@@ -753,14 +875,10 @@ async function logout(io: Io, api: string, json: boolean): Promise<number> {
   const credential = all[api]
   const envKey = Boolean(io.env.LEARN_API_KEY)
   if (!credential) {
-    report(
-      io,
-      json,
-      { ok: true, signedIn: envKey, envKey },
-      () =>
-        envKey
-          ? "No saved key to forget, but LEARN_API_KEY is set in this shell, so publishing still uses it. Unset it to sign out."
-          : "Not signed in."
+    report(io, json, { ok: true, signedIn: envKey, envKey }, () =>
+      envKey
+        ? "No saved key to forget, but LEARN_API_KEY is set in this shell, so publishing still uses it. Unset it to sign out."
+        : "Not signed in."
     )
     return 0
   }
@@ -776,19 +894,15 @@ async function logout(io: Io, api: string, json: boolean): Promise<number> {
   }
   delete all[api]
   await writeCredentials(io, all)
-  report(
-    io,
-    json,
-    { ok: true, signedIn: envKey, revoked, envKey },
-    () =>
-      [
-        `Signed out of ${api}.${revoked ? " The key was revoked." : " The key couldn't be revoked from here; revoke it at " + api + "/settings if it may have leaked."}`,
-        envKey
-          ? "LEARN_API_KEY is still set in this shell, so publishing keeps using it. Unset it to sign out."
-          : null,
-      ]
-        .filter(Boolean)
-        .join("\n")
+  report(io, json, { ok: true, signedIn: envKey, revoked, envKey }, () =>
+    [
+      `Signed out of ${api}.${revoked ? " The key was revoked." : " The key couldn't be revoked from here; revoke it at " + api + "/settings if it may have leaked."}`,
+      envKey
+        ? "LEARN_API_KEY is still set in this shell, so publishing keeps using it. Unset it to sign out."
+        : null,
+    ]
+      .filter(Boolean)
+      .join("\n")
   )
   return 0
 }
@@ -816,7 +930,8 @@ async function whoami(io: Io, api: string, json: boolean): Promise<number> {
       io,
       json,
       { ok: false, error: "invalid_api_key", message: (e as Error).message },
-      () => `The saved key for ${api} doesn't work (${(e as Error).message}). Run \`learn login\` again.`
+      () =>
+        `The saved key for ${api} doesn't work (${(e as Error).message}). Run \`learn login\` again.`
     )
     return 1
   }

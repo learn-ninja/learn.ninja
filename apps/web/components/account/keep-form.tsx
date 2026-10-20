@@ -14,12 +14,29 @@ export interface KeepResult {
   message: string
   url?: string
   title?: string
+  /** The owner's handle, or null when they haven't picked one yet. */
+  handle?: string | null
+  /** Whether the kept lesson is listed in Explore. */
+  listed?: boolean
 }
 
 type KeepAction = (
   previous: KeepResult | null,
   formData: FormData
 ) => Promise<KeepResult>
+
+/**
+ * What a kept lesson's state is, after its title: the same sentence the agents say after a keep
+ * (skills/learn/steps.md step 6). Listed under the handle; or saved but still to be listed or
+ * named, with where to do that.
+ */
+function keptSentence({ handle, listed }: KeepResult) {
+  if (handle && listed)
+    return `is saved to your account and listed in Explore under @${handle}. Unlist it any time from your settings.`
+  if (handle)
+    return `is saved to your account under @${handle} and won't expire. List it in Explore from your settings.`
+  return "is saved to your account and won't expire. Pick a handle in your settings and it'll show in Explore."
+}
 
 /** The /keep page for a signed-in user: the lesson's title and one button. */
 export function KeepForm({
@@ -43,7 +60,7 @@ export function KeepForm({
           </h1>
           <p className="text-muted-foreground">
             <span className="font-medium text-foreground">{result.title}</span>{" "}
-            is saved to your account and won&apos;t expire.
+            {keptSentence(result)}
           </p>
         </div>
         <div className="flex gap-2">
@@ -64,9 +81,9 @@ export function KeepForm({
           Keep this lesson?
         </h1>
         <p className="text-muted-foreground">
-          <span className="font-medium text-foreground">{title}</span> expires
-          7 days after it was published. Keeping it saves it to your account
-          for good.
+          <span className="font-medium text-foreground">{title}</span> expires 7
+          days after it was published. Keeping it saves it to your account for
+          good.
         </p>
       </div>
       <FormError>{result && !result.ok ? result.message : null}</FormError>

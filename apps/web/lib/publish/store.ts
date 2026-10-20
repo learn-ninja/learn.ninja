@@ -47,6 +47,8 @@ export interface LessonStore {
   update(record: StoredLesson): Promise<void>
   /** Gives a lesson to `ownerId`: it stops expiring and its claim token stops working. */
   claim(id: string, ownerId: string): Promise<void>
+  /** Replaces an anonymous lesson's claim token with the one that hashes to `hash`; the old one stops working. */
+  setClaimToken(id: string, hash: string): Promise<void>
   /** Deletes every lesson that has expired, and says how many. */
   deleteExpired(): Promise<number>
 }
@@ -116,6 +118,13 @@ export class PostgresLessonStore implements LessonStore {
         updatedAt: this.date(),
       })
       .where(eq(lesson.id, id))
+  }
+
+  async setClaimToken(id: string, hash: string) {
+    await this.db
+      .update(lesson)
+      .set({ claimTokenHash: hash, updatedAt: this.date() })
+      .where(and(eq(lesson.id, id), isNull(lesson.ownerId)))
   }
 
   async deleteExpired() {

@@ -18,6 +18,15 @@ export async function findByHandle(db: Db, handle: string) {
   return row ?? null
 }
 
+/** The handle of the user with `id`, or null: no such user, or none picked yet. */
+export async function handleOf(db: Db, id: string): Promise<string | null> {
+  const [row] = await db
+    .select({ handle: user.handle })
+    .from(user)
+    .where(eq(user.id, id))
+  return row?.handle ?? null
+}
+
 /**
  * A handle close to `wanted` that nobody has: the normalized name itself, or with a number after
  * it ("colin", "colin-2", "colin-3"...). Used for GitHub logins at first sign-in.
@@ -26,7 +35,8 @@ export async function freeHandle(db: Db, wanted: string): Promise<string> {
   const base = (normalizeHandle(wanted) || "ninja").padEnd(3, "0")
   const stem = RESERVED.has(base) ? `${base}-1` : base
   for (let n = 1; n < 1000; n++) {
-    const candidate = n === 1 ? stem : `${stem.slice(0, 30 - 1 - String(n).length)}-${n}`
+    const candidate =
+      n === 1 ? stem : `${stem.slice(0, 30 - 1 - String(n).length)}-${n}`
     if (!(await findByHandle(db, candidate))) return candidate
   }
   throw new Error(`No free handle near ${wanted}`)

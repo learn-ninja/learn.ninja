@@ -3,7 +3,7 @@ title: Publish API
 description: The HTTP API behind publishing. The CLI uses it; you can too.
 ---
 
-Base URL: `https://learn.ninja`. Requests and responses are JSON. No account is needed: publishing returns an edit token for that one lesson, and anonymous lessons last 7 days. Signed in, with a session cookie or an API key, lessons are saved to your account and never expire.
+Base URL: `https://learn.ninja`. Requests and responses are JSON. No account is needed: publishing returns an edit token for that one lesson, and anonymous lessons last 7 days. Signed in, with a session cookie or an API key, lessons are saved to your account, never expire, and are listed in Explore under your handle.
 
 ## Publish a lesson
 
@@ -24,11 +24,13 @@ The body is the lesson file. A valid lesson returns `201`:
   "claimUrl": "https://learn.ninja/keep/…",
   "owned": false,
   "expiresAt": "2026-10-26T09:00:00.000Z",
+  "owner": null,
+  "visibility": "unlisted",
   "spec": "0.5"
 }
 ```
 
-Keep `editToken` private: it's the only way to update the lesson, and it's shown once. `claimToken` is shown once too; it moves the lesson into an account later (see [Keep a lesson](#keep-a-lesson)). With an `x-api-key` header or a session cookie, the lesson belongs to that account from the start: `owned` is `true`, `expiresAt` is `null`, and there's no claim token.
+Keep `editToken` private: it's the way to update the lesson, and it's shown once. `claimToken` is shown once too; it moves the lesson into an account later (see [Keep a lesson](#keep-a-lesson)), and so does the edit token. With an `x-api-key` header or a session cookie, the lesson belongs to that account from the start: `owned` is `true`, `expiresAt` is `null`, `owner` is `{ "handle": "…" }` (the handle is `null` until the account picks one), `visibility` says whether Explore lists it, and there's no claim token. The same four fields come back from updating and keeping, so a client can say "saved to @handle and listed in Explore" in one place.
 
 ## Update a lesson
 
@@ -48,9 +50,9 @@ Content-Type: application/json
 x-api-key: <key>
 ```
 
-The body is `{ "claimToken": "…" }` from publishing. Needs a signed-in caller: an API key or a session cookie. The lesson then belongs to that account, stops expiring, and the claim token stops working. Returns `200` with `id`, `url`, `title`, `owned: true`, and `expiresAt: null`; `409 already_claimed` if another account has it; `404` once it has expired.
+The body is `{ "claimToken": "…" }` or `{ "editToken": "…" }` from publishing (both together is fine; either one proves the lesson is yours). Needs a signed-in caller: an API key or a session cookie. The lesson then belongs to that account, stops expiring, and the claim token stops working; the edit token keeps working. Returns `200` with `id`, `url`, `title`, `owned: true`, `expiresAt: null`, `owner`, and `visibility`; `401 unauthorized` if neither token matches; `409 already_claimed` if another account has it; `404` once it has expired.
 
-`claimUrl` from publishing (`/keep/{claimToken}`) does the same thing in the browser: it signs the visitor in, then keeps that one lesson.
+`claimUrl` from publishing (`/keep/{claimToken}`) does the same thing in the browser: it signs the visitor in, then keeps that one lesson. The MCP server's `keep_lesson` tool makes a fresh `claimUrl` from the edit token, for a lesson whose publish-time link is gone; the previous link stops working.
 
 ## List a lesson in Explore
 
@@ -60,7 +62,7 @@ Content-Type: application/json
 x-api-key: <key>
 ```
 
-The body is `{ "visibility": "public" }` to list a lesson in [Explore](/explore) and on your profile, or `{ "visibility": "unlisted" }` to make it link-only again. Owner only (`403 not_owner` otherwise). Every lesson starts unlisted, kept ones included, so nothing is listed that you didn't choose to show. Returns `200` with `id`, `url`, and `visibility`. The same switch is on the [settings page](https://learn.ninja/settings).
+The body is `{ "visibility": "public" }` to list a lesson in [Explore](/explore) and on your profile, or `{ "visibility": "unlisted" }` to make it link-only again. Owner only (`403 not_owner` otherwise). A lesson is listed once it's saved to an account (published signed in, or kept); anonymous lessons are always link-only. Returns `200` with `id`, `url`, and `visibility`. The same switch is on the [settings page](https://learn.ninja/settings).
 
 ## Like a lesson
 
