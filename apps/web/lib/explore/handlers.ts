@@ -198,7 +198,10 @@ export async function reportLesson(
     .select({ id: report.id })
     .from(report)
     .where(
-      and(eq(report.lessonId, found.id), eq(report.reporterIpHash, reporterIpHash))
+      and(
+        eq(report.lessonId, found.id),
+        eq(report.reporterIpHash, reporterIpHash)
+      )
     )
     .limit(1)
   const id = newToken().slice(0, 16)

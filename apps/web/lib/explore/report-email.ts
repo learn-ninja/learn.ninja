@@ -20,7 +20,9 @@ export function reportSenderFromEnv(env = process.env): ReportSender {
   const to = env.REPORT_EMAIL
   if (!key || !to) {
     return async (report) => {
-      console.log(`[${SITE.name}] Report on ${report.url}:\n${reportText(report)}`)
+      console.log(
+        `[${SITE.name}] Report on ${report.url}:\n${reportText(report)}`
+      )
     }
   }
   const from = env.EMAIL_FROM ?? DEFAULT_FROM

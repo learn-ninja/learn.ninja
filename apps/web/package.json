@@ -13,6 +13,7 @@
     "visuals:css": "node scripts/build-visuals-css.mjs",
     "favicon": "node scripts/build-favicon.mjs",
     "share": "tsx --tsconfig scripts/tsconfig.json scripts/build-share-images.tsx",
+    "tags": "tsx --tsconfig scripts/tsconfig.json scripts/tag-report.ts",
     "predev": "npm run visuals:css",
     "prebuild": "npm run visuals:css && npm run migrate -w @workspace/db",
     "test": "vitest run",

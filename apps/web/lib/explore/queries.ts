@@ -1,6 +1,17 @@
-import { and, desc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm"
+import {
+  and,
+  desc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  or,
+  sql,
+} from "drizzle-orm"
 
-import { lesson, like, user, type Db } from "@workspace/db"
+import { lesson, lessonTag, like, user, type Db } from "@workspace/db"
 import {
   isSubject,
   subjectForTopic,
@@ -111,7 +122,11 @@ function toSummary(row: Row): LessonSummary {
     language: row.language,
     author:
       row.authorId && row.authorName !== null
-        ? { handle: row.authorHandle, name: row.authorName, image: row.authorImage }
+        ? {
+            handle: row.authorHandle,
+            name: row.authorName,
+            image: row.authorImage,
+          }
         : null,
     plays: row.plays,
     likes: row.likes,
@@ -125,7 +140,7 @@ const live = (now: number) =>
   or(isNull(lesson.expiresAt), gt(lesson.expiresAt, new Date(now)))
 
 /** Owned, public, and not hidden: what Explore and profiles show. Anonymous lessons never qualify. */
-const listed = (now: number) =>
+export const listed = (now: number) =>
   and(
     isNotNull(lesson.ownerId),
     eq(lesson.visibility, "public"),
@@ -149,18 +164,41 @@ function orderFor(sort: ExploreSort, now: number) {
   }
 }
 
-/** The Explore list for one tab. */
+/** What narrows an Explore list: one subject, one tag within it, or both. */
+export interface ExploreFilter {
+  subject?: Subject
+  tag?: string
+  now?: number
+}
+
+/** The Explore list for one tab, optionally narrowed to a subject and a tag. */
 export async function listLessons(
   db: Db,
   sort: ExploreSort,
   limit: number,
-  now = Date.now()
+  { subject, tag, now = Date.now() }: ExploreFilter = {}
 ): Promise<LessonSummary[]> {
   const rows = await db
     .select(columns)
     .from(lesson)
     .leftJoin(user, eq(user.id, lesson.ownerId))
-    .where(listed(now))
+    .where(
+      and(
+        listed(now),
+        // Served by lesson_subject_idx, which is on this same expression.
+        subject ? eq(field("subject"), subject) : undefined,
+        tag
+          ? exists(
+              db
+                .select({ one: sql`1` })
+                .from(lessonTag)
+                .where(
+                  and(eq(lessonTag.lessonId, lesson.id), eq(lessonTag.tag, tag))
+                )
+            )
+          : undefined
+      )
+    )
     .orderBy(...orderFor(sort, now))
     .limit(limit)
   return rows.map(toSummary)
@@ -250,7 +288,11 @@ export async function lessonsOwnedBy(
 export async function authorOf(
   db: Db,
   ownerId: string
-): Promise<{ handle: string | null; name: string; image: string | null } | null> {
+): Promise<{
+  handle: string | null
+  name: string
+  image: string | null
+} | null> {
   const [row] = await db
     .select({ handle: user.handle, name: user.name, image: user.image })
     .from(user)

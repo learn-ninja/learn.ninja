@@ -60,7 +60,9 @@ export const exploreApi: ExploreApi = {
       method: "PATCH",
       body: JSON.stringify({ visibility }),
     })
-    return reply.ok ? { visibility: reply.visibility } : { error: reply.message }
+    return reply.ok
+      ? { visibility: reply.visibility }
+      : { error: reply.message }
   },
 }
 

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm"
 import {
   boolean,
   customType,
@@ -205,8 +206,34 @@ export const lesson = pgTable(
   (t) => [
     index("lesson_expires_at_idx").on(t.expiresAt),
     index("lesson_listing_idx").on(t.visibility, t.hidden, t.createdAt),
+    // Explore filtered by subject: the subject is read from the JSON (spec 0.6), so the index is on
+    // that expression, joined with the listing columns. No column, so a publish stays one row write.
+    index("lesson_subject_idx").on(
+      sql`(${t.lesson}->>'subject')`,
+      t.visibility,
+      t.hidden,
+      t.createdAt
+    ),
     index("lesson_claim_token_hash_idx").on(t.claimTokenHash),
     index("lesson_owner_id_idx").on(t.ownerId),
+  ]
+)
+
+/**
+ * A lesson's tags, one row each, for counting and filtering. Rebuilt from the lesson JSON on every
+ * publish and update (the JSON stays the truth; this is an index), and gone with the lesson.
+ */
+export const lessonTag = pgTable(
+  "lesson_tag",
+  {
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lesson.id, { onDelete: "cascade" }),
+    tag: text("tag").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.lessonId, t.tag] }),
+    index("lesson_tag_tag_idx").on(t.tag),
   ]
 )
 

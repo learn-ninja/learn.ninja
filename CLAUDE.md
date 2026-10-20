@@ -30,6 +30,7 @@ Planning doc (decisions, lesson spec, tech stack, test lessons): https://claude.
 - `npm run skill:build -w @workspace/cli`: rebuild `skills/learn` (bundled CLI, schema, examples) after changing the spec, CLI, or examples; a test fails if it's stale
 - `npm run schema -w @workspace/spec`: re-export `packages/spec/schema/lesson.schema.json` after changing the spec (a test fails if it's stale)
 - `npm run favicon -w web`: rebuild `apps/web/app/favicon.ico` from `app/icon.svg` after changing the icon
+- `npm run tags -w web`: the weekly tag report (subjects by lesson count, top tags per subject, tags used once) from `DATABASE_URL` or `apps/web/.env.local`, else the local PGlite; read it to add synonyms to `packages/spec/src/tags.ts`
 - `npm run share -w web`: re-render the share images in `brand/` (GitHub social preview, X banner, square post) from the link preview card in `apps/web/lib/og.tsx`
 - Add shadcn components from `apps/web`: `npx shadcn@latest add <name>` (they land in `packages/ui`)
 

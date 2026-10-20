@@ -3,7 +3,13 @@ import { join } from "node:path"
 import { Redis } from "@upstash/redis"
 import { and, eq, gt, isNotNull, isNull, lte, or } from "drizzle-orm"
 
-import { connectNeon, connectPglite, lesson, type Db } from "@workspace/db"
+import {
+  connectNeon,
+  connectPglite,
+  lesson,
+  lessonTag,
+  type Db,
+} from "@workspace/db"
 import type { Prepared } from "@workspace/player"
 import type { Lesson } from "@workspace/spec"
 
@@ -80,6 +86,7 @@ export class PostgresLessonStore implements LessonStore {
       updatedAt: new Date(record.updatedAt ?? record.createdAt),
       expiresAt: record.expiresAt === null ? null : new Date(record.expiresAt),
     })
+    await this.writeTags(record)
   }
 
   async get(id: string) {
@@ -109,6 +116,17 @@ export class PostgresLessonStore implements LessonStore {
         updatedAt: new Date(record.updatedAt ?? this.now()),
       })
       .where(eq(lesson.id, record.id))
+    await this.db.delete(lessonTag).where(eq(lessonTag.lessonId, record.id))
+    await this.writeTags(record)
+  }
+
+  /** The lesson's tags as rows of lesson_tag, for counting and filtering. The JSON stays the truth; this is its index. */
+  private async writeTags(record: StoredLesson) {
+    const tags = record.lesson.tags ?? []
+    if (!tags.length) return
+    await this.db
+      .insert(lessonTag)
+      .values(tags.map((tag) => ({ lessonId: record.id, tag })))
   }
 
   async claim(id: string, ownerId: string) {

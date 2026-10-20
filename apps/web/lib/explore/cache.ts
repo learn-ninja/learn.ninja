@@ -1,6 +1,10 @@
 import { revalidateTag, unstable_cache } from "next/cache"
 
-import { getDb, redisFromEnv, StorageNotConfiguredError } from "@/lib/publish/store"
+import {
+  getDb,
+  redisFromEnv,
+  StorageNotConfiguredError,
+} from "@/lib/publish/store"
 
 import { flushPendingPlays } from "./handlers"
 import {
@@ -8,9 +12,12 @@ import {
   WriteThroughPlayCounter,
   type PlayCounter,
 } from "./plays"
+import type { Subject } from "@workspace/spec"
+
 import {
   listLessons,
   profileByHandle,
+  type ExploreFilter,
   type ExploreSort,
   type LessonSummary,
   type Profile,
@@ -22,6 +29,8 @@ import {
 // (see app/(feed)/explore/page.tsx).
 
 export const EXPLORE_TAG = "explore"
+/** The cache tag of one subject's lists, so a publish can refresh just them. revalidateExplore clears every list anyway. */
+export const subjectTag = (subject: Subject) => `${EXPLORE_TAG}:${subject}`
 const REVALIDATE_SECONDS = 60
 /** How many cards one Explore tab shows. */
 export const EXPLORE_PAGE_SIZE = 30
@@ -44,19 +53,23 @@ export async function getPlayCounter(): Promise<PlayCounter> {
   return shared.learnPlays
 }
 
-/** The Explore list for one tab. Pending plays are added to the table first, so the counts are current. */
+/** The Explore list for one tab, narrowed to a subject and tag when given. Pending plays are added to the table first, so the counts are current. */
 export function cachedLessons(
   sort: ExploreSort,
-  limit = EXPLORE_PAGE_SIZE
+  limit = EXPLORE_PAGE_SIZE,
+  { subject, tag }: Pick<ExploreFilter, "subject" | "tag"> = {}
 ): Promise<LessonSummary[]> {
   return unstable_cache(
     async () => {
       const db = await getDb()
       await flushPendingPlays({ db, plays: await getPlayCounter() })
-      return listLessons(db, sort, limit)
+      return listLessons(db, sort, limit, { subject, tag })
     },
-    ["explore", sort, String(limit)],
-    { tags: [EXPLORE_TAG], revalidate: REVALIDATE_SECONDS }
+    ["explore", sort, subject ?? "all", tag ?? "", String(limit)],
+    {
+      tags: [EXPLORE_TAG, ...(subject ? [subjectTag(subject)] : [])],
+      revalidate: REVALIDATE_SECONDS,
+    }
   )()
 }
 
