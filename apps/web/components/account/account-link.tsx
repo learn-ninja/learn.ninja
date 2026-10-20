@@ -1,8 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
-
 import { cn } from "@workspace/ui/lib/utils"
 
 import { ButtonLink } from "@/components/site/button-link"
@@ -13,8 +11,6 @@ import {
   readAccount,
   rememberAccount,
 } from "@/lib/auth/browser"
-
-import { UserAvatar } from "./user-avatar"
 
 /**
  * What the header knows about the visitor: the signed-in user's handle and picture, null when
@@ -43,7 +39,11 @@ export function useAccount(known?: AccountInfo | null): Account {
   return account
 }
 
-/** The header's account control: "Sign in", or the profile picture once signed in, linking to settings. */
+/**
+ * The header's "Sign in" link. Until the cookie is read (after hydration) it holds its space
+ * invisibly, so the header doesn't shift for the many visitors who aren't signed in. A signed-in
+ * user gets the AccountMenu instead.
+ */
 export function AccountLink({
   account,
   className,
@@ -51,33 +51,15 @@ export function AccountLink({
   account: Account
   className?: string
 }) {
-  // Until the cookie is read (after hydration), an invisible "Sign in" holds the space so the
-  // header doesn't shift for the many visitors who aren't signed in.
-  if (account === null || account === undefined) {
-    return (
-      <ButtonLink
-        href="/sign-in"
-        variant="ghost"
-        size="sm"
-        className={cn(className, account === undefined && "invisible")}
-        aria-hidden={account === undefined || undefined}
-      >
-        Sign in
-      </ButtonLink>
-    )
-  }
-  const name = account.handle ? `@${account.handle}` : "Account"
   return (
-    <Link
-      href="/settings"
-      aria-label={`${name}: settings`}
-      title={name}
-      className={cn(
-        "ms-1 flex size-8 shrink-0 items-center justify-center rounded-full outline-none hover:opacity-90 focus-visible:ring-3 focus-visible:ring-ring/50",
-        className
-      )}
+    <ButtonLink
+      href="/sign-in"
+      variant="ghost"
+      size="sm"
+      className={cn(className, account === undefined && "invisible")}
+      aria-hidden={account === undefined || undefined}
     >
-      <UserAvatar image={account.image} handle={account.handle} size="header" />
-    </Link>
+      Sign in
+    </ButtonLink>
   )
 }

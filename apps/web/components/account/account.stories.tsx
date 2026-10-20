@@ -4,6 +4,7 @@ import type { KeySummary, McpConnection } from "@/lib/auth/account"
 import type { AccountApi } from "@/lib/auth/browser"
 import { SiteHeader } from "@/components/site/site-header"
 
+import { AccountMenu } from "./account-menu"
 import { ApiKeys } from "./api-keys"
 import { AvatarForm } from "./avatar-form"
 import { ConnectChat } from "./connect-chat"
@@ -20,7 +21,9 @@ const wait = (ms = 400) => new Promise((r) => setTimeout(r, ms))
 const fakeApi = (over: Partial<AccountApi> = {}): AccountApi => ({
   async sendCode(email) {
     await wait()
-    return email.includes("@") ? {} : { error: "That doesn't look like an email." }
+    return email.includes("@")
+      ? {}
+      : { error: "That doesn't look like an email." }
   },
   async verifyCode(_email, code) {
     await wait()
@@ -132,7 +135,12 @@ const navigate = (to: string) => alert(`→ ${to}`)
 
 export const SignIn: Story = {
   render: () => (
-    <SignInForm github callback="/settings" api={fakeApi()} navigate={navigate} />
+    <SignInForm
+      github
+      callback="/settings"
+      api={fakeApi()}
+      navigate={navigate}
+    />
   ),
 }
 
@@ -233,7 +241,10 @@ export const SignOut: Story = {
 }
 
 /** A stand-in for the server action: keeps unless the token is "spent". */
-const keep = async (_: KeepResult | null, data: FormData): Promise<KeepResult> => {
+const keep = async (
+  _: KeepResult | null,
+  data: FormData
+): Promise<KeepResult> => {
   await wait()
   return data.get("token") === "spent"
     ? { ok: false, message: "This lesson was already saved to an account." }
@@ -263,6 +274,24 @@ export const HeaderLinks: Story = {
       <SiteHeader account={{ handle: null, image: null }} />
       <SiteHeader account={{ handle: "ada-lovelace", image: null }} />
       <SiteHeader account={{ handle: "ada-lovelace", image: PICTURE }} />
+    </div>
+  ),
+}
+
+export const HeaderMenu: Story = {
+  name: "Header menu",
+  render: () => (
+    // The signed-in header's menu, open: hover the picture to open it on the other headers.
+    <div className="flex h-72 flex-col gap-2 [&_header]:static">
+      <SiteHeader account={{ handle: "ada-lovelace", image: PICTURE }} />
+      <div className="flex justify-end px-8">
+        <AccountMenu
+          account={{ handle: "ada-lovelace", image: PICTURE }}
+          api={fakeApi()}
+          navigate={navigate}
+          defaultOpen
+        />
+      </div>
     </div>
   ),
 }

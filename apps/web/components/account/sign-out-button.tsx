@@ -6,9 +6,19 @@ import { Button } from "@workspace/ui/components/button"
 
 import { accountApi, forgetAccount, type AccountApi } from "@/lib/auth/browser"
 
+/** Ends the session, forgets the header's marker, and leaves for the home page. */
+export async function signOutAndLeave(
+  api: AccountApi = accountApi,
+  navigate: (to: string) => void = (to) => window.location.assign(to)
+) {
+  await api.signOut()
+  forgetAccount()
+  navigate("/")
+}
+
 export function SignOutButton({
   api = accountApi,
-  navigate = (to) => window.location.assign(to),
+  navigate,
 }: {
   api?: AccountApi
   navigate?: (to: string) => void
@@ -20,9 +30,7 @@ export function SignOutButton({
       isDisabled={busy}
       onPress={async () => {
         setBusy(true)
-        await api.signOut()
-        forgetAccount()
-        navigate("/")
+        await signOutAndLeave(api, navigate)
       }}
     >
       Sign out
