@@ -257,6 +257,21 @@ export const like = pgTable(
   ]
 )
 
+/** A lesson the user played to its wrap-up, first time only: Explore marks it with a check. */
+export const completion = pgTable(
+  "completion",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lesson.id, { onDelete: "cascade" }),
+    completedAt: time("completed_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.lessonId] })]
+)
+
 /** A report on a lesson, emailed to the maker when it's made. The reporter is kept only as a hash of their IP. */
 export const report = pgTable(
   "report",

@@ -1,5 +1,5 @@
 {
-  "id": "f34b757c-a8c5-46cc-b9b5-f8770ca93e88",
+  "id": "c9a061f9-3261-4b3c-9a72-81fb6f44f220",
   "prevId": "8cfa28d4-7962-4494-972e-d0624d4c642d",
   "version": "7",
   "dialect": "postgresql",
@@ -405,6 +405,73 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.completion": {
+      "name": "completion",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lesson_id": {
+          "name": "lesson_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "completed_at": {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "completion_user_id_user_id_fk": {
+          "name": "completion_user_id_user_id_fk",
+          "tableFrom": "completion",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "completion_lesson_id_lesson_id_fk": {
+          "name": "completion_lesson_id_lesson_id_fk",
+          "tableFrom": "completion",
+          "tableTo": "lesson",
+          "columnsFrom": [
+            "lesson_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "completion_user_id_lesson_id_pk": {
+          "name": "completion_user_id_lesson_id_pk",
+          "columns": [
+            "user_id",
+            "lesson_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.lesson": {
       "name": "lesson",
       "schema": "",
@@ -556,39 +623,6 @@
           "method": "btree",
           "with": {}
         },
-        "lesson_subject_idx": {
-          "name": "lesson_subject_idx",
-          "columns": [
-            {
-              "expression": "(\"lesson\"->>'subject')",
-              "asc": true,
-              "isExpression": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "visibility",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "hidden",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "lesson_claim_token_hash_idx": {
           "name": "lesson_claim_token_hash_idx",
           "columns": [
@@ -697,69 +731,6 @@
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.lesson_tag": {
-      "name": "lesson_tag",
-      "schema": "",
-      "columns": {
-        "lesson_id": {
-          "name": "lesson_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tag": {
-          "name": "tag",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "lesson_tag_tag_idx": {
-          "name": "lesson_tag_tag_idx",
-          "columns": [
-            {
-              "expression": "tag",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "lesson_tag_lesson_id_lesson_id_fk": {
-          "name": "lesson_tag_lesson_id_lesson_id_fk",
-          "tableFrom": "lesson_tag",
-          "tableTo": "lesson",
-          "columnsFrom": [
-            "lesson_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "lesson_tag_lesson_id_tag_pk": {
-          "name": "lesson_tag_lesson_id_tag_pk",
-          "columns": [
-            "lesson_id",
-            "tag"
-          ]
-        }
-      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},

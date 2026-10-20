@@ -15,16 +15,19 @@ export function RichText({
   text,
   lang,
   className,
+  inline = false,
 }: {
   text: string
   lang?: string
   className?: string
+  /** The text is a piece of a sentence (a streamed word), so code keeps its chip even when it's all there is. */
+  inline?: boolean
 }) {
   const { prepared } = usePlayer()
   const nodes: React.ReactNode[] = []
   // Text that is only code (an option like `fixed stuff`) already sits in its own card or chip,
   // so it skips the inline chip: no box inside a box, and wrapped lines stay aligned.
-  const solo = /^`[^`]+`$/.test(text.trim())
+  const solo = !inline && /^`[^`]+`$/.test(text.trim())
   let last = 0
   let key = 0
   for (const m of text.matchAll(TOKEN)) {

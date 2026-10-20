@@ -643,6 +643,7 @@ export function NinjaStage({
   celebrate,
   onLanded,
   level = "default",
+  vanishing = false,
 }: {
   /** The lesson card: he's positioned inside it and follows the pointer over it. */
   area: React.RefObject<HTMLDivElement | null>
@@ -656,6 +657,8 @@ export function NinjaStage({
   onLanded?: () => void
   /** Which character he is. The player leaves him out entirely when the setting is off. */
   level?: NinjaEnergy
+  /** Set while the intro vanishes: he goes up in smoke too, and turns up on the next screen instead of leaping. */
+  vanishing?: boolean
 }) {
   const float = React.useRef<HTMLDivElement>(null)
   const svg = React.useRef<SVGSVGElement>(null)
@@ -672,6 +675,12 @@ export function NinjaStage({
   const leaping = React.useRef<Promise<void> | null>(null)
   // The kind of slot he's in ("" for a plain slot), or null in the corner.
   const slotKind = React.useRef<string | null>(null)
+  // After vanishing he reappears where he's going, out of a wisp of smoke.
+  const vanished = React.useRef(false)
+  const [appearing, setAppearing] = React.useState(false)
+  React.useEffect(() => {
+    if (vanishing) vanished.current = true
+  }, [vanishing])
 
   // The card is the stage's parent. (The `area` ref isn't attached yet when this first runs.)
   const measure = React.useCallback(() => {
@@ -719,6 +728,11 @@ export function NinjaStage({
       return
     }
     if (reducedMotion()) return
+    if (vanished.current) {
+      vanished.current = false
+      setAppearing(true)
+      return
+    }
     // Corner to corner: the placement doesn't change, so there's no re-render to leap from.
     if (!next && inCorner) return
     // Reactions and the send-off wait on the leap from now, or they'd find nothing to wait for and
@@ -825,8 +839,13 @@ export function NinjaStage({
       className={cn(
         "pointer-events-none absolute z-10",
         !placed && "invisible",
-        !slot && "start-4 bottom-4 size-10 sm:start-6 sm:bottom-6"
+        !slot && "start-4 bottom-4 size-10 sm:start-6 sm:bottom-6",
+        vanishing && "ninja-vanish",
+        appearing && "ninja-appear"
       )}
+      onAnimationEnd={(e) => {
+        if (e.target === e.currentTarget) setAppearing(false)
+      }}
       style={
         {
           "--ninja-energy": NINJA_ENERGY[level],
@@ -977,28 +996,141 @@ async function leap(
   life.hold(false)
 }
 
-// ---------- the aura ----------
+// ---------- the smoke ----------
 
 /** The hue of a lesson's light: one per subject (subjects.ts in the spec), so lessons on the same subject share it and the light says something. */
 export function hueFor(subject: Subject): number {
   return SUBJECT_INFO[subject].hue
 }
 
+// One smoke texture, drawn once by the browser as an image: noise pushed through a soft blob, with
+// the noise's own streaks as its density. The color is baked in (a background image moves on the GPU
+// in Safari; a mask repaints every frame), so each theme gets its own copy.
+function smokeSprite(seed: number, color: string) {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='f' filterUnits='userSpaceOnUse' x='0' y='0' width='200' height='200'><feTurbulence type='fractalNoise' baseFrequency='0.022' numOctaves='5' seed='${seed}' result='n'/><feDisplacementMap in='SourceGraphic' in2='n' scale='70' xChannelSelector='R' yChannelSelector='G' result='d'/><feColorMatrix in='n' type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 2.2 0 0 0 -0.6' result='t'/><feComposite in='t' in2='d' operator='in' result='m'/><feFlood flood-color='${color}'/><feComposite in2='m' operator='in'/><feGaussianBlur stdDeviation='1.2'/></filter><radialGradient id='g'><stop offset='0' stop-color='#fff'/><stop offset='0.5' stop-color='#fff' stop-opacity='0.6'/><stop offset='1' stop-color='#fff' stop-opacity='0'/></radialGradient><circle cx='100' cy='100' r='72' fill='url(#g)' filter='url(#f)'/></svg>`
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+}
+
+// The puffs: where each sits (% of the smoke box), its size (% of the box's width), its starting
+// turn, how long one turn takes (s), which way it turns, and how strong it is. Few and large: every
+// layer costs Safari memory and drawing time.
+const PUFFS: {
+  x: number
+  y: number
+  size: number
+  turn: number
+  secs: number
+  back?: boolean
+  alpha: number
+}[] = [
+  { x: 50, y: 52, size: 60, turn: 0, secs: 70, alpha: 0.85 },
+  { x: 36, y: 46, size: 48, turn: 120, secs: 54, back: true, alpha: 0.75 },
+  { x: 64, y: 44, size: 50, turn: 210, secs: 62, alpha: 0.75 },
+  { x: 30, y: 64, size: 42, turn: 40, secs: 48, alpha: 0.6 },
+  { x: 70, y: 63, size: 44, turn: 300, secs: 58, back: true, alpha: 0.6 },
+  { x: 50, y: 33, size: 42, turn: 80, secs: 44, back: true, alpha: 0.55 },
+  { x: 52, y: 70, size: 46, turn: 160, secs: 66, alpha: 0.55 },
+  { x: 20, y: 48, size: 34, turn: 250, secs: 40, alpha: 0.45 },
+  { x: 80, y: 46, size: 34, turn: 20, secs: 46, back: true, alpha: 0.45 },
+]
+
 /**
- * The soft light behind the intro: one glow below the title and a smaller one a few hues away that
- * drifts. `shift` moves both up or down (px) to follow the content, e.g. when the ninja's slot folds away.
+ * The smoke behind the intro: overlapping puffs of one smoke texture, faintly tinted with the
+ * lesson's hue, each turning slowly at its own pace, so together they curl and billow. `shift` moves
+ * it up or down (px) to follow the content, e.g. when the ninja's slot folds away. `vanishing` flares
+ * it and blows the puffs outward as the intro disappears. No scripts, nothing loaded.
  */
-export function Aura({ hue, shift = 0 }: { hue: number; shift?: number }) {
+export function Aura({
+  hue,
+  shift = 0,
+  vanishing = false,
+}: {
+  hue: number
+  shift?: number
+  vanishing?: boolean
+}) {
+  const sprites = React.useMemo(
+    () => ({
+      "--sprite-a": smokeSprite(3, `hsl(${hue} 8% 55%)`),
+      "--sprite-b": smokeSprite(11, `hsl(${hue} 8% 55%)`),
+      "--sprite-a-dark": smokeSprite(3, `hsl(${hue} 10% 78%)`),
+      "--sprite-b-dark": smokeSprite(11, `hsl(${hue} 10% 78%)`),
+    }),
+    [hue]
+  )
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[inherit]"
       style={
-        { "--aura-h": hue, "--aura-shift": `${shift}px` } as React.CSSProperties
+        {
+          ...sprites,
+          "--aura-shift": `${shift}px`,
+        } as React.CSSProperties
       }
     >
-      <div className="aura" />
-      <div className="aura aura-second" />
+      <div className="smoke" data-vanishing={vanishing || undefined}>
+        {PUFFS.map((p, i) => (
+          <div
+            key={i}
+            className="smoke-puff"
+            style={
+              {
+                "--x": `${p.x}%`,
+                "--y": `${p.y}%`,
+                "--size": `${p.size}%`,
+                // Out from the middle, so the burst spreads.
+                "--bx": `${(p.x - 50) * 4}px`,
+                "--by": `${(p.y - 50) * 4 - 40}px`,
+                opacity: p.alpha,
+              } as React.CSSProperties
+            }
+          >
+            <div
+              className={cn("smoke-spin", i % 2 ? "smoke-b" : "smoke-a")}
+              style={
+                {
+                  "--turn": `${p.turn}deg`,
+                  // The starting turn as a head start, so the keyframes stay plain (Safari runs
+                  // those on the GPU; ones with variables it may not).
+                  animationDelay: `${-(p.turn / 360) * p.secs}s`,
+                  animationDuration: `${p.secs}s`,
+                  animationDirection: p.back ? "reverse" : "normal",
+                } as React.CSSProperties
+              }
+            />
+          </div>
+        ))}
+      </div>
     </div>
   )
+}
+
+/**
+ * Text that can vanish into smoke word by word (the `vanish` class on an ancestor starts it). Words,
+ * not letters, so joined scripts like Arabic keep their shapes. `step` is the delay between words (ms).
+ */
+export function SmokeWords({
+  text,
+  step = 40,
+}: {
+  text: string
+  step?: number
+}) {
+  const words = text.split(/\s+/).filter(Boolean)
+  return words.map((word, i) => (
+    <React.Fragment key={i}>
+      {i > 0 ? " " : null}
+      <span
+        className="vanish-word"
+        style={
+          {
+            "--delay": `${Math.min(i * step, 360)}ms`,
+          } as React.CSSProperties
+        }
+      >
+        {word}
+      </span>
+    </React.Fragment>
+  ))
 }

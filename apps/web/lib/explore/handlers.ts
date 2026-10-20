@@ -1,6 +1,6 @@
 import { and, eq, gt, isNull, or, sql } from "drizzle-orm"
 
-import { lesson, like, report, type Db } from "@workspace/db"
+import { completion, lesson, like, report, type Db } from "@workspace/db"
 
 import type { Reply } from "@/lib/publish/handlers"
 import { hashToken, lessonPath, newToken } from "@/lib/publish/ids"
@@ -13,7 +13,7 @@ import type { ReportSender } from "./report-email"
 
 export { REASON_MAX }
 
-// The API behind likes, visibility, reports, and plays, independent of Next.js so it can be tested
+// The API behind likes, completions, visibility, reports, and plays, independent of Next.js so it can be tested
 // directly. Routes under app/api/lessons/[id]/ call these.
 
 export interface ExploreDeps {
@@ -107,6 +107,34 @@ export async function unlikeLesson(
     deps.onChange?.()
   }
   return { status: 200, body: { ok: true, liked: false, likes } }
+}
+
+/**
+ * POST /api/lessons/{id}/complete: the signed-in learner reached the wrap-up. Only the first time
+ * is kept, so the check on Explore says when they first finished it.
+ */
+export async function completeLesson(
+  req: { id: string; userId: string },
+  deps: ExploreDeps
+): Promise<Reply> {
+  const found = await liveLesson(deps, req.id)
+  if (!found) return NOT_FOUND
+  await deps.db
+    .insert(completion)
+    .values({
+      userId: req.userId,
+      lessonId: found.id,
+      completedAt: new Date(deps.now?.() ?? Date.now()),
+    })
+    .onConflictDoNothing()
+  const [row] = await deps.db
+    .select({ completedAt: completion.completedAt })
+    .from(completion)
+    .where(and(eq(completion.userId, req.userId), eq(completion.lessonId, found.id)))
+  return {
+    status: 200,
+    body: { ok: true, completedAt: row?.completedAt.toISOString() ?? null },
+  }
 }
 
 /**

@@ -143,7 +143,11 @@ export default meta
 type Story = StoryObj
 
 const signedOut = { signedIn: false, liked: new Set<string>() }
-const signedIn = { signedIn: true, liked: new Set(["k3x9a2mq"]) }
+const signedIn = {
+  signedIn: true,
+  liked: new Set(["k3x9a2mq"]),
+  completed: new Map([["k3x9a2mq", Date.UTC(2026, 9, 20, 12, 12)]]),
+}
 
 export const Row: Story = {
   render: () => (
@@ -163,7 +167,7 @@ export const RowStates: Story = {
       <Labeled label="Signed out: pressing the heart asks to sign in">
         <LessonRow lesson={LESSONS[0]!} viewer={signedOut} />
       </Labeled>
-      <Labeled label="Signed in, liked">
+      <Labeled label="Signed in, liked and completed">
         <LessonRow lesson={LESSONS[0]!} viewer={signedIn} />
       </Labeled>
       <Labeled label="Signed in, not liked">

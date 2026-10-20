@@ -32,8 +32,10 @@ export default function PrivacyPage() {
           not tied to you.
         </li>
         <li>
-          <strong>Likes and reports.</strong> Liking a lesson stores that your
-          account liked it. Reporting a lesson stores the reason and a hash of
+          <strong>Likes, completions, and reports.</strong> Liking a lesson
+          stores that your account liked it. Finishing a lesson while signed
+          in stores when you first finished it, so Explore can mark it for you.
+          Reporting a lesson stores the reason and a hash of
           your IP address, never the address itself, and emails the report to
           us.
         </li>

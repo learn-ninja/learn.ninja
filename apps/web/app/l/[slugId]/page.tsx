@@ -57,7 +57,7 @@ export default async function PublishedLessonPage({
   const { slugId } = await params
   const view = await viewPublished(slugId)
   if (!view.record) return <LessonExpired reason={view.reason ?? "expired"} />
-  const { record, isOwner, listed } = view
+  const { record, isOwner, listed, signedIn } = view
   const { ui } = await searchParams
   return (
     <div className="h-svh">
@@ -69,6 +69,7 @@ export default async function PublishedLessonPage({
         progressKey={`l/${slugId}`}
         lessonId={record.id}
         canReport={listed && !isOwner}
+        recordCompletion={signedIn}
         owner={
           isOwner
             ? { visibility: record.visibility, hidden: record.hidden }

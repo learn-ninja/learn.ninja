@@ -157,7 +157,7 @@ export function Briefing({
                     className="brief-word"
                     style={{ animationDelay: `${delays[b]![i]}ms` }}
                   >
-                    <RichText text={word} />
+                    <RichText text={word} inline />
                   </span>
                   {unit.slice(word.length)}
                 </React.Fragment>

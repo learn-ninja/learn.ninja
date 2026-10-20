@@ -13,6 +13,13 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { Answer, Mark } from "./check"
 import { usePlayer } from "./context"
+import {
+  controlPadding,
+  controlStyles,
+  controlSurface,
+  markStyles,
+  slotStyles,
+} from "./controls"
 import { buzz, fly, shake } from "./motion"
 import { RichText } from "./rich-text"
 import { Visual } from "./visuals"
@@ -26,15 +33,11 @@ export interface QuestionBrickProps {
   locked: boolean
 }
 
-// A row's mark outranks its selected and hover colors (hence the `!`), so the result shows on the picked row too.
-const markStyles =
-  "data-[status=correct]:border-green-600! data-[status=correct]:bg-green-600/10! " +
-  "data-[status=wrong]:border-yellow-500! data-[status=wrong]:bg-yellow-500/10! " +
-  "data-[status=partial]:border-amber-500! data-[status=partial]:bg-amber-500/10!"
-
-const cardStyles =
-  "w-full rounded-lg border bg-background text-start shadow-xs transition-colors dark:bg-input/30 dark:hover:bg-input/50 dark:data-selected:bg-muted " +
-  "hover:bg-muted data-selected:border-primary data-selected:bg-muted data-pressed:translate-y-px "
+// A choice row is the shared control, a little roomier for its key hint and longer text.
+const cardStyles = cn(
+  controlStyles,
+  "w-full rounded-lg text-start data-pressed:translate-y-px"
+)
 
 /** The number key that picks an option, or after checking, whether it was right. */
 function KeyHint({
@@ -424,7 +427,8 @@ export function MatchBrick({
   const badge = (k: number) => (
     <span
       aria-hidden="true"
-      className="grid size-6 shrink-0 place-items-center rounded-full border border-dashed text-xs font-bold text-white"
+      // It overhangs the chip's padding a little, so a chip stays one line tall like every other control.
+      className="-my-0.5 grid size-6 shrink-0 place-items-center rounded-full border border-dashed text-xs font-bold text-white"
       style={
         k >= 0
           ? {
@@ -438,9 +442,12 @@ export function MatchBrick({
       {k >= 0 ? k + 1 : ""}
     </span>
   )
-  const chip =
-    "flex w-full items-center gap-2.5 rounded-lg border bg-background px-3 py-2.5 text-start text-sm font-medium shadow-xs hover:bg-muted data-selected:border-primary data-selected:bg-muted dark:bg-input/30 dark:hover:bg-input/50 dark:data-selected:bg-muted " +
+  const chip = cn(
+    controlStyles,
+    controlPadding,
+    "flex w-full items-center gap-2.5 text-start",
     markStyles
+  )
 
   // Both columns share the grid's rows (a subgrid), so each item is as tall as the one beside it and
   // the pairs line up. The columns stay whole in the DOM, so keyboards and screen readers go down one
@@ -491,10 +498,6 @@ export function MatchBrick({
 }
 
 // ---------- blank (word chips) ----------
-
-/** A word chip, in the bank or placed in a gap: the same chip in both, so it reads as one thing moving. */
-const wordChip =
-  "rounded-md border bg-background shadow-xs transition-colors dark:bg-input/30"
 
 /**
  * Which bank chip sits in each gap. A word listed twice in the bank (two gaps accept it) has two
@@ -596,8 +599,9 @@ export function BlankBrick({
   const parts = brick.template.split(/(\[\[[^\]]+\]\])/)
   const vt = (i: number) => `learn-${uid}-w${i}`
   // One reading size: the words are the sentence's size (code's is mono), set apart by weight and chip.
+  // A word is the same chip in the bank and in a gap, so it reads as one thing moving.
   const size = code ? "font-mono text-sm" : "text-base font-medium"
-  const inline = cn(wordChip, "px-2.5 py-0.5", size)
+  const inline = cn(controlStyles, "px-2.5 py-0.5", size)
 
   return (
     <div ref={root} className="flex flex-col gap-8">
@@ -639,7 +643,7 @@ export function BlankBrick({
                   key={w}
                   aria-hidden="true"
                   className={cn(
-                    wordChip,
+                    controlSurface,
                     "invisible border-y-0 px-2.5 shadow-none [grid-area:1/1]",
                     size
                   )}
@@ -693,15 +697,8 @@ export function BlankBrick({
                 "flex items-center gap-2",
                 gone
                   ? // An outlined slot holds its place, so the other chips don't move (like the sort brick's empty lanes).
-                    cn(
-                      "rounded-md border border-dashed border-foreground/20 bg-muted/60 py-1 ps-3 pe-2 text-transparent dark:bg-input/10",
-                      size
-                    )
-                  : cn(
-                      wordChip,
-                      "py-1 ps-3 pe-2 hover:bg-muted dark:hover:bg-input/50",
-                      size
-                    )
+                    cn(slotStyles, "py-1 ps-3 pe-2 text-transparent", size)
+                  : cn(controlStyles, "py-1 ps-3 pe-2", size)
               )}
             >
               {word}

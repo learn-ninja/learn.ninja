@@ -9,6 +9,7 @@ import { compact } from "@/lib/explore/browser"
 import type { LessonSummary } from "@/lib/explore/queries"
 import { lessonPath } from "@/lib/publish/paths"
 
+import { CompletedCheck } from "./completed-check"
 import { LikeButton } from "./like-button"
 
 /** What the viewer can do on a row: like it (signed in) or be told to sign in. Omit for a read-only row. */
@@ -16,6 +17,8 @@ export interface Viewer {
   signedIn: boolean
   /** Ids of the lessons the viewer has liked. */
   liked: ReadonlySet<string>
+  /** When the viewer first finished each lesson they've finished, as lesson id → ms since epoch. */
+  completed?: ReadonlyMap<string, number>
 }
 
 const t = stringsFor("en")
@@ -24,10 +27,11 @@ const t = stringsFor("en")
  * A lesson as one row of the Explore feed or a profile. A byline first: who made it (their
  * picture and handle) at the start and how long ago at the end, so the ages line up as a column
  * down the feed. Then the title, up to two lines of summary, and one meta line with the subject,
- * length and level, and the plays and likes at its end. The whole row opens the lesson; the
- * author and the heart are their own links. Rows sit between hairlines (the list adds them), not
- * in cards. `rank` puts a number in the margin on the Top tab; `showAuthor={false}` drops the
- * author on a profile, where every row shares it, leaving the age alone on the byline.
+ * length and level (after a green check when the viewer has finished it), and the plays and likes
+ * at its end. The whole row opens the lesson; the author, the check, and the heart are their own
+ * targets. Rows sit between hairlines (the list adds them), not in cards. `rank` puts a number
+ * in the margin on the Top tab; `showAuthor={false}` drops the author on a profile, where every
+ * row shares it, leaving the age alone on the byline.
  */
 export function LessonRow({
   lesson,
@@ -43,6 +47,7 @@ export function LessonRow({
   className?: string
 }) {
   const href = lessonPath(lesson.slug, lesson.id)
+  const completedAt = viewer?.completed?.get(lesson.id)
   const author = lesson.author
   const byline =
     showAuthor && author ? (
@@ -118,6 +123,9 @@ export function LessonRow({
         </p>
         <div className="mt-2 flex items-center justify-between gap-3 text-sm text-muted-foreground">
           <p className="flex min-w-0 flex-1 basis-0 flex-wrap items-center gap-x-1.5">
+            {completedAt !== undefined ? (
+              <CompletedCheck at={completedAt} className="relative z-10" />
+            ) : null}
             {facts.map((fact, i) => (
               <span key={i} className="contents">
                 {i > 0 ? (
