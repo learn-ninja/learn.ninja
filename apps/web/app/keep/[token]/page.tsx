@@ -45,8 +45,9 @@ export default async function KeepPage({
             Nothing to keep here
           </h1>
           <p className="text-muted-foreground">
-            This lesson was already saved to an account, or it expired before
-            anyone kept it. Each keep link works once.
+            This lesson was already saved to an account, it expired before
+            anyone kept it, or a newer keep link was made for it. Each keep
+            link works once.
           </p>
         </div>
         <ButtonLink href="/" variant="outline" className="self-start">

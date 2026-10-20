@@ -64,6 +64,8 @@ interface PublishRequest {
   skillVersion?: string | null
   /** The signed-in user (session cookie or API key), or null for an anonymous publish. */
   ownerId?: string | null
+  /** The owner's handle when the caller already knows it (the route has the actor), so the reply needn't look it up. */
+  ownerHandle?: string | null
 }
 
 /** Checks size, JSON, spec version, the spec's rules, and that diagrams draw. Returns the lesson or an error reply. */
@@ -204,7 +206,7 @@ export async function publishLesson(
       ...(claimToken
         ? { claimToken, claimUrl: deps.origin + keepPath(claimToken) }
         : {}),
-      ...(await ownership(record, deps)),
+      ...(await ownership(record, deps, req.ownerHandle)),
       spec: record.spec,
       skill,
     },
@@ -333,8 +335,8 @@ export async function claimLesson(
       },
     }
   }
-  await deps.store.claim(existing.id, req.ownerId)
-  return kept({ ...existing, ownerId: req.ownerId, expiresAt: null }, deps)
+  // Reply from the row as the store left it, not from `existing`: claiming may change more than the owner (its visibility, say).
+  return kept(await deps.store.claim(existing.id, req.ownerId), deps)
 }
 
 async function kept(
@@ -406,7 +408,17 @@ export async function reissueClaimToken(
     }
   }
   const claimToken = newToken()
-  await deps.store.setClaimToken(existing.id, hashToken(claimToken))
+  // The row may have been claimed since it was read; then there's nothing to re-issue.
+  if (!(await deps.store.setClaimToken(existing.id, hashToken(claimToken)))) {
+    return {
+      status: 409,
+      body: {
+        ok: false,
+        error: "already_claimed",
+        message: "This lesson is already saved to an account.",
+      },
+    }
+  }
   return {
     status: 200,
     body: {
@@ -428,10 +440,17 @@ export async function reissueClaimToken(
  */
 async function ownership(
   record: Pick<StoredLesson, "ownerId" | "expiresAt" | "visibility">,
-  deps: Pick<Deps, "handleOf">
+  deps: Pick<Deps, "handleOf">,
+  /** The owner's handle when the caller knows it; undefined means look it up. */
+  handle?: string | null
 ) {
   const owner = record.ownerId
-    ? { handle: (await deps.handleOf?.(record.ownerId)) ?? null }
+    ? {
+        handle:
+          (handle !== undefined
+            ? handle
+            : await deps.handleOf?.(record.ownerId)) ?? null,
+      }
     : null
   return {
     owned: owner !== null,

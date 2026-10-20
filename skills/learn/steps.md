@@ -45,7 +45,7 @@ There are two ways to follow these steps. In a terminal with the skill installed
 
    Already signed in on this machine, but the lesson was published anonymously (an earlier folder, or before the login)? Run `learn keep`: it saves every lesson published from this folder without a new code. `learn whoami` says who's signed in; `learn logout` forgets the key. Never tell the user to look in `.learn/` or in the credentials file.
 
-   Over MCP there is no login. When the user says they want to keep the lesson, call `keep_lesson` with its `id` and `editToken` and paste the `claimUrl` it returns (the `claimUrl` from `publish_lesson` works too, while it's still at hand). Opening it signs them in on learn.ninja and saves the lesson, which is then listed in Explore under their handle. Each link works once; call `keep_lesson` again for a fresh one.
+   Over MCP there is no login. When the user says they want to keep the lesson, call `keep_lesson` with its `id` and `editToken` and paste the `claimUrl` it returns; it replaces the one `publish_lesson` gave, which stops working. Opening it signs them in on learn.ninja and saves the lesson. Each link works once; call `keep_lesson` again for a fresh one.
 
 If a command prints that a newer version of the skill is available, tell the user the update command it shows.
 

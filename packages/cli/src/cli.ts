@@ -50,6 +50,8 @@ interface SavedLesson {
   expiresAt: string | null
   /** Moves the lesson into an account (`login`); absent once claimed or for owned lessons. */
   claimToken?: string
+  /** True once the server said another account owns it: nothing here can keep it, so `keep` and `login` leave it alone. */
+  ownedElsewhere?: true
 }
 
 /** One signed-in server, in the credentials file. */
@@ -98,9 +100,9 @@ Options:
   --api <url>   Server to use (default: $LEARN_API_URL or ${DEFAULT_API_URL})
   --json        Print machine-readable JSON instead of text
 
-Signed in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account, never
-expires, and is listed in Explore under your handle. Anonymous lessons last 7 days; \`login\` and
-\`keep\` save the ones published from this folder.`
+Signed in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account and
+never expires. Anonymous lessons last 7 days; \`login\` and \`keep\` save the ones published from
+this folder.`
 
 export async function run(argv: string[], io: Io): Promise<number> {
   const flags = new Set(argv.filter((a) => a.startsWith("--")))
@@ -570,7 +572,7 @@ async function publish(
         `${live ? "Updated" : "Published"}: ${record.url}`,
         owned
           ? ownedLine(standing, o.api)
-          : `Lasts 7 days, until ${new Date(record.expiresAt!).toUTCString()}. Tell the user once: "It lasts 7 days. To keep it, say so and I'll save it under your email." When they say so, run \`learn login\`.`,
+          : `Lasts 7 days, until ${new Date(record.expiresAt!).toUTCString()}. To keep it, run \`learn login\` (an email code; agents: offer this once, in one sentence).`,
         `Saved the edit token in .learn/state.json, so publishing ${o.file} again updates this same link.`,
         updateLine(skill),
       ]
@@ -777,23 +779,29 @@ async function keep(io: Io, api: string, json: boolean): Promise<number> {
   }
   const { kept, total, tried, retry } = await claimAll(io, api, credential)
   const handle = kept[0]?.handle ?? (await fetchHandle(io, api, credential))
-  report(io, json, { ok: true, handle, kept, retry }, () =>
-    [
-      kept.length
-        ? keptLines(kept, api)
-        : tried
-          ? "Nothing new to keep: the lessons published from this folder are already saved, or have expired."
-          : total
-            ? "Every lesson published from this folder is already saved to your account."
-            : "No lessons have been published from this folder yet; signed in, `learn publish` saves them to your account as it goes.",
-      retry
-        ? `Couldn't reach the server for ${retry} lesson${retry === 1 ? "" : "s"}; run \`learn keep\` again in a minute.`
-        : null,
-    ]
-      .filter(Boolean)
-      .join("\n")
+  // Nothing kept and something unreachable: that's a failure to run again, not a quiet success.
+  const ok = kept.length > 0 || retry === 0
+  report(
+    io,
+    json,
+    { ok, ...(ok ? {} : { error: "retry" }), handle, kept, retry },
+    () =>
+      [
+        kept.length
+          ? keptLines(kept, api)
+          : tried
+            ? "Nothing new to keep: the lessons published from this folder are already saved, or have expired."
+            : total
+              ? "Every lesson published from this folder is already saved to your account."
+              : "No lessons have been published from this folder yet; signed in, `learn publish` saves them to your account as it goes.",
+        retry
+          ? `Couldn't reach the server for ${retry} lesson${retry === 1 ? "" : "s"}; run \`learn keep\` again in a minute.`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("\n")
   )
-  return 0
+  return ok ? 0 : 1
 }
 
 /** A lesson `login` or `keep` moved into the account. */
@@ -815,7 +823,9 @@ async function claimAll(
   let retry = 0
   let changed = false
   for (const saved of Object.values(state.lessons)) {
-    if (saved.expiresAt === null) continue
+    // Owned already, gone from the server, or another account's: nothing to send.
+    if (saved.expiresAt === null || !isLive(saved) || saved.ownedElsewhere)
+      continue
     tried++
     const claimed = await claimOne(io, api, credential, saved)
     if (claimed.outcome === "kept") kept.push({ url: saved.url, ...claimed })
@@ -857,16 +867,19 @@ async function claimOne(
   }
   if (response.status >= 500 || response.status === 429)
     return { outcome: "retry" }
-  const body = (await response.json().catch(() => ({}))) as Record<
+  const body = (await response.json().catch(() => null)) as Record<
     string,
     unknown
-  >
-  if (response.ok && body.ok) {
+  > | null
+  if (response.ok) {
+    // A success we can't read is a fault, not a refusal: keep the token for next time.
+    if (!body?.ok) return { outcome: "retry" }
     saved.expiresAt = null
     delete saved.claimToken
     return { outcome: "kept", ...standingOf(body) }
   }
   delete saved.claimToken
+  if (body?.error === "already_claimed") saved.ownedElsewhere = true
   return { outcome: "spent" }
 }
 

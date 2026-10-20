@@ -226,7 +226,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
     {
       title: "Get a link that keeps a lesson",
       description:
-        "Returns a link (`claimUrl`) that saves a published lesson to the user's learn.ninja account, so it stops expiring and is listed in Explore under their handle. Call it only when the user says they want to keep the lesson, then paste the link into the chat: opening it signs them in and keeps the lesson. Pass the `id` and `editToken` from `publish_lesson`. Each call makes a new link and the previous one stops working; a lesson already saved to an account answers `already_claimed`.",
+        "Returns a link (`claimUrl`) that saves a published lesson to the user's learn.ninja account, so it stops expiring and can be listed in Explore under their handle. Call it only when the user says they want to keep the lesson, then paste the link into the chat: opening it signs them in and keeps the lesson. Pass the `id` and `editToken` from `publish_lesson`. Each call makes a new link and the previous one stops working; a lesson already saved to an account answers `already_claimed`.",
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z
@@ -242,7 +242,12 @@ function registerTools(server: McpServer, deps: McpDeps) {
     },
     ({ id, editToken }, ctx) =>
       toolResult(
-        () => reissueClaimToken({ id, editToken, client: clientOf(ctx) }, deps),
+        // Minting a token is cheap, and chat apps share an egress IP: the checks' limit, not the publish one.
+        () =>
+          reissueClaimToken(
+            { id, editToken, client: clientOf(ctx) },
+            { ...deps, limiter: deps.validateLimiter }
+          ),
         ["ok", "id", "url", "claimUrl", "expiresAt"]
       )
   )

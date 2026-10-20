@@ -1,15 +1,15 @@
 ---
 title: Keep a lesson
-description: Save a lesson to an account so it stops expiring, and list it in Explore. For people and for the agents that do it for them.
+description: Save a lesson to an account so it stops expiring, then list it in Explore. For people and for the agents that do it for them.
 ---
 
-A lesson is published anonymously and lasts 7 days. **Keeping** it saves it to an account: it stops expiring, it's listed in [Explore](/explore) under your handle, and every lesson you publish from then on is saved too. There's no password and no form to fill in; an email code is enough, and the agent does the typing.
+A lesson is published anonymously and lasts 7 days. **Keeping** it saves it to an account: it stops expiring, it can be listed in [Explore](/explore) under your handle, and every lesson you publish from then on is saved too. There's no password and no form to fill in; an email code is enough, and the agent does the typing.
 
 ## Say keep
 
 1. Your agent gives you the link and says the lesson lasts 7 days. Tell it you want to keep the lesson.
 2. It asks for your email address and sends a six-digit code there.
-3. Give the agent the code. The lesson is saved, and the agent tells you which lessons it kept: saved to @handle and listed in Explore.
+3. Give the agent the code. The lesson is saved, and the agent tells you which lessons it kept, under which handle, and whether Explore lists them.
 
 Use the same email every time, so everything lands in one account. If you sign in on learn.ninja with GitHub, that's the email on your GitHub account.
 
@@ -24,7 +24,7 @@ node <skill-folder>/scripts/learn.mjs login --email you@example.com
 node <skill-folder>/scripts/learn.mjs login --email you@example.com --code 123456
 ```
 
-Signing in saves an API key for this machine (in `~/.config/learn/credentials`, readable only by you) and keeps every lesson published from the current folder. From then on `publish` sends the key: new lessons belong to the account from the start, never expire, and are listed in Explore, and the agent stops offering to keep them. Already signed in, in a folder the login didn't cover? `keep` saves that folder's lessons without a new code. `whoami` prints the signed-in email and handle; `logout` forgets the key and revokes it. The [CLI reference](/docs/reference/cli#login) has the details.
+Signing in saves an API key for this machine (in `~/.config/learn/credentials`, readable only by you) and keeps every lesson published from the current folder. From then on `publish` sends the key: new lessons belong to the account from the start and never expire, and the agent stops offering to keep them. Already signed in, in a folder the login didn't cover? `keep` saves that folder's lessons without a new code. `whoami` prints the signed-in email and handle; `logout` forgets the key and revokes it. The [CLI reference](/docs/reference/cli#login) has the details.
 
 Rules for agents, from the skill's own steps:
 
@@ -40,9 +40,12 @@ Publishing also returns a keep link, `https://learn.ninja/keep/…`, and over MC
 
 ## Show it in Explore
 
-A kept lesson is listed straight away: it shows in Explore and on your profile at `learn.ninja/u/{handle}`. Pick a handle in [learn.ninja/settings](https://learn.ninja/settings) if you haven't; Explore credits lessons by handle.
+A kept lesson is still link-only. To list it:
 
-To keep a lesson link-only, switch it to **Unlisted** under **Your lessons** in your settings. Switch it back to **Listed** at any time: the link keeps working either way.
+1. Open [learn.ninja/settings](https://learn.ninja/settings) and pick a handle, if you haven't. Explore credits lessons by handle.
+2. Under **Your lessons**, switch the lesson to **Listed**.
+
+It then shows in Explore and on your profile at `learn.ninja/u/{handle}`. Switch it back to **Unlisted** at any time: the link keeps working either way. The agent's reply after a keep says which it is.
 
 ## When a lesson can't be kept
 

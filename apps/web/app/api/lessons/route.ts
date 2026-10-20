@@ -7,15 +7,17 @@ import { respond } from "@/lib/publish/respond"
 // belongs to that account and never expires.
 
 export async function POST(req: Request) {
-  return respond(async () =>
-    publishLesson(
+  return respond(async () => {
+    const actor = await actorFor(req)
+    return publishLesson(
       {
         text: await req.text(),
         client: clientKey(req),
         skillVersion: req.headers.get("x-learn-skill-version"),
-        ownerId: (await actorFor(req))?.userId ?? null,
+        ownerId: actor?.userId ?? null,
+        ownerHandle: actor?.handle ?? null,
       },
       await depsFor(req)
     )
-  )
+  })
 }

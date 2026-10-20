@@ -39,7 +39,7 @@ Checks the lesson, then publishes it and prints the link. If this lesson was pub
 node scripts/learn.mjs publish lesson.json
 ```
 
-An anonymous lesson lasts 7 days; the tool says so, and gives the agent the one sentence to offer keeping it. Once you're signed in (`login`), every lesson you publish is saved to your account, never expires, and is listed in Explore under your handle; the tool says that instead. Signed in and updating a lesson that was published anonymously, it keeps that lesson as it goes.
+An anonymous lesson lasts 7 days; the tool says so, and gives the agent the one sentence to offer keeping it. Once you're signed in (`login`), every lesson you publish is saved to your account and never expires; the tool says so, with the handle it's under and whether Explore lists it. Signed in and updating a lesson that was published anonymously, it keeps that lesson as it goes.
 
 The edit token for each published lesson is saved in `.learn/state.json` next to where you run it, along with the claim token that `login` and `keep` use. Don't delete or share that file. The tool adds a `.gitignore` to `.learn/` so none of it gets committed.
 
@@ -64,7 +64,7 @@ node scripts/learn.mjs login --email you@example.com
 node scripts/learn.mjs login --email you@example.com --code 123456
 ```
 
-Codes work for 5 minutes and three tries. The tool saves an API key for this machine in `~/.config/learn/credentials` (readable only by you; `$XDG_CONFIG_HOME/learn/credentials` if that's set), then prints which lessons from this folder it kept and that they're listed in Explore under your handle. From then on, `publish` sends the key and lessons are saved to your account. You can also set `LEARN_API_KEY` instead, with a key made at [learn.ninja/settings](https://learn.ninja/settings).
+Codes work for 5 minutes and three tries. The tool saves an API key for this machine in `~/.config/learn/credentials` (readable only by you; `$XDG_CONFIG_HOME/learn/credentials` if that's set), then prints which lessons from this folder it kept, under which handle, and whether Explore lists them. From then on, `publish` sends the key and lessons are saved to your account. You can also set `LEARN_API_KEY` instead, with a key made at [learn.ninja/settings](https://learn.ninja/settings).
 
 ### `keep`
 
@@ -74,7 +74,7 @@ Saves every lesson published from this folder to the signed-in account, without 
 node scripts/learn.mjs keep
 ```
 
-It prints the lessons it kept and where they stand (saved to @handle and listed in Explore), says when there's nothing new to keep, and asks you to run `login` first when you're not signed in.
+It prints the lessons it kept and where they stand (the handle, and whether Explore lists them), says when there's nothing new to keep, exits 1 when the server couldn't be reached for any of them, and asks you to run `login` first when you're not signed in.
 
 ### `logout`
 

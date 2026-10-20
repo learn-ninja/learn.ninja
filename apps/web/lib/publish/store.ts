@@ -45,10 +45,13 @@ export interface LessonStore {
   getByClaimTokenHash(hash: string): Promise<StoredLesson | null>
   /** Replaces a lesson without changing when it expires or who owns it. */
   update(record: StoredLesson): Promise<void>
-  /** Gives a lesson to `ownerId`: it stops expiring and its claim token stops working. */
-  claim(id: string, ownerId: string): Promise<void>
-  /** Replaces an anonymous lesson's claim token with the one that hashes to `hash`; the old one stops working. */
-  setClaimToken(id: string, hash: string): Promise<void>
+  /** Gives a lesson to `ownerId`: it stops expiring and its claim token stops working. Returns the lesson as it now is. */
+  claim(id: string, ownerId: string): Promise<StoredLesson>
+  /**
+   * Replaces an anonymous lesson's claim token with the one that hashes to `hash`; the old one
+   * stops working. False when nothing changed: the lesson is owned by now, or gone.
+   */
+  setClaimToken(id: string, hash: string): Promise<boolean>
   /** Deletes every lesson that has expired, and says how many. */
   deleteExpired(): Promise<number>
 }
@@ -109,7 +112,7 @@ export class PostgresLessonStore implements LessonStore {
   }
 
   async claim(id: string, ownerId: string) {
-    await this.db
+    const [row] = await this.db
       .update(lesson)
       .set({
         ownerId,
@@ -118,13 +121,18 @@ export class PostgresLessonStore implements LessonStore {
         updatedAt: this.date(),
       })
       .where(eq(lesson.id, id))
+      .returning()
+    if (!row) throw new Error(`Lesson ${id} vanished while being claimed`)
+    return toStored(row)
   }
 
   async setClaimToken(id: string, hash: string) {
-    await this.db
+    const changed = await this.db
       .update(lesson)
       .set({ claimTokenHash: hash, updatedAt: this.date() })
-      .where(and(eq(lesson.id, id), isNull(lesson.ownerId)))
+      .where(and(eq(lesson.id, id), isNull(lesson.ownerId), this.live()))
+      .returning({ id: lesson.id })
+    return changed.length > 0
   }
 
   async deleteExpired() {

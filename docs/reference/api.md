@@ -3,7 +3,7 @@ title: Publish API
 description: The HTTP API behind publishing. The CLI uses it; you can too.
 ---
 
-Base URL: `https://learn.ninja`. Requests and responses are JSON. No account is needed: publishing returns an edit token for that one lesson, and anonymous lessons last 7 days. Signed in, with a session cookie or an API key, lessons are saved to your account, never expire, and are listed in Explore under your handle.
+Base URL: `https://learn.ninja`. Requests and responses are JSON. No account is needed: publishing returns an edit token for that one lesson, and anonymous lessons last 7 days. Signed in, with a session cookie or an API key, lessons are saved to your account and never expire.
 
 ## Publish a lesson
 
@@ -62,7 +62,7 @@ Content-Type: application/json
 x-api-key: <key>
 ```
 
-The body is `{ "visibility": "public" }` to list a lesson in [Explore](/explore) and on your profile, or `{ "visibility": "unlisted" }` to make it link-only again. Owner only (`403 not_owner` otherwise). A lesson is listed once it's saved to an account (published signed in, or kept); anonymous lessons are always link-only. Returns `200` with `id`, `url`, and `visibility`. The same switch is on the [settings page](https://learn.ninja/settings).
+The body is `{ "visibility": "public" }` to list a lesson in [Explore](/explore) and on your profile, or `{ "visibility": "unlisted" }` to make it link-only again. Owner only (`403 not_owner` otherwise). Every lesson starts unlisted, kept ones included, so nothing is listed that you didn't choose to show. Returns `200` with `id`, `url`, and `visibility`. The same switch is on the [settings page](https://learn.ninja/settings).
 
 ## Like a lesson
 

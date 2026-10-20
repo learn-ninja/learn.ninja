@@ -2,10 +2,9 @@
 
 import { headers } from "next/headers"
 
-import { handleOf } from "@/lib/auth/handles"
 import { currentActor } from "@/lib/auth/session"
 import { claimLesson } from "@/lib/publish/handlers"
-import { getDb, getLessonStore } from "@/lib/publish/store"
+import { getLessonStore } from "@/lib/publish/store"
 
 export interface KeepResult {
   ok: boolean
@@ -32,24 +31,19 @@ export async function keepLesson(
   const origin =
     process.env.LEARN_PUBLIC_URL ??
     `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`
-  const db = await getDb()
   const reply = await claimLesson(
     { claimToken: token, ownerId: actor.userId },
-    {
-      store: await getLessonStore(),
-      origin,
-      handleOf: (userId) => handleOf(db, userId),
-    }
+    // The keeper is the signed-in user, so their handle needs no lookup.
+    { store: await getLessonStore(), origin, handleOf: async () => actor.handle }
   )
   if (!reply.body.ok)
     return { ok: false, message: reply.body.message as string }
-  const owner = reply.body.owner as { handle: string | null } | null
   return {
     ok: true,
     message: "Kept.",
     url: reply.body.url as string,
     title: reply.body.title as string,
-    handle: owner?.handle ?? null,
+    handle: actor.handle,
     listed: reply.body.visibility === "public",
   }
 }

@@ -551,7 +551,7 @@ describe("learn publish", () => {
   it("keeps the claim token and says how long an anonymous lesson lasts", async () => {
     expect(await run(["publish", "lesson.json"], t.io)).toBe(0)
     expect(t.out.join("\n")).toMatch(
-      /Lasts 7 days, until .*\. Tell the user once: "It lasts 7 days\. To keep it, say so and I'll save it under your email\." When they say so, run `learn login`\./
+      /Lasts 7 days, until .*\. To keep it, run `learn login` \(an email code; agents: offer this once, in one sentence\)\./
     )
     expect(t.out.join("\n")).not.toMatch(/keep\/claim-/)
     const saved = JSON.parse(
@@ -983,15 +983,17 @@ describe("learn keep", () => {
     writeCredentials(t, {
       "https://learn.ninja": { apiKey: KEY, email: "ada@example.com" },
     })
-    expect(await run(["keep", "--json"], t.io)).toBe(0)
-    expect(JSON.parse(t.out.at(-1)!)).toMatchObject({
-      ok: true,
+    // Nothing kept and one unreachable: a failure to run again, in JSON and in text.
+    expect(await run(["keep", "--json"], t.io)).toBe(1)
+    expect(JSON.parse(t.err.at(-1)!)).toMatchObject({
+      ok: false,
+      error: "retry",
       kept: [],
       retry: 1,
     })
-    t.out.length = 0
-    expect(await run(["keep"], t.io)).toBe(0)
-    expect(t.out.join("\n")).toMatch(
+    t.err.length = 0
+    expect(await run(["keep"], t.io)).toBe(1)
+    expect(t.err.join("\n")).toMatch(
       /Nothing new to keep: the lessons published from this folder are already saved, or have expired\.\nCouldn't reach the server for 1 lesson; run `learn keep` again in a minute\./
     )
     // The unreachable one keeps its token for next time; the expired one lost it.
@@ -1004,6 +1006,70 @@ describe("learn keep", () => {
     expect(state.lessons[join(t.cwd, "other.json")].claimToken).toBe(
       "claim-bbbb2222"
     )
+  })
+})
+
+describe("learn keep leaves alone what it can't keep", () => {
+  it("skips expired and foreign-owned lessons, and keeps a token behind an unreadable success", async () => {
+    const t = setup({
+      ...signInRoutes(),
+      "POST /api/lessons": [
+        created("aaaa1111"),
+        created("bbbb2222"),
+        created("cccc3333"),
+      ],
+      "POST /api/lessons/aaaa1111/claim": {
+        status: 409,
+        body: {
+          ok: false,
+          error: "already_claimed",
+          message: "Someone else's.",
+        },
+      },
+      // A 200 whose body isn't JSON (a proxy page, say).
+      "POST /api/lessons/bbbb2222/claim": { status: 200, body: "<html>" },
+      "POST /api/lessons/cccc3333/claim": keptReply(),
+    })
+    for (const file of ["lesson.json", "other.json", "third.json"]) {
+      writeFileSync(join(t.cwd, file), lesson)
+      await run(["publish", file], t.io)
+    }
+    // Signed in after publishing, so nothing was claimed on the way.
+    writeCredentials(t, { "https://learn.ninja": { apiKey: KEY, email: "a" } })
+    const statePath = join(t.cwd, ".learn/state.json")
+    const state = JSON.parse(readFileSync(statePath, "utf8"))
+    // The third expired on the server before anyone kept it.
+    state.lessons[join(t.cwd, "third.json")].expiresAt = new Date(
+      0
+    ).toISOString()
+    writeFileSync(statePath, JSON.stringify(state))
+    t.calls.length = 0
+
+    // Nothing kept, one to retry: exit 1 so the agent runs it again.
+    expect(await run(["keep"], t.io)).toBe(1)
+    expect(t.methods()).toEqual([
+      "POST /api/lessons/aaaa1111/claim",
+      "POST /api/lessons/bbbb2222/claim",
+      "GET /api/account",
+    ])
+    const after = JSON.parse(readFileSync(statePath, "utf8"))
+    expect(after.lessons[join(t.cwd, "lesson.json")]).toMatchObject({
+      ownedElsewhere: true,
+    })
+    expect(after.lessons[join(t.cwd, "lesson.json")]).not.toHaveProperty(
+      "claimToken"
+    )
+    expect(after.lessons[join(t.cwd, "other.json")].claimToken).toBe(
+      "claim-bbbb2222"
+    )
+
+    // The next run doesn't ask about the other account's lesson or the expired one again.
+    t.calls.length = 0
+    await run(["keep"], t.io)
+    expect(t.methods()).toEqual([
+      "POST /api/lessons/bbbb2222/claim",
+      "GET /api/account",
+    ])
   })
 })
 

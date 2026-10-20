@@ -138,6 +138,15 @@ describe("publishing", () => {
       deps
     )
     expect(unnamed.body.owner).toEqual({ handle: null })
+    // A route that already has the actor passes the handle, and no lookup runs.
+    deps.handleOf = async () => {
+      throw new Error("looked up")
+    }
+    const known = await publishLesson(
+      { text: buttons, client: "x", ownerId: "user_2", ownerHandle: "two" },
+      deps
+    )
+    expect(known.body.owner).toEqual({ handle: "two" })
     expect(reply.body).not.toHaveProperty("claimToken")
     expect(reply.body).not.toHaveProperty("claimUrl")
     const stored = await deps.store.get(reply.body.id as string)
@@ -295,6 +304,8 @@ describe("claiming", () => {
       expiresAt: null,
       claimTokenHash: null,
     })
+    // The reply describes the row as claiming left it, not as it was read before.
+    expect(reply.body.visibility).toBe(stored?.visibility)
     // The token is spent: nobody else can use it, and the /keep page no longer finds the lesson.
     expect(
       await deps.store.getByClaimTokenHash(hashToken(body.claimToken as string))
@@ -479,6 +490,39 @@ describe("claiming", () => {
         deps
       )
     ).toMatchObject({ status: 409, body: { error: "already_claimed" } })
+  })
+
+  it("answers already_claimed when the lesson is claimed between the read and the write", async () => {
+    const { body } = await anonymous()
+    const slow = { ...deps.store } as typeof deps.store
+    // The store's view is still anonymous when the handler reads, but claimed by the time it writes.
+    slow.get = async (id) =>
+      (await deps.store.get(id)) && {
+        ...(await deps.store.get(id))!,
+        ownerId: null,
+      }
+    slow.setClaimToken = deps.store.setClaimToken.bind(deps.store)
+    await claimLesson(
+      {
+        id: body.id as string,
+        claimToken: body.claimToken as string,
+        ownerId: "user_1",
+      },
+      deps
+    )
+    const reply = await reissueClaimToken(
+      {
+        id: body.id as string,
+        editToken: body.editToken as string,
+        client: "y",
+      },
+      { ...deps, store: slow }
+    )
+    expect(reply).toMatchObject({
+      status: 409,
+      body: { error: "already_claimed" },
+    })
+    expect((await deps.store.get(body.id as string))?.claimTokenHash).toBeNull()
   })
 
   it("rate-limits re-issuing by client", async () => {

@@ -23,7 +23,7 @@ The server has five tools. The guide comes from the same files the skill uses, s
 
 Writing out the lesson is the slow part of a chat, so the model sends it only once. When a check fails, the tools return the issues and a `draftId`, and the model sends small `patches` against that draft instead of the whole lesson again; `update_lesson` takes patches against the published lesson too. A patch is `set`, `insert`, or `remove` at a path like `bricks[2].options[0].feedback`, the same paths the checker reports. Drafts last a day.
 
-Lessons made this way last 7 days; the agent says so once, after the link. To keep one, tell the app you want to keep it: it pastes a link, and opening it signs you in on learn.ninja and saves the lesson to your account, listed in Explore under your handle (see [Keep a lesson](/docs/keep)). The link comes from `keep_lesson`, so it works as long as the chat still has the lesson's edit token, not only right after publishing. The [limits](/docs/reference/api#limits) are the same as the API's.
+Lessons made this way last 7 days; the agent says so once, after the link. To keep one, tell the app you want to keep it: it pastes a link, and opening it signs you in on learn.ninja and saves the lesson to your account (see [Keep a lesson](/docs/keep)). The link comes from `keep_lesson`, so it works as long as the chat still has the lesson's edit token, not only right after publishing. The [limits](/docs/reference/api#limits) are the same as the API's.
 
 ## Connect your app
 
