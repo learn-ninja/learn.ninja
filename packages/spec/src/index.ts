@@ -1,4 +1,4 @@
-// The lesson spec v0.6: the single definition of a valid lesson.
+// The lesson spec v0.7: the single definition of a valid lesson.
 export * from "./schema"
 export {
   everyVisual,

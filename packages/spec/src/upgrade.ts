@@ -4,7 +4,8 @@
 // chart visual and 0.4 to 0.5 the diagram visual, so those lessons need nothing but their version
 // changed. 0.6 replaced the free-text `topic` label with a `subject` from a fixed list and `tags`:
 // the old label is mapped to a subject by a small lookup (and otherwise to `life`), and kept as a
-// tag so nothing is lost.
+// tag so nothing is lost. 0.7 split `math` into `math` and `data`: a math lesson whose tags say it's
+// about data moves over.
 
 import { redundantTag } from "./rules"
 import { SPEC_VERSION } from "./schema"
@@ -17,7 +18,7 @@ interface LessonV02 {
   [key: string]: unknown
 }
 
-const OLD_SPECS = ["0.2", "0.3", "0.4", "0.5"]
+const OLD_SPECS = ["0.2", "0.3", "0.4", "0.5", "0.6"]
 
 /** True for data that claims an older spec, or has a concept `term`, that this module can upgrade. */
 export function canUpgrade(data: unknown): boolean {
@@ -47,16 +48,19 @@ export function upgradeLesson(data: unknown): unknown {
   if (!canUpgrade(data)) return data
   if ((data as { spec?: unknown }).spec !== "0.2") {
     const lesson = data as { bricks?: unknown[] }
-    return withSubject({
-      ...lesson,
-      spec: SPEC_VERSION,
-      bricks: Array.isArray(lesson.bricks)
-        ? lesson.bricks.map(withoutTerm)
-        : lesson.bricks,
-    })
+    return withDataSubject(
+      withSubject({
+        ...lesson,
+        spec: SPEC_VERSION,
+        bricks: Array.isArray(lesson.bricks)
+          ? lesson.bricks.map(withoutTerm)
+          : lesson.bricks,
+      })
+    )
   }
   const { loops, ...rest } = data as LessonV02
-  if (!Array.isArray(loops)) return withSubject({ ...rest, spec: SPEC_VERSION })
+  if (!Array.isArray(loops))
+    return withDataSubject(withSubject({ ...rest, spec: SPEC_VERSION }))
   const out: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(rest)) {
     if (key === "challenge")
@@ -66,7 +70,45 @@ export function upgradeLesson(data: unknown): unknown {
       ])
     out[key] = key === "spec" ? SPEC_VERSION : value
   }
-  return withSubject(out)
+  return withDataSubject(withSubject(out))
+}
+
+/**
+ * Tags that say a `math` lesson from before 0.7 is really about data: statistics and analysis
+ * rather than maths for its own sake. The split is by what the learner does afterwards, and these
+ * are the tags such lessons carried.
+ */
+const DATA_TAGS = new Set([
+  "data",
+  "statistics",
+  "data-analysis",
+  "data-literacy",
+  "data-science",
+  "data-visualization",
+  "charts",
+  "correlation",
+  "causation",
+  "regression",
+  "sampling",
+  "surveys",
+  "experiments",
+  "a-b-testing",
+  "sql",
+  "spreadsheets",
+  "excel",
+  "dashboards",
+  "metrics",
+  "analytics",
+])
+
+/** Spec 0.7 split `math` into `math` and `data`: a math lesson tagged as data moves to `data`. */
+function withDataSubject(
+  lesson: Record<string, unknown>
+): Record<string, unknown> {
+  if (lesson.subject !== "math" || !Array.isArray(lesson.tags)) return lesson
+  return lesson.tags.some((t) => DATA_TAGS.has(t as string))
+    ? { ...lesson, subject: "data" }
+    : lesson
 }
 
 function conceptBrick(concept: Record<string, unknown> | undefined) {
@@ -90,7 +132,7 @@ const TOPIC_SUBJECTS: Record<string, Subject> = {
   "ui design": "design",
   "product management": "business",
   "personal finance": "money",
-  data: "math",
+  data: "data",
   javascript: "programming",
   spanish: "languages",
   history: "history",
@@ -132,8 +174,8 @@ const TOPIC_SUBJECTS: Record<string, Subject> = {
   math: "math",
   maths: "math",
   mathematics: "math",
-  statistics: "math",
-  "data science": "math",
+  statistics: "data",
+  "data science": "data",
   health: "health",
   fitness: "health",
   nutrition: "health",

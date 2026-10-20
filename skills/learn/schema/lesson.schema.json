@@ -4,7 +4,7 @@
   "properties": {
     "spec": {
       "type": "string",
-      "const": "0.6"
+      "const": "0.7"
     },
     "title": {
       "type": "string",
@@ -55,6 +55,7 @@
         "money",
         "science",
         "math",
+        "data",
         "health",
         "history",
         "society",
@@ -1228,5 +1229,5 @@
       ]
     }
   },
-  "title": "Lesson (spec 0.6)"
+  "title": "Lesson (spec 0.7)"
 }

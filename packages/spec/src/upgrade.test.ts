@@ -20,7 +20,7 @@ function asV02(lesson: any) {
 }
 
 describe("upgradeLesson", () => {
-  it.each(exampleFiles())("turns %s back into the same 0.6 lesson", (file) => {
+  it.each(exampleFiles())("turns %s back into the same 0.7 lesson", (file) => {
     const lesson = loadExample(file)
     const upgraded = upgradeLesson(asV02(lesson))
     expect(upgraded).toEqual(lesson)
@@ -28,8 +28,8 @@ describe("upgradeLesson", () => {
     expect(validateLesson(upgraded).ok).toBe(true)
   })
 
-  it.each(["0.3", "0.4", "0.5"])(
-    "brings a %s lesson to 0.6 by its version alone",
+  it.each(["0.3", "0.4", "0.5", "0.6"])(
+    "brings a %s lesson to 0.7 by its version alone",
     (spec) => {
       const lesson = loadExample("button-hierarchy.json")
       const old = { ...lesson, spec }
@@ -65,7 +65,7 @@ describe("upgradeLesson", () => {
     const old = { ...rest, spec: "0.5", topic: "UI design" }
     expect(canUpgrade(old)).toBe(true)
     const upgraded = upgradeLesson(old) as Record<string, unknown>
-    expect(upgraded.spec).toBe("0.6")
+    expect(upgraded.spec).toBe("0.7")
     expect(upgraded.subject).toBe("design")
     // "ui-design" is a synonym of "user-interface"
     expect(upgraded.tags).toEqual(["user-interface"])
@@ -161,6 +161,34 @@ describe("upgradeLesson", () => {
         >
       ).tags
     ).toEqual(lesson.tags)
+  })
+
+  it("moves a 0.6 math lesson to data when its tags say so, and leaves other math alone", () => {
+    const lesson = loadExample("correlation-vs-causation.json")
+    expect(lesson.subject).toBe("data")
+    const asMath = { ...lesson, spec: "0.6", subject: "math" }
+    expect(canUpgrade(asMath)).toBe(true)
+    expect(upgradeLesson(asMath)).toEqual(lesson)
+    const algebra = { ...asMath, tags: ["algebra", "equations"] }
+    expect(upgradeLesson(algebra)).toEqual({ ...algebra, spec: "0.7" })
+    // The same split applies to older files, whose topic lands in math first.
+    const { subject: _s, tags: _t, ...rest } = lesson
+    expect(
+      (
+        upgradeLesson({ ...rest, spec: "0.5", topic: "Statistics" }) as Record<
+          string,
+          unknown
+        >
+      ).subject
+    ).toBe("data")
+    expect(
+      (
+        upgradeLesson({ ...rest, spec: "0.5", topic: "Algebra" }) as Record<
+          string,
+          unknown
+        >
+      ).subject
+    ).toBe("life")
   })
 
   it("leaves current and unknown files alone", () => {

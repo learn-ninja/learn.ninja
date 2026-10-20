@@ -533,7 +533,7 @@ describe("subjects and tags", () => {
       },
     ])
     expect(report.subjects.map((s) => s.lessons).slice(2)).toEqual(
-      Array(14).fill(0)
+      Array(15).fill(0)
     )
     expect(report.singles).toEqual([
       { tag: "forms", subject: "design" },

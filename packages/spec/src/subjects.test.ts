@@ -12,9 +12,9 @@ import {
 } from "./tags"
 
 describe("subjects", () => {
-  it("are the 16 from the plan, each with a name, scope notes, and a hue of its own", () => {
-    expect(SUBJECTS).toHaveLength(16)
-    expect(new Set(SUBJECTS).size).toBe(16)
+  it("are the plan's 16 plus data, each with a name, scope notes, and a hue of its own", () => {
+    expect(SUBJECTS).toHaveLength(17)
+    expect(new Set(SUBJECTS).size).toBe(17)
     for (const subject of SUBJECTS) {
       const info = SUBJECT_INFO[subject]
       expect(subject, "slugs are one lowercase word").toMatch(/^[a-z]+$/)

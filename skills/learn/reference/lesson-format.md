@@ -1,4 +1,4 @@
-# Lesson format (spec 0.6)
+# Lesson format (spec 0.7)
 
 A lesson is one JSON file with four slots: `hook`, `bricks`, `challenge`, `wrapup`. A brick is one screen: either a `concept` brick (theory) or a question brick (`choice`, `compare`, `hotspot`, `sort`, `order`, `match`, `blank`, `scenario`). `schema/lesson.schema.json` is the formal definition; the checker (`scripts/learn.mjs validate`) also enforces the cross-field rules listed at the end.
 
@@ -6,7 +6,7 @@ A lesson is one JSON file with four slots: `hook`, `bricks`, `challenge`, `wrapu
 
 | Field              | Required | Description                                                                                                                                                         |
 | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spec`             | yes      | Always `"0.6"`                                                                                                                                                      |
+| `spec`             | yes      | Always `"0.7"`                                                                                                                                                      |
 | `title`            | yes      | Up to 60 characters; also used in the link                                                                                                                          |
 | `summary`          | yes      | One sentence shown before starting, up to 160 characters                                                                                                            |
 | `objective`        | yes      | What the learner can do afterwards                                                                                                                                  |
@@ -14,7 +14,7 @@ A lesson is one JSON file with four slots: `hook`, `bricks`, `challenge`, `wrapu
 | `targetLanguage`   | no       | The language being taught, for language lessons                                                                                                                     |
 | `level`            | yes      | Who it's for: `beginner`, `intermediate`, or `advanced` (`levels/index.md` says how to choose)                                                                      |
 | `estimatedMinutes` | yes      | 3–15, by size: short 3–5, standard 5–10, long 10–15 (`reference/planning.md`)                                                                                       |
-| `subject`          | yes      | One of the 16 subjects below, by what the learner will do afterwards. The checker refuses anything else                                                           |
+| `subject`          | yes      | One of the subjects below,    by what the learner will do afterwards. The checker refuses anything else                                                           |
 | `tags`             | no       | Up to 5 specifics: lowercase words joined by single hyphens (`compound-interest`), 2–30 characters each; see Subjects and tags below                                |
 | `source`           | no       | `{ "title": "…", "url": "https://…" }` credit for the material                                                                                                      |
 | `hook`             | yes      | One `choice` or `compare` brick; not scored                                                                                                                         |
@@ -49,7 +49,8 @@ Brick ids are unique across the whole lesson, including the hook and the challen
 | `marketing` | Marketing & writing | Marketing, sales, copywriting, content, social media, public speaking, professional writing | Creative writing (→ `arts`); grammar of a language being learned (→ `languages`) |
 | `money` | Money & finance | Personal finance, investing, accounting, economics for individuals | Running a company's finances (→ `business`) |
 | `science` | Science | Physics, chemistry, biology, earth and space science, scientific method | Human health (→ `health`); maths on its own (→ `math`) |
-| `math` | Math & data | Arithmetic through calculus, statistics, probability, data literacy, data analysis | Programming a data pipeline (→ `programming`); machine learning (→ `ai`) |
+| `math` | Math | Arithmetic through calculus, algebra, geometry, probability, proofs, mathematical thinking | Statistics and analysis of real data (→ `data`); machine learning (→ `ai`) |
+| `data` | Data | Statistics, data literacy, reading and making charts, data analysis, experiments and A/B tests, SQL for analysis | Probability and maths for their own sake (→ `math`); programming a data pipeline (→ `programming`); machine learning (→ `ai`) |
 | `health` | Health & fitness | Medicine for lay readers, nutrition, exercise, sleep, mental health, first aid | Biology for its own sake (→ `science`) |
 | `history` | History | Any period, place, or theme in history; archaeology | Current politics and institutions (→ `society`) |
 | `society` | Society & ideas | Politics, law, philosophy, religion, psychology, sociology, geography, current affairs, civics | Historical events (→ `history`); personal habits (→ `life`) |
@@ -165,6 +166,6 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 - No `number` bricks; every `blank` has `choices` that include an accepted answer.
 - Formulas in `\( … \)` are balanced and render; language codes are valid BCP 47.
 - Code sits in backticks: a command like `git push`, a flag, a call, a file name, a path, or an HTML tag written as plain text in a prompt, option, pair, item, feedback, or explanation is rejected.
-- `subject` is one of the 16 slugs above; at most 5 `tags`, each 2–30 characters of lowercase words and single hyphens, none repeating the subject, a level, or a language the lesson sets, none twice.
+- `subject` is one of the slugs above; at most 5 `tags`, each 2–30 characters of lowercase words and single hyphens, none repeating the subject, a level, or a language the lesson sets, none twice.
 - HTML visuals: no scripts, event handlers, iframes, forms, objects, embeds, `javascript:` links, or external URLs; each under 20 KB; the whole file under 500 KB. A concept's or question's HTML visual has `alt`.
 - Diagram visuals: the D2 compiles, with no colors, icons, images, links, tooltips, or HTML of its own; a concept's or question's diagram has `alt`.

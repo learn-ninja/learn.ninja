@@ -99,16 +99,16 @@ describe("schema", () => {
   it("requires the current spec version", () => {
     const l = buttons()
     l.spec = "0.1"
-    expectIssue(l, { path: "spec", message: /0\.6/ })
+    expectIssue(l, { path: "spec", message: /0\.7/ })
   })
 
-  it("requires a subject from the list, and names all 16 when it's wrong or missing", () => {
+  it("requires a subject from the list, and names every subject when it's wrong or missing", () => {
     const l = buttons()
     l.subject = "coding"
-    const sixteen = new RegExp(SUBJECTS.join(", "))
-    expectIssue(l, { path: "subject", message: sixteen })
+    const all = new RegExp(SUBJECTS.join(", "))
+    expectIssue(l, { path: "subject", message: all })
     delete l.subject
-    expectIssue(l, { path: "subject", message: sixteen })
+    expectIssue(l, { path: "subject", message: all })
   })
 
   it("no longer knows the topic field", () => {

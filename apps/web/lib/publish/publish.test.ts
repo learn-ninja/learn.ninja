@@ -227,7 +227,7 @@ describe("publishing", () => {
     )
     expect(reply).toMatchObject({
       status: 201,
-      body: { spec: "0.6", skill: { updateAvailable: true } },
+      body: { spec: "0.7", skill: { updateAvailable: true } },
     })
     const stored = await deps.store.get(reply.body.id as string)
     expect(stored?.lesson).toEqual(JSON.parse(buttons))
@@ -243,17 +243,17 @@ describe("publishing", () => {
       },
       deps
     )
-    expect(reply).toMatchObject({ status: 201, body: { spec: "0.6" } })
+    expect(reply).toMatchObject({ status: 201, body: { spec: "0.7" } })
     const stored = await deps.store.get(reply.body.id as string)
     expect(stored?.lesson).toMatchObject({
-      spec: "0.6",
+      spec: "0.7",
       subject: "business",
       tags: ["startups"],
     })
     expect(stored?.lesson).not.toHaveProperty("topic")
   })
 
-  it("refuses a subject outside the list, naming all 16", async () => {
+  it("refuses a subject outside the list, naming every subject", async () => {
     const reply = await publishLesson(
       {
         text: JSON.stringify({ ...JSON.parse(buttons), subject: "coding" }),
@@ -657,7 +657,7 @@ describe("checking", () => {
     const reply = await checkLesson({ text: buttons, client: "x" }, deps)
     expect(reply).toMatchObject({
       status: 200,
-      body: { ok: true, spec: "0.6", skill: { updateAvailable: false } },
+      body: { ok: true, spec: "0.7", skill: { updateAvailable: false } },
     })
     expect(reply.body).not.toHaveProperty("id")
     expect(reply.body).not.toHaveProperty("editToken")

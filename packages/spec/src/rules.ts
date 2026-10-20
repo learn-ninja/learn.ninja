@@ -69,14 +69,20 @@ export function positionalReference(text: string): string | null {
 // command with a known subcommand, a long flag, a call, a file name with a code extension, a path,
 // or an HTML tag. Prose that merely mentions git or python is left alone.
 const SUBCOMMANDS: Record<string, string[]> = {
-  git: "add commit push pull fetch clone status checkout switch branch merge rebase log diff stash reset init remote tag restore".split(" "),
-  npm: "install i uninstall run test start init ci publish update create exec".split(" "),
+  git: "add commit push pull fetch clone status checkout switch branch merge rebase log diff stash reset init remote tag restore".split(
+    " "
+  ),
+  npm: "install i uninstall run test start init ci publish update create exec".split(
+    " "
+  ),
   npx: ["*"],
   pnpm: "add install i run dev build test exec dlx".split(" "),
   yarn: "add install run dev build test".split(" "),
   pip: "install uninstall freeze list".split(" "),
   pip3: "install uninstall freeze list".split(" "),
-  docker: "run build ps pull push compose exec images stop start logs".split(" "),
+  docker: "run build ps pull push compose exec images stop start logs".split(
+    " "
+  ),
   kubectl: "get apply delete describe logs exec".split(" "),
   brew: "install update upgrade uninstall".split(" "),
   apt: "install update upgrade remove".split(" "),
@@ -119,7 +125,7 @@ export function bareCode(text: string): string | null {
   for (const re of BARE_CODE) {
     const found = plain.match(re)?.[0]
     // Node.js, Vue.js, and friends are names, not files.
-    if (found && !(/^[A-Z]\w*\.js$/.test(found))) return found
+    if (found && !/^[A-Z]\w*\.js$/.test(found)) return found
   }
   return null
 }

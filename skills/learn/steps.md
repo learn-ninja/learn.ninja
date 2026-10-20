@@ -1,6 +1,6 @@
 # Learn: the steps
 
-You write one lesson as a JSON file that follows the lesson spec (v0.6), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links last 7 days, or for good once the user keeps them in an account (step 7).
+You write one lesson as a JSON file that follows the lesson spec (v0.7), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links last 7 days, or for good once the user keeps them in an account (step 7).
 
 There are two ways to follow these steps. In a terminal with the skill installed, run the commands shown; every path below is relative to the folder this file is in (`.learn/skill/` after a sync, or the installed skill's folder), and `<skill-folder>` is the installed skill's folder, the one `SKILL.md` is in. Through the learn.ninja MCP server, there are no files or commands: call the tool named beside each one instead (`publish_lesson`, `update_lesson`). The one `get_guide` call you started with already returned every guide below but the schema, so don't call it again for them.
 

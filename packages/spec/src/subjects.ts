@@ -14,6 +14,7 @@ export const SUBJECTS = [
   "money",
   "science",
   "math",
+  "data",
   "health",
   "history",
   "society",
@@ -99,12 +100,20 @@ export const SUBJECT_INFO: Record<Subject, SubjectInfo> = {
     notThis: "Human health (→ `health`); maths on its own (→ `math`)",
   },
   math: {
-    name: "Math & data",
+    name: "Math",
     hue: 260,
     covers:
-      "Arithmetic through calculus, statistics, probability, data literacy, data analysis",
+      "Arithmetic through calculus, algebra, geometry, probability, proofs, mathematical thinking",
     notThis:
-      "Programming a data pipeline (→ `programming`); machine learning (→ `ai`)",
+      "Statistics and analysis of real data (→ `data`); machine learning (→ `ai`)",
+  },
+  data: {
+    name: "Data",
+    hue: 170,
+    covers:
+      "Statistics, data literacy, reading and making charts, data analysis, experiments and A/B tests, SQL for analysis",
+    notThis:
+      "Probability and maths for their own sake (→ `math`); programming a data pipeline (→ `programming`); machine learning (→ `ai`)",
   },
   health: {
     name: "Health & fitness",

@@ -30,6 +30,7 @@ import {
 /** Spec versions the server accepts. Older skills keep working while they're listed here; older files are upgraded first. */
 export const ACCEPTED_SPECS: string[] = [
   SPEC_VERSION,
+  "0.6",
   "0.5",
   "0.4",
   "0.3",

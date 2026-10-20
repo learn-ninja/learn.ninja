@@ -3,11 +3,11 @@ import { z } from "zod"
 import { SUBJECTS } from "./subjects"
 import { TAG_LIMITS, TAG_PATTERN } from "./tags"
 
-// Lesson spec v0.6: the shape of a lesson file.
+// Lesson spec v0.7: the shape of a lesson file.
 // Structural limits that JSON Schema can express live here; cross-field and
 // teaching-quality rules live in rules.ts.
 
-export const SPEC_VERSION = "0.6" as const
+export const SPEC_VERSION = "0.7" as const
 
 /** Who a lesson is for, from least to most prior knowledge. The skill's `levels/` guides say how each one teaches. */
 export const LEVELS = ["beginner", "intermediate", "advanced"] as const
@@ -19,7 +19,7 @@ const richText = z.string().min(1)
 /** A BCP 47 language code, e.g. "en", "es", "ar", "pt-BR". Checked further in rules.ts. */
 const langCode = z.string().min(2).max(35)
 
-/** One of the 16 subjects (subjects.ts). The message lists them, so an agent that guessed can pick again. */
+/** One of the subjects in subjects.ts. The message lists them, so an agent that guessed can pick again. */
 const subject = z.enum(SUBJECTS, {
   error: `"subject" must be one of: ${SUBJECTS.join(", ")}. Pick by what the learner will do afterwards; the format reference's subject table has the scope of each.`,
 })
