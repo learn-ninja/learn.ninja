@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { ChartVisual } from "@workspace/spec"
 
 import { renderChart } from "./chart"
+import { chartKey } from "./prepared"
 
 // Charts are drawn on the server into SVG that carries only theme tokens, so one drawing serves
 // light and dark and the frame runs no script.
@@ -69,5 +70,18 @@ describe("renderChart", () => {
     expect(compact).toContain('width="320"')
     expect(full).toContain('width="480"')
     expect(renderChart(scatter)).toBe(full)
+  })
+})
+
+describe("chartKey", () => {
+  it("ignores key order, since Postgres jsonb reorders a stored lesson's keys", () => {
+    const reordered = JSON.parse(
+      JSON.stringify(Object.fromEntries(Object.entries(scatter).reverse()))
+    )
+    reordered.data = scatter.data.map((d) =>
+      Object.fromEntries(Object.entries(d).reverse())
+    )
+    expect(chartKey(reordered, false)).toBe(chartKey(scatter, false))
+    expect(chartKey(scatter, true)).not.toBe(chartKey(scatter, false))
   })
 })

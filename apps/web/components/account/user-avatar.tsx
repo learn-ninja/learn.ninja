@@ -1,4 +1,5 @@
 import { UserRoundIcon } from "lucide-react"
+import { getImageProps } from "next/image"
 
 import {
   Avatar,
@@ -9,10 +10,30 @@ import { cn } from "@workspace/ui/lib/utils"
 
 /** Where a picture shows, which sets its size: a feed row's 20px author, the header's 28px control, the settings form, a profile's heading. */
 const SIZES = {
-  row: { avatar: "size-5", fallback: "text-xs" },
-  header: { avatar: "size-7", fallback: "text-xs" },
-  settings: { avatar: "size-20", fallback: "text-2xl" },
-  profile: { avatar: "size-16 sm:size-20", fallback: "text-xl sm:text-2xl" },
+  row: { avatar: "size-5", fallback: "text-xs", px: 20 },
+  header: { avatar: "size-7", fallback: "text-xs", px: 28 },
+  settings: { avatar: "size-20", fallback: "text-2xl", px: 80 },
+  profile: {
+    avatar: "size-16 sm:size-20",
+    fallback: "text-xl sm:text-2xl",
+    px: 80,
+  },
+}
+
+/**
+ * An off-site picture (a GitHub profile picture) goes through Next's image optimizer, so it loads
+ * from our own origin: a page reached client-side from a lesson keeps the lesson's CSP, which
+ * blocks off-site images. Uploads and previews are already ours.
+ */
+function pictureProps(image: string, px: number) {
+  if (!image.startsWith("https://")) return { src: image }
+  const { props } = getImageProps({
+    src: image,
+    alt: "",
+    width: px,
+    height: px,
+  })
+  return { src: props.src, srcSet: props.srcSet }
 }
 
 /**
@@ -32,7 +53,13 @@ export function UserAvatar({
 }) {
   return (
     <Avatar className={cn(SIZES[size].avatar, className)}>
-      {image ? <AvatarImage src={image} alt="" /> : null}
+      {image ? (
+        <AvatarImage
+          key={image}
+          {...pictureProps(image, SIZES[size].px)}
+          alt=""
+        />
+      ) : null}
       <AvatarFallback
         className={cn("font-medium uppercase", SIZES[size].fallback)}
       >

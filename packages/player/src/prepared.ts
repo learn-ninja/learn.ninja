@@ -43,9 +43,22 @@ const hash = (text: string) => {
   }
   return (h >>> 0).toString(16)
 }
-/** A chart's key: its content hashed, drawn full size or compact (on an option or item card). */
+/** JSON with every object's keys sorted, so the same content always gives the same text. */
+const canonicalJson = (value: unknown): string =>
+  JSON.stringify(value, (_, v: unknown) =>
+    v && typeof v === "object" && !Array.isArray(v)
+      ? Object.fromEntries(
+          Object.entries(v).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        )
+      : v
+  )
+/**
+ * A chart's key: its content hashed, drawn full size or compact (on an option or item card). The
+ * keys are sorted first: Postgres jsonb reorders them, so a stored lesson reads back in a
+ * different order than it was prepared in.
+ */
 export const chartKey = (chart: unknown, compact: boolean) =>
-  `${compact ? "c" : "f"}:${hash(JSON.stringify(chart))}`
+  `${compact ? "c" : "f"}:${hash(canonicalJson(chart))}`
 /** A diagram's key: its D2 source hashed. One drawing serves every size. */
 export const diagramKey = (d2: string) => `d:${hash(d2)}`
 

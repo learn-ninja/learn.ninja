@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 
+import { withCharts } from "@workspace/player/prepare"
+
 import { PlayBeacon } from "@/components/explore/play-beacon"
 import { LessonView } from "@/components/lesson-view"
 import { LessonExpired } from "@/components/site/lesson-expired"
@@ -63,7 +65,7 @@ export default async function PublishedLessonPage({
     <div className="h-svh">
       <LessonView
         lesson={record.lesson}
-        prepared={record.prepared}
+        prepared={withCharts(record.lesson, record.prepared)}
         uiLanguage={ui}
         expiresAt={record.expiresAt ?? undefined}
         progressKey={`l/${slugId}`}

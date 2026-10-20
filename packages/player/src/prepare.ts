@@ -137,6 +137,22 @@ function diagramsIn(lesson: Lesson): string[] {
  * The publish-time checks for diagram visuals, which need D2 itself and so can't live in the
  * spec's rules: D2 that doesn't compile, and what the lesson page can't show (see checkDiagram).
  */
+/**
+ * Draws any chart the prepared data is missing. Lessons published before chart keys ignored key
+ * order were prepared under keys that no longer match once Postgres reordered them; this redraws
+ * those on read, which is cheap (no Shiki or Tailwind).
+ */
+export function withCharts(lesson: Lesson, prepared: Prepared): Prepared {
+  const missing = chartsIn(lesson).filter(
+    ({ chart, compact }) => !prepared.charts?.[chartKey(chart, compact)]
+  )
+  if (missing.length === 0) return prepared
+  const charts = { ...prepared.charts }
+  for (const { chart, compact } of missing)
+    charts[chartKey(chart, compact)] = renderChart(chart, compact)
+  return { ...prepared, charts }
+}
+
 export async function checkDiagrams(lesson: Lesson): Promise<Issue[]> {
   const issues: Issue[] = []
   for (const { visual, path } of everyVisual(lesson)) {

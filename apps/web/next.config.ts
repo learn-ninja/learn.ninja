@@ -87,6 +87,17 @@ const nextConfig: NextConfig = {
   // PGlite (lesson storage in development) loads its WebAssembly and data files from its own folder;
   // D2.js finds its WASM build and worker next to its own file. Bundling would move both.
   serverExternalPackages: ["@electric-sql/pglite", "@terrastruct/d2"],
+  // GitHub profile pictures are served from our own origin (see UserAvatar): after a client-side
+  // visit to a lesson page, the document keeps LESSON_CSP, which blocks off-site images.
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+        pathname: "/u/**",
+      },
+    ],
+  },
   // prepareLesson() reads Tailwind's own stylesheets at runtime to compile each lesson's visuals CSS,
   // and D2.js loads its WASM build and worker by path, so they must ship with the server functions
   // that check, publish, and render lessons.
