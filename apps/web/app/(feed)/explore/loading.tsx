@@ -1,4 +1,4 @@
-import { FeedSkeleton, TabsSkeleton } from "@/components/explore/feed-skeleton"
+import { FeedSkeleton } from "@/components/explore/feed-skeleton"
 
 /**
  * What Explore shows until its list arrives. Next prefetches this with the route and swaps it in
@@ -9,7 +9,6 @@ export default function ExploreLoading() {
   return (
     <>
       <h1 className="sr-only">Explore</h1>
-      <TabsSkeleton />
       <FeedSkeleton />
     </>
   )

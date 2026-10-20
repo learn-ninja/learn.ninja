@@ -29,7 +29,7 @@ export function FeedSkeleton({
             <Skeleton className="h-3.5 w-20" />
           </div>
           {/* The title: one 22px line of text-base. */}
-          <Skeleton className={cn("my-[3px] mt-1 h-4", TITLE_WIDTHS[i % 4])} />
+          <Skeleton className={cn("my-[3px] mt-2 h-4", TITLE_WIDTHS[i % 4])} />
           {/* The summary: two 20px lines of text-sm. */}
           <Skeleton className="my-[3px] mt-0.5 h-3.5 w-full" />
           <Skeleton className={cn("my-[3px] h-3.5", LINE_WIDTHS[i % 4])} />
@@ -42,9 +42,4 @@ export function FeedSkeleton({
       ))}
     </div>
   )
-}
-
-/** The Explore tabs' footprint (New · Trending · Top) while the page can't yet say which is selected. */
-export function TabsSkeleton() {
-  return <Skeleton aria-hidden="true" className="h-8 w-40 rounded-lg" />
 }

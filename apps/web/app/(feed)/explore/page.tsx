@@ -1,10 +1,9 @@
 import type { Metadata } from "next"
 
-import { ExploreTabs } from "@/components/explore/explore-tabs"
 import { LessonFeed } from "@/components/explore/lesson-feed"
 import { currentActor } from "@/lib/auth/session"
 import { cachedLessons } from "@/lib/explore/cache"
-import { EXPLORE_SORTS, likedIds } from "@/lib/explore/queries"
+import { likedIds } from "@/lib/explore/queries"
 import { getDb } from "@/lib/publish/store"
 import { SITE } from "@/lib/site"
 
@@ -19,16 +18,12 @@ export const metadata: Metadata = {
 // file stands in for the list until it arrives.
 export const dynamic = "force-dynamic"
 
-export default async function ExplorePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ sort?: string | string[] }>
-}) {
-  const wanted = (await searchParams).sort
-  const sort = EXPLORE_SORTS.find((s) => s === wanted) ?? "new"
+// Newest first, for now: Trending and Top are still in lib/explore/queries.ts for when the feed
+// is big enough to need them.
+export default async function ExplorePage() {
   const [actor, lessons] = await Promise.all([
     currentActor(),
-    cachedLessons(sort),
+    cachedLessons("new"),
   ])
   const liked = actor
     ? await likedIds(
@@ -41,12 +36,10 @@ export default async function ExplorePage({
     <>
       {/* The list is the page: no heading or blurb, only a name for assistive tech. */}
       <h1 className="sr-only">Explore</h1>
-      <ExploreTabs sort={sort} />
       {lessons.length ? (
         <LessonFeed
           lessons={lessons}
           viewer={{ signedIn: actor !== null, liked }}
-          ranked={sort === "top"}
         />
       ) : (
         <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">

@@ -301,7 +301,7 @@ export function LessonHeader({
         // Holds the middle of the header so the buttons don't shift when the bar appears.
         <div aria-hidden="true" className="min-w-0 sm:flex-1" />
       )}
-      <div className="flex items-center justify-end gap-1 sm:flex-1">
+      <div className="flex items-center justify-end gap-2 sm:flex-1">
         {settings}
         <ShareButton title={title} url={shareUrl} t={t} />
       </div>
@@ -615,7 +615,7 @@ export function AppSettings({
   })
   return (
     <DropdownMenuTrigger>
-      <Button variant="ghost" size="icon-sm" aria-label={t.settings}>
+      <Button variant="outline" size="icon-sm" aria-label={t.settings}>
         <SettingsIcon />
       </Button>
       <DropdownMenu placement="bottom end" className="w-auto min-w-44">

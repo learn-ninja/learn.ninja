@@ -102,7 +102,7 @@ export function LessonRow({
             className="ms-auto shrink-0"
           />
         </div>
-        <h3 className="mt-1 text-base leading-snug font-medium">
+        <h3 className="mt-2 text-base leading-snug font-medium">
           <Link
             href={href}
             data-slot="row-link"

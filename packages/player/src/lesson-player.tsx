@@ -10,13 +10,8 @@ import type {
   QuestionBrick,
 } from "@workspace/spec"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
-import { Button, LinkButton } from "@workspace/ui/components/button"
+import { Button } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { DirectionProvider } from "@workspace/ui/components/direction"
 import { cn } from "@workspace/ui/lib/utils"
@@ -35,7 +30,6 @@ import {
 } from "./check"
 import { Briefing } from "./briefing"
 import { PlayerProvider, usePlayer } from "./context"
-import { TimeAgo } from "./time"
 import {
   hasOptionCards,
   BlankBrick,
@@ -106,13 +100,6 @@ import {
   type Moment,
 } from "./voices"
 
-/** Who published a lesson: their handle, where it links, and their picture when they have one. */
-export interface Author {
-  handle: string
-  href: string
-  image?: string | null
-}
-
 export interface LessonPlayerProps {
   lesson: Lesson
   /** Formulas and code prepared on the server (prepareLesson). */
@@ -132,10 +119,6 @@ export interface LessonPlayerProps {
   termsHref?: string
   /** The link Share copies. Defaults to the current page. */
   shareUrl?: string
-  /** Who published the lesson, credited on the title screen with a link to their profile. */
-  author?: Author
-  /** When the lesson was published, shown on the title screen as how long ago. */
-  publishedAt?: number
   /** The app's own entries for the lesson menu (the chevron by the title), after the player's. */
   menuItems?: React.ReactNode
   /** The app's color theme. Pass both to show the theme setting in the footer. */
@@ -167,8 +150,6 @@ export function LessonPlayer({
   privacyHref,
   termsHref,
   shareUrl,
-  author,
-  publishedAt,
   menuItems,
   theme,
   onThemeChange,
@@ -245,8 +226,6 @@ export function LessonPlayer({
             expiresAt={expiresAt}
             homeHref={homeHref}
             shareUrl={shareUrl}
-            author={author}
-            publishedAt={publishedAt}
             menuItems={menuItems}
             chrome={chrome}
           />
@@ -613,8 +592,6 @@ function Player({
   expiresAt,
   homeHref,
   shareUrl,
-  author,
-  publishedAt,
   menuItems,
   progressKey,
 }: {
@@ -633,9 +610,6 @@ function Player({
   expiresAt?: number
   homeHref: string
   shareUrl?: string
-  author?: Author
-  /** When the lesson was published, shown on the title screen as how long ago. */
-  publishedAt?: number
   menuItems?: React.ReactNode
   progressKey?: string
 }) {
@@ -951,8 +925,6 @@ function Player({
                       item={item}
                       state={state}
                       dispatch={dispatch}
-                      author={author}
-                      publishedAt={publishedAt}
                       label={screenLabel(state, t)}
                       inBubble
                       ninja={ninja !== "off"}
@@ -1192,17 +1164,11 @@ export function Screen({
   inBubble = false,
   brief = null,
   paths = false,
-  author,
-  publishedAt,
 }: {
   lesson: Lesson
   item: Item
   state: State
   dispatch: React.Dispatch<Action>
-  /** Who published the lesson, credited on the title screen. */
-  author?: Author
-  /** When the lesson was published, shown on the title screen as how long ago. */
-  publishedAt?: number
   /** A scenario's brief, while the ninja tells it (the player's story mode). */
   brief?: BriefProps | null
   /** A scenario after the right answer: every option's outcome (Every path, the player's Why?). */
@@ -1224,8 +1190,7 @@ export function Screen({
         <div className="flex flex-col items-center gap-5 text-center">
           <NinjaSlot show={ninja} gap="-mb-5" />
           <div className="flex w-full flex-col gap-3">
-            <Byline author={author} publishedAt={publishedAt} />
-            <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
               {lesson.title}
             </h1>
             <p className="text-base font-medium text-pretty text-muted-foreground">
@@ -1288,52 +1253,6 @@ function screenLabel(state: State, t: Strings): string | undefined {
   return item?.kind === "question" && item.role === "hook"
     ? t.warmUp
     : undefined
-}
-
-/**
- * The title screen's byline, the same as a row in Explore: who made the lesson (their picture
- * and handle, linking to their profile) at the start, and how long ago it was published at the
- * end. The picture and handle alone, no "by": it reads the same in every language.
- */
-function Byline({
-  author,
-  publishedAt,
-}: {
-  author?: Author
-  publishedAt?: number
-}) {
-  const { lang = "en" } = usePlayer()
-  if (!author && !publishedAt) return null
-  return (
-    <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-      {author ? (
-        <LinkButton
-          href={author.href}
-          variant="link"
-          size="sm"
-          className="h-auto min-w-0 gap-1.5 rounded-sm p-0 text-foreground"
-        >
-          <Avatar className="size-5">
-            {author.image ? <AvatarImage src={author.image} alt="" /> : null}
-            <AvatarFallback className="text-xs font-medium uppercase">
-              {author.handle[0]}
-            </AvatarFallback>
-          </Avatar>
-          <bdi dir="ltr" className="min-w-0 truncate">
-            {author.handle}
-          </bdi>
-        </LinkButton>
-      ) : null}
-      {publishedAt ? (
-        // Alone (an anonymous lesson), the age sits centered over the title rather than floating at the end.
-        <TimeAgo
-          at={publishedAt}
-          lang={lang}
-          className={cn("shrink-0", author ? "ms-auto" : "mx-auto")}
-        />
-      ) : null}
-    </div>
-  )
 }
 
 /** The title screen's meta line under the summary, as in Explore: the topic, length, and level, dot-separated. */

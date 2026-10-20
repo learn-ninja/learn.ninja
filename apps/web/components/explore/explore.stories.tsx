@@ -7,8 +7,7 @@ import { YourLessons } from "@/components/account/your-lessons"
 import type { ExploreApi } from "@/lib/explore/browser"
 import type { LessonSummary } from "@/lib/explore/queries"
 
-import { ExploreTabs } from "./explore-tabs"
-import { FeedSkeleton, TabsSkeleton } from "./feed-skeleton"
+import { FeedSkeleton } from "./feed-skeleton"
 import { LessonFeed } from "./lesson-feed"
 import { LessonRow } from "./lesson-row"
 import { LikeButton } from "./like-button"
@@ -220,18 +219,16 @@ export const RowAges: Story = {
 
 export const Feed: Story = {
   render: () => (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8">
-      <ExploreTabs sort="new" />
+    <div className="mx-auto max-w-2xl">
       <LessonFeed lessons={LESSONS} viewer={signedIn} />
     </div>
   ),
 }
 
 export const FeedTop: Story = {
-  name: "Feed, Top tab (ranked)",
+  name: "Feed, ranked",
   render: () => (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8">
-      <ExploreTabs sort="top" />
+    <div className="mx-auto max-w-2xl">
       <LessonFeed
         lessons={[...LESSONS].sort((a, b) => b.likes - a.likes)}
         viewer={signedIn}
@@ -244,8 +241,7 @@ export const FeedTop: Story = {
 export const FeedLoading: Story = {
   name: "Feed, loading",
   render: () => (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8">
-      <TabsSkeleton />
+    <div className="mx-auto max-w-2xl">
       <FeedSkeleton rows={4} />
     </div>
   ),

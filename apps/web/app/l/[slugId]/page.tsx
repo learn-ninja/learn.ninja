@@ -57,7 +57,7 @@ export default async function PublishedLessonPage({
   const { slugId } = await params
   const view = await viewPublished(slugId)
   if (!view.record) return <LessonExpired reason={view.reason ?? "expired"} />
-  const { record, author, isOwner, listed } = view
+  const { record, isOwner, listed } = view
   const { ui } = await searchParams
   return (
     <div className="h-svh">
@@ -67,12 +67,6 @@ export default async function PublishedLessonPage({
         uiLanguage={ui}
         expiresAt={record.expiresAt ?? undefined}
         progressKey={`l/${slugId}`}
-        author={
-          author?.handle
-            ? { handle: author.handle, href: `/u/${author.handle}`, image: author.image }
-            : undefined
-        }
-        publishedAt={record.createdAt}
         lessonId={record.id}
         canReport={listed && !isOwner}
         owner={

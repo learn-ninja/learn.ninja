@@ -52,12 +52,8 @@ test("Explore lists only lessons their makers chose to share", async ({
   expect(res.status()).toBe(201)
   const { id } = (await res.json()) as { id: string }
 
-  await page.goto("/explore?sort=trending")
+  await page.goto("/explore")
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Explore")
-  await expect(page.getByRole("tab", { name: "Trending" })).toHaveAttribute(
-    "aria-selected",
-    "true"
-  )
   await expect(page.locator(`a[href$="-${id}"]`)).toHaveCount(0)
 
   // Liking needs an account; visibility needs the owner.
