@@ -37,6 +37,7 @@ import {
   trendingScore,
 } from "./queries"
 import { reportText, type ReportMail } from "./report-email"
+import { backfillTags, formatBackfill } from "./backfill"
 import { formatTagReport, tagReport } from "./tag-report"
 
 // Explore over an in-memory Postgres: what gets listed, how the tabs sort, likes, visibility,
@@ -577,5 +578,73 @@ describe("subjects and tags", () => {
     now += 8 * DAY
     expect(await publish.store.deleteExpired()).toBe(1)
     expect(await tagsOf()).toEqual([])
+  })
+})
+
+describe("tag backfill", () => {
+  it("rewrites older rows to the current spec and rebuilds every lesson's tag rows", async () => {
+    // A lesson stored before spec 0.6, as the database still holds some: a topic, no subject, no tag rows.
+    const { subject: _subject, tags: _tags, ...rest } = JSON.parse(buttons)
+    const old = { ...rest, spec: "0.5", topic: "Statistics" }
+    await db.insert(lesson).values({
+      id: "old12345",
+      slug: "old",
+      spec: "0.5",
+      lesson: old,
+      prepared: {},
+      editTokenHash: "x",
+      ownerId: "ada",
+      visibility: "public",
+    })
+    // A current lesson whose tag rows went missing.
+    const current = await published("ada", { visibility: "public" })
+    await db.delete(lessonTag).where(eq(lessonTag.lessonId, current))
+    const tagsOf = async (id: string) =>
+      (await db.select().from(lessonTag).where(eq(lessonTag.lessonId, id)))
+        .map((r) => r.tag)
+        .sort()
+
+    const dry = await backfillTags(db)
+    expect(dry).toMatchObject({
+      written: false,
+      lessons: 2,
+      upgraded: [
+        {
+          id: "old12345",
+          from: "0.5",
+          subject: "data",
+          tags: ["statistics"],
+        },
+      ],
+      tagRows: 4,
+      bySubject: { data: 1, design: 1 },
+    })
+    expect(await tagsOf("old12345")).toEqual([])
+    expect(await tagsOf(current)).toEqual([])
+    expect(formatBackfill(dry)).toContain("dry run")
+
+    const done = await backfillTags(db, { write: true })
+    expect(done.written).toBe(true)
+    const [row] = await db
+      .select()
+      .from(lesson)
+      .where(eq(lesson.id, "old12345"))
+    expect(row?.spec).toBe("0.7")
+    expect(row?.lesson).toMatchObject({
+      spec: "0.7",
+      subject: "data",
+      tags: ["statistics"],
+    })
+    expect(row?.lesson).not.toHaveProperty("topic")
+    expect(await tagsOf("old12345")).toEqual(["statistics"])
+    expect(await tagsOf(current)).toEqual([
+      "buttons",
+      "user-interface",
+      "visual-hierarchy",
+    ])
+    // Running it again changes nothing.
+    const again = await backfillTags(db, { write: true })
+    expect(again.upgraded).toEqual([])
+    expect(formatBackfill(again)).toContain("2 lessons, 0 rewritten")
   })
 })
