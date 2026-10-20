@@ -43,6 +43,12 @@ const fakeApi: ExploreApi = {
 }
 
 const DAY = 864e5
+/** A picture for one author, inline so the story works offline; the others fall back to a letter. */
+const PORTRAIT =
+  "data:image/svg+xml," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#6d5dfc"/><circle cx="32" cy="26" r="12" fill="#fff"/><path d="M8 64c2-16 12-24 24-24s22 8 24 24z" fill="#fff"/></svg>'
+  )
 const summary = (over: Partial<LessonSummary> = {}): LessonSummary => ({
   id: "k3x9a2mq",
   slug: "how-compound-interest-works",
@@ -53,7 +59,7 @@ const summary = (over: Partial<LessonSummary> = {}): LessonSummary => ({
   level: "beginner",
   minutes: 6,
   language: "en",
-  author: { handle: "ada", name: "Ada Lovelace" },
+  author: { handle: "ada", name: "Ada Lovelace", image: PORTRAIT },
   plays: 1284,
   likes: 37,
   visibility: "public",
@@ -72,7 +78,7 @@ const LESSONS: LessonSummary[] = [
     topic: "Product",
     level: "intermediate",
     minutes: 10,
-    author: { handle: "bob-builds", name: "Bob" },
+    author: { handle: "bob-builds", name: "Bob", image: null },
     plays: 412,
     likes: 9,
   }),
@@ -85,7 +91,7 @@ const LESSONS: LessonSummary[] = [
     level: "beginner",
     minutes: 4,
     language: "es",
-    author: { handle: "maria", name: "María" },
+    author: { handle: "maria", name: "María", image: null },
     plays: 88,
     likes: 2,
   }),
@@ -98,7 +104,7 @@ const LESSONS: LessonSummary[] = [
     level: "beginner",
     minutes: 5,
     language: "ar",
-    author: { handle: "noor", name: "Noor" },
+    author: { handle: "noor", name: "Noor", image: null },
     plays: 40,
     likes: 5,
   }),
@@ -111,7 +117,7 @@ const LESSONS: LessonSummary[] = [
     topic: "History",
     level: "advanced",
     minutes: 14,
-    author: { handle: null, name: "Someone without a handle" },
+    author: { handle: null, name: "Someone without a handle", image: null },
     plays: 0,
     likes: 0,
   }),
@@ -123,7 +129,7 @@ const LESSONS: LessonSummary[] = [
     topic: null,
     level: "intermediate",
     minutes: 7,
-    author: { handle: "dev", name: "Dev" },
+    author: { handle: "dev", name: "Dev", image: null },
     plays: 3100,
     likes: 120,
   }),

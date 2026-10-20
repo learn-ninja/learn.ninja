@@ -23,7 +23,7 @@ export interface LessonSummary {
   /** The lesson's BCP 47 language, so the card can set `lang` and direction. */
   language: string
   /** Who published it; null for anonymous lessons (never listed) or when the owner is gone. */
-  author: { handle: string | null; name: string } | null
+  author: { handle: string | null; name: string; image: string | null } | null
   plays: number
   likes: number
   visibility: Visibility
@@ -66,6 +66,7 @@ const columns = {
   authorId: lesson.ownerId,
   authorHandle: user.handle,
   authorName: user.name,
+  authorImage: user.image,
 }
 
 interface Row {
@@ -85,6 +86,7 @@ interface Row {
   authorId: string | null
   authorHandle: string | null
   authorName: string | null
+  authorImage: string | null
 }
 
 function toSummary(row: Row): LessonSummary {
@@ -99,7 +101,7 @@ function toSummary(row: Row): LessonSummary {
     language: row.language,
     author:
       row.authorId && row.authorName !== null
-        ? { handle: row.authorHandle, name: row.authorName }
+        ? { handle: row.authorHandle, name: row.authorName, image: row.authorImage }
         : null,
     plays: row.plays,
     likes: row.likes,
@@ -238,9 +240,9 @@ export async function lessonsOwnedBy(
 export async function authorOf(
   db: Db,
   ownerId: string
-): Promise<{ handle: string | null; name: string } | null> {
+): Promise<{ handle: string | null; name: string; image: string | null } | null> {
   const [row] = await db
-    .select({ handle: user.handle, name: user.name })
+    .select({ handle: user.handle, name: user.name, image: user.image })
     .from(user)
     .where(eq(user.id, ownerId))
   return row ?? null

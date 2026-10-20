@@ -69,7 +69,7 @@ export default async function PublishedLessonPage({
         progressKey={`l/${slugId}`}
         author={
           author?.handle
-            ? { handle: author.handle, href: `/u/${author.handle}` }
+            ? { handle: author.handle, href: `/u/${author.handle}`, image: author.image }
             : undefined
         }
         lessonId={record.id}

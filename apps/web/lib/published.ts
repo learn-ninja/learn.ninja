@@ -32,8 +32,8 @@ export interface PublishedView {
   isOwner: boolean
   /** In Explore and on the owner's profile: owned, public, and not hidden. */
   listed: boolean
-  /** The owner's public name, for the title screen; null for anonymous lessons. */
-  author: { handle: string | null; name: string } | null
+  /** The owner's public name and picture, for the title screen; null for anonymous lessons. */
+  author: { handle: string | null; name: string; image: string | null } | null
 }
 
 /**

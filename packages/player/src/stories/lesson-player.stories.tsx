@@ -71,6 +71,23 @@ export const BronzeAgeCollapse: Story = {
   args: { lesson: lessons.bronze },
 }
 /** Under a day left: the lesson menu counts the link's time in hours instead of days. */
+export const WithAuthor: Story = {
+  args: {
+    lesson: lessons.buttons,
+    author: {
+      handle: "ada",
+      href: "#",
+      image:
+        "data:image/svg+xml," +
+        encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#6d5dfc"/><circle cx="32" cy="26" r="12" fill="#fff"/><path d="M8 64c2-16 12-24 24-24s22 8 24 24z" fill="#fff"/></svg>'
+        ),
+    },
+  },
+}
+export const WithAuthorNoPicture: Story = {
+  args: { lesson: lessons.buttons, author: { handle: "bob-builds", href: "#" } },
+}
 export const ExpiresSoon: Story = {
   args: { lesson: lessons.buttons, expiresAt: Date.now() + 14 * HOUR },
 }

@@ -4,6 +4,7 @@ import { PlayIcon } from "lucide-react"
 import { stringsFor } from "@workspace/player"
 import { cn } from "@workspace/ui/lib/utils"
 
+import { UserAvatar } from "@/components/account/user-avatar"
 import { compact } from "@/lib/explore/browser"
 import type { LessonSummary } from "@/lib/explore/queries"
 import { lessonPath } from "@/lib/publish/paths"
@@ -21,10 +22,11 @@ const t = stringsFor("en")
 
 /**
  * A lesson as one row of the Explore feed or a profile: the title, up to two lines of summary,
- * then one meta line with who made it, the topic, length and level, and the plays and likes at
- * its end. The whole row opens the lesson; the author and the heart are their own links. Rows
- * sit between hairlines (the list adds them), not in cards. `rank` puts a number in the margin
- * on the Top tab; `showAuthor={false}` drops the handle on a profile, where every row shares it.
+ * then one meta line with who made it (their picture and handle), the topic, length and level,
+ * and the plays and likes at its end. The whole row opens the lesson; the author and the heart
+ * are their own links. Rows sit between hairlines (the list adds them), not in cards. `rank`
+ * puts a number in the margin on the Top tab; `showAuthor={false}` drops the author on a
+ * profile, where every row shares it.
  */
 export function LessonRow({
   lesson,
@@ -40,21 +42,28 @@ export function LessonRow({
   className?: string
 }) {
   const href = lessonPath(lesson.slug, lesson.id)
-  const handle = lesson.author?.handle
+  const author = lesson.author
   const facts: React.ReactNode[] = []
-  if (showAuthor)
+  if (showAuthor && author)
     facts.push(
-      handle ? (
+      author.handle ? (
         <Link
           key="author"
-          href={`/u/${handle}`}
-          className="relative z-10 min-w-0 truncate rounded-sm text-foreground outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+          href={`/u/${author.handle}`}
+          className="relative z-10 flex min-w-0 items-center gap-1.5 rounded-sm text-foreground outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
         >
-          <bdi dir="ltr">@{handle}</bdi>
+          <UserAvatar image={author.image} handle={author.handle} size="row" />
+          <bdi dir="ltr" className="min-w-0 truncate">
+            {author.handle}
+          </bdi>
         </Link>
       ) : (
-        <span key="author" className="min-w-0 truncate">
-          {lesson.author?.name ?? ""}
+        <span
+          key="author"
+          className="flex min-w-0 items-center gap-1.5"
+        >
+          <UserAvatar image={author.image} handle={null} size="row" />
+          <span className="min-w-0 truncate">{author.name}</span>
         </span>
       )
     )

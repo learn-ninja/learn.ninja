@@ -7,8 +7,9 @@ import {
 } from "@workspace/ui/components/avatar"
 import { cn } from "@workspace/ui/lib/utils"
 
-/** Where a picture shows, which sets its size: the header's 28px control, the settings form, a profile's heading. */
+/** Where a picture shows, which sets its size: a feed row's 20px author, the header's 28px control, the settings form, a profile's heading. */
 const SIZES = {
+  row: { avatar: "size-5", fallback: "text-xs" },
   header: { avatar: "size-7", fallback: "text-xs" },
   settings: { avatar: "size-20", fallback: "text-2xl" },
   profile: { avatar: "size-16 sm:size-20", fallback: "text-xl sm:text-2xl" },

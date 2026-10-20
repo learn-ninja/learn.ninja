@@ -2,12 +2,7 @@
 
 import * as React from "react"
 import { createPortal } from "react-dom"
-import {
-  LightbulbIcon,
-  PanelRightIcon,
-  RotateCcwIcon,
-  UserRoundIcon,
-} from "lucide-react"
+import { LightbulbIcon, PanelRightIcon, RotateCcwIcon } from "lucide-react"
 
 import type {
   ConceptBrick as ConceptBrickData,
@@ -15,6 +10,11 @@ import type {
   QuestionBrick,
 } from "@workspace/spec"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@workspace/ui/components/avatar"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button, LinkButton } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
@@ -105,6 +105,13 @@ import {
   type Moment,
 } from "./voices"
 
+/** Who published a lesson: their handle, where it links, and their picture when they have one. */
+export interface Author {
+  handle: string
+  href: string
+  image?: string | null
+}
+
 export interface LessonPlayerProps {
   lesson: Lesson
   /** Formulas and code prepared on the server (prepareLesson). */
@@ -125,7 +132,7 @@ export interface LessonPlayerProps {
   /** The link Share copies. Defaults to the current page. */
   shareUrl?: string
   /** Who published the lesson, credited on the title screen with a link to their profile. */
-  author?: { handle: string; href: string }
+  author?: Author
   /** The app's own entries for the lesson menu (the chevron by the title), after the player's. */
   menuItems?: React.ReactNode
   /** The app's color theme. Pass both to show the theme setting in the footer. */
@@ -620,7 +627,7 @@ function Player({
   expiresAt?: number
   homeHref: string
   shareUrl?: string
-  author?: { handle: string; href: string }
+  author?: Author
   menuItems?: React.ReactNode
   progressKey?: string
 }) {
@@ -1183,7 +1190,7 @@ export function Screen({
   state: State
   dispatch: React.Dispatch<Action>
   /** Who published the lesson, credited on the title screen. */
-  author?: { handle: string; href: string }
+  author?: Author
   /** A scenario's brief, while the ninja tells it (the player's story mode). */
   brief?: BriefProps | null
   /** A scenario after the right answer: every option's outcome (Every path, the player's Why?). */
@@ -1222,15 +1229,20 @@ export function Screen({
             <Badge variant="outline">{t.levels[lesson.level]}</Badge>
           </div>
           {author ? (
-            // The handle alone, no "by": it reads the same in every language.
+            // The picture and handle alone, no "by": it reads the same in every language.
             <LinkButton
               href={author.href}
               variant="ghost"
               size="sm"
               className="text-muted-foreground"
             >
-              <UserRoundIcon data-icon="inline-start" />
-              <bdi dir="ltr">@{author.handle}</bdi>
+              <Avatar className="size-5">
+                {author.image ? <AvatarImage src={author.image} alt="" /> : null}
+                <AvatarFallback className="text-xs font-medium uppercase">
+                  {author.handle[0]}
+                </AvatarFallback>
+              </Avatar>
+              <bdi dir="ltr">{author.handle}</bdi>
             </LinkButton>
           ) : null}
         </div>

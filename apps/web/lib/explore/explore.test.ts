@@ -114,7 +114,7 @@ describe("what Explore lists", () => {
       level: "beginner",
       minutes: 6,
       language: "en",
-      author: { handle: "ada", name: "Ada Lovelace" },
+      author: { handle: "ada", name: "Ada Lovelace", image: null },
       plays: 0,
       likes: 0,
       visibility: "public",
@@ -154,7 +154,7 @@ describe("what Explore lists", () => {
   it("lists a lesson whose owner has no handle yet, without a handle", async () => {
     await published("new", { visibility: "public" })
     const [row] = await listLessons(db, "new", 10, now)
-    expect(row?.author).toEqual({ handle: null, name: "No Handle Yet" })
+    expect(row?.author).toEqual({ handle: null, name: "No Handle Yet", image: null })
   })
 })
 
@@ -185,7 +185,7 @@ describe("profiles", () => {
     expect((await lessonsOwnedBy(db, "ada")).map((l) => l.id).sort()).toEqual(
       [a, b].sort()
     )
-    expect(await authorOf(db, "ada")).toEqual({ handle: "ada", name: "Ada Lovelace" })
+    expect(await authorOf(db, "ada")).toEqual({ handle: "ada", name: "Ada Lovelace", image: null })
     expect(await authorOf(db, "ghost")).toBeNull()
   })
 })
