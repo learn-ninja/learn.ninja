@@ -134,5 +134,6 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 - Prompts ≤40 words; concept bodies ≤80 words.
 - No `number` bricks; every `blank` has `choices` that include an accepted answer.
 - Formulas in `\( … \)` are balanced and render; language codes are valid BCP 47.
+- Code sits in backticks: a command like `git push`, a flag, a call, a file name, a path, or an HTML tag written as plain text in a prompt, option, pair, item, feedback, or explanation is rejected.
 - HTML visuals: no scripts, event handlers, iframes, forms, objects, embeds, `javascript:` links, or external URLs; each under 20 KB; the whole file under 500 KB. A concept's or question's HTML visual has `alt`.
 - Diagram visuals: the D2 compiles, with no colors, icons, images, links, tooltips, or HTML of its own; a concept's or question's diagram has `alt`.

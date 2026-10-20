@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { loadExample } from "./test-helpers"
-import { positionalReference } from "./rules"
+import { bareCode, positionalReference } from "./rules"
 import { validateLesson } from "./validate"
 
 // Each test breaks a valid example lesson in one way and checks the right issue comes back.
@@ -525,6 +525,51 @@ describe("answers named by their place", () => {
     expect(positionalReference("It comes in the third step.")).toBeNull()
     expect(positionalReference("Plot B measures it first.")).toBe("Plot B")
     expect(positionalReference("Answer a question with a question.")).toBeNull()
+  })
+})
+
+describe("code outside backticks", () => {
+  it("rejects a match pair that writes a command as plain text", () => {
+    const lesson = loadExample("spanish-greetings.json") as {
+      bricks: { type: string; pairs: { left: string; right: string }[] }[]
+    }
+    const match = lesson.bricks.find((b) => b.type === "match")!
+    match.pairs[0]!.left = "git push"
+    expectIssue(lesson, {
+      path: "bricks[1].pairs[0].left",
+      message: /"git push" looks like code, but it isn't in backticks/,
+      kind: "teaching",
+    })
+  })
+
+  it("accepts the same command in backticks", () => {
+    const lesson = loadExample("spanish-greetings.json") as {
+      bricks: { type: string; pairs: { left: string; right: string }[] }[]
+    }
+    const match = lesson.bricks.find((b) => b.type === "match")!
+    match.pairs[0]!.left = "`git push`"
+    expect(validateLesson(lesson).ok).toBe(true)
+  })
+
+  it("spots commands, flags, calls, files, paths, and tags, but not prose", () => {
+    expect(bareCode("Send your commits up with git push")).toBe("git push")
+    expect(bareCode("Run `git push` now")).toBeNull()
+    expect(bareCode("the git history of a repo")).toBeNull()
+    expect(bareCode("npm install it first")).toBe("npm install")
+    expect(bareCode("add the --force flag")).toBe("--force")
+    expect(bareCode("arr.map() returns a new array")).toBe("arr.map()")
+    expect(bareCode("open package.json")).toBe("package.json")
+    expect(bareCode("Node.js is a runtime")).toBeNull()
+    expect(bareCode("the .env file")).toBe(".env")
+    expect(bareCode("edit ~/.zshrc")).toBe("~/.zshrc")
+    expect(bareCode("look in src/app/page.tsx")).toBe("src/app/page.tsx")
+    expect(bareCode("a <div> element")).toBe("<div>")
+    expect(bareCode("cd ../app")).toBe("cd ../app")
+    expect(bareCode("cd into the folder")).toBeNull()
+    expect(bareCode("and/or, 3/4 cup, 24/7")).toBeNull()
+    expect(bareCode("see https://learn.ninja/docs")).toBeNull()
+    expect(bareCode("In \\( x^2 \\) terms, e.g. U.S. history")).toBeNull()
+    expect(bareCode("python code costs 2.50 in v1.2.3")).toBeNull()
   })
 })
 
