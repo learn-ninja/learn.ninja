@@ -66,6 +66,11 @@ interface PublishRequest {
   ownerId?: string | null
   /** The owner's handle when the caller already knows it (the route has the actor), so the reply needn't look it up. */
   ownerHandle?: string | null
+  /**
+   * Where an owned lesson starts: listed in Explore (the default) or link-only. A personal MCP URL
+   * publishes unlisted, so half-finished drafts don't land in Explore. Ignored for anonymous lessons.
+   */
+  visibility?: "public" | "unlisted"
 }
 
 /** Checks size, JSON, spec version, the spec's rules, and that diagrams draw. Returns the lesson or an error reply. */
@@ -187,9 +192,9 @@ export async function publishLesson(
     editTokenHash: hashToken(editToken),
     claimTokenHash: claimToken ? hashToken(claimToken) : null,
     ownerId: owner,
-    // An owned lesson is listed in Explore straight away (the owner can unlist it from their
-    // settings); an anonymous one stays link-only until it's kept.
-    visibility: owner ? "public" : "unlisted",
+    // An owned lesson is listed in Explore straight away unless the caller says otherwise (the
+    // owner can switch it in their settings); an anonymous one stays link-only until it's kept.
+    visibility: owner ? (req.visibility ?? "public") : "unlisted",
     hidden: false,
     plays: 0,
     likes: 0,
@@ -214,8 +219,18 @@ export async function publishLesson(
   }
 }
 
+/**
+ * Replaces a published lesson. The edit token from publishing proves the right to change it; so
+ * does being its owner (`actorId` equal to the lesson's `ownerId`), which is how a chat app on a
+ * personal MCP URL edits a lesson whose token lives in another chat.
+ */
 export async function updateLesson(
-  req: PublishRequest & { id: string; editToken: string | null },
+  req: PublishRequest & {
+    id: string
+    editToken: string | null
+    /** The signed-in user, when the caller has one; an owner needs no token. */
+    actorId?: string | null
+  },
   deps: Deps
 ): Promise<Reply> {
   if (!(await deps.limiter.allow(req.client))) {
@@ -240,13 +255,15 @@ export async function updateLesson(
       },
     }
   }
-  if (!req.editToken || !tokenMatches(req.editToken, existing.editTokenHash)) {
+  if (!mayEdit(existing, req.editToken, req.actorId)) {
     return {
       status: 401,
       body: {
         ok: false,
         error: "unauthorized",
-        message: "The edit token doesn't match this lesson.",
+        message: req.editToken
+          ? "The edit token doesn't match this lesson."
+          : "This lesson isn't in your account, and no edit token was sent.",
       },
     }
   }
@@ -274,6 +291,16 @@ export async function updateLesson(
       skill,
     },
   }
+}
+
+/** Whether the edit token, or the signed-in user's ownership, allows changing `existing`. */
+export function mayEdit(
+  existing: Pick<StoredLesson, "editTokenHash" | "ownerId">,
+  editToken: string | null | undefined,
+  actorId?: string | null
+): boolean {
+  if (editToken && tokenMatches(editToken, existing.editTokenHash)) return true
+  return Boolean(actorId) && existing.ownerId === actorId
 }
 
 /**

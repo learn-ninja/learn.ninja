@@ -28,6 +28,19 @@ export const CODE_EXPIRY_SECONDS = 5 * 60
 export const CODE_ATTEMPTS = 3
 /** API keys start with this, so a leaked one is easy to recognize. */
 export const API_KEY_PREFIX = "learn_"
+/**
+ * The key inside a personal MCP URL (https://learn.ninja/mcp/{key}) starts with this. Such a key
+ * works only there: sent as x-api-key, to the account API or to Better Auth's own routes, it's
+ * refused (the hook below and getActor), so a URL that leaks from a screenshot or a config can
+ * publish and edit lessons, and nothing else.
+ */
+export const MCP_KEY_PREFIX = "learn_mcp_"
+/** What an MCP key may do; /mcp/{key} checks it, so a terminal key pasted into the URL is refused too. */
+export const MCP_KEY_PERMISSIONS = { mcp: ["publish"] }
+
+/** Why an MCP key sent as x-api-key is refused. */
+export const MCP_KEY_AS_HEADER =
+  "This key belongs in a chat app's MCP URL and works nowhere else. For the terminal, run `learn login`."
 
 export interface AuthDeps {
   db: Db
@@ -124,15 +137,22 @@ export function createAuth(deps: AuthDeps) {
         enableSessionForAPIKeys: true,
         // Publishing has its own limits; a key shouldn't stop after ten lessons a day.
         rateLimit: { enabled: false },
-        startingCharactersConfig: { charactersLength: API_KEY_PREFIX.length + 4 },
+        // Enough of the start to tell keys apart in the settings, and to see an MCP key's prefix.
+        startingCharactersConfig: { charactersLength: MCP_KEY_PREFIX.length + 4 },
       }),
     ],
     hooks: {
       // Each code is an email we pay for: a per-address limit, checked before the code is made.
       // (Better Auth sends codes after replying, so sendVerificationOTP can't refuse.)
       before: createAuthMiddleware(async (ctx) => {
+        const apiKeyHeader = ctx.headers?.get("x-api-key")
+        // An MCP key is a bearer for one URL, not an account key: never a session here, whatever
+        // the route (get-session, update-user, api-key/delete…). /mcp/{key} verifies it by value.
+        if (apiKeyHeader?.startsWith(MCP_KEY_PREFIX)) {
+          throw new APIError("FORBIDDEN", { message: MCP_KEY_AS_HEADER })
+        }
         // A key may not mint keys: only a browser session can (POST /api/keys does the same).
-        if (ctx.path === "/api-key/create" && ctx.headers?.get("x-api-key")) {
+        if (ctx.path === "/api-key/create" && apiKeyHeader) {
           throw new APIError("FORBIDDEN", {
             message: "Make new keys from the website, signed in.",
           })

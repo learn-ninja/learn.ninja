@@ -5,11 +5,12 @@ import { redirect } from "next/navigation"
 import { AccountPage } from "@/components/account/account-page"
 import { ApiKeys } from "@/components/account/api-keys"
 import { AvatarForm } from "@/components/account/avatar-form"
+import { ConnectChat } from "@/components/account/connect-chat"
 import { HandleForm } from "@/components/account/handle-form"
 import { SignOutButton } from "@/components/account/sign-out-button"
 import { YourLessons } from "@/components/account/your-lessons"
 import { ButtonLink } from "@/components/site/button-link"
-import { listKeys } from "@/lib/auth/account"
+import { listKeys, mcpConnection } from "@/lib/auth/account"
 import { accountOf } from "@/lib/auth/account-info"
 import { getAuth } from "@/lib/auth/auth"
 import { currentActor } from "@/lib/auth/session"
@@ -30,10 +31,11 @@ export const dynamic = "force-dynamic"
 export default async function SettingsPage() {
   const actor = await currentActor()
   if (!actor) redirect("/sign-in?callback=/settings")
-  const [keys, lessons] = await Promise.all([
-    listKeys(await getAuth(), await headers()).then(
-      (r) => r.body.keys as KeySummary[]
-    ),
+  const auth = await getAuth()
+  const h = await headers()
+  const [keys, connection, lessons] = await Promise.all([
+    listKeys(auth, h).then((r) => r.body.keys as KeySummary[]),
+    mcpConnection(auth, h),
     lessonsOwnedBy(await getDb(), actor.userId),
   ])
   return (
@@ -73,6 +75,13 @@ export default async function SettingsPage() {
       <section id="lessons" className="flex scroll-mt-20 flex-col gap-4">
         <h2 className="text-xl font-semibold tracking-tight">Your lessons</h2>
         <YourLessons initial={lessons} handle={actor.handle} />
+      </section>
+
+      <section id="chat" className="flex scroll-mt-20 flex-col gap-4">
+        <h2 className="text-xl font-semibold tracking-tight">
+          Connect a chat app
+        </h2>
+        <ConnectChat initial={connection} />
       </section>
 
       <section className="flex flex-col gap-4">

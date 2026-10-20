@@ -13,7 +13,7 @@ A lesson is published anonymously and lasts 7 days. **Keeping** it saves it to a
 
 Use the same email every time, so everything lands in one account. If you sign in on learn.ninja with GitHub, that's the email on your GitHub account.
 
-In a chat app connected over [MCP](/docs/reference/mcp), there's no code to type: say you want to keep the lesson, and the agent pastes a link. Opening it signs you in on learn.ninja (GitHub or an email code) and one button saves the lesson.
+It's the same in a chat app connected over [MCP](/docs/reference/mcp): say you want to keep the lesson, give the agent your email, then the code. The agent passes both to the `keep_lesson` tool; the code is checked on learn.ninja and spent at once, and nothing that could sign in as you stays in the chat. Each lesson is kept on its own. To have every lesson a chat app makes saved without asking, [connect your own URL](/docs/reference/mcp#connect-with-your-account) from your settings.
 
 ## What the agent runs
 
@@ -26,17 +26,19 @@ node <skill-folder>/scripts/learn.mjs login --email you@example.com --code 12345
 
 Signing in saves an API key for this machine (in `~/.config/learn/credentials`, readable only by you) and keeps every lesson published from the current folder. From then on `publish` sends the key: new lessons belong to the account from the start, never expire, and are listed in Explore, and the agent stops offering to keep them. Already signed in, in a folder the login didn't cover? `keep` saves that folder's lessons without a new code. `whoami` prints the signed-in email and handle; `logout` forgets the key and revokes it. The [CLI reference](/docs/reference/cli#login) has the details.
 
+Over MCP, the two calls are `keep_lesson` with the lesson's `id`, its `editToken`, and your `email`, then the same with the `code`. Nothing is saved in the chat app afterwards.
+
 Rules for agents, from the skill's own steps:
 
 - Offer to keep a lesson once, in one sentence after the link, and don't bring it up again.
-- Run `login` only when the user asks to keep a lesson. Never sign them in on your own.
-- Don't paste the keep link into the chat until the user says they want to keep the lesson. Over MCP, that's the moment to call `keep_lesson` and paste the link it returns.
+- Send a code only when the user asks to keep a lesson, to the address they give. Never sign them in on your own, and never guess the address.
+- Don't paste the keep link into the chat unless the user asks for one.
 - Never send the user to look in `.learn/` or in the credentials file.
 - Codes work for 5 minutes and three tries. If one fails, ask for the email again and send a new code.
 
 ## Keep from the browser
 
-Publishing also returns a keep link, `https://learn.ninja/keep/…`, and over MCP the agent can make a fresh one at any time with `keep_lesson`. Opening it signs you in, with GitHub or an email code, and one button saves that lesson. Each keep link works once. This is the way to keep a lesson in an account you already use on the website, without signing in from the terminal.
+Publishing also returns a keep link, `https://learn.ninja/keep/…`, and over MCP the agent can make a fresh one at any time with `keep_lesson` (called without an email). Opening it signs you in, with GitHub or an email code, and one button saves that lesson. Each keep link works once. This is the way to keep a lesson in an account you already use on the website, without typing a code into the chat.
 
 ## Show it in Explore
 
@@ -48,7 +50,7 @@ To keep a lesson link-only, switch it to **Unlisted** under **Your lessons** in 
 
 Keeping needs proof that the lesson is yours: the claim token from publishing, or the edit token, which the tool saves in `.learn/state.json` and a chat app keeps in the conversation. Whoever can rewrite a lesson is its author, so the edit token is enough.
 
-- **The chat is still open** (MCP): say you want to keep the lesson; the agent calls `keep_lesson` with the edit token and pastes the link.
+- **The chat is still open** (MCP): say you want to keep the lesson; the agent calls `keep_lesson` with the edit token and your email, then your code.
 - **The folder is still there** (skill): `learn login` keeps everything published from it, or `learn keep` if you're already signed in. Lessons published by an older tool that saved no claim token are kept with the edit token.
 - **Both are gone.** Nothing can prove the lesson is yours, so it can't be kept; publish a fresh copy with `publish lesson.json --new` and keep that one. The old link expires on its own.
 - **The keep link says "Nothing to keep here".** The lesson was already saved to an account, it expired first, or a newer keep link replaced this one.

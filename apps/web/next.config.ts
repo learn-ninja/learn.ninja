@@ -95,13 +95,18 @@ const nextConfig: NextConfig = {
     "/api/lessons/[id]": PREPARE_FILES,
     "/api/validate": PREPARE_FILES,
     // The MCP server also serves the skill's guides at runtime (get_guide reads skills/learn/).
-    "/mcp": [
-      ...PREPARE_FILES,
-      "../../skills/learn/*.md",
-      "../../skills/learn/levels/*.md",
-      "../../skills/learn/reference/*.md",
-      "../../skills/learn/schema/*.json",
-    ],
+    ...Object.fromEntries(
+      ["/mcp", "/mcp/[key]"].map((route) => [
+        route,
+        [
+          ...PREPARE_FILES,
+          "../../skills/learn/*.md",
+          "../../skills/learn/levels/*.md",
+          "../../skills/learn/reference/*.md",
+          "../../skills/learn/schema/*.json",
+        ],
+      ])
+    ),
     "/lessons/[slug]": PREPARE_FILES,
     "/docs": PREPARE_FILES,
     // The site's link preview card reads the agent logos from public/ (lib/og.tsx).

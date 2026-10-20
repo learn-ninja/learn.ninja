@@ -713,6 +713,49 @@ describe("updating", () => {
     )
     expect(reply).toMatchObject({ status: 404, body: { error: "not_found" } })
   })
+
+  it("lets the owner update without a token, and nobody else", async () => {
+    const created = await publishLesson(
+      { text: buttons, client: "x", ownerId: "user_1", visibility: "unlisted" },
+      deps
+    )
+    expect(created.body).toMatchObject({ owned: true, visibility: "unlisted" })
+    const id = created.body.id as string
+    const changed = JSON.stringify({ ...JSON.parse(buttons), title: "Mine" })
+    const asOwner = await updateLesson(
+      { id, editToken: null, actorId: "user_1", text: changed, client: "x" },
+      deps
+    )
+    expect(asOwner.status).toBe(200)
+    expect((await deps.store.get(id))?.lesson.title).toBe("Mine")
+
+    const asOther = await updateLesson(
+      { id, editToken: null, actorId: "user_2", text: buttons, client: "x" },
+      deps
+    )
+    expect(asOther).toMatchObject({
+      status: 401,
+      body: { error: "unauthorized" },
+    })
+    // An anonymous lesson has no owner to match.
+    const anonymous = await publishLesson({ text: buttons, client: "x" }, deps)
+    const noToken = await updateLesson(
+      {
+        id: anonymous.body.id as string,
+        editToken: null,
+        actorId: "user_1",
+        text: buttons,
+        client: "x",
+      },
+      deps
+    )
+    expect(noToken.status).toBe(401)
+    // Visibility is only a choice for owned lessons.
+    expect(
+      (await publishLesson({ text: buttons, client: "x", visibility: "public" }, deps))
+        .body.visibility
+    ).toBe("unlisted")
+  })
 })
 
 describe("respond", () => {

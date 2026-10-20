@@ -1,7 +1,7 @@
 import { emailOTPClient } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 
-import type { KeySummary } from "./account"
+import type { KeySummary, McpConnection } from "./account"
 import { decodeAccount, encodeAccount, type AccountInfo } from "./account-info"
 
 // What the sign-in and settings pages call from the browser: Better Auth's client for sign-in
@@ -42,6 +42,15 @@ export interface AccountApi {
   listKeys(): Promise<KeySummary[]>
   createKey(name: string): Promise<Outcome & { key?: NewKey }>
   deleteKey(id: string): Promise<Outcome>
+  /** Makes the personal MCP URL, replacing any earlier one; the URL comes back once, in the clear. */
+  connectChat(): Promise<Outcome & { connection?: NewMcpConnection }>
+  /** Revokes the personal MCP URL. */
+  disconnectChat(): Promise<Outcome>
+}
+
+export interface NewMcpConnection extends McpConnection {
+  /** The whole URL, shown once. */
+  url: string
 }
 
 async function call<T extends object>(
@@ -125,6 +134,21 @@ export const accountApi: AccountApi = {
   },
   async deleteKey(id) {
     const reply = await call(`/api/keys/${id}`, { method: "DELETE" })
+    return reply.ok ? {} : { error: reply.message }
+  },
+  async connectChat() {
+    const reply = await call<{
+      id: string
+      url: string
+      start: string | null
+      createdAt: string
+    }>("/api/account/mcp", { method: "POST" })
+    return reply.ok
+      ? { connection: { ...reply, lastUsedAt: null } }
+      : { error: reply.message }
+  },
+  async disconnectChat() {
+    const reply = await call("/api/account/mcp", { method: "DELETE" })
     return reply.ok ? {} : { error: reply.message }
   },
 }

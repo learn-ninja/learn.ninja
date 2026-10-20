@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
-import type { KeySummary } from "@/lib/auth/account"
+import type { KeySummary, McpConnection } from "@/lib/auth/account"
 import type { AccountApi } from "@/lib/auth/browser"
 import { SiteHeader } from "@/components/site/site-header"
 
 import { ApiKeys } from "./api-keys"
 import { AvatarForm } from "./avatar-form"
+import { ConnectChat } from "./connect-chat"
 import { HandleForm } from "./handle-form"
 import { KeepForm, type KeepResult } from "./keep-form"
 import { SignInForm } from "./sign-in-form"
@@ -69,8 +70,31 @@ const fakeApi = (over: Partial<AccountApi> = {}): AccountApi => ({
     await wait()
     return {}
   },
+  async connectChat() {
+    await wait()
+    return {
+      connection: {
+        id: `m${Date.now()}`,
+        url: "https://learn.ninja/mcp/learn_mcp_" + "x".repeat(64),
+        start: "learn_mcp_xxxx",
+        createdAt: new Date().toISOString(),
+        lastUsedAt: null,
+      },
+    }
+  },
+  async disconnectChat() {
+    await wait()
+    return {}
+  },
   ...over,
 })
+
+const CONNECTION: McpConnection = {
+  id: "m1",
+  start: "learn_mcp_ab12",
+  createdAt: new Date(Date.now() - 10 * 864e5).toISOString(),
+  lastUsedAt: new Date(Date.now() - 864e5).toISOString(),
+}
 
 const KEYS: KeySummary[] = [
   {
@@ -177,6 +201,31 @@ export const Keys: Story = {
 export const KeysNone: Story = {
   name: "Keys, none yet",
   render: () => <ApiKeys initial={[]} api={fakeApi()} />,
+}
+
+export const ConnectChatApp: Story = {
+  name: "Connect a chat app",
+  render: () => <ConnectChat initial={CONNECTION} api={fakeApi()} />,
+}
+
+export const ConnectChatAppNone: Story = {
+  name: "Connect a chat app, no URL yet",
+  render: () => <ConnectChat initial={null} api={fakeApi()} />,
+}
+
+export const ConnectChatAppFails: Story = {
+  name: "Connect a chat app, server refuses",
+  render: () => (
+    <ConnectChat
+      initial={null}
+      api={fakeApi({
+        connectChat: async () => {
+          await wait()
+          return { error: "Sign in again to make a URL." }
+        },
+      })}
+    />
+  ),
 }
 
 export const SignOut: Story = {

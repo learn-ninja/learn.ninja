@@ -52,7 +52,7 @@ x-api-key: <key>
 
 The body is `{ "claimToken": "…" }` or `{ "editToken": "…" }` from publishing (both together is fine; either one proves the lesson is yours). Needs a signed-in caller: an API key or a session cookie. The lesson then belongs to that account, stops expiring, and the claim token stops working; the edit token keeps working. Returns `200` with `id`, `url`, `title`, `owned: true`, `expiresAt: null`, `owner`, and `visibility`; `401 unauthorized` if neither token matches; `409 already_claimed` if another account has it; `404` once it has expired.
 
-`claimUrl` from publishing (`/keep/{claimToken}`) does the same thing in the browser: it signs the visitor in, then keeps that one lesson. The MCP server's `keep_lesson` tool makes a fresh `claimUrl` from the edit token, for a lesson whose publish-time link is gone; the previous link stops working.
+`claimUrl` from publishing (`/keep/{claimToken}`) does the same thing in the browser: it signs the visitor in, then keeps that one lesson. The MCP server's `keep_lesson` tool keeps a lesson with an email code instead (the two sign-in calls below, then this one, all on the server), or makes a fresh `claimUrl` from the edit token when called without an email; the previous link then stops working.
 
 ## List a lesson in Explore
 
@@ -112,6 +112,13 @@ DELETE /api/keys/{id}
 
 List the account's keys (never the keys themselves), make a new one from `{ "name": "…" }` (the only call that returns a key in the clear; it needs a session cookie, not another key), or revoke one. A key may revoke itself.
 
+```http
+POST /api/account/mcp
+DELETE /api/account/mcp
+```
+
+The account's personal MCP URL (`https://learn.ninja/mcp/{key}`, see [Connect with your account](/docs/reference/mcp#connect-with-your-account)). `POST` makes it, revoking any earlier one, and returns `{ "ok": true, "id": "…", "url": "…", "start": "learn_mcp_ab12", "createdAt": "…" }`: the only time the URL is shown. `DELETE` revokes it. Both need a session cookie. The key in the URL starts with `learn_mcp_` and is not an API key: sent as `x-api-key` it answers `401 invalid_api_key` everywhere, and it's not listed by `GET /api/keys`. The MCP server on that URL publishes to the account with `visibility: "unlisted"`, and a key that was revoked or never existed answers `401 invalid_api_key` with nothing published.
+
 Sign-in itself goes through [Better Auth](https://better-auth.com)'s routes under `/api/auth/`: `POST /api/auth/email-otp/send-verification-otp` with `{ "email": "…", "type": "sign-in" }` emails a six-digit code, and `POST /api/auth/sign-in/email-otp` with `{ "email": "…", "otp": "…" }` signs in and sets the session cookie. The CLI's `login` command does exactly this.
 
 ## Check a lesson
@@ -139,7 +146,7 @@ Errors return `"ok": false` with an `error` code and a `message`.
 | ------ | ------------------ | ----------------------------------------------------------- |
 | 401    | `unauthorized`     | The edit or claim token doesn't match this lesson           |
 | 401    | `sign_in_required` | The call needs a session cookie or an `x-api-key` header    |
-| 401    | `invalid_api_key`  | The key was revoked or never existed; run `learn login`     |
+| 401    | `invalid_api_key`  | The key was revoked, never existed, or belongs in an MCP URL |
 | 403    | `not_owner`        | Only the lesson's owner can change its visibility           |
 | 404    | `not_found`        | The lesson doesn't exist, has expired, or was already kept  |
 | 409    | `already_claimed`  | Another account already keeps this lesson                   |

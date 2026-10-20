@@ -4,32 +4,48 @@ import { z } from "zod"
 
 import { LIMITS } from "@workspace/spec"
 
+import type { KeyActor } from "../auth/actor"
+import type { Auth } from "../auth/auth"
 import {
   checkLesson,
+  claimLesson,
+  mayEdit,
   publishLesson,
   reissueClaimToken,
   updateLesson,
   type Deps,
   type Reply,
 } from "../publish/handlers"
-import { tokenMatches } from "../publish/ids"
 import type { RateLimiter } from "../publish/rate-limit"
 import { clientKey } from "../publish/request"
 import { StorageNotConfiguredError } from "../publish/store"
 import { applyPatches, PatchError, type DraftStore, type Patch } from "./drafts"
+import { keepByEmail } from "./keep"
 
-// The learn.ninja MCP server at /mcp: the guide and the publish API as tools, for chat apps that
-// can't run the skill's CLI. No accounts: lessons publish anonymously, and a user keeps one by
-// opening the link `keep_lesson` (or `publish_lesson`) returns, which signs them in on learn.ninja.
+// The learn.ninja MCP server: the guide and the publish API as tools, for chat apps that can't
+// run the skill's CLI. At /mcp there are no accounts: lessons publish anonymously, and a user
+// keeps one from the chat with an email code (`keep_lesson`), or by opening the link it returns.
+// At /mcp/{key}, a personal URL from the settings page, the route resolves the account first
+// (`actor`) and every lesson is published to it, unlisted.
 
 export interface McpDeps extends Deps {
+  /** Better Auth, for the email code `keep_lesson` sends and checks. */
+  auth: Auth
   /** The looser limit checks use, as /api/validate does. */
   validateLimiter: RateLimiter
   /** The skill's synced files (steps, guides, levels, schema), by path. */
   guide: () => { files: Record<string, string> }
   /** Lessons sent to the tools, kept so later calls can send patches. */
   drafts: DraftStore
+  /** The account behind a personal URL; absent on the public /mcp. */
+  actor?: KeyActor | null
+  /** Called when a lesson becomes listed in Explore (a keep), so cached lists refresh. */
+  exploreChanged?: () => void
 }
+
+/** The keep sentence the model says once after an anonymous publish, on every surface (steps.md step 6). */
+export const KEEP_SENTENCE =
+  "It lasts 7 days. To keep it, say so and I'll save it under your email."
 
 const INSTRUCTIONS =
   "learn.ninja turns anything into one short, interactive lesson with a shareable link. Call `get_guide` once before writing a lesson: it returns the whole guide, then follow its steps."
@@ -110,6 +126,8 @@ export function createLearnMcp(
 }
 
 function registerTools(server: McpServer, deps: McpDeps) {
+  const actor = deps.actor ?? null
+
   server.registerTool(
     "get_guide",
     {
@@ -165,7 +183,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
         null,
         async (text) => {
           const reply = await checkLesson(
-            { text, client: clientOf(ctx) },
+            { text, client: clientOf(ctx, actor) },
             { limiter: deps.validateLimiter }
           )
           return { reply, keepDraft: true }
@@ -174,12 +192,18 @@ function registerTools(server: McpServer, deps: McpDeps) {
       )
   )
 
+  const owned = actor
+    ? `Lessons are saved to ${actor.handle ? `@${actor.handle}` : "the user's account"} (this URL is theirs) and start unlisted, so drafts don't show in Explore. After the link, say once: "Saved to ${actor.handle ? `@${actor.handle}` : "your account"}; list it in Explore at learn.ninja/settings${actor.handle ? "" : ", where you can also pick a handle"}."`
+    : null
+
   server.registerTool(
     "publish_lesson",
     {
       title: "Publish a lesson",
-      description:
-        "Checks and publishes a lesson, and returns its link (`url`), which lasts 7 days. If the check fails, nothing is published: it returns the issues and a `draftId`, so call it again with `draftId` and `patches` that fix every issue, not the whole lesson. Keep the `id` and `editToken` to change it later with `update_lesson`. After the link, tell the user once, in one sentence: \"It lasts 7 days. To keep it, say so and I'll give you a link that saves it.\" Don't repeat it, and don't paste the keep link (`claimUrl`) until they say they want to keep the lesson; then paste it, or call `keep_lesson` for a fresh one. When `owner` is set, say instead that it's saved to @handle and, if `visibility` is public, listed in Explore.",
+      description: `Checks and publishes a lesson, and returns its link (\`url\`). If the check fails, nothing is published: it returns the issues and a \`draftId\`, so call it again with \`draftId\` and \`patches\` that fix every issue, not the whole lesson. Keep the \`id\` and \`editToken\` to change it later with \`update_lesson\`. ${
+        owned ??
+        `The link lasts 7 days. After it, tell the user once, in one sentence: "${KEEP_SENTENCE}" Don't repeat it, and never paste the keep link (\`claimUrl\`) on your own. When they say they want to keep the lesson, ask for their email and call \`keep_lesson\`.`
+      }`,
       inputSchema: z.object(lessonInput),
       annotations: {
         readOnlyHint: false,
@@ -194,7 +218,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
         input,
         null,
         async (text) => {
-          const client = clientOf(ctx)
+          const client = clientOf(ctx, actor)
           // Check first against the looser limit, so fixing a lesson doesn't use up publishes.
           const checked = await checkLesson(
             { text, client },
@@ -203,7 +227,14 @@ function registerTools(server: McpServer, deps: McpDeps) {
           if (checked.body.ok !== true)
             return { reply: checked, keepDraft: true }
           const reply = await publishLesson(
-            { text, client, ownerId: null },
+            {
+              text,
+              client,
+              ownerId: actor?.userId ?? null,
+              ownerHandle: actor?.handle ?? null,
+              // A personal URL publishes everything, drafts included: keep them out of Explore.
+              visibility: actor ? "unlisted" : undefined,
+            },
             deps
           )
           return { reply, keepDraft: reply.body.ok !== true }
@@ -224,14 +255,27 @@ function registerTools(server: McpServer, deps: McpDeps) {
   server.registerTool(
     "keep_lesson",
     {
-      title: "Get a link that keeps a lesson",
-      description:
-        "Returns a link (`claimUrl`) that saves a published lesson to the user's learn.ninja account, so it stops expiring and is listed in Explore under their handle. Call it only when the user says they want to keep the lesson, then paste the link into the chat: opening it signs them in and keeps the lesson. Pass the `id` and `editToken` from `publish_lesson`. Each call makes a new link and the previous one stops working; a lesson already saved to an account answers `already_claimed`.",
+      title: "Keep a lesson in an account",
+      description: actor
+        ? `Saves a lesson that was published anonymously (in another chat, or through the public learn.ninja/mcp) to ${actor.handle ? `@${actor.handle}` : "the user's account"}, given its \`id\` and \`editToken\`. Lessons published here are already saved, so it's rarely needed.`
+        : `Saves a published lesson to the user's learn.ninja account, so it stops expiring and is listed in Explore under their handle. Call it only when the user says they want to keep the lesson. Pass the \`id\` and \`editToken\` from \`publish_lesson\`. Three ways: with \`email\`, it emails them a six-digit code (then ask for the code); with \`email\` and \`code\`, it signs them in and keeps the lesson, and the reply names the account (\`owner.handle\`, \`visibility\`); with neither, it returns a link (\`claimUrl\`) to paste instead, which keeps the lesson when opened in a browser. A wrong code answers \`sign_in_failed\`: ask again, or call without a code for a new one. A lesson already in an account answers \`already_claimed\`.`,
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z
           .string()
           .describe("The secret edit token, from `publish_lesson`."),
+        email: z
+          .string()
+          .optional()
+          .describe(
+            "The user's email address, to send a sign-in code to. Ask them for it; never guess it."
+          ),
+        code: z
+          .string()
+          .optional()
+          .describe(
+            "The six-digit code the user got by email, on the second call. Needs `email` too."
+          ),
       }),
       annotations: {
         readOnlyHint: false,
@@ -240,29 +284,75 @@ function registerTools(server: McpServer, deps: McpDeps) {
         openWorldHint: true,
       },
     },
-    ({ id, editToken }, ctx) =>
-      toolResult(
-        // Minting a token is cheap, and chat apps share an egress IP: the checks' limit, not the publish one.
-        () =>
-          reissueClaimToken(
-            { id, editToken, client: clientOf(ctx) },
-            { ...deps, limiter: deps.validateLimiter }
-          ),
+    ({ id, editToken, email, code }, ctx) => {
+      // Keeping is cheap, and chat apps share an egress IP: the checks' limit, not the publish one.
+      const limited = { ...deps, limiter: deps.validateLimiter }
+      const client = clientOf(ctx, actor)
+      const kept = [
+        "ok",
+        "id",
+        "url",
+        "title",
+        "expiresAt",
+        "owner",
+        "visibility",
+      ]
+      if (actor) {
+        return toolResult(async () => {
+          if (!(await limited.limiter.allow(client)))
+            return RATE_LIMITED
+          const reply = await claimLesson(
+            { id, editToken, ownerId: actor.userId },
+            { ...deps, handleOf: async () => actor.handle }
+          )
+          if (reply.status === 200) deps.exploreChanged?.()
+          return reply
+        }, kept)
+      }
+      if (code && !email) {
+        return errorResult({
+          ok: false,
+          error: "bad_input",
+          message: "Send `email` with the `code`: the same address the code was sent to.",
+        })
+      }
+      if (email) {
+        return toolResult(async () => {
+          const reply = await keepByEmail(
+            { id, editToken, email, code, client },
+            limited
+          )
+          if (reply.status === 200 && reply.body.owned)
+            deps.exploreChanged?.()
+          return reply
+        }, [...kept, "sent", "email", "message"])
+      }
+      return toolResult(
+        () => reissueClaimToken({ id, editToken, client }, limited),
         ["ok", "id", "url", "claimUrl", "expiresAt"]
       )
+    }
   )
 
   server.registerTool(
     "update_lesson",
     {
       title: "Update a published lesson",
-      description:
-        "Replaces a published lesson with a new version at the same link. Pass the `id` and `editToken` that `publish_lesson` returned, and either `patches` alone (applied to the published lesson: the quickest way to change a few things), the whole `lesson`, or a `draftId` with `patches`. If the check fails, it returns the issues and a `draftId` to patch.",
+      description: `Replaces a published lesson with a new version at the same link. Pass the \`id\`${
+        actor
+          ? " (the end of the lesson's URL); a lesson in the user's account needs no `editToken`, one published elsewhere does"
+          : " and `editToken` that `publish_lesson` returned"
+      }, and either \`patches\` alone (applied to the published lesson: the quickest way to change a few things), the whole \`lesson\`, or a \`draftId\` with \`patches\`. If the check fails, it returns the issues and a \`draftId\` to patch.`,
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z
           .string()
-          .describe("The secret edit token, from `publish_lesson`."),
+          .optional()
+          .describe(
+            actor
+              ? "The secret edit token, for a lesson that isn't in the user's account."
+              : "The secret edit token, from `publish_lesson`."
+          ),
         ...lessonInput,
       }),
       annotations: {
@@ -273,15 +363,24 @@ function registerTools(server: McpServer, deps: McpDeps) {
       },
     },
     async ({ id, editToken, ...input }, ctx) => {
-      const client = clientOf(ctx)
+      const client = clientOf(ctx, actor)
       const update = (text: string) =>
-        updateLesson({ id, editToken, text, client }, deps)
-      // Patches alone change the published lesson. Read it only for the right token, so a wrong
-      // one gets updateLesson's own not_found or unauthorized reply.
+        updateLesson(
+          {
+            id,
+            editToken: editToken ?? null,
+            actorId: actor?.userId ?? null,
+            text,
+            client,
+          },
+          deps
+        )
+      // Patches alone change the published lesson. Read it only for the right token or owner, so
+      // anyone else gets updateLesson's own not_found or unauthorized reply.
       let base: string | null = null
       if (!input.lesson && !input.draftId && input.patches) {
         const existing = await deps.store.get(id)
-        if (!existing || !tokenMatches(editToken, existing.editTokenHash))
+        if (!existing || !mayEdit(existing, editToken, actor?.userId))
           return toolResult(() => update(""), [])
         base = JSON.stringify(existing.lesson)
       }
@@ -401,8 +500,24 @@ async function lessonText(
   }
 }
 
-/** The caller's IP for rate limits, from the HTTP request the tool call came in on. */
-function clientOf(ctx: { http?: { req?: Request } }): string {
+const RATE_LIMITED: Reply = {
+  status: 429,
+  body: {
+    ok: false,
+    error: "rate_limited",
+    message: "Too many requests from here recently. Try again later.",
+  },
+}
+
+/**
+ * Who the rate limits count: the key behind a personal URL (one person, wherever they call from),
+ * or else the IP of the HTTP request the tool call came in on.
+ */
+function clientOf(
+  ctx: { http?: { req?: Request } },
+  actor?: KeyActor | null
+): string {
+  if (actor) return `key:${actor.keyId}`
   return ctx.http?.req ? clientKey(ctx.http.req) : "local"
 }
 

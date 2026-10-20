@@ -17,6 +17,9 @@ export function slugify(title: string): string {
 /** The path a lesson is shared at: /l/{slug}-{id}. */
 export const lessonPath = (slug: string, id: string) => `/l/${slug}-${id}`
 
+/** The path a personal MCP URL lives at: /mcp/{key}, with the key from the settings page. */
+export const mcpPath = (key: string) => `/mcp/${key}`
+
 /** The id from the last part of a lesson path ("writing-a-prd-k3x9a2mq" → "k3x9a2mq"). */
 export function idFromParam(param: string): string | null {
   const id = param.slice(param.lastIndexOf("-") + 1)

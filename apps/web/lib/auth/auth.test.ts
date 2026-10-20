@@ -8,9 +8,23 @@ import { publishLesson, claimLesson, type Deps } from "@/lib/publish/handlers"
 import { MemoryRateLimiter } from "@/lib/publish/rate-limit"
 import { PostgresLessonStore } from "@/lib/publish/store"
 
-import { createKey, deleteKey, listKeys, setHandle, whoami } from "./account"
-import { getActor, InvalidApiKeyError } from "./actor"
-import { API_KEY_PREFIX, createAuth, type Auth } from "./auth"
+import {
+  connectMcp,
+  createKey,
+  deleteKey,
+  disconnectMcp,
+  listKeys,
+  mcpConnection,
+  setHandle,
+  whoami,
+} from "./account"
+import { getActor, getActorByKey, InvalidApiKeyError } from "./actor"
+import {
+  API_KEY_PREFIX,
+  createAuth,
+  MCP_KEY_PREFIX,
+  type Auth,
+} from "./auth"
 import { freeHandle, handleProblem, normalizeHandle } from "./handles"
 import { safeCallback } from "./session"
 
@@ -117,7 +131,7 @@ describe("API keys", () => {
     expect(created.status).toBe(201)
     const key = created.body.key as string
     expect(key.startsWith(API_KEY_PREFIX)).toBe(true)
-    expect(created.body.start).toBe(key.slice(0, API_KEY_PREFIX.length + 4))
+    expect(created.body.start).toBe(key.slice(0, MCP_KEY_PREFIX.length + 4))
 
     const actor = await getActor(auth, new Headers({ "x-api-key": key }))
     expect(actor).toMatchObject({ email: "cli@example.com", viaApiKey: true })
@@ -154,6 +168,74 @@ describe("API keys", () => {
     expect(await getActor(auth, new Headers({ "x-api-key": key }))).toMatchObject({
       email: "minter@example.com",
     })
+  })
+
+  it("keeps the MCP key apart from the terminal keys", async () => {
+    const cookie = await signIn("chat@example.com")
+    const headers = new Headers({ cookie })
+    const { userId } = (await getActor(auth, headers))!
+    expect(await mcpConnection(auth, headers)).toBeNull()
+
+    const made = await connectMcp(auth, headers, userId, "https://learn.test")
+    expect(made.status).toBe(201)
+    const url = made.body.url as string
+    expect(url).toMatch(/^https:\/\/learn\.test\/mcp\/learn_mcp_/)
+    const key = url.split("/mcp/")[1]!
+    expect(key.startsWith(API_KEY_PREFIX)).toBe(true)
+    expect(made.body.start).toBe(key.slice(0, MCP_KEY_PREFIX.length + 4))
+
+    // The settings page sees it, masked, and never among the terminal keys.
+    expect(await mcpConnection(auth, headers)).toEqual({
+      id: made.body.id,
+      start: made.body.start,
+      createdAt: made.body.createdAt,
+      lastUsedAt: null,
+    })
+    const terminal = await createKey(auth, headers, "laptop")
+    expect((await listKeys(auth, headers)).body.keys).toEqual([
+      expect.objectContaining({ id: terminal.body.id }),
+    ])
+    expect(JSON.stringify(await listKeys(auth, headers))).not.toContain(key)
+
+    // It stands for the account on its own URL, and nowhere else.
+    expect(await getActorByKey(auth, db, key)).toMatchObject({
+      userId,
+      email: "chat@example.com",
+      viaApiKey: true,
+      keyId: made.body.id,
+    })
+    await expect(getActorByKey(auth, db, terminal.body.key as string)).rejects.toBeInstanceOf(
+      InvalidApiKeyError
+    )
+    await expect(
+      getActor(auth, new Headers({ "x-api-key": key }))
+    ).rejects.toBeInstanceOf(InvalidApiKeyError)
+    await expect(
+      auth.api.createApiKey({
+        headers: new Headers({ "x-api-key": key }),
+        body: { name: "second" },
+      })
+    ).rejects.toMatchObject({ status: "FORBIDDEN" })
+    await expect(
+      auth.api.deleteApiKey({
+        headers: new Headers({ "x-api-key": key }),
+        body: { keyId: terminal.body.id as string },
+      })
+    ).rejects.toMatchObject({ status: "FORBIDDEN" })
+    // Using it counts as a request on the key.
+    expect((await mcpConnection(auth, headers))?.lastUsedAt).toEqual(
+      expect.any(String)
+    )
+
+    // Revoking it from the settings leaves the terminal key alone.
+    expect((await disconnectMcp(auth, headers)).status).toBe(200)
+    expect(await mcpConnection(auth, headers)).toBeNull()
+    await expect(getActorByKey(auth, db, key)).rejects.toBeInstanceOf(
+      InvalidApiKeyError
+    )
+    expect(
+      await getActor(auth, new Headers({ "x-api-key": terminal.body.key as string }))
+    ).toMatchObject({ userId })
   })
 
   it("refuses a made-up key instead of treating the request as anonymous", async () => {
