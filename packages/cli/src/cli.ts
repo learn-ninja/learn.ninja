@@ -416,6 +416,7 @@ async function validate(
   report(io, o.json, body, () =>
     [
       `✓ ${o.file} is a valid lesson (spec ${body.spec as string}).`,
+      notesText(body.notes),
       updateLine(skill),
     ]
       .filter(Boolean)
@@ -448,8 +449,20 @@ function validateOffline(
   report(
     io,
     o.json,
-    { ok: true, spec: SPEC_VERSION, offline: why },
-    () => `✓ ${o.file} is a valid lesson (spec ${SPEC_VERSION}).\n${note}`
+    {
+      ok: true,
+      spec: SPEC_VERSION,
+      ...(result.notes.length ? { notes: result.notes } : {}),
+      offline: why,
+    },
+    () =>
+      [
+        `✓ ${o.file} is a valid lesson (spec ${SPEC_VERSION}).`,
+        notesText(result.notes),
+        note,
+      ]
+        .filter(Boolean)
+        .join("\n")
   )
   return 0
 }
@@ -565,11 +578,13 @@ async function publish(
       url: record.url,
       owned,
       expiresAt: record.expiresAt,
+      ...(Array.isArray(body.notes) ? { notes: body.notes } : {}),
       skill,
     },
     () =>
       [
         `${live ? "Updated" : "Published"}: ${record.url}`,
+        notesText(body.notes),
         owned
           ? ownedLine(standing, o.api)
           : `Lasts 7 days, until ${new Date(record.expiresAt!).toUTCString()}. To keep it, run \`learn login\` (an email code; agents: offer this once, in one sentence).`,
@@ -1050,6 +1065,12 @@ export function compareVersions(a: string, b: string): number {
     if (d !== 0) return d
   }
   return 0
+}
+
+/** What the checker tidied on its own (a tag's spelling), or null when it changed nothing. */
+function notesText(notes: unknown): string | null {
+  if (!Array.isArray(notes) || notes.length === 0) return null
+  return `Notes:\n${formatIssues(notes as Issue[])}`
 }
 
 function issuesText(issues: Issue[]): string {

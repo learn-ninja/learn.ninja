@@ -54,7 +54,7 @@ const summary = (over: Partial<LessonSummary> = {}): LessonSummary => ({
   title: "How compound interest works",
   summary:
     "Why money grows faster the longer you leave it, and how to estimate it without a calculator.",
-  topic: "Personal finance",
+  subject: "money",
   level: "beginner",
   minutes: 6,
   language: "en",
@@ -74,7 +74,7 @@ const LESSONS: LessonSummary[] = [
     slug: "writing-a-prd",
     title: "Writing a PRD that engineers actually read",
     summary: "The five sections that matter and the ones to leave out.",
-    topic: "Product",
+    subject: "business",
     level: "intermediate",
     minutes: 10,
     author: { handle: "bob-builds", name: "Bob", image: null },
@@ -86,7 +86,7 @@ const LESSONS: LessonSummary[] = [
     slug: "saludos-en-espanol",
     title: "Saludos básicos en español",
     summary: "Hola, buenos días y cómo responder cuando te preguntan qué tal.",
-    topic: "Español",
+    subject: "languages",
     level: "beginner",
     minutes: 4,
     language: "es",
@@ -99,7 +99,7 @@ const LESSONS: LessonSummary[] = [
     slug: "arabic-greetings",
     title: "التحيات الأساسية بالعربية",
     summary: "كيف تقول مرحباً وكيف ترد عندما يسألك أحدهم عن حالك.",
-    topic: "العربية",
+    subject: "languages",
     level: "beginner",
     minutes: 5,
     language: "ar",
@@ -113,7 +113,7 @@ const LESSONS: LessonSummary[] = [
     title: "Why the Bronze Age collapsed",
     summary:
       "Drought, earthquakes, and the Sea Peoples: weighing the usual suspects.",
-    topic: "History",
+    subject: "history",
     level: "advanced",
     minutes: 14,
     author: { handle: null, name: "Someone without a handle", image: null },
@@ -121,11 +121,11 @@ const LESSONS: LessonSummary[] = [
     likes: 0,
   }),
   summary({
-    id: "notopic1",
+    id: "bignums1",
     slug: "map-vs-foreach",
     title: "map vs forEach",
     summary: "When to use each, and the bug that comes from mixing them up.",
-    topic: null,
+    subject: "programming",
     level: "intermediate",
     minutes: 7,
     author: { handle: "dev", name: "Dev", image: null },
@@ -169,7 +169,7 @@ export const RowStates: Story = {
       <Labeled label="Signed in, not liked">
         <LessonRow lesson={LESSONS[1]!} viewer={signedIn} />
       </Labeled>
-      <Labeled label="No topic, big numbers">
+      <Labeled label="Big numbers">
         <LessonRow lesson={LESSONS[5]!} viewer={signedIn} />
       </Labeled>
       <Labeled label="Owner has no handle yet">

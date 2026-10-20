@@ -1,12 +1,13 @@
 {
-  "spec": "0.5",
+  "spec": "0.6",
   "title": "Why the Bronze Age collapsed",
   "summary": "Sea Peoples, drought, earthquakes, revolt, or a fragile trade web? Weigh the evidence for each and see why historians now blame all of them.",
   "objective": "Judge which evidence supports which proposed cause of the Late Bronze Age collapse, spot inferences the evidence can't carry, and explain the systems-collapse view.",
   "language": "en",
   "level": "advanced",
   "estimatedMinutes": 9,
-  "topic": "History",
+  "subject": "history",
+  "tags": ["bronze-age", "ancient-history", "archaeology", "systems-collapse"],
   "source": {
     "title": "Eric H. Cline, 1177 B.C.: The Year Civilization Collapsed"
   },

@@ -20,7 +20,7 @@ function asV02(lesson: any) {
 }
 
 describe("upgradeLesson", () => {
-  it.each(exampleFiles())("turns %s back into the same 0.5 lesson", (file) => {
+  it.each(exampleFiles())("turns %s back into the same 0.6 lesson", (file) => {
     const lesson = loadExample(file)
     const upgraded = upgradeLesson(asV02(lesson))
     expect(upgraded).toEqual(lesson)
@@ -28,8 +28,8 @@ describe("upgradeLesson", () => {
     expect(validateLesson(upgraded).ok).toBe(true)
   })
 
-  it.each(["0.3", "0.4"])(
-    "brings a %s lesson to 0.5 by its version alone",
+  it.each(["0.3", "0.4", "0.5"])(
+    "brings a %s lesson to 0.6 by its version alone",
     (spec) => {
       const lesson = loadExample("button-hierarchy.json")
       const old = { ...lesson, spec }
@@ -54,6 +54,113 @@ describe("upgradeLesson", () => {
     expect(upgradeLesson(withTerm)).toEqual(lesson)
     expect(upgradeLesson(asV02(withTerm))).toEqual(lesson)
     expect(validateLesson(upgradeLesson(withTerm)).ok).toBe(true)
+  })
+
+  it("maps a 0.5 lesson's topic to a subject and keeps the label as a tag", () => {
+    const {
+      subject: _subject,
+      tags: _tags,
+      ...rest
+    } = loadExample("button-hierarchy.json")
+    const old = { ...rest, spec: "0.5", topic: "UI design" }
+    expect(canUpgrade(old)).toBe(true)
+    const upgraded = upgradeLesson(old) as Record<string, unknown>
+    expect(upgraded.spec).toBe("0.6")
+    expect(upgraded.subject).toBe("design")
+    // "ui-design" is a synonym of "user-interface"
+    expect(upgraded.tags).toEqual(["user-interface"])
+    expect("topic" in upgraded).toBe(false)
+    // The field order of a hand-written file: subject and tags right after estimatedMinutes.
+    expect(Object.keys(upgraded).slice(0, 10)).toEqual([
+      "spec",
+      "title",
+      "summary",
+      "objective",
+      "language",
+      "level",
+      "estimatedMinutes",
+      "subject",
+      "tags",
+      "hook",
+    ])
+    const result = validateLesson(upgraded)
+    expect(result.ok).toBe(true)
+  })
+
+  it.each([
+    ["Startups", "business", ["startups"]],
+    ["Git & Claude Code", "tools", ["git-claude-code"]],
+    ["Claude Code", "tools", ["claude-code"]],
+    ["Personal finance", "money", ["personal-finance"]],
+    ["JavaScript", "programming", ["javascript"]],
+    // The label is the subject itself, so it isn't worth a tag.
+    ["History", "history", undefined],
+    // Unknown labels land in life, with the label kept.
+    ["Beekeeping", "life", ["beekeeping"]],
+  ])("maps the topic %j to %s with tags %j", (topic, subject, tags) => {
+    const {
+      subject: _subject,
+      tags: _tags,
+      ...rest
+    } = loadExample("button-hierarchy.json")
+    const upgraded = upgradeLesson({ ...rest, spec: "0.5", topic }) as Record<
+      string,
+      unknown
+    >
+    expect(upgraded.subject).toBe(subject)
+    expect(upgraded.tags).toEqual(tags)
+    expect(validateLesson(upgraded).ok).toBe(true)
+  })
+
+  it("drops a label that only repeats a language the lesson sets", () => {
+    const {
+      subject: _subject,
+      tags: _tags,
+      ...rest
+    } = loadExample("spanish-greetings.json")
+    const upgraded = upgradeLesson({
+      ...rest,
+      spec: "0.5",
+      topic: "Spanish",
+    }) as Record<string, unknown>
+    expect(upgraded.subject).toBe("languages")
+    expect(upgraded.tags).toBeUndefined()
+    expect(validateLesson(upgraded).ok).toBe(true)
+  })
+
+  it("gives a 0.5 lesson without a topic the widest subject", () => {
+    const {
+      subject: _subject,
+      tags: _tags,
+      ...rest
+    } = loadExample("button-hierarchy.json")
+    const upgraded = upgradeLesson({ ...rest, spec: "0.5" }) as Record<
+      string,
+      unknown
+    >
+    expect(upgraded.subject).toBe("life")
+    expect(upgraded.tags).toBeUndefined()
+    expect(validateLesson(upgraded).ok).toBe(true)
+  })
+
+  it("keeps a subject an older file already has, and adds the topic as a tag", () => {
+    const lesson = loadExample("button-hierarchy.json")
+    const upgraded = upgradeLesson({
+      ...lesson,
+      spec: "0.5",
+      topic: "Call to action",
+    }) as Record<string, unknown>
+    expect(upgraded.subject).toBe("design")
+    expect(upgraded.tags).toEqual([...lesson.tags, "call-to-action"])
+    // A label already among the tags isn't added twice.
+    expect(
+      (
+        upgradeLesson({ ...lesson, spec: "0.5", topic: "Buttons" }) as Record<
+          string,
+          unknown
+        >
+      ).tags
+    ).toEqual(lesson.tags)
   })
 
   it("leaves current and unknown files alone", () => {

@@ -1,10 +1,13 @@
 import { z } from "zod"
 
-// Lesson spec v0.5: the shape of a lesson file.
+import { SUBJECTS } from "./subjects"
+import { TAG_LIMITS, TAG_PATTERN } from "./tags"
+
+// Lesson spec v0.6: the shape of a lesson file.
 // Structural limits that JSON Schema can express live here; cross-field and
 // teaching-quality rules live in rules.ts.
 
-export const SPEC_VERSION = "0.5" as const
+export const SPEC_VERSION = "0.6" as const
 
 /** Who a lesson is for, from least to most prior knowledge. The skill's `levels/` guides say how each one teaches. */
 export const LEVELS = ["beginner", "intermediate", "advanced"] as const
@@ -15,6 +18,21 @@ const id = z.string().min(1).max(64)
 const richText = z.string().min(1)
 /** A BCP 47 language code, e.g. "en", "es", "ar", "pt-BR". Checked further in rules.ts. */
 const langCode = z.string().min(2).max(35)
+
+/** One of the 16 subjects (subjects.ts). The message lists them, so an agent that guessed can pick again. */
+const subject = z.enum(SUBJECTS, {
+  error: `"subject" must be one of: ${SUBJECTS.join(", ")}. Pick by what the learner will do afterwards; the format reference's subject table has the scope of each.`,
+})
+
+/** A tag as the lesson keeps it: already normalized by the checker (tags.ts), so it must match the pattern as written. */
+const tag = z
+  .string()
+  .min(TAG_LIMITS.min)
+  .max(TAG_LIMITS.max)
+  .regex(TAG_PATTERN, {
+    error:
+      'Tags are lowercase words joined by single hyphens, like "claude-code" or "compound-interest".',
+  })
 
 // ---------- visuals ----------
 
@@ -332,7 +350,9 @@ export const lesson = z.strictObject({
   targetLanguage: langCode.optional(),
   level: z.enum(LEVELS),
   estimatedMinutes: z.int().min(3).max(15),
-  topic: z.string().min(1).optional(),
+  subject,
+  /** Up to five specifics, from the thing taught to the field it sits in; checked further in rules.ts. */
+  tags: z.array(tag).max(TAG_LIMITS.perLesson).optional(),
   source: z
     .strictObject({ title: z.string().min(1), url: z.url().optional() })
     .optional(),

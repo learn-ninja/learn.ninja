@@ -1,7 +1,12 @@
 import { and, desc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm"
 
 import { lesson, like, user, type Db } from "@workspace/db"
-import type { Level } from "@workspace/spec"
+import {
+  isSubject,
+  subjectForTopic,
+  type Level,
+  type Subject,
+} from "@workspace/spec"
 
 // What Explore, profiles, and the settings page read: lessons as cards, straight from the database
 // (no listing API in v2). Only what a card shows is selected: a lesson's JSON can be hundreds of
@@ -17,7 +22,8 @@ export interface LessonSummary {
   slug: string
   title: string
   summary: string
-  topic: string | null
+  /** The lesson's subject; the card shows its translated name. */
+  subject: Subject
   level: Level
   minutes: number
   /** The lesson's BCP 47 language, so the card can set `lang` and direction. */
@@ -54,6 +60,8 @@ const columns = {
   slug: lesson.slug,
   title: field("title"),
   summary: field("summary"),
+  subject: field("subject"),
+  // Lessons published before spec 0.6 are stored with a `topic` label instead; see toSummary.
   topic: field("topic"),
   level: field("level"),
   minutes: field("estimatedMinutes"),
@@ -74,6 +82,7 @@ interface Row {
   slug: string
   title: string
   summary: string
+  subject: string | null
   topic: string | null
   level: string
   minutes: string | number
@@ -95,7 +104,8 @@ function toSummary(row: Row): LessonSummary {
     slug: row.slug,
     title: row.title,
     summary: row.summary,
-    topic: row.topic || null,
+    // Rows aren't upgraded on read like a lesson page is, so an older row's label is mapped here.
+    subject: isSubject(row.subject) ? row.subject : subjectForTopic(row.topic),
     level: row.level as Level,
     minutes: Number(row.minutes),
     language: row.language,

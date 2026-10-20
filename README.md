@@ -55,7 +55,7 @@ Runs lint, type-checking, and tests across every package. CI runs the same check
 | `apps/storybook`  | Storybook for the player and UI components               |
 | `docs/`           | The docs pages                                           |
 | `packages/ui`     | shadcn/ui components on React Aria, shared styles        |
-| `packages/spec`   | The lesson spec (v0.5)                                   |
+| `packages/spec`   | The lesson spec (v0.6)                                   |
 | `packages/player` | Lesson screens and building blocks                       |
 | `packages/cli`    | The `learn` command: validate and publish lessons        |
 | `skills/learn`    | The installable lesson skill                             |

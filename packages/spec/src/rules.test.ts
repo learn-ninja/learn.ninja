@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { loadExample } from "./test-helpers"
 import { positionalReference } from "./rules"
+import { SUBJECTS } from "./subjects"
 import { validateLesson } from "./validate"
 
 // Each test breaks a valid example lesson in one way and checks the right issue comes back.
@@ -98,7 +99,84 @@ describe("schema", () => {
   it("requires the current spec version", () => {
     const l = buttons()
     l.spec = "0.1"
-    expectIssue(l, { path: "spec", message: /0\.5/ })
+    expectIssue(l, { path: "spec", message: /0\.6/ })
+  })
+
+  it("requires a subject from the list, and names all 16 when it's wrong or missing", () => {
+    const l = buttons()
+    l.subject = "coding"
+    const sixteen = new RegExp(SUBJECTS.join(", "))
+    expectIssue(l, { path: "subject", message: sixteen })
+    delete l.subject
+    expectIssue(l, { path: "subject", message: sixteen })
+  })
+
+  it("no longer knows the topic field", () => {
+    const l = buttons()
+    l.topic = "UI design"
+    expectIssue(l, { message: /topic/ })
+  })
+})
+
+describe("tags", () => {
+  it("allows up to five, each 2–30 characters in the tag shape", () => {
+    const l = buttons()
+    l.tags = ["a", "b"]
+    expectIssue(l, { path: "tags[0]", message: />=2/ })
+    l.tags = ["x".repeat(31)]
+    expectIssue(l, { path: "tags[0]", message: /<=30/ })
+    l.tags = ["one", "two", "three", "four", "five", "six"]
+    expectIssue(l, { path: "tags", message: /<=5/ })
+    // Normalization folds symbols to hyphens first, so "c++" arrives as "c".
+    l.tags = ["c++"]
+    expectIssue(l, { path: "tags[0]", message: />=2/ })
+    l.tags = ["buttons", "call-to-action", "user-interface", "forms", "ui-kit"]
+    expect(validateLesson(l).ok).toBe(true)
+    delete l.tags
+    expect(validateLesson(l).ok).toBe(true)
+  })
+
+  it("normalizes spelling and synonyms, keeps the result, and says so in a note", () => {
+    const l = buttons()
+    l.tags = ["Buttons", "UX", "forms"]
+    const result = validateLesson(l)
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.lesson.tags).toEqual(["buttons", "user-experience", "forms"])
+    expect(result.notes).toEqual([
+      { path: "tags[0]", message: 'Kept the tag "Buttons" as "buttons".' },
+      { path: "tags[1]", message: 'Kept the tag "UX" as "user-experience".' },
+    ])
+    expect(validateLesson(buttons()).notes).toEqual([])
+  })
+
+  it("rejects a tag that repeats the subject, a level, or a language", () => {
+    const l = buttons()
+    l.tags = ["design"]
+    expectIssue(l, { path: "tags[0]", message: /repeats the subject/ })
+    l.tags = ["beginner"]
+    expectIssue(l, { path: "tags[0]", message: /is a level/ })
+    l.tags = ["english"]
+    expectIssue(l, { path: "tags[0]", message: /names a language.*"language"/ })
+    l.tags = ["en"]
+    expectIssue(l, { path: "tags[0]", message: /language code/ })
+    const greetings = loadExample("spanish-greetings.json")
+    greetings.tags = ["spanish"]
+    expectIssue(greetings, { path: "tags[0]", message: /"targetLanguage"/ })
+    // Another subject's slug is fine: that's where a lesson's second subject goes.
+    l.tags = ["marketing"]
+    expect(validateLesson(l).ok).toBe(true)
+  })
+
+  it("rejects duplicates, including ones the synonym table folds together", () => {
+    const l = buttons()
+    l.tags = ["javascript", "js"]
+    expectIssue(l, {
+      path: "tags",
+      message: /"javascript" appears more than once/,
+    })
+    l.tags = ["forms", "forms"]
+    expectIssue(l, { path: "tags", message: /"forms" appears more than once/ })
   })
 })
 

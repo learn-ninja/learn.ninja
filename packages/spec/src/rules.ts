@@ -1,6 +1,12 @@
 import katex from "katex"
 
-import type { Brick, Lesson, QuestionBrick, Visual } from "./schema"
+import {
+  LEVELS,
+  type Brick,
+  type Lesson,
+  type QuestionBrick,
+  type Visual,
+} from "./schema"
 
 // Rules the schema can't express: cross-references, teaching quality, v1 limits, and safety.
 // Every message says what's wrong and how to fix it, so an LLM can correct the lesson on its own.
@@ -105,6 +111,23 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
 
   for (const { brick, path } of questions)
     checkBrickReferences(brick, path, add)
+
+  // ---------- tags ----------
+
+  // Tags are the specifics; the subject, level, and languages are fields already, so a tag that
+  // repeats one says nothing. Duplicates are checked after the synonym mapping (validate.ts runs it
+  // before the schema), so "js" next to "javascript" counts as one tag twice.
+  const tags = lesson.tags ?? []
+  tags.forEach((tag, i) => {
+    const why = redundantTag(tag, lesson)
+    if (why) add("structure", `tags[${i}]`, why)
+  })
+  for (const dupe of duplicates(tags))
+    add(
+      "structure",
+      "tags",
+      `The tag "${dupe}" appears more than once (spelling variants count as the same tag). Keep it once.`
+    )
 
   // ---------- v1 limits ----------
 
@@ -384,6 +407,46 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
   }
 
   return issues
+}
+
+/**
+ * Why `tag` says nothing on this lesson, or null when it's fine: it repeats the subject, a level,
+ * or a language the lesson already names (by code, or by its English name: "spanish" on a lesson
+ * with `targetLanguage: "es"`). The upgrade uses it too, to drop an old label that became redundant.
+ */
+export function redundantTag(
+  tag: string,
+  lesson: Pick<Lesson, "subject" | "language" | "targetLanguage">
+): string | null {
+  if (tag === lesson.subject)
+    return `The tag "${tag}" repeats the subject. Tags are for the specifics: the thing taught, then the product or field.`
+  if ((LEVELS as readonly string[]).includes(tag))
+    return `The tag "${tag}" is a level; "level" already says who the lesson is for. Use tags for what it teaches.`
+  const codes = [lesson.language, lesson.targetLanguage].filter(
+    (c): c is string => typeof c === "string"
+  )
+  for (const code of codes) {
+    if (tag === code.toLowerCase())
+      return `The tag "${tag}" is a language code; "language" and "targetLanguage" already say that. Use tags for what the lesson teaches.`
+    const name = languageName(code)
+    if (name && tag === name)
+      return `The tag "${tag}" names a language the lesson already sets in "${code === lesson.language ? "language" : "targetLanguage"}". Use tags for what it teaches: "greetings", "verb-tenses".`
+  }
+  return null
+}
+
+/** The English name of a language code in tag form ("es" → "spanish"), or null when the code is unknown. */
+function languageName(code: string): string | null {
+  try {
+    const name = new Intl.DisplayNames(["en"], { type: "language" }).of(code)
+    if (!name || name === code) return null
+    return name
+      .toLowerCase()
+      .replace(/[\s_\p{P}\p{S}]+/gu, "-")
+      .replace(/^-+|-+$/g, "")
+  } catch {
+    return null
+  }
 }
 
 /** Teach, then practise: concept bricks, each followed by the question bricks that practise it. */
@@ -692,7 +755,9 @@ const visualName = (v: Visual) =>
   v.kind === "html" ? "HTML visual" : v.kind === "chart" ? "chart" : v.kind
 
 /** Every visual in the lesson with its path: on bricks, on options, and on items. */
-export function everyVisual(lesson: Lesson): { visual: Visual; path: string }[] {
+export function everyVisual(
+  lesson: Lesson
+): { visual: Visual; path: string }[] {
   const out: { visual: Visual; path: string }[] = []
   const bricks: { brick: Brick; path: string }[] = [
     { brick: lesson.hook, path: "hook" },

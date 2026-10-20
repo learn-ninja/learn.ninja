@@ -2,6 +2,7 @@
 
 import * as React from "react"
 
+import { SUBJECT_INFO, type Subject } from "@workspace/spec"
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { NinjaLevel } from "./strings"
@@ -978,11 +979,9 @@ async function leap(
 
 // ---------- the aura ----------
 
-/** A hue for the lesson's topic, so lessons on the same subject share a light. */
-export function hueFor(topic: string): number {
-  let h = 0
-  for (const c of topic.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return h % 360
+/** The hue of a lesson's light: one per subject (subjects.ts in the spec), so lessons on the same subject share it and the light says something. */
+export function hueFor(subject: Subject): number {
+  return SUBJECT_INFO[subject].hue
 }
 
 /**

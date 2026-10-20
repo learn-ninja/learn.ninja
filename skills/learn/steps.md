@@ -1,6 +1,6 @@
 # Learn: the steps
 
-You write one lesson as a JSON file that follows the lesson spec (v0.5), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links last 7 days, or for good once the user keeps them in an account (step 7).
+You write one lesson as a JSON file that follows the lesson spec (v0.6), check it, and publish it. The learner opens the link and plays it: short bricks, instant feedback, Duolingo/Brilliant style. Links last 7 days, or for good once the user keeps them in an account (step 7).
 
 There are two ways to follow these steps. In a terminal with the skill installed, run the commands shown; every path below is relative to the folder this file is in (`.learn/skill/` after a sync, or the installed skill's folder), and `<skill-folder>` is the installed skill's folder, the one `SKILL.md` is in. Through the learn.ninja MCP server, there are no files or commands: call the tool named beside each one instead (`publish_lesson`, `update_lesson`). The one `get_guide` call you started with already returned every guide below but the schema, so don't call it again for them.
 
@@ -12,7 +12,7 @@ There are two ways to follow these steps. In a terminal with the skill installed
 
    Level guides add to this file and the teaching guide; where one disagrees, this file and the teaching guide win. Design the lesson for its topic from the guides; don't look for a lesson to copy.
 
-3. **Write the lesson file**, e.g. `lesson.json` in the current folder, following the format exactly; over MCP, write it as JSON text to pass to the tools. `schema/lesson.schema.json` (`get_guide` with `schema`) is the formal JSON Schema, rarely needed. For a path, write only the first lesson, in its own folder, as `reference/planning.md` describes.
+3. **Write the lesson file**, e.g. `lesson.json` in the current folder, following the format exactly; over MCP, write it as JSON text to pass to the tools. Pick the `subject` from the format reference's table by what the learner will do afterwards (the "Not this" column settles ties), and write 2–5 `tags` for the specifics. `schema/lesson.schema.json` (`get_guide` with `schema`) is the formal JSON Schema, rarely needed. For a path, write only the first lesson, in its own folder, as `reference/planning.md` describes.
 4. **Check it** and fix every issue it reports, then check again until it passes:
    ```bash
    node <skill-folder>/scripts/learn.mjs validate lesson.json

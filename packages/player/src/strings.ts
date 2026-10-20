@@ -1,7 +1,7 @@
 // The player's own text (buttons, feedback titles, helper lines), translated by the player.
 // Lesson content stays in the lesson's language. One file per language lives in ./locales.
 
-import type { Level } from "@workspace/spec"
+import type { Level, Subject } from "@workspace/spec"
 
 import { STRINGS } from "./locales"
 
@@ -31,6 +31,8 @@ export type Strings = {
   /** Time left on a published link: days from 24 hours up, hours below. */
   expires: { days: (n: number) => string; hours: (n: number) => string }
   levels: Record<Level, string>
+  /** The subject's name in the player's language, shown on the title screen and Explore rows. */
+  subjects: Record<Subject, string>
   objective: string
   warmUp: string
   concept: (i: number, n: number) => string

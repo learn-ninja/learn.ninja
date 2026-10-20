@@ -6,6 +6,7 @@ import {
   upgradeLesson,
   validateLesson,
   type Issue,
+  type Note,
 } from "@workspace/spec"
 
 import {
@@ -27,7 +28,13 @@ import {
 // The publish API's logic, independent of Next.js so it can be tested directly.
 
 /** Spec versions the server accepts. Older skills keep working while they're listed here; older files are upgraded first. */
-export const ACCEPTED_SPECS: string[] = [SPEC_VERSION, "0.4", "0.3", "0.2"]
+export const ACCEPTED_SPECS: string[] = [
+  SPEC_VERSION,
+  "0.5",
+  "0.4",
+  "0.3",
+  "0.2",
+]
 
 export {
   compareVersions,
@@ -132,8 +139,12 @@ async function checkLessonText(text: string, skillVersion?: string | null) {
       },
     }
   }
-  return { lesson: result.lesson, skill }
+  // Notes don't stop a publish: what the checker tidied (a tag's spelling), for the agent to know.
+  return { lesson: result.lesson, skill, notes: result.notes satisfies Note[] }
 }
+
+/** The `notes` field of a reply, present only when the checker has something to say. */
+const notesField = (notes: Note[]) => (notes.length ? { notes } : {})
 
 /** POST /api/validate: the checks publishing runs, without storing anything. Older CLIs get the newest rules this way. */
 export async function checkLesson(
@@ -154,7 +165,12 @@ export async function checkLesson(
   if ("error" in checked) return checked.error!
   return {
     status: 200,
-    body: { ok: true, spec: checked.lesson.spec, skill: checked.skill },
+    body: {
+      ok: true,
+      spec: checked.lesson.spec,
+      ...notesField(checked.notes),
+      skill: checked.skill,
+    },
   }
 }
 
@@ -177,7 +193,7 @@ export async function publishLesson(
   const checked = await checkLessonText(req.text, req.skillVersion)
   if ("error" in checked) return checked.error!
 
-  const { lesson, skill } = checked
+  const { lesson, skill, notes } = checked
   const editToken = newToken()
   // An owned lesson never expires and needs no claim token; an anonymous one lasts 7 days and
   // carries a token that moves it into an account later (`learn login`, or the /keep link).
@@ -214,6 +230,7 @@ export async function publishLesson(
         : {}),
       ...(await ownership(record, deps, req.ownerHandle)),
       spec: record.spec,
+      ...notesField(notes),
       skill,
     },
   }
@@ -270,7 +287,7 @@ export async function updateLesson(
   const checked = await checkLessonText(req.text, req.skillVersion)
   if ("error" in checked) return checked.error!
 
-  const { lesson, skill } = checked
+  const { lesson, skill, notes } = checked
   const record: StoredLesson = {
     ...existing,
     slug: slugify(lesson.title),
@@ -288,6 +305,7 @@ export async function updateLesson(
       url: deps.origin + lessonPath(record.slug, record.id),
       ...(await ownership(record, deps)),
       spec: record.spec,
+      ...notesField(notes),
       skill,
     },
   }

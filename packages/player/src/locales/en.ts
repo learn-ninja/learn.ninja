@@ -1,3 +1,5 @@
+import { SUBJECT_INFO, SUBJECTS, type Subject } from "@workspace/spec"
+
 import type { Strings } from "../strings"
 
 import { plural } from "./plural"
@@ -29,6 +31,10 @@ export const en: Strings = {
     intermediate: "Intermediate",
     advanced: "Advanced",
   },
+  // The English names live with the subject list, so the two can't drift apart.
+  subjects: Object.fromEntries(
+    SUBJECTS.map((s) => [s, SUBJECT_INFO[s].name])
+  ) as Record<Subject, string>,
   objective: "You'll be able to",
   warmUp: "Warm-up",
   concept: (i, n) => `Concept ${i} of ${n}`,

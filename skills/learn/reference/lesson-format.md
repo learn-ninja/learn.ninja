@@ -1,4 +1,4 @@
-# Lesson format (spec 0.5)
+# Lesson format (spec 0.6)
 
 A lesson is one JSON file with four slots: `hook`, `bricks`, `challenge`, `wrapup`. A brick is one screen: either a `concept` brick (theory) or a question brick (`choice`, `compare`, `hotspot`, `sort`, `order`, `match`, `blank`, `scenario`). `schema/lesson.schema.json` is the formal definition; the checker (`scripts/learn.mjs validate`) also enforces the cross-field rules listed at the end.
 
@@ -6,7 +6,7 @@ A lesson is one JSON file with four slots: `hook`, `bricks`, `challenge`, `wrapu
 
 | Field              | Required | Description                                                                                                                                                         |
 | ------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `spec`             | yes      | Always `"0.5"`                                                                                                                                                      |
+| `spec`             | yes      | Always `"0.6"`                                                                                                                                                      |
 | `title`            | yes      | Up to 60 characters; also used in the link                                                                                                                          |
 | `summary`          | yes      | One sentence shown before starting, up to 160 characters                                                                                                            |
 | `objective`        | yes      | What the learner can do afterwards                                                                                                                                  |
@@ -14,7 +14,8 @@ A lesson is one JSON file with four slots: `hook`, `bricks`, `challenge`, `wrapu
 | `targetLanguage`   | no       | The language being taught, for language lessons                                                                                                                     |
 | `level`            | yes      | Who it's for: `beginner`, `intermediate`, or `advanced` (`levels/index.md` says how to choose)                                                                      |
 | `estimatedMinutes` | yes      | 3–15, by size: short 3–5, standard 5–10, long 10–15 (`reference/planning.md`)                                                                                       |
-| `topic`            | no       | A short label, e.g. "UI design"                                                                                                                                     |
+| `subject`          | yes      | One of the 16 subjects below, by what the learner will do afterwards. The checker refuses anything else                                                           |
+| `tags`             | no       | Up to 5 specifics: lowercase words joined by single hyphens (`compound-interest`), 2–30 characters each; see Subjects and tags below                                |
 | `source`           | no       | `{ "title": "…", "url": "https://…" }` credit for the material                                                                                                      |
 | `hook`             | yes      | One `choice` or `compare` brick; not scored                                                                                                                         |
 | `bricks`           | yes      | The lesson in play order: 1–4 `concept` bricks, each followed by 2–4 question bricks that practise it; 3–12 question bricks in total, at most 20 bricks. The first brick is a `concept` |
@@ -33,6 +34,35 @@ A lesson is one JSON file with four slots: `hook`, `bricks`, `challenge`, `wrapu
 ```
 
 Brick ids are unique across the whole lesson, including the hook and the challenge.
+
+## Subjects and tags
+
+`subject` is the lesson's category: where it sits in Explore, its label on the title screen (translated to the reader's language), and the colour of its light. Pick one from this table by what the learner will **do afterwards**, not by the nouns in the title: a Git lesson for people who will type Git commands is `tools`; a lesson on how Git stores objects is `programming`. The "Not this" column settles the ties. There is no "other": `life` and `society` are wide on purpose.
+
+| Slug | Name | Covers | Not this (goes to) |
+|---|---|---|---|
+| `programming` | Programming | Languages, frameworks, algorithms, software design, databases, testing, version control | Using a developer tool as a user without code (→ `tools`); AI as a subject (→ `ai`) |
+| `ai` | AI | How models work, prompting, agents, machine learning concepts, working with AI tools | Writing code that calls an API, where the lesson is about the code (→ `programming`) |
+| `tools` | Tools & productivity | How to use a specific app, product, or workflow: Git as a tool, spreadsheets, note apps, keyboard habits, personal productivity systems | Programming in that tool's language (→ `programming`); a tool used for design (→ `design`) |
+| `design` | Design | UI, UX, visual and graphic design, typography, product design, design systems | Art appreciation and art history (→ `arts`) |
+| `business` | Business & startups | Strategy, startups, management, operations, entrepreneurship, product management, economics as it applies to firms | Personal money (→ `money`); the macroeconomics of nations (→ `society`) |
+| `marketing` | Marketing & writing | Marketing, sales, copywriting, content, social media, public speaking, professional writing | Creative writing (→ `arts`); grammar of a language being learned (→ `languages`) |
+| `money` | Money & finance | Personal finance, investing, accounting, economics for individuals | Running a company's finances (→ `business`) |
+| `science` | Science | Physics, chemistry, biology, earth and space science, scientific method | Human health (→ `health`); maths on its own (→ `math`) |
+| `math` | Math & data | Arithmetic through calculus, statistics, probability, data literacy, data analysis | Programming a data pipeline (→ `programming`); machine learning (→ `ai`) |
+| `health` | Health & fitness | Medicine for lay readers, nutrition, exercise, sleep, mental health, first aid | Biology for its own sake (→ `science`) |
+| `history` | History | Any period, place, or theme in history; archaeology | Current politics and institutions (→ `society`) |
+| `society` | Society & ideas | Politics, law, philosophy, religion, psychology, sociology, geography, current affairs, civics | Historical events (→ `history`); personal habits (→ `life`) |
+| `languages` | Languages | Learning a language: vocabulary, grammar, phrases, pronunciation. Set `targetLanguage` | Writing well in your own language (→ `marketing`) |
+| `arts` | Arts & culture | Music, film, literature, visual art, creative writing, photography, games as culture, pop culture | Making a UI (→ `design`); the history of an art movement when the lesson is history first (→ `history`) |
+| `life` | Everyday life | Cooking, gardening, home, parenting, travel, pets, hobbies, crafts, DIY, relationships, study skills | Health and fitness (→ `health`); personal finance (→ `money`) |
+| `careers` | Careers & learning | Job search, interviews, workplace skills, leadership as a skill, teaching, how to learn, exam prep | Running a business (→ `business`); a specific tool (→ `tools`) |
+
+`tags` say what the lesson is specifically about, for people browsing within a subject later (they're stored, not shown yet). Write 2–5, in this order: the specific thing taught (`git`, `compound-interest`), then the product or field if there is one (`claude-code`, `javascript`), then at most one angle (`beginners`, `history-of`). Nouns, singular, in the lesson's language or English.
+
+- Lowercase letters (any script), digits, and single hyphens between words: `claude-code`, not `Claude Code` or `claude_code`. The checker fixes spelling like that itself and tells you in a note; it also folds known variants (`js` → `javascript`, `ux` → `user-experience`) to one tag.
+- Don't repeat what the fields say: no tag equal to the subject (`programming` on a `programming` lesson), a level (`beginner`), or a language the lesson sets (`spanish` when `targetLanguage` is `es`). A second subject's slug is fine as a tag: that's where a lesson that straddles two goes.
+- No duplicates, including ones that fold to the same tag.
 
 ## Concept bricks
 
@@ -134,5 +164,6 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 - Prompts ≤40 words; concept bodies ≤80 words.
 - No `number` bricks; every `blank` has `choices` that include an accepted answer.
 - Formulas in `\( … \)` are balanced and render; language codes are valid BCP 47.
+- `subject` is one of the 16 slugs above; at most 5 `tags`, each 2–30 characters of lowercase words and single hyphens, none repeating the subject, a level, or a language the lesson sets, none twice.
 - HTML visuals: no scripts, event handlers, iframes, forms, objects, embeds, `javascript:` links, or external URLs; each under 20 KB; the whole file under 500 KB. A concept's or question's HTML visual has `alt`.
 - Diagram visuals: the D2 compiles, with no colors, icons, images, links, tooltips, or HTML of its own; a concept's or question's diagram has `alt`.

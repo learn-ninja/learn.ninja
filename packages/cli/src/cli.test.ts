@@ -48,7 +48,7 @@ const bundle = (over: Partial<Record<string, unknown>> = {}) => ({
   ...manifest(over),
   files: GUIDES,
 })
-const valid = { status: 200, body: { ok: true, spec: "0.5" } }
+const valid = { status: 200, body: { ok: true, spec: "0.6" } }
 
 /** A server with current guides and a checker that accepts everything; tests override routes. */
 function setup(routes: Routes = {}) {
@@ -324,7 +324,7 @@ describe("learn validate", () => {
     const t = setup()
     expect(await run(["validate", "lesson.json"], t.io)).toBe(0)
     expect(t.methods()).toContain("POST /api/validate")
-    expect(t.out.join("\n")).toMatch(/is a valid lesson \(spec 0\.5\)/)
+    expect(t.out.join("\n")).toMatch(/is a valid lesson \(spec 0\.6\)/)
   })
 
   it("lists the server's issues", async () => {

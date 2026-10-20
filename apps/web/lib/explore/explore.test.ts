@@ -110,7 +110,7 @@ describe("what Explore lists", () => {
     expect(rows[0]).toMatchObject({
       slug: "button-hierarchy",
       title: "Button hierarchy",
-      topic: "UI design",
+      subject: "design",
       level: "beginner",
       minutes: 6,
       language: "en",

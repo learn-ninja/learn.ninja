@@ -1,12 +1,13 @@
 {
-  "spec": "0.5",
+  "spec": "0.6",
   "title": "How compound interest works",
   "summary": "See why money grows faster over time when interest earns interest.",
   "objective": "Calculate compound growth year by year and explain why starting early matters.",
   "language": "en",
   "level": "beginner",
   "estimatedMinutes": 7,
-  "topic": "Personal finance",
+  "subject": "money",
+  "tags": ["compound-interest", "investing", "rule-of-72"],
   "hook": {
     "id": "hook",
     "type": "choice",

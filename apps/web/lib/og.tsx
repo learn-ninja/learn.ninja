@@ -625,10 +625,10 @@ export function lessonImage(lesson: Lesson) {
   const dir = /^(ar|he|fa|ur)\b/i.test(lesson.language) ? "rtl" : "ltr"
   const shown = peek(lesson)
   const facts = [
-    lesson.topic,
+    t.subjects[lesson.subject],
     t.minutes(lesson.estimatedMinutes),
     t.levels[lesson.level],
-  ].filter(Boolean) as string[]
+  ]
   return respond(
     <Page dir={dir}>
       <Header />

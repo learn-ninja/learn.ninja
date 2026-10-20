@@ -23,7 +23,7 @@ const t = stringsFor("en")
 /**
  * A lesson as one row of the Explore feed or a profile. A byline first: who made it (their
  * picture and handle) at the start and how long ago at the end, so the ages line up as a column
- * down the feed. Then the title, up to two lines of summary, and one meta line with the topic,
+ * down the feed. Then the title, up to two lines of summary, and one meta line with the subject,
  * length and level, and the plays and likes at its end. The whole row opens the lesson; the
  * author and the heart are their own links. Rows sit between hairlines (the list adds them), not
  * in cards. `rank` puts a number in the margin on the Top tab; `showAuthor={false}` drops the
@@ -63,21 +63,17 @@ export function LessonRow({
         </span>
       )
     ) : null
-  const facts: React.ReactNode[] = []
-  if (lesson.topic)
-    facts.push(
-      <bdi key="topic" lang={lesson.language} className="min-w-0 truncate">
-        {lesson.topic}
-      </bdi>
-    )
-  facts.push(
+  const facts: React.ReactNode[] = [
+    <span key="subject" className="min-w-0 truncate">
+      {t.subjects[lesson.subject]}
+    </span>,
     <span key="minutes" className="shrink-0">
       {t.minutes(lesson.minutes)}
     </span>,
     <span key="level" className="shrink-0">
       {t.levels[lesson.level]}
-    </span>
-  )
+    </span>,
+  ]
   return (
     <div
       className={cn(

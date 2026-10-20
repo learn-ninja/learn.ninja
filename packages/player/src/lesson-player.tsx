@@ -890,7 +890,7 @@ function Player({
             >
               {item.kind === "intro" ? (
                 <Aura
-                  hue={hueFor(lesson.topic ?? lesson.title)}
+                  hue={hueFor(lesson.subject)}
                   // Half of the slot (88px) and its gap (20px): the content moves up this far without the ninja.
                   shift={ninja === "off" ? -54 : 0}
                 />
@@ -1198,7 +1198,7 @@ export function Screen({
             </p>
           </div>
           <MetaLine
-            lesson={lesson}
+            subject={t.subjects[lesson.subject]}
             minutes={t.minutes(lesson.estimatedMinutes)}
             level={t.levels[lesson.level]}
           />
@@ -1255,31 +1255,27 @@ function screenLabel(state: State, t: Strings): string | undefined {
     : undefined
 }
 
-/** The title screen's meta line under the summary, as in Explore: the topic, length, and level, dot-separated. */
+/** The title screen's meta line under the summary, as in Explore: the subject, length, and level, dot-separated. All three are in the player's language. */
 function MetaLine({
-  lesson,
+  subject,
   minutes,
   level,
 }: {
-  lesson: Lesson
+  subject: string
   minutes: string
   level: string
 }) {
-  const facts: React.ReactNode[] = []
-  if (lesson.topic)
-    facts.push(
-      <bdi key="topic" lang={lesson.language} className="min-w-0 truncate">
-        {lesson.topic}
-      </bdi>
-    )
-  facts.push(
+  const facts: React.ReactNode[] = [
+    <span key="subject" className="min-w-0 truncate">
+      {subject}
+    </span>,
     <span key="minutes" className="shrink-0">
       {minutes}
     </span>,
     <span key="level" className="shrink-0">
       {level}
-    </span>
-  )
+    </span>,
+  ]
   return (
     <p className="flex min-w-0 flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
       {facts.map((fact, i) => (

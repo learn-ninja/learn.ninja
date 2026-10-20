@@ -1,12 +1,13 @@
 {
-  "spec": "0.5",
+  "spec": "0.6",
   "title": "Button hierarchy",
   "summary": "Learn how primary, secondary, and tertiary buttons tell people what to do next.",
   "objective": "Give each view one clear primary action and style the rest by importance.",
   "language": "en",
   "level": "beginner",
   "estimatedMinutes": 6,
-  "topic": "UI design",
+  "subject": "design",
+  "tags": ["buttons", "user-interface", "visual-hierarchy"],
   "hook": {
     "id": "hook",
     "type": "compare",
