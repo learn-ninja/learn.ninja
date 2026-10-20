@@ -118,10 +118,11 @@ describe("publishing", () => {
     expect(stored?.claimTokenHash).toBe(
       hashToken(reply.body.claimToken as string)
     )
+    expect(stored?.visibility).toBe("unlisted")
     expect(stored?.ownerId).toBeNull()
   })
 
-  it("publishes an owned lesson with no expiry and no claim token, naming the owner", async () => {
+  it("publishes an owned lesson listed, with no expiry and no claim token, naming the owner", async () => {
     const reply = await publishLesson(
       { text: buttons, client: "x", ownerId: "user_1" },
       deps
@@ -130,7 +131,7 @@ describe("publishing", () => {
       owned: true,
       expiresAt: null,
       owner: { handle: "one" },
-      visibility: expect.any(String),
+      visibility: "public",
     })
     // An owner without a handle yet is still named, so clients can say where to pick one.
     const unnamed = await publishLesson(
@@ -154,6 +155,7 @@ describe("publishing", () => {
       ownerId: "user_1",
       expiresAt: null,
       claimTokenHash: null,
+      visibility: "public",
     })
     // Never swept, and still there long after anonymous lessons are gone.
     now += 365 * 24 * 3.6e6
@@ -275,7 +277,7 @@ describe("publishing", () => {
 describe("claiming", () => {
   const anonymous = () => publishLesson({ text: buttons, client: "x" }, deps)
 
-  it("keeps a lesson with its id and claim token: owned, never expiring, token spent", async () => {
+  it("keeps a lesson with its id and claim token: owned, listed, never expiring, token spent", async () => {
     const { body } = await anonymous()
     const reply = await claimLesson(
       {
@@ -295,7 +297,7 @@ describe("claiming", () => {
         owned: true,
         expiresAt: null,
         owner: { handle: "one" },
-        visibility: expect.any(String),
+        visibility: "public",
       },
     })
     const stored = await deps.store.get(body.id as string)
@@ -303,6 +305,7 @@ describe("claiming", () => {
       ownerId: "user_1",
       expiresAt: null,
       claimTokenHash: null,
+      visibility: "public",
     })
     // The reply describes the row as claiming left it, not as it was read before.
     expect(reply.body.visibility).toBe(stored?.visibility)

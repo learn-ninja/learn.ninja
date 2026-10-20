@@ -3,6 +3,7 @@
 import { headers } from "next/headers"
 
 import { currentActor } from "@/lib/auth/session"
+import { revalidateExplore } from "@/lib/explore/cache"
 import { claimLesson } from "@/lib/publish/handlers"
 import { getLessonStore } from "@/lib/publish/store"
 
@@ -38,6 +39,8 @@ export async function keepLesson(
   )
   if (!reply.body.ok)
     return { ok: false, message: reply.body.message as string }
+  // A kept lesson is listed straight away.
+  revalidateExplore()
   return {
     ok: true,
     message: "Kept.",

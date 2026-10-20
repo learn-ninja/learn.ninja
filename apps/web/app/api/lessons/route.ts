@@ -1,3 +1,4 @@
+import { revalidateExplore } from "@/lib/explore/cache"
 import { publishLesson } from "@/lib/publish/handlers"
 import { actorFor, clientKey, depsFor } from "@/lib/publish/request"
 import { respond } from "@/lib/publish/respond"
@@ -9,7 +10,7 @@ import { respond } from "@/lib/publish/respond"
 export async function POST(req: Request) {
   return respond(async () => {
     const actor = await actorFor(req)
-    return publishLesson(
+    const reply = await publishLesson(
       {
         text: await req.text(),
         client: clientKey(req),
@@ -19,5 +20,8 @@ export async function POST(req: Request) {
       },
       await depsFor(req)
     )
+    // An owned lesson is listed straight away.
+    if (actor && reply.status === 201) revalidateExplore()
+    return reply
   })
 }

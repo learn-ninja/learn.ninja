@@ -50,8 +50,8 @@ export default async function ExplorePage({
         />
       ) : (
         <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
-          Nothing here yet. Be the first: ask your agent for a lesson, say keep
-          it, and list it from your settings.
+          Nothing here yet. Be the first: ask your agent for a lesson and say
+          keep it.
         </p>
       )}
     </>

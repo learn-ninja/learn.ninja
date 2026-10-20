@@ -100,9 +100,9 @@ Options:
   --api <url>   Server to use (default: $LEARN_API_URL or ${DEFAULT_API_URL})
   --json        Print machine-readable JSON instead of text
 
-Signed in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account and
-never expires. Anonymous lessons last 7 days; \`login\` and \`keep\` save the ones published from
-this folder.`
+Signed in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account, never
+expires, and is listed in Explore under your handle. Anonymous lessons last 7 days; \`login\` and
+\`keep\` save the ones published from this folder.`
 
 export async function run(argv: string[], io: Io): Promise<number> {
   const flags = new Set(argv.filter((a) => a.startsWith("--")))
