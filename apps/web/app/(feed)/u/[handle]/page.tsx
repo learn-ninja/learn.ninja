@@ -8,7 +8,7 @@ import { normalizeHandle } from "@/lib/auth/handle-rules"
 import { currentActor } from "@/lib/auth/session"
 import { compact } from "@/lib/explore/browser"
 import { cachedProfile } from "@/lib/explore/cache"
-import { likedIds } from "@/lib/explore/queries"
+import { completedAt, likedIds } from "@/lib/explore/queries"
 import { getDb } from "@/lib/publish/store"
 import { SITE } from "@/lib/site"
 
@@ -41,13 +41,15 @@ export default async function ProfilePage({ params }: Props) {
     handle ? cachedProfile(handle) : null,
   ])
   if (!profile) notFound()
-  const liked = actor
-    ? await likedIds(
-        await getDb(),
-        actor.userId,
-        profile.lessons.map((l) => l.id)
+  const ids = profile.lessons.map((l) => l.id)
+  const [liked, completed] = actor
+    ? await getDb().then((db) =>
+        Promise.all([
+          likedIds(db, actor.userId, ids),
+          completedAt(db, actor.userId, ids),
+        ])
       )
-    : new Set<string>()
+    : [new Set<string>(), new Map<string, number>()]
   const own = actor?.userId === profile.id
   // Email-code accounts have no name until GitHub or a later setting gives them one.
   const name = profile.name.trim()
@@ -93,7 +95,7 @@ export default async function ProfilePage({ params }: Props) {
       {profile.lessons.length ? (
         <LessonFeed
           lessons={profile.lessons}
-          viewer={{ signedIn: actor !== null, liked }}
+          viewer={{ signedIn: actor !== null, liked, completed }}
           showAuthor={false}
         />
       ) : (

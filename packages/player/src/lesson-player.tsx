@@ -137,6 +137,8 @@ export interface LessonPlayerProps {
    * reloading the page carries on from the same screen. Omit it to start fresh every time.
    */
   progressKey?: string
+  /** Called when the learner reaches the wrap-up (not in demos), once per run through the lesson. */
+  onComplete?: () => void
 }
 
 export function LessonPlayer({
@@ -158,6 +160,7 @@ export function LessonPlayer({
   scopeKeys = false,
   chrome = true,
   progressKey,
+  onComplete,
 }: LessonPlayerProps) {
   const root = React.useRef<HTMLDivElement>(null)
   // The title as shown, which a rename in the header changes.
@@ -199,6 +202,7 @@ export function LessonPlayer({
             lesson={shown}
             startAt={startAt}
             progressKey={progressKey}
+            onComplete={onComplete}
             onRename={(next) => {
               setTitle(next)
               onRename?.(next)
@@ -594,6 +598,7 @@ function Player({
   shareUrl,
   menuItems,
   progressKey,
+  onComplete,
 }: {
   lesson: Lesson
   prefs: Preferences
@@ -612,6 +617,7 @@ function Player({
   shareUrl?: string
   menuItems?: React.ReactNode
   progressKey?: string
+  onComplete?: () => void
 }) {
   const { t, keyScope, lang = "en" } = usePlayer()
   const { textSize } = prefs
@@ -676,6 +682,14 @@ function Player({
       setClock((c) => (c.end ? c : { ...c, end: Date.now() }))
     else setClock((c) => (c.start ? c : { start: Date.now() }))
   }, [item.kind])
+  // Tell the page the lesson was finished: once per run (a retry is a new run), never in a demo.
+  const completeRef = React.useRef(onComplete)
+  React.useEffect(() => {
+    completeRef.current = onComplete
+  })
+  React.useEffect(() => {
+    if (item.kind === "wrap" && !startAt) completeRef.current?.()
+  }, [item.kind, state.run, startAt])
   const coarse = useCoarsePointer()
   // The tray holds the screen's buttons in the middle and the player's settings at the end. The notch
   // opens and closes it (Enter keeps working either way); the buttons render into `actionsEl`.
