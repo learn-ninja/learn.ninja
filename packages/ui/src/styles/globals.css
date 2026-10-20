@@ -574,70 +574,150 @@
   }
 }
 
-/* The aura behind the intro: a soft glow in the lesson's hue (--aura-h, set by the player), sitting just
-   below the title, plus a smaller one a few hues away that drifts. Softer and dimmer in the dark.
-   --aura-shift (also set by the player) moves both with the content when the ninja's slot folds away. */
+/* The smoke behind the intro (Aura in packages/player/src/ninja.tsx): overlapping puffs of one smoke
+   texture, each turning at its own pace. The textures carry their own color (gray with a faint tint
+   of the lesson's hue), one per theme. --aura-shift (set by the player) moves it with the content
+   when the ninja's slot folds away. Only transform and opacity move, so Safari keeps it on the GPU. */
 :root {
-  --aura-l: 0.88;
-  --aura-c: 0.09;
-  --aura-a: 0.85;
+  --smoke-a: 0.4;
 }
 .dark {
-  --aura-l: 0.52;
-  --aura-c: 0.13;
-  --aura-a: 0.72;
+  --smoke-a: 0.6;
 }
-.aura {
+.smoke {
   position: absolute;
   left: 50%;
   top: calc(54% + var(--aura-shift, 0px));
-  width: min(78%, 640px);
-  aspect-ratio: 1.45;
-  border-radius: 50%;
+  width: min(96%, 780px);
+  aspect-ratio: 600 / 420;
   transform: translate(-50%, -50%);
-  filter: blur(44px);
-  background: radial-gradient(
-    closest-side,
-    oklch(var(--aura-l) var(--aura-c) var(--aura-h) / var(--aura-a)),
-    oklch(var(--aura-l) calc(var(--aura-c) * 0.55) var(--aura-h) / 0.3) 55%,
-    transparent 74%
-  );
+  opacity: var(--smoke-a);
+  contain: layout style;
 }
-.aura-second {
-  top: calc(46% + var(--aura-shift, 0px));
-  width: min(44%, 360px);
+.smoke-puff {
+  position: absolute;
+  left: calc(var(--x) - var(--size) / 2);
+  top: calc(var(--y) - var(--size) * 600 / 420 / 2);
+  width: var(--size);
   aspect-ratio: 1;
-  filter: blur(36px);
-  background: radial-gradient(
-    closest-side,
-    oklch(var(--aura-l) var(--aura-c) calc(var(--aura-h) + 34) / 0.75),
-    transparent 70%
-  );
+}
+.smoke-spin {
+  width: 100%;
+  height: 100%;
+  background: var(--sprite-a) center / 100% 100% no-repeat;
+  transform: rotate(var(--turn));
+}
+.smoke-b {
+  background-image: var(--sprite-b);
+}
+.dark .smoke-a {
+  background-image: var(--sprite-a-dark);
+}
+.dark .smoke-b {
+  background-image: var(--sprite-b-dark);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .aura {
-    animation: aura-in 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  .smoke {
+    animation: smoke-in 2.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
     transition: top 0.3s ease-out;
   }
-  .aura-second {
-    animation:
-      aura-in 2.6s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s backwards,
-      aura-drift 12s ease-in-out 2.8s infinite alternate;
+  .smoke-spin {
+    animation: smoke-turn 60s linear infinite;
+    will-change: transform;
+  }
+  .smoke-puff {
+    transition: transform 0.65s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  /* "Start lesson": the smoke flares, the puffs blow outward, and it all thins away. */
+  .smoke[data-vanishing] {
+    animation: smoke-burst 0.65s ease-out forwards;
+  }
+  .smoke[data-vanishing] .smoke-puff {
+    transform: translate(var(--bx), var(--by)) scale(1.5);
   }
 }
-@keyframes aura-in {
+@keyframes smoke-in {
   from {
     opacity: 0;
-    scale: 1.25;
-    filter: blur(70px);
+    scale: 0.85;
   }
 }
-@keyframes aura-drift {
+@keyframes smoke-turn {
   from {
-    translate: -16% 8%;
+    transform: rotate(0deg);
   }
   to {
-    translate: 18% -10%;
+    transform: rotate(360deg);
+  }
+}
+@keyframes smoke-burst {
+  30% {
+    opacity: min(1, calc(var(--smoke-a) * 1.6));
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* The intro vanishing into smoke (SmokeWords): each title word blurs, skews, and drifts up and
+   toward the end side, one after another; the rest blurs away as a block. Only transform, opacity,
+   and filter move, on few elements, so Safari can keep it on the GPU. */
+.vanish-word {
+  display: inline-block;
+}
+[dir="rtl"] {
+  --vanish-x: -1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .vanish .vanish-word {
+    animation: smoky 0.5s cubic-bezier(0.4, 0, 0.7, 1) var(--delay, 0ms) both;
+    will-change: transform, opacity, filter;
+  }
+  .vanish .vanish-word:nth-child(even) {
+    animation-name: smoky-mirror;
+  }
+  .vanish .vanish-fade {
+    animation: smoke-fade 0.45s ease-in 0.1s both;
+    will-change: transform, opacity, filter;
+  }
+  /* The ninja goes up in smoke with the intro and turns up in his corner on the first brick. */
+  .ninja-vanish {
+    animation: smoke-fade 0.4s ease-in both;
+  }
+  .ninja-appear {
+    animation: smoke-appear 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+@keyframes smoky {
+  to {
+    transform: translate3d(calc(var(--vanish-x, 1) * 3rem), -2rem, 0)
+      rotate(calc(var(--vanish-x, 1) * -14deg))
+      skewX(calc(var(--vanish-x, 1) * 40deg)) scale(1.4);
+    filter: blur(10px);
+    opacity: 0;
+  }
+}
+@keyframes smoky-mirror {
+  to {
+    transform: translate3d(calc(var(--vanish-x, 1) * 3.6rem), -2.4rem, 0)
+      rotate(calc(var(--vanish-x, 1) * -14deg))
+      skewX(calc(var(--vanish-x, 1) * -40deg)) scale(1.7);
+    filter: blur(12px);
+    opacity: 0;
+  }
+}
+@keyframes smoke-appear {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    scale: 1.4;
+  }
+}
+@keyframes smoke-fade {
+  to {
+    opacity: 0;
+    filter: blur(8px);
+    translate: 0 -0.75rem;
   }
 }
 

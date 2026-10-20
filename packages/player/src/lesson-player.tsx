@@ -55,6 +55,7 @@ import {
 import {
   Aura,
   hueFor,
+  SmokeWords,
   Ninja,
   NinjaStage,
   reducedMotion,
@@ -788,6 +789,23 @@ function Player({
       dispatch({ type: "next" })
     }, 200)
   }, [])
+  // "Start lesson" makes the intro vanish in a puff of smoke before the first brick arrives.
+  const [vanishing, setVanishing] = React.useState(false)
+  const vanishingRef = React.useRef(false)
+  const vanishIntro = React.useCallback(() => {
+    if (vanishingRef.current) return
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      dispatch({ type: "next" })
+      return
+    }
+    vanishingRef.current = true
+    setVanishing(true)
+    window.setTimeout(() => {
+      vanishingRef.current = false
+      setVanishing(false)
+      dispatch({ type: "next" })
+    }, 650)
+  }, [])
   const seenConcepts = state.items
     .slice(0, state.index + 1)
     .flatMap((i) => (i.kind === "concept" ? [i.brick] : []))
@@ -907,6 +925,7 @@ function Player({
                   hue={hueFor(lesson.topic ?? lesson.title)}
                   // Half of the slot (88px) and its gap (20px): the content moves up this far without the ninja.
                   shift={ninja === "off" ? -54 : 0}
+                  vanishing={vanishing}
                 />
               ) : null}
               <main
@@ -918,6 +937,7 @@ function Player({
                   key={state.index}
                   className={cn(
                     "mx-auto flex min-h-full w-full flex-col justify-center-safe gap-8 px-4 py-16",
+                    vanishing && "vanish",
                     leaving
                       ? "motion-safe:animate-out motion-safe:duration-200 motion-safe:fade-out-0 motion-safe:fill-mode-forwards motion-safe:slide-out-to-end-24"
                       : item.kind === "concept"
@@ -966,6 +986,7 @@ function Player({
                     level={ninja}
                     pickLine={pickLine}
                     onConceptDone={leaveConcept}
+                    onStart={vanishIntro}
                     onBubbleRoom={setBubbleRoom}
                     inBubble
                     brief={
@@ -1001,6 +1022,7 @@ function Player({
                   celebrate={celebrate}
                   onLanded={() => setLanded(true)}
                   level={ninja}
+                  vanishing={vanishing}
                 />
               ) : null}
               {rewinding ? (
@@ -1205,17 +1227,19 @@ export function Screen({
           <NinjaSlot show={ninja} gap="-mb-5" />
           <div className="flex w-full flex-col gap-3">
             <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-              {lesson.title}
+              <SmokeWords text={lesson.title} step={50} />
             </h1>
-            <p className="text-base font-medium text-pretty text-muted-foreground">
+            <p className="vanish-fade text-base font-medium text-pretty text-muted-foreground">
               {lesson.summary}
             </p>
           </div>
-          <MetaLine
-            lesson={lesson}
-            minutes={t.minutes(lesson.estimatedMinutes)}
-            level={t.levels[lesson.level]}
-          />
+          <div className="vanish-fade">
+            <MetaLine
+              lesson={lesson}
+              minutes={t.minutes(lesson.estimatedMinutes)}
+              level={t.levels[lesson.level]}
+            />
+          </div>
         </div>
       )
     case "concept":
@@ -1642,6 +1666,7 @@ export function ActionArea({
   level = "default",
   pickLine: picker,
   onConceptDone,
+  onStart,
   inBubble = false,
   why,
   onBubbleRoom,
@@ -1664,6 +1689,8 @@ export function ActionArea({
   pickLine?: LinePicker
   /** "Got it" on a concept: the player animates the card away before moving on. */
   onConceptDone?: () => void
+  /** Starts the lesson from the intro (the player makes the intro vanish first). */
+  onStart?: () => void
   /**
    * The player's mode: every piece of feedback (the verdict, a miss's hint, the explanation) is said in
    * the ninja's speech bubble. A lone demo keeps the explanation and hint in place.
@@ -1721,7 +1748,10 @@ export function ActionArea({
       CADENCE[characterFor(level)]
     )
   if (item.kind === "intro")
-    primary = { label: t.start, onPress: () => dispatch({ type: "next" }) }
+    primary = {
+      label: t.start,
+      onPress: onStart ?? (() => dispatch({ type: "next" })),
+    }
   else if (item.kind === "concept")
     primary = {
       label: t.continue,
