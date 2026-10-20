@@ -127,9 +127,6 @@ export function LessonRow({
         </p>
         <div className="mt-2 flex items-center justify-between gap-3 text-sm text-muted-foreground">
           <p className="flex min-w-0 flex-1 basis-0 flex-wrap items-center gap-x-1.5">
-            {completedAt !== undefined ? (
-              <CompletedCheck at={completedAt} className="relative z-10" />
-            ) : null}
             {facts.map((fact, i) => (
               <span key={i} className="contents">
                 {i > 0 ? (
@@ -140,6 +137,9 @@ export function LessonRow({
                 {fact}
               </span>
             ))}
+            {completedAt !== undefined ? (
+              <CompletedCheck at={completedAt} className="relative z-10" />
+            ) : null}
           </p>
           <span className="ms-auto flex shrink-0 items-center gap-3">
             <span
