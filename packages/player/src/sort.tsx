@@ -9,6 +9,12 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { QuestionBrickProps } from "./bricks"
 import { POOL } from "./check"
 import { usePlayer } from "./context"
+import {
+  controlPadding,
+  controlSurface,
+  markStyles,
+  slotStyles,
+} from "./controls"
 import { buzz, calm, fly, pulse, shake } from "./motion"
 import { RichText } from "./rich-text"
 
@@ -36,13 +42,6 @@ export function moveItem(
 
 /** How far a finger has to travel before a swipe counts. */
 const SWIPE = 48
-
-const markStyles =
-  "data-[status=correct]:border-green-600! data-[status=correct]:bg-green-600/10! " +
-  "data-[status=wrong]:border-yellow-500! data-[status=wrong]:bg-yellow-500/10!"
-
-const tileStyles =
-  "rounded-md border bg-background text-sm font-medium shadow-xs dark:bg-input/30"
 
 export function SortBrick({
   brick,
@@ -231,8 +230,9 @@ export function SortBrick({
               heads.current[i] = el
             }}
             className={cn(
-              tileStyles,
-              "flex min-h-10 items-center justify-center gap-2 px-3 py-2.5 font-semibold transition-colors",
+              controlSurface,
+              controlPadding,
+              "flex items-center justify-center gap-2 font-semibold transition-colors",
               aim?.lane === i && "bg-foreground/5 dark:bg-input/50"
             )}
           >
@@ -272,10 +272,11 @@ export function SortBrick({
                 gridColumn: lane < 0 ? "1 / -1" : `${lane + 1}`,
               }}
               className={cn(
-                tileStyles,
+                controlSurface,
+                controlPadding,
                 markStyles,
-                "relative flex min-h-10 items-center justify-center py-2.5 text-center select-none",
-                lane < 0 ? "px-9" : "px-3",
+                "relative flex items-center justify-center text-center select-none",
+                lane < 0 && "px-9",
                 "group-has-[[role=radio]:focus-visible]/row:border-ring group-has-[[role=radio]:focus-visible]/row:ring-[3px] group-has-[[role=radio]:focus-visible]/row:ring-ring/50"
               )}
             >
@@ -323,13 +324,14 @@ export function SortBrick({
                 onMouseLeave={() => setAim(null)}
                 style={{ gridRow: 1, gridColumn: i + 1 }}
                 className={cn(
-                  "z-10 min-h-10 rounded-md outline-none",
+                  // As tall as the row, which the item's tile sets.
+                  "z-10 rounded-md outline-none",
                   !locked && "cursor-pointer",
                   lane < 0 || lane === i
                     ? !locked && "hover:bg-foreground/5"
                     : // An empty lane stays outlined, even after checking, so every row shows both bins.
                       cn(
-                        "border border-dashed border-foreground/20 bg-muted/60 dark:bg-input/10",
+                        slotStyles,
                         !locked &&
                           "transition-colors hover:border-foreground/40 hover:bg-muted dark:hover:bg-input/30"
                       )

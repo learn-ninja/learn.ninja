@@ -11,6 +11,7 @@ import { PostgresLessonStore } from "@/lib/publish/store"
 
 import {
   flushPendingPlays,
+  completeLesson,
   likeLesson,
   recordPlay,
   reportLesson,
@@ -21,6 +22,7 @@ import {
 import { MemoryPlayCounter, WriteThroughPlayCounter } from "./plays"
 import {
   authorOf,
+  completedAt,
   lessonsOwnedBy,
   likedIds,
   listLessons,
@@ -30,7 +32,7 @@ import {
 import { reportText, type ReportMail } from "./report-email"
 
 // Explore over an in-memory Postgres: what gets listed, how the tabs sort, likes, visibility,
-// reports, and plays.
+// completions, reports, and plays.
 
 const example = (file: string) =>
   readFileSync(new URL(`../../../../examples/${file}`, import.meta.url), "utf8")
@@ -223,6 +225,32 @@ describe("likes", () => {
       status: 404,
       body: { error: "not_found" },
     })
+  })
+})
+
+describe("completions", () => {
+  it("keeps when each user first finished a lesson", async () => {
+    const id = await published("ada", { visibility: "public" })
+    const first = now
+    expect(await completeLesson({ id, userId: "bob" }, deps)).toMatchObject({
+      status: 200,
+      body: { ok: true, completedAt: new Date(first).toISOString() },
+    })
+    // Finishing again keeps the first time.
+    now += DAY
+    expect(await completeLesson({ id, userId: "bob" }, deps)).toMatchObject({
+      body: { completedAt: new Date(first).toISOString() },
+    })
+    expect(await completedAt(db, "bob", [id, "other"])).toEqual(
+      new Map([[id, first]])
+    )
+    expect(await completedAt(db, "ada", [id])).toEqual(new Map())
+  })
+
+  it("answers 404 for a lesson that's gone", async () => {
+    expect(
+      await completeLesson({ id: "nope1234", userId: "bob" }, deps)
+    ).toMatchObject({ status: 404, body: { error: "not_found" } })
   })
 })
 

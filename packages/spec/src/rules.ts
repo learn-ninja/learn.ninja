@@ -65,6 +65,80 @@ export function positionalReference(text: string): string | null {
   return (plain.match(ordinal) ?? plain.match(lettered))?.[0] ?? null
 }
 
+// Code that the lesson's text leaves outside backticks. Each pattern is narrow on purpose: a
+// command with a known subcommand, a long flag, a call, a file name with a code extension, a path,
+// or an HTML tag. Prose that merely mentions git or python is left alone.
+const SUBCOMMANDS: Record<string, string[]> = {
+  git: "add commit push pull fetch clone status checkout switch branch merge rebase log diff stash reset init remote tag restore".split(" "),
+  npm: "install i uninstall run test start init ci publish update create exec".split(" "),
+  npx: ["*"],
+  pnpm: "add install i run dev build test exec dlx".split(" "),
+  yarn: "add install run dev build test".split(" "),
+  pip: "install uninstall freeze list".split(" "),
+  pip3: "install uninstall freeze list".split(" "),
+  docker: "run build ps pull push compose exec images stop start logs".split(" "),
+  kubectl: "get apply delete describe logs exec".split(" "),
+  brew: "install update upgrade uninstall".split(" "),
+  apt: "install update upgrade remove".split(" "),
+  "apt-get": "install update upgrade remove".split(" "),
+  cargo: "build run test add new".split(" "),
+  sudo: ["*"],
+  chmod: ["*"],
+}
+const COMMAND =
+  /(?<![\w./-])(git|npm|npx|pnpm|yarn|pip3?|docker|kubectl|brew|apt(?:-get)?|cargo|sudo|chmod)\s+(--?[\w-]+|[\w./~-]+)/g
+const BARE_CODE: RegExp[] = [
+  // cd, ls, and mkdir followed by a path or a flag
+  /(?<![\w./-])(?:cd|ls|mkdir)\s+(?:--?[\w-]+|[\w-]*[./~][\w./~-]*)/,
+  /(?<![\w-])--[a-z][\w-]*\b/,
+  /\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\(\)/,
+  /(?<!\S)(?:~|\.{1,2})?\/[\w.-]+(?:\/[\w.-]+)+/,
+  /(?<!\S)~\/[\w.-]+/,
+  // relative paths: a file in a folder, or three or more segments ("and/or" and "3/4" are left alone)
+  /(?<![\w./-])[A-Za-z_][\w-]*(?:\/[\w-]+)*\/[\w-]+\.[A-Za-z]\w*\b/,
+  /(?<![\w./-])[A-Za-z_][\w-]*(?:\/[\w-]+){2,}\b/,
+  /(?<![\w.])[\w-]+\.(?:json|[cm]?jsx?|tsx?|py|rb|rs|java|kt|swift|s?css|html?|mdx?|ya?ml|toml|sh|sql|csv|lock)\b/,
+  /(?<!\S)\.env\b/,
+  /<\/?[a-z][\w-]*\s*\/?>/,
+]
+
+/**
+ * A piece of code (a command, flag, call, file name, path, or tag) written outside backticks,
+ * or null. Text already in backticks or formulas is ignored.
+ */
+export function bareCode(text: string): string | null {
+  const plain = text
+    .replace(/`[^`]*`/g, " ")
+    .replace(/\\\((?:.|\n)*?\\\)/g, " ")
+  for (const m of plain.matchAll(COMMAND)) {
+    const [whole, tool, arg] = m as unknown as [string, string, string]
+    const known = SUBCOMMANDS[tool] ?? []
+    if (known.includes("*") || known.includes(arg) || arg.startsWith("-"))
+      return whole
+  }
+  for (const re of BARE_CODE) {
+    const found = plain.match(re)?.[0]
+    // Node.js, Vue.js, and friends are names, not files.
+    if (found && !(/^[A-Z]\w*\.js$/.test(found))) return found
+  }
+  return null
+}
+
+/** The rich-text fields a learner reads, so the keys where code should sit in backticks. */
+const RICH_TEXT_KEYS = new Set([
+  "prompt",
+  "text",
+  "feedback",
+  "hint",
+  "explanation",
+  "situation",
+  "outcome",
+  "left",
+  "right",
+  "body",
+  "takeaways",
+])
+
 const countWords = (s: string) =>
   s.replace(/[*`]/g, "").trim().split(/\s+/).filter(Boolean).length
 
@@ -220,6 +294,18 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
         )
     }
   }
+
+  // Code outside backticks shows as plain text, so `git push` in a match pair or an option reads
+  // like prose. Visuals are skipped: their html, code, and d2 are code by nature.
+  walkRichText(lesson, (text, where) => {
+    const found = bareCode(text)
+    if (found)
+      add(
+        "teaching",
+        where,
+        `"${found}" looks like code, but it isn't in backticks, so it shows as plain text. Wrap commands, flags, file names, paths, tags, and code in backticks (\`${found}\`) so they render in monospace.`
+      )
+  })
 
   // A brick's HTML visual is a picture to a screen reader, so it needs alt text. (Hotspot visuals
   // are read through their tappable regions, item visuals through their captions, and option
@@ -726,6 +812,26 @@ function walkObjects(
     visit(value as Record<string, unknown>, path)
     for (const [k, v] of Object.entries(value))
       walkObjects(v, path ? `${path}.${k}` : k, visit)
+  }
+}
+
+/** Every rich-text string a learner reads, with its path. Visual subtrees are skipped. */
+function walkRichText(
+  value: unknown,
+  visit: (text: string, path: string) => void,
+  path = ""
+) {
+  if (Array.isArray(value)) {
+    value.forEach((v, i) => walkRichText(v, visit, `${path}[${i}]`))
+  } else if (value && typeof value === "object") {
+    if ("kind" in value) return
+    for (const [k, v] of Object.entries(value)) {
+      const at = path ? `${path}.${k}` : k
+      if (RICH_TEXT_KEYS.has(k) && typeof v === "string") visit(v, at)
+      else if (RICH_TEXT_KEYS.has(k) && Array.isArray(v))
+        v.forEach((s, i) => typeof s === "string" && visit(s, `${at}[${i}]`))
+      else walkRichText(v, visit, at)
+    }
   }
 }
 

@@ -84,6 +84,7 @@ Mechanics of each type:
 - Prompts: 40 words at most, one clear task. Questions end with a question mark.
 - Plain, friendly, specific language. Short sentences. No filler ("In this lesson we will…").
 - Rich text supports `**bold**`, `*italic*`, `` `code` ``, and inline formulas `\( ... \)`. A `$` is always a plain dollar sign.
+- **Code goes in backticks, wherever it appears:** commands (`` `git push` ``), flags, file names, paths, identifiers, HTML tags, and values, in prompts, options, match pairs, sort and order items, blank chips, feedback, and explanations alike. The player then shows it in monospace; without the backticks it reads as plain prose, and the checker rejects it. An item that is only code (a match pair's `` `git pull` ``) renders as code without an extra box.
 - In formulas, name a quantity before its symbol ("the interest rate, `\( r \)`"), use `\times` or `\cdot` (never `*`) and `\frac`, and follow the lesson language's decimal mark (`3{,}5` in TeX).
 - Don't reveal the answer in the prompt or the concept brick's wording.
 

@@ -1,6 +1,6 @@
 import { and, desc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm"
 
-import { lesson, like, user, type Db } from "@workspace/db"
+import { completion, lesson, like, user, type Db } from "@workspace/db"
 import {
   isSubject,
   subjectForTopic,
@@ -178,6 +178,20 @@ export async function likedIds(
     .from(like)
     .where(and(eq(like.userId, userId), inArray(like.lessonId, ids)))
   return new Set(rows.map((r) => r.id))
+}
+
+/** When the user first finished each of `ids` they have finished, as lesson id → ms since epoch. */
+export async function completedAt(
+  db: Db,
+  userId: string,
+  ids: string[]
+): Promise<Map<string, number>> {
+  if (!ids.length) return new Map()
+  const rows = await db
+    .select({ id: completion.lessonId, at: completion.completedAt })
+    .from(completion)
+    .where(and(eq(completion.userId, userId), inArray(completion.lessonId, ids)))
+  return new Map(rows.map((r) => [r.id, r.at.getTime()]))
 }
 
 export interface Profile {

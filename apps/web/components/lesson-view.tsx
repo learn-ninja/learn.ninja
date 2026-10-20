@@ -24,18 +24,22 @@ export interface LessonViewProps extends LessonPlayerProps {
   canReport?: boolean
   /** When the viewer owns the lesson: how it's listed, with a way to the settings page. */
   owner?: { visibility: Visibility; hidden: boolean }
+  /** Record finishing the lesson to the viewer's account (signed in only), for the check on Explore. */
+  recordCompletion?: boolean
 }
 
 /**
  * The lesson player with the footer's theme setting connected to next-themes. A page that doesn't
  * pass `uiLanguage` (the prerendered /lessons pages) still honors ?ui=, read after mounting, the
  * same moment the player loads saved preferences, so the page can stay static. Published lessons
- * add the site's own items to the lesson menu: a report, or the owner's listing status.
+ * add the site's own items to the lesson menu: a report, or the owner's listing status, and tell
+ * the server when a signed-in viewer reaches the wrap-up.
  */
 export function LessonView({
   lessonId,
   canReport = false,
   owner,
+  recordCompletion = false,
   ...props
 }: LessonViewProps) {
   const { theme, setTheme } = useTheme()
@@ -97,6 +101,16 @@ export function LessonView({
         theme={mounted ? ((theme as Theme | undefined) ?? "system") : "system"}
         onThemeChange={setTheme}
         menuItems={menuItems}
+        onComplete={
+          lessonId && recordCompletion
+            ? () => {
+                fetch(`/api/lessons/${lessonId}/complete`, {
+                  method: "POST",
+                  keepalive: true,
+                }).catch(() => {})
+              }
+            : undefined
+        }
       />
       {lessonId && canReport ? (
         <ReportDialog

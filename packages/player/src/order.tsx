@@ -7,6 +7,12 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { QuestionBrickProps } from "./bricks"
 import { usePlayer } from "./context"
+import {
+  controlPadding,
+  controlStyles,
+  markStyles,
+  slotStyles,
+} from "./controls"
 import { buzz, fly, shake } from "./motion"
 import { RichText } from "./rich-text"
 import { Visual } from "./visuals"
@@ -14,13 +20,6 @@ import { Visual } from "./visuals"
 // The order brick: numbered slots wait on top and the shuffled items below. Tap the items in order and
 // each slides into the next open slot; tap a placed item to send it back. With a keyboard, Enter or
 // Space places or returns an item, ↑ and ↓ move a placed item up or down, and focus never gets lost.
-
-const markStyles =
-  "data-[status=correct]:border-green-600! data-[status=correct]:bg-green-600/10! " +
-  "data-[status=wrong]:border-yellow-500! data-[status=wrong]:bg-yellow-500/10!"
-
-const tileStyles =
-  "h-auto rounded-md border bg-background px-3 py-2.5 text-sm font-medium whitespace-normal shadow-xs disabled:opacity-100 dark:bg-input/30"
 
 export function OrderBrick({
   brick,
@@ -121,7 +120,9 @@ export function OrderBrick({
           }
         }}
         className={cn(
-          tileStyles,
+          controlStyles,
+          controlPadding,
+          "h-auto whitespace-normal disabled:opacity-100",
           markStyles,
           // Placed items fill their row; waiting ones are chips, or cards when they're visuals.
           placed ? "min-w-0 flex-1 shrink" : visual ? "w-full" : "w-auto",
@@ -155,14 +156,17 @@ export function OrderBrick({
             {id ? (
               tile(id, true)
             ) : (
-              // An open slot; the next one to fill stands out a little.
+              // An open slot; the next one to fill stands out a little. It takes a tile's padding and one
+              // line of its text, so it's exactly as tall as a placed item at every text size.
               <div
                 className={cn(
-                  "min-w-0 flex-1 rounded-md border border-dashed bg-muted/60 dark:bg-input/10",
-                  visual ? "min-h-24" : "min-h-10",
-                  i === next ? "border-foreground/40" : "border-foreground/20"
+                  slotStyles,
+                  "min-w-0 flex-1",
+                  visual ? "min-h-24" : controlPadding,
+                  i === next && "border-foreground/40"
                 )}
               >
+                {visual ? null : <span aria-hidden="true">{"\u200b"}</span>}
                 <span className="sr-only">{t.emptyGap}</span>
               </div>
             )}
