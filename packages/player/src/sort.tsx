@@ -232,7 +232,7 @@ export function SortBrick({
             className={cn(
               controlSurface,
               controlPadding,
-              "flex items-center justify-center gap-2 font-semibold transition-colors",
+              "flex items-center justify-center gap-2 font-semibold",
               aim?.lane === i && "bg-foreground/5 dark:bg-input/50"
             )}
           >
@@ -333,7 +333,7 @@ export function SortBrick({
                       cn(
                         slotStyles,
                         !locked &&
-                          "transition-colors hover:border-foreground/40 hover:bg-muted dark:hover:bg-input/30"
+                          "hover:border-foreground/40 hover:bg-muted dark:hover:bg-input/30"
                       )
                 )}
               />

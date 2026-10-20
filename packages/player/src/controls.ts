@@ -5,10 +5,10 @@
 export const controlSurface =
   "rounded-md border bg-background shadow-xs dark:bg-input/30"
 
-/** A control on a card: hover and selected states on top of the surface. */
+/** A control on a card: hover and selected states on top of the surface, with no fade so they follow the pointer at once. */
 export const controlStyles =
   controlSurface +
-  " transition-colors hover:bg-muted data-selected:border-primary data-selected:bg-muted dark:hover:bg-input/50 dark:data-selected:bg-muted"
+  " hover:bg-muted data-selected:border-primary data-selected:bg-muted dark:hover:bg-input/50 dark:data-selected:bg-muted"
 
 /**
  * A one-line control's padding and text. Its height is this padding plus one line of `text-sm`, never a

@@ -73,15 +73,16 @@ function KeyHint({
 // An option card: the visual on a panel in the page's color, the caption in a muted footer. Selection
 // and marks only recolor the border; the panel inherits it. Each card spans two rows of the options
 // grid (a subgrid), so the panels in a row match in height and the captions start on one line.
+// No color transition: hover follows the pointer at once, and the panel's inherited border would ease twice.
 const optionCardStyles =
-  "group relative row-span-2 grid grid-rows-subgrid gap-0 rounded-xl border bg-muted text-start shadow-xs transition-colors dark:bg-input/30 " +
+  "group relative row-span-2 grid grid-rows-subgrid gap-0 rounded-xl border bg-muted text-start shadow-xs dark:bg-input/30 " +
   "hover:border-ring data-selected:border-primary data-pressed:translate-y-px " +
   "data-[status=correct]:border-green-600! data-[status=wrong]:border-yellow-500! data-[status=partial]:border-amber-500!"
 
 // The panel is at least 160px tall, so a small visual (a row of buttons, a badge) still reads as a
 // preview window; taller visuals grow it, and the visual stays centered.
 const optionPanelStyles =
-  "relative -mx-px -mt-px flex min-h-40 flex-col justify-center rounded-xl border border-inherit bg-background px-1 py-5 transition-colors"
+  "relative -mx-px -mt-px flex min-h-40 flex-col justify-center rounded-xl border border-inherit bg-background px-1 py-5"
 
 // ---------- concept ----------
 
