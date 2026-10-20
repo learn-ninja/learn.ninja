@@ -1219,32 +1219,12 @@ export function Screen({
               {lesson.summary}
             </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {lesson.topic ? (
-              <Badge variant="outline">{lesson.topic}</Badge>
-            ) : null}
-            <Badge variant="outline">
-              {t.minutes(lesson.estimatedMinutes)}
-            </Badge>
-            <Badge variant="outline">{t.levels[lesson.level]}</Badge>
-          </div>
-          {author ? (
-            // The picture and handle alone, no "by": it reads the same in every language.
-            <LinkButton
-              href={author.href}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground"
-            >
-              <Avatar className="size-5">
-                {author.image ? <AvatarImage src={author.image} alt="" /> : null}
-                <AvatarFallback className="text-xs font-medium uppercase">
-                  {author.handle[0]}
-                </AvatarFallback>
-              </Avatar>
-              <bdi dir="ltr">{author.handle}</bdi>
-            </LinkButton>
-          ) : null}
+          <MetaLine
+            lesson={lesson}
+            author={author}
+            minutes={t.minutes(lesson.estimatedMinutes)}
+            level={t.levels[lesson.level]}
+          />
         </div>
       )
     case "concept":
@@ -1296,6 +1276,73 @@ function screenLabel(state: State, t: Strings): string | undefined {
   return item?.kind === "question" && item.role === "hook"
     ? t.warmUp
     : undefined
+}
+
+/**
+ * The title screen's one meta line, the same as a row in Explore: who made the lesson (their
+ * picture and handle, linking to their profile), the topic, length, and level, dot-separated.
+ * The picture and handle alone, no "by": it reads the same in every language.
+ */
+function MetaLine({
+  lesson,
+  author,
+  minutes,
+  level,
+}: {
+  lesson: Lesson
+  author?: Author
+  minutes: string
+  level: string
+}) {
+  const facts: React.ReactNode[] = []
+  if (author)
+    facts.push(
+      <LinkButton
+        key="author"
+        href={author.href}
+        variant="link"
+        size="sm"
+        className="h-auto min-w-0 gap-1.5 rounded-sm p-0 text-foreground"
+      >
+        <Avatar className="size-5">
+          {author.image ? <AvatarImage src={author.image} alt="" /> : null}
+          <AvatarFallback className="text-xs font-medium uppercase">
+            {author.handle[0]}
+          </AvatarFallback>
+        </Avatar>
+        <bdi dir="ltr" className="min-w-0 truncate">
+          {author.handle}
+        </bdi>
+      </LinkButton>
+    )
+  if (lesson.topic)
+    facts.push(
+      <bdi key="topic" lang={lesson.language} className="min-w-0 truncate">
+        {lesson.topic}
+      </bdi>
+    )
+  facts.push(
+    <span key="minutes" className="shrink-0">
+      {minutes}
+    </span>,
+    <span key="level" className="shrink-0">
+      {level}
+    </span>
+  )
+  return (
+    <p className="flex min-w-0 flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
+      {facts.map((fact, i) => (
+        <span key={i} className="contents">
+          {i > 0 ? (
+            <span aria-hidden="true" className="text-muted-foreground/60">
+              ·
+            </span>
+          ) : null}
+          {fact}
+        </span>
+      ))}
+    </p>
+  )
 }
 
 function ScreenLabel({
