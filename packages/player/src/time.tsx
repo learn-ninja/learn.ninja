@@ -29,16 +29,13 @@ export function timeAgo(at: number, now: number, lang: string): string {
   return say("year", YEAR)
 }
 
-/** The exact moment, for a tooltip: "20 Oct 2026, 11:17". */
+/** The date, for a tooltip: "20 Oct 2026". The date only: a clock time rendered on the server would be in its time zone, not the reader's. */
 export function exactTime(at: number, lang: string): string {
-  return new Intl.DateTimeFormat(lang, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(at)
+  return new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(at)
 }
 
 /**
- * "5 minutes ago" as a <time>, with the exact moment on hover. The age is taken at render, so
+ * "5 minutes ago" as a <time>, with the date on hover. The age is taken at render, so
  * the server's and the browser's can differ by a few seconds; the warning is suppressed since
  * that only matters right at a boundary, and the browser's text wins on the next render.
  */
