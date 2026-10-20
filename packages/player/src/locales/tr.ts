@@ -19,6 +19,7 @@ export const tr: Strings = {
   picked: (parts) => `Seçilen: ${parts}`,
   hookNote: "Bu ilk soru bir ısınma. Puanına sayılmaz.",
   minutes: (n) => p(n, { one: "# dk", other: "# dk" }),
+  justNow: "az önce",
   expires: {
     days: (n) => `${n} gün içinde sona erer`,
     hours: (n) => `${n} saat içinde sona erer`,

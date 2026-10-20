@@ -15,6 +15,7 @@ export const th: Strings = {
   picked: (parts) => `เลือกแล้ว: ${parts}`,
   hookNote: "ข้อแรกเป็นการวอร์มอัป ไม่นับคะแนน",
   minutes: (n) => `${n} นาที`,
+  justNow: "เมื่อสักครู่",
   expires: {
     days: (n) => `หมดอายุใน ${n} วัน`,
     hours: (n) => `หมดอายุใน ${n} ชม.`,

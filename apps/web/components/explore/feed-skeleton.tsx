@@ -20,8 +20,16 @@ export function FeedSkeleton({
     <div aria-hidden="true" className={cn("flex flex-col divide-y", className)}>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex flex-col py-4">
+          {/* The byline: a 20px picture and handle, the age at the end. */}
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-1.5">
+              <Skeleton className="size-5 rounded-full" />
+              <Skeleton className="h-3.5 w-16" />
+            </span>
+            <Skeleton className="h-3.5 w-20" />
+          </div>
           {/* The title: one 22px line of text-base. */}
-          <Skeleton className={cn("my-[3px] h-4", TITLE_WIDTHS[i % 4])} />
+          <Skeleton className={cn("my-[3px] mt-1 h-4", TITLE_WIDTHS[i % 4])} />
           {/* The summary: two 20px lines of text-sm. */}
           <Skeleton className="my-[3px] mt-0.5 h-3.5 w-full" />
           <Skeleton className={cn("my-[3px] h-3.5", LINE_WIDTHS[i % 4])} />

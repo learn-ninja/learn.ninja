@@ -19,6 +19,7 @@ export const ar: Strings = {
   picked: (parts) => `المختار: ${parts}`,
   hookNote: "هذا سؤال تمهيدي، ولا يُحتسب في نتيجتك.",
   minutes: (n) => `${n} دقائق`,
+  justNow: "الآن",
   expires: {
     days: (n) =>
       p(n, {

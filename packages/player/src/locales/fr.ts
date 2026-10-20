@@ -20,6 +20,7 @@ export const fr: Strings = {
   hookNote:
     "Cette première question est un échauffement. Elle ne compte pas dans ton score.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),
+  justNow: "à l'instant",
   expires: {
     days: (n) =>
       p(n, { one: "Expire dans # jour", other: "Expire dans # jours" }),

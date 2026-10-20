@@ -189,6 +189,35 @@ export const RowStates: Story = {
   ),
 }
 
+const HOUR = 36e5
+const AGES: [string, number][] = [
+  ["Just now", 0],
+  ["Minutes", 5 * 60e3],
+  ["Hours", 3 * HOUR],
+  ["Yesterday", DAY],
+  ["Days", 4 * DAY],
+  ["Weeks", 2 * 7 * DAY],
+  ["Months", 3 * 30 * DAY],
+  ["Last year", 365 * DAY],
+  ["Years", 2 * 365 * DAY],
+]
+
+/** The byline's age at every step, from a lesson published this minute to one years old. */
+export const RowAges: Story = {
+  name: "Row ages",
+  render: () => (
+    <div className="mx-auto flex max-w-2xl flex-col divide-y">
+      {AGES.map(([label, age]) => (
+        <LessonRow
+          key={label}
+          lesson={summary({ id: label, createdAt: Date.now() - age })}
+          viewer={signedOut}
+        />
+      ))}
+    </div>
+  ),
+}
+
 export const Feed: Story = {
   render: () => (
     <div className="mx-auto flex max-w-2xl flex-col gap-8">

@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { PlayIcon } from "lucide-react"
 
-import { stringsFor } from "@workspace/player"
+import { stringsFor, TimeAgo } from "@workspace/player"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { UserAvatar } from "@/components/account/user-avatar"
@@ -21,12 +21,13 @@ export interface Viewer {
 const t = stringsFor("en")
 
 /**
- * A lesson as one row of the Explore feed or a profile: the title, up to two lines of summary,
- * then one meta line with who made it (their picture and handle), the topic, length and level,
- * and the plays and likes at its end. The whole row opens the lesson; the author and the heart
- * are their own links. Rows sit between hairlines (the list adds them), not in cards. `rank`
- * puts a number in the margin on the Top tab; `showAuthor={false}` drops the author on a
- * profile, where every row shares it.
+ * A lesson as one row of the Explore feed or a profile. A byline first: who made it (their
+ * picture and handle) at the start and how long ago at the end, so the ages line up as a column
+ * down the feed. Then the title, up to two lines of summary, and one meta line with the topic,
+ * length and level, and the plays and likes at its end. The whole row opens the lesson; the
+ * author and the heart are their own links. Rows sit between hairlines (the list adds them), not
+ * in cards. `rank` puts a number in the margin on the Top tab; `showAuthor={false}` drops the
+ * author on a profile, where every row shares it, leaving the age alone on the byline.
  */
 export function LessonRow({
   lesson,
@@ -43,12 +44,10 @@ export function LessonRow({
 }) {
   const href = lessonPath(lesson.slug, lesson.id)
   const author = lesson.author
-  const facts: React.ReactNode[] = []
-  if (showAuthor && author)
-    facts.push(
+  const byline =
+    showAuthor && author ? (
       author.handle ? (
         <Link
-          key="author"
           href={`/u/${author.handle}`}
           className="relative z-10 flex min-w-0 items-center gap-1.5 rounded-sm text-foreground outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
         >
@@ -58,15 +57,13 @@ export function LessonRow({
           </bdi>
         </Link>
       ) : (
-        <span
-          key="author"
-          className="flex min-w-0 items-center gap-1.5"
-        >
+        <span className="flex min-w-0 items-center gap-1.5">
           <UserAvatar image={author.image} handle={null} size="row" />
           <span className="min-w-0 truncate">{author.name}</span>
         </span>
       )
-    )
+    ) : null
+  const facts: React.ReactNode[] = []
   if (lesson.topic)
     facts.push(
       <bdi key="topic" lang={lesson.language} className="min-w-0 truncate">
@@ -97,7 +94,15 @@ export function LessonRow({
         </span>
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col">
-        <h3 className="text-base leading-snug font-medium">
+        <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+          {byline}
+          <TimeAgo
+            at={lesson.createdAt}
+            lang="en"
+            className="ms-auto shrink-0"
+          />
+        </div>
+        <h3 className="mt-1 text-base leading-snug font-medium">
           <Link
             href={href}
             data-slot="row-link"

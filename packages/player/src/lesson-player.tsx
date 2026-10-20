@@ -35,6 +35,7 @@ import {
 } from "./check"
 import { Briefing } from "./briefing"
 import { PlayerProvider, usePlayer } from "./context"
+import { TimeAgo } from "./time"
 import {
   hasOptionCards,
   BlankBrick,
@@ -133,6 +134,8 @@ export interface LessonPlayerProps {
   shareUrl?: string
   /** Who published the lesson, credited on the title screen with a link to their profile. */
   author?: Author
+  /** When the lesson was published, shown on the title screen as how long ago. */
+  publishedAt?: number
   /** The app's own entries for the lesson menu (the chevron by the title), after the player's. */
   menuItems?: React.ReactNode
   /** The app's color theme. Pass both to show the theme setting in the footer. */
@@ -165,6 +168,7 @@ export function LessonPlayer({
   termsHref,
   shareUrl,
   author,
+  publishedAt,
   menuItems,
   theme,
   onThemeChange,
@@ -242,6 +246,7 @@ export function LessonPlayer({
             homeHref={homeHref}
             shareUrl={shareUrl}
             author={author}
+            publishedAt={publishedAt}
             menuItems={menuItems}
             chrome={chrome}
           />
@@ -609,6 +614,7 @@ function Player({
   homeHref,
   shareUrl,
   author,
+  publishedAt,
   menuItems,
   progressKey,
 }: {
@@ -628,6 +634,8 @@ function Player({
   homeHref: string
   shareUrl?: string
   author?: Author
+  /** When the lesson was published, shown on the title screen as how long ago. */
+  publishedAt?: number
   menuItems?: React.ReactNode
   progressKey?: string
 }) {
@@ -944,6 +952,7 @@ function Player({
                       state={state}
                       dispatch={dispatch}
                       author={author}
+                      publishedAt={publishedAt}
                       label={screenLabel(state, t)}
                       inBubble
                       ninja={ninja !== "off"}
@@ -1184,6 +1193,7 @@ export function Screen({
   brief = null,
   paths = false,
   author,
+  publishedAt,
 }: {
   lesson: Lesson
   item: Item
@@ -1191,6 +1201,8 @@ export function Screen({
   dispatch: React.Dispatch<Action>
   /** Who published the lesson, credited on the title screen. */
   author?: Author
+  /** When the lesson was published, shown on the title screen as how long ago. */
+  publishedAt?: number
   /** A scenario's brief, while the ninja tells it (the player's story mode). */
   brief?: BriefProps | null
   /** A scenario after the right answer: every option's outcome (Every path, the player's Why?). */
@@ -1211,7 +1223,8 @@ export function Screen({
         // The ninja stands in the slot above the title (NinjaStage puts him there), in the lesson's light.
         <div className="flex flex-col items-center gap-5 text-center">
           <NinjaSlot show={ninja} gap="-mb-5" />
-          <div className="flex flex-col gap-3">
+          <div className="flex w-full flex-col gap-3">
+            <Byline author={author} publishedAt={publishedAt} />
             <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
               {lesson.title}
             </h1>
@@ -1221,7 +1234,6 @@ export function Screen({
           </div>
           <MetaLine
             lesson={lesson}
-            author={author}
             minutes={t.minutes(lesson.estimatedMinutes)}
             level={t.levels[lesson.level]}
           />
@@ -1279,42 +1291,62 @@ function screenLabel(state: State, t: Strings): string | undefined {
 }
 
 /**
- * The title screen's one meta line, the same as a row in Explore: who made the lesson (their
- * picture and handle, linking to their profile), the topic, length, and level, dot-separated.
- * The picture and handle alone, no "by": it reads the same in every language.
+ * The title screen's byline, the same as a row in Explore: who made the lesson (their picture
+ * and handle, linking to their profile) at the start, and how long ago it was published at the
+ * end. The picture and handle alone, no "by": it reads the same in every language.
  */
+function Byline({
+  author,
+  publishedAt,
+}: {
+  author?: Author
+  publishedAt?: number
+}) {
+  const { lang = "en" } = usePlayer()
+  if (!author && !publishedAt) return null
+  return (
+    <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+      {author ? (
+        <LinkButton
+          href={author.href}
+          variant="link"
+          size="sm"
+          className="h-auto min-w-0 gap-1.5 rounded-sm p-0 text-foreground"
+        >
+          <Avatar className="size-5">
+            {author.image ? <AvatarImage src={author.image} alt="" /> : null}
+            <AvatarFallback className="text-xs font-medium uppercase">
+              {author.handle[0]}
+            </AvatarFallback>
+          </Avatar>
+          <bdi dir="ltr" className="min-w-0 truncate">
+            {author.handle}
+          </bdi>
+        </LinkButton>
+      ) : null}
+      {publishedAt ? (
+        // Alone (an anonymous lesson), the age sits centered over the title rather than floating at the end.
+        <TimeAgo
+          at={publishedAt}
+          lang={lang}
+          className={cn("shrink-0", author ? "ms-auto" : "mx-auto")}
+        />
+      ) : null}
+    </div>
+  )
+}
+
+/** The title screen's meta line under the summary, as in Explore: the topic, length, and level, dot-separated. */
 function MetaLine({
   lesson,
-  author,
   minutes,
   level,
 }: {
   lesson: Lesson
-  author?: Author
   minutes: string
   level: string
 }) {
   const facts: React.ReactNode[] = []
-  if (author)
-    facts.push(
-      <LinkButton
-        key="author"
-        href={author.href}
-        variant="link"
-        size="sm"
-        className="h-auto min-w-0 gap-1.5 rounded-sm p-0 text-foreground"
-      >
-        <Avatar className="size-5">
-          {author.image ? <AvatarImage src={author.image} alt="" /> : null}
-          <AvatarFallback className="text-xs font-medium uppercase">
-            {author.handle[0]}
-          </AvatarFallback>
-        </Avatar>
-        <bdi dir="ltr" className="min-w-0 truncate">
-          {author.handle}
-        </bdi>
-      </LinkButton>
-    )
   if (lesson.topic)
     facts.push(
       <bdi key="topic" lang={lesson.language} className="min-w-0 truncate">

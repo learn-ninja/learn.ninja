@@ -19,6 +19,7 @@ export const he: Strings = {
   picked: (parts) => `נבחר: ${parts}`,
   hookNote: "השאלה הראשונה היא חימום. היא לא נספרת בניקוד.",
   minutes: (n) => p(n, { one: "דקה אחת", two: "# דקות", other: "# דק׳" }),
+  justNow: "הרגע",
   expires: {
     days: (n) =>
       p(n, {

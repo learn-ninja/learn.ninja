@@ -15,6 +15,7 @@ export const ko: Strings = {
   picked: (parts) => `선택함: ${parts}`,
   hookNote: "첫 문제는 준비 운동이에요. 점수에 들어가지 않아요.",
   minutes: (n) => `${n}분`,
+  justNow: "방금",
   expires: {
     days: (n) => `${n}일 후 만료`,
     hours: (n) => `${n}시간 후 만료`,

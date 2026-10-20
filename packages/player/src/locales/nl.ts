@@ -20,6 +20,7 @@ export const nl: Strings = {
   hookNote:
     "Deze eerste vraag is een opwarmer. Hij telt niet mee voor je score.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),
+  justNow: "zojuist",
   expires: {
     days: (n) =>
       p(n, { one: "Verloopt over # dag", other: "Verloopt over # dagen" }),

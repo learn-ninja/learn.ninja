@@ -15,6 +15,7 @@ export const zh: Strings = {
   picked: (parts) => `已选：${parts}`,
   hookNote: "第一题是热身，不计入得分。",
   minutes: (n) => `${n} 分钟`,
+  justNow: "刚刚",
   expires: {
     days: (n) => `${n} 天后过期`,
     hours: (n) => `${n} 小时后过期`,

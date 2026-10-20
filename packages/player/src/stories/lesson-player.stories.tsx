@@ -74,6 +74,7 @@ export const BronzeAgeCollapse: Story = {
 export const WithAuthor: Story = {
   args: {
     lesson: lessons.buttons,
+    publishedAt: Date.now() - 2 * HOUR,
     author: {
       handle: "ada",
       href: "#",
@@ -86,7 +87,15 @@ export const WithAuthor: Story = {
   },
 }
 export const WithAuthorNoPicture: Story = {
-  args: { lesson: lessons.buttons, author: { handle: "bob-builds", href: "#" } },
+  args: {
+    lesson: lessons.buttons,
+    author: { handle: "bob-builds", href: "#" },
+    publishedAt: Date.now() - 3 * DAY,
+  },
+}
+/** An anonymous lesson: no author, only how long ago it was published. */
+export const JustPublished: Story = {
+  args: { lesson: lessons.buttons, publishedAt: Date.now() },
 }
 export const ExpiresSoon: Story = {
   args: { lesson: lessons.buttons, expiresAt: Date.now() + 14 * HOUR },

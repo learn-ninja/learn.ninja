@@ -15,6 +15,7 @@ export const id: Strings = {
   picked: (parts) => `Dipilih: ${parts}`,
   hookNote: "Pertanyaan pertama ini pemanasan. Tidak dihitung dalam skor.",
   minutes: (n) => `${n} mnt`,
+  justNow: "baru saja",
   expires: {
     days: (n) => `Berakhir dalam ${n} hari`,
     hours: (n) => `Berakhir dalam ${n} jam`,

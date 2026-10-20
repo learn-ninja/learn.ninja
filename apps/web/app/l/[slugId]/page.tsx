@@ -72,6 +72,7 @@ export default async function PublishedLessonPage({
             ? { handle: author.handle, href: `/u/${author.handle}`, image: author.image }
             : undefined
         }
+        publishedAt={record.createdAt}
         lessonId={record.id}
         canReport={listed && !isOwner}
         owner={

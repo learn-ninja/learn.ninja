@@ -15,6 +15,7 @@ export const ja: Strings = {
   picked: (parts) => `選択中: ${parts}`,
   hookNote: "最初の問題はウォームアップです。スコアには入りません。",
   minutes: (n) => `${n}分`,
+  justNow: "たった今",
   expires: {
     days: (n) => `あと${n}日で期限切れ`,
     hours: (n) => `あと${n}時間で期限切れ`,

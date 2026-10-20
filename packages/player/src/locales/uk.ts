@@ -19,6 +19,7 @@ export const uk: Strings = {
   picked: (parts) => `Вибрано: ${parts}`,
   hookNote: "Перше запитання — розминка. Воно не впливає на результат.",
   minutes: (n) => p(n, { one: "# хв", other: "# хв" }),
+  justNow: "щойно",
   expires: {
     days: (n) =>
       p(n, {

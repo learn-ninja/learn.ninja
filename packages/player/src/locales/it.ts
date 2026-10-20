@@ -20,6 +20,7 @@ export const it: Strings = {
   hookNote:
     "Questa prima domanda è un riscaldamento. Non conta per il punteggio.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),
+  justNow: "proprio ora",
   expires: {
     days: (n) =>
       p(n, { one: "Scade tra # giorno", other: "Scade tra # giorni" }),

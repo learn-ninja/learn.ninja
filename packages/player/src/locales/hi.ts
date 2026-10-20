@@ -19,6 +19,7 @@ export const hi: Strings = {
   picked: (parts) => `चुना गया: ${parts}`,
   hookNote: "यह पहला सवाल वार्म-अप है। यह आपके स्कोर में नहीं गिना जाता।",
   minutes: (n) => p(n, { one: "# मिनट", other: "# मिनट" }),
+  justNow: "अभी-अभी",
   expires: {
     days: (n) => p(n, { one: "# दिन में समाप्त", other: "# दिनों में समाप्त" }),
     hours: (n) =>

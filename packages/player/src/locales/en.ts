@@ -19,6 +19,7 @@ export const en: Strings = {
   picked: (parts) => `Picked: ${parts}`,
   hookNote: "This first one is a warm-up. It doesn't count toward your score.",
   minutes: (n) => `${n} min`,
+  justNow: "just now",
   expires: {
     days: (n) => p(n, { one: "Expires in # day", other: "Expires in # days" }),
     hours: (n) => `Expires in ${n}h`,
