@@ -41,7 +41,12 @@ export default async function ExplorePage() {
       {lessons.length ? (
         <LessonFeed
           lessons={lessons}
-          viewer={{ signedIn: actor !== null, liked, completed }}
+          viewer={{
+            signedIn: actor !== null,
+            liked,
+            completed,
+            userId: actor?.userId,
+          }}
         />
       ) : (
         <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">

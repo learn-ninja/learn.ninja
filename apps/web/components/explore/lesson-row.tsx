@@ -10,6 +10,7 @@ import type { LessonSummary } from "@/lib/explore/queries"
 import { lessonPath } from "@/lib/publish/paths"
 
 import { CompletedCheck } from "./completed-check"
+import { LessonMenu } from "./lesson-menu"
 import { LikeButton } from "./like-button"
 
 /** What the viewer can do on a row: like it (signed in) or be told to sign in. Omit for a read-only row. */
@@ -19,9 +20,15 @@ export interface Viewer {
   liked: ReadonlySet<string>
   /** When the viewer first finished each lesson they've finished, as lesson id → ms since epoch. */
   completed?: ReadonlyMap<string, number>
+  /** The viewer's user id, so their own rows get the menu to unpublish, rename, or delete them. */
+  userId?: string
 }
 
 const t = stringsFor("en")
+
+/** The title link, stretched over the whole row. */
+const ROW_LINK =
+  "rounded-sm outline-none after:absolute after:inset-0 focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
 
 /**
  * A lesson as one row of the Explore feed or a profile. A byline first: who made it (their
@@ -35,7 +42,8 @@ const t = stringsFor("en")
  * gutter (negative margin, matching padding), so the text stays lined up with the page and the
  * tile has room around it; the list hides the two hairlines it would touch. `rank` puts a number
  * in the margin on the Top tab; `showAuthor={false}` drops the author on a profile, where every
- * row shares it, leaving the age alone on the byline.
+ * row shares it, leaving the age alone on the byline. The viewer's own rows open a menu on right
+ * click to unpublish, rename, or delete them (LessonMenu).
  */
 export function LessonRow({
   lesson,
@@ -53,6 +61,7 @@ export function LessonRow({
   const href = lessonPath(lesson.slug, lesson.id)
   const completedAt = viewer?.completed?.get(lesson.id)
   const author = lesson.author
+  const mine = viewer?.userId !== undefined && author?.id === viewer.userId
   const byline =
     showAuthor && author ? (
       author.handle ? (
@@ -74,11 +83,7 @@ export function LessonRow({
     ) : null
   const facts: React.ReactNode[] = [
     ...lesson.tags.slice(0, 2).map((tag, i) => (
-      <bdi
-        key={`tag-${i}`}
-        lang={lesson.language}
-        className="min-w-0 truncate"
-      >
+      <bdi key={`tag-${i}`} lang={lesson.language} className="min-w-0 truncate">
         {tag}
       </bdi>
     )),
@@ -114,15 +119,30 @@ export function LessonRow({
           />
         </div>
         <h3 className="mt-2 text-base leading-snug font-medium">
-          <Link
-            href={href}
-            data-slot="row-link"
-            lang={lesson.language}
-            dir="auto"
-            className="rounded-sm outline-none after:absolute after:inset-0 focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
-          >
-            {lesson.title}
-          </Link>
+          {mine ? (
+            <LessonMenu
+              lesson={{
+                id: lesson.id,
+                title: lesson.title,
+                language: lesson.language,
+                visibility: lesson.visibility,
+              }}
+              href={href}
+              className={ROW_LINK}
+            >
+              {lesson.title}
+            </LessonMenu>
+          ) : (
+            <Link
+              href={href}
+              data-slot="row-link"
+              lang={lesson.language}
+              dir="auto"
+              className={ROW_LINK}
+            >
+              {lesson.title}
+            </Link>
+          )}
         </h3>
         <p
           lang={lesson.language}

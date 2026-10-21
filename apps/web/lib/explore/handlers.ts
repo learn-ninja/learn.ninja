@@ -6,12 +6,12 @@ import type { Reply } from "@/lib/publish/handlers"
 import { hashToken, lessonPath, newToken } from "@/lib/publish/ids"
 import type { RateLimiter } from "@/lib/publish/rate-limit"
 
-import { REASON_MAX } from "./browser"
+import { REASON_MAX, TITLE_MAX } from "./browser"
 import { flushPlays, type PlayCounter } from "./plays"
 import type { Visibility } from "./queries"
 import type { ReportSender } from "./report-email"
 
-export { REASON_MAX }
+export { REASON_MAX, TITLE_MAX }
 
 // The API behind likes, completions, visibility, reports, and plays, independent of Next.js so it can be tested
 // directly. Routes under app/api/lessons/[id]/ call these.
@@ -36,6 +36,17 @@ const NOT_FOUND: Reply = {
     error: "not_found",
     message: "This lesson doesn't exist or has expired.",
   },
+}
+
+function notOwner(what: string): Reply {
+  return {
+    status: 403,
+    body: {
+      ok: false,
+      error: "not_owner",
+      message: `Only the lesson's owner can ${what}.`,
+    },
+  }
 }
 
 /** The lesson, if it's still live (hidden ones included: their owner can still open them). */
@@ -130,7 +141,9 @@ export async function completeLesson(
   const [row] = await deps.db
     .select({ completedAt: completion.completedAt })
     .from(completion)
-    .where(and(eq(completion.userId, req.userId), eq(completion.lessonId, found.id)))
+    .where(
+      and(eq(completion.userId, req.userId), eq(completion.lessonId, found.id))
+    )
   return {
     status: 200,
     body: { ok: true, completedAt: row?.completedAt.toISOString() ?? null },
@@ -160,16 +173,7 @@ export async function setVisibility(
   }
   const found = await liveLesson(deps, req.id)
   if (!found) return NOT_FOUND
-  if (found.ownerId !== req.userId) {
-    return {
-      status: 403,
-      body: {
-        ok: false,
-        error: "not_owner",
-        message: "Only the lesson's owner can change who sees it.",
-      },
-    }
-  }
+  if (found.ownerId !== req.userId) return notOwner("change who sees it")
   const visibility: Visibility = req.visibility
   if (found.visibility !== visibility) {
     await deps.db
@@ -187,6 +191,66 @@ export async function setVisibility(
       visibility,
     },
   }
+}
+
+/**
+ * PATCH /api/lessons/{id} with { title }: the owner renames a lesson. Only the title in the stored
+ * JSON changes; the link keeps its slug, so links already shared still open it.
+ */
+export async function renameLesson(
+  req: { id: string; userId: string; title: unknown },
+  deps: ExploreDeps
+): Promise<Reply> {
+  const title =
+    typeof req.title === "string" ? req.title.trim().replace(/\s+/g, " ") : ""
+  if (!title || title.length > TITLE_MAX) {
+    return {
+      status: 422,
+      body: {
+        ok: false,
+        error: "invalid_title",
+        message: `Give the lesson a title of up to ${TITLE_MAX} characters.`,
+      },
+    }
+  }
+  const found = await liveLesson(deps, req.id)
+  if (!found) return NOT_FOUND
+  if (found.ownerId !== req.userId) return notOwner("rename it")
+  if (found.title !== title) {
+    await deps.db
+      .update(lesson)
+      .set({
+        lesson: sql`jsonb_set(${lesson.lesson}, '{title}', to_jsonb(${title}::text))`,
+        updatedAt: new Date(deps.now?.() ?? Date.now()),
+      })
+      .where(eq(lesson.id, found.id))
+    deps.onChange?.()
+  }
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      id: found.id,
+      url: deps.origin + lessonPath(found.slug, found.id),
+      title,
+    },
+  }
+}
+
+/**
+ * DELETE /api/lessons/{id}: the owner deletes a lesson for good. Its likes, completions, tags,
+ * and reports go with it (the foreign keys cascade), and its link stops working.
+ */
+export async function deleteLesson(
+  req: { id: string; userId: string },
+  deps: ExploreDeps
+): Promise<Reply> {
+  const found = await liveLesson(deps, req.id)
+  if (!found) return NOT_FOUND
+  if (found.ownerId !== req.userId) return notOwner("delete it")
+  await deps.db.delete(lesson).where(eq(lesson.id, found.id))
+  deps.onChange?.()
+  return { status: 200, body: { ok: true, id: found.id, deleted: true } }
 }
 
 /**

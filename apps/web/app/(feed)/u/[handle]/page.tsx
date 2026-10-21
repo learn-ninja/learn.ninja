@@ -95,7 +95,12 @@ export default async function ProfilePage({ params }: Props) {
       {profile.lessons.length ? (
         <LessonFeed
           lessons={profile.lessons}
-          viewer={{ signedIn: actor !== null, liked, completed }}
+          viewer={{
+            signedIn: actor !== null,
+            liked,
+            completed,
+            userId: actor?.userId,
+          }}
           showAuthor={false}
         />
       ) : (
