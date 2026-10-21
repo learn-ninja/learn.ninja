@@ -83,24 +83,35 @@ export class PatchError extends Error {}
 
 /** Splits `bricks[2].options[0].feedback` into ["bricks", 2, "options", 0, "feedback"]. */
 export function parsePath(path: string): (string | number)[] {
-  const parts: (string | number)[] = []
-  const re = /([^.[\]]+)|\[(\d+)\]/g
   const rest = path.trim()
   if (!rest) throw new PatchError("A patch needs a path.")
-  let match: RegExpExecArray | null
-  let consumed = 0
-  while ((match = re.exec(rest))) {
-    // Only dots may sit between parts: `a..b` or `a]b` isn't a path.
-    const gap = rest.slice(consumed, match.index)
-    if (gap !== "" && gap !== ".") throw new PatchError(`Bad path "${path}".`)
-    const part = match[2] !== undefined ? Number(match[2]) : match[1]!
+  const bad = () => new PatchError(`Bad path "${path}".`)
+  const parts: (string | number)[] = []
+  let at = 0
+  while (at < rest.length) {
+    let part: string | number
+    if (rest[at] === "[") {
+      // An index, right after a name or another index: `bricks[2]`, `grid[1][0]`.
+      const end = rest.indexOf("]", at)
+      const digits = rest.slice(at + 1, end)
+      if (end === -1 || !/^\d+$/.test(digits)) throw bad()
+      part = Number(digits)
+      at = end + 1
+    } else {
+      // A name: first, or joined to what came before by one dot (`a.b`, `a[1].b`), never `a[1]b`.
+      if (parts.length > 0) {
+        if (rest[at] !== ".") throw bad()
+        at += 1
+      }
+      const name = /^[^.[\]]+/.exec(rest.slice(at))?.[0]
+      if (!name) throw bad()
+      part = name
+      at += name.length
+    }
     if (part === "__proto__" || part === "constructor" || part === "prototype")
-      throw new PatchError(`Bad path "${path}".`)
+      throw bad()
     parts.push(part)
-    consumed = match.index + match[0].length
   }
-  if (consumed !== rest.length || parts.length === 0)
-    throw new PatchError(`Bad path "${path}".`)
   return parts
 }
 

@@ -14,6 +14,7 @@ import { MemoryRateLimiter } from "../publish/rate-limit"
 import { PostgresLessonStore } from "../publish/store"
 import { skillBundle } from "../skill-files"
 import { PostgresDraftStore } from "./drafts"
+import { PROTECTED_TOOLS } from "./gate"
 import { handlePersonalMcp } from "./personal"
 import {
   createLearnMcp,
@@ -198,6 +199,17 @@ describe("tools", () => {
       update_lesson: optional,
       keep_lesson: [{ type: "oauth2", scopes: ["lessons"] }],
     })
+  })
+
+  it("gates exactly the tools whose metadata says they need the account", async () => {
+    const { tools } = await rpc("tools/list", {})
+    const needsAccount = tools
+      .filter(
+        (t: { _meta?: { securitySchemes?: { type: string }[] } }) =>
+          !t._meta?.securitySchemes?.some((s) => s.type === "noauth")
+      )
+      .map((t: { name: string }) => t.name)
+    expect(new Set(needsAccount)).toEqual(PROTECTED_TOOLS)
   })
 })
 

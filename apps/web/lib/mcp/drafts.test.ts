@@ -12,6 +12,8 @@ describe("parsePath", () => {
       "feedback",
     ])
     expect(parsePath("title")).toEqual(["title"])
+    expect(parsePath("grid[1][0]")).toEqual(["grid", 1, 0])
+    expect(parsePath("[0].id")).toEqual([0, "id"])
   })
 
   it("refuses malformed and prototype paths", () => {
@@ -20,6 +22,11 @@ describe("parsePath", () => {
       "a..b",
       "a]b",
       "a[x]",
+      "a[1]b",
+      "a.[1]",
+      "a.",
+      ".a",
+      "a[1",
       "__proto__.x",
       "a.constructor",
     ])

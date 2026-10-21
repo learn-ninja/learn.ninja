@@ -1,8 +1,9 @@
 import { SITE } from "@/lib/site"
 
 // Sign-in codes go out through Resend (RESEND_API_KEY) as sensei@learn.ninja, which is a real inbox
-// in the learn.ninja Google Workspace, so replies reach a person. Without the key, the
-// code is printed to the server console instead, so development needs no account.
+// in the learn.ninja Google Workspace, so replies reach a person. Without the key, the code is
+// printed to the server console instead, so development needs no account; a production build
+// without the key refuses to send, since its logs would otherwise hold every user's code.
 
 export const DEFAULT_FROM = `${SITE.name} <sensei@learn.ninja>`
 
@@ -11,6 +12,11 @@ export type CodeSender = (email: string, code: string) => Promise<void>
 export function codeSenderFromEnv(env = process.env): CodeSender {
   const key = env.RESEND_API_KEY
   if (!key) {
+    if (env.NODE_ENV === "production") {
+      return async () => {
+        throw new Error("RESEND_API_KEY isn't set, so sign-in codes can't be sent.")
+      }
+    }
     return async (email, code) => {
       console.log(`[${SITE.name}] Sign-in code for ${email}: ${code}`)
     }
