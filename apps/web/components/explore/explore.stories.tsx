@@ -9,13 +9,15 @@ import type { LessonSummary } from "@/lib/explore/queries"
 
 import { FeedSkeleton } from "./feed-skeleton"
 import { LessonFeed } from "./lesson-feed"
+import { LessonMenuView } from "./lesson-menu"
 import { LessonRow } from "./lesson-row"
 import { LikeButton } from "./like-button"
 import { ProfileTabs } from "./profile-tabs"
 import { ReportDialog } from "./report-dialog"
 
 // Explore's rows and controls with a fake server: likes go through, a report with "fail" in it
-// fails, and listing a lesson whose title has "fail" in it is refused.
+// fails, listing a lesson whose title has "fail" in it is refused, and so is renaming one to a
+// title with "fail" in it.
 
 const wait = (ms = 400) => new Promise((r) => setTimeout(r, ms))
 
@@ -40,6 +42,16 @@ const fakeApi: ExploreApi = {
       ? { error: "Only the lesson's owner can change who sees it." }
       : {}
   },
+  async rename(_id, title) {
+    await wait()
+    return title.includes("fail")
+      ? { error: "Give the lesson a title of up to 60 characters." }
+      : { title }
+  },
+  async remove() {
+    await wait()
+    return {}
+  },
 }
 
 const DAY = 864e5
@@ -60,7 +72,7 @@ const summary = (over: Partial<LessonSummary> = {}): LessonSummary => ({
   level: "beginner",
   minutes: 6,
   language: "en",
-  author: { handle: "ada", name: "Ada Lovelace", image: PORTRAIT },
+  author: { id: "ada", handle: "ada", name: "Ada Lovelace", image: PORTRAIT },
   plays: 1284,
   likes: 37,
   visibility: "public",
@@ -80,7 +92,12 @@ const LESSONS: LessonSummary[] = [
     tags: ["PRD", "Product management"],
     level: "intermediate",
     minutes: 10,
-    author: { handle: "bob-builds", name: "Bob", image: null },
+    author: {
+      id: "bob-builds",
+      handle: "bob-builds",
+      name: "Bob",
+      image: null,
+    },
     plays: 412,
     likes: 9,
   }),
@@ -94,7 +111,7 @@ const LESSONS: LessonSummary[] = [
     level: "beginner",
     minutes: 4,
     language: "es",
-    author: { handle: "maria", name: "María", image: null },
+    author: { id: "maria", handle: "maria", name: "María", image: null },
     plays: 88,
     likes: 2,
   }),
@@ -108,7 +125,7 @@ const LESSONS: LessonSummary[] = [
     level: "beginner",
     minutes: 5,
     language: "ar",
-    author: { handle: "noor", name: "Noor", image: null },
+    author: { id: "noor", handle: "noor", name: "Noor", image: null },
     plays: 40,
     likes: 5,
   }),
@@ -123,7 +140,12 @@ const LESSONS: LessonSummary[] = [
     tags: ["Bronze Age"],
     level: "advanced",
     minutes: 14,
-    author: { handle: null, name: "Someone without a handle", image: null },
+    author: {
+      id: "nohandle",
+      handle: null,
+      name: "Someone without a handle",
+      image: null,
+    },
     plays: 0,
     likes: 0,
   }),
@@ -136,7 +158,7 @@ const LESSONS: LessonSummary[] = [
     tags: ["JavaScript", "Arrays", "Higher-order functions"],
     level: "intermediate",
     minutes: 7,
-    author: { handle: "dev", name: "Dev", image: null },
+    author: { id: "dev", handle: "dev", name: "Dev", image: null },
     plays: 3100,
     likes: 120,
   }),
@@ -198,6 +220,37 @@ export const RowStates: Story = {
       </Labeled>
     </div>
   ),
+}
+
+/** The menu on the viewer's own rows: right-click the title (or long-press it, or Shift+F10). */
+export const OwnerMenu: Story = {
+  name: "Owner menu",
+  render: function Render() {
+    const [done, setDone] = React.useState(0)
+    return (
+      <div className="mx-auto flex max-w-2xl flex-col gap-2">
+        <p className="text-sm text-muted-foreground">
+          Right-click the title. Done {done} {done === 1 ? "time" : "times"}.
+        </p>
+        <h3 className="text-base leading-snug font-medium">
+          <LessonMenuView
+            lesson={{
+              id: LESSONS[0]!.id,
+              title: LESSONS[0]!.title,
+              language: "en",
+              visibility: "public",
+            }}
+            href="#"
+            api={fakeApi}
+            onDone={() => setDone((n) => n + 1)}
+            className="rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            {LESSONS[0]!.title}
+          </LessonMenuView>
+        </h3>
+      </div>
+    )
+  },
 }
 
 const HOUR = 36e5

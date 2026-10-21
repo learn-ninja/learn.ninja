@@ -50,7 +50,13 @@ export interface LessonSummary {
   /** The lesson's BCP 47 language, so the card can set `lang` and direction. */
   language: string
   /** Who published it; null for anonymous lessons (never listed) or when the owner is gone. */
-  author: { handle: string | null; name: string; image: string | null } | null
+  author: {
+    /** Their user id, so a page can tell the viewer's own lessons apart. */
+    id: string
+    handle: string | null
+    name: string
+    image: string | null
+  } | null
   plays: number
   likes: number
   visibility: Visibility
@@ -167,6 +173,7 @@ function toSummary(row: Row): LessonSummary {
     author:
       row.authorId && row.authorName !== null
         ? {
+            id: row.authorId,
             handle: row.authorHandle,
             name: row.authorName,
             image: row.authorImage,

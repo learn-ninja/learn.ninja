@@ -19,8 +19,10 @@ import { PostgresLessonStore } from "@/lib/publish/store"
 import {
   flushPendingPlays,
   completeLesson,
+  deleteLesson,
   likeLesson,
   recordPlay,
+  renameLesson,
   reportLesson,
   setVisibility,
   unlikeLesson,
@@ -137,7 +139,12 @@ describe("what Explore lists", () => {
       level: "beginner",
       minutes: 6,
       language: "en",
-      author: { handle: "ada", name: "Ada Lovelace", image: null },
+      author: {
+        id: "ada",
+        handle: "ada",
+        name: "Ada Lovelace",
+        image: null,
+      },
       plays: 0,
       likes: 0,
       visibility: "public",
@@ -194,6 +201,7 @@ describe("what Explore lists", () => {
     await published("new", { visibility: "public" })
     const [row] = await listLessons(db, "new", 10, { now })
     expect(row?.author).toEqual({
+      id: "new",
       handle: null,
       name: "No Handle Yet",
       image: null,
@@ -369,6 +377,60 @@ describe("visibility", () => {
     expect(
       await setVisibility({ id, userId: "ada", visibility: "public" }, deps)
     ).toMatchObject({ status: 403 })
+  })
+})
+
+describe("renaming and deleting", () => {
+  it("lets the owner, and only the owner, rename a lesson", async () => {
+    const id = await published("ada", { visibility: "public" })
+    expect(
+      await renameLesson({ id, userId: "bob", title: "Mine now" }, deps)
+    ).toMatchObject({ status: 403, body: { error: "not_owner" } })
+    expect(
+      await renameLesson(
+        { id, userId: "ada", title: "  Buttons,   ranked " },
+        deps
+      )
+    ).toMatchObject({
+      status: 200,
+      body: {
+        title: "Buttons, ranked",
+        url: `https://learn.test/l/button-hierarchy-${id}`,
+      },
+    })
+    const [listed] = await listLessons(db, "new", 10, { now })
+    expect(listed?.title).toBe("Buttons, ranked")
+    const [row] = await db
+      .select({ lesson: lesson.lesson })
+      .from(lesson)
+      .where(eq(lesson.id, id))
+    expect((row?.lesson as { title: string }).title).toBe("Buttons, ranked")
+  })
+
+  it("refuses an empty or overlong title", async () => {
+    const id = await published("ada")
+    for (const title of ["   ", "x".repeat(61), 42]) {
+      expect(
+        await renameLesson({ id, userId: "ada", title }, deps)
+      ).toMatchObject({ status: 422, body: { error: "invalid_title" } })
+    }
+  })
+
+  it("lets the owner, and only the owner, delete a lesson and what hangs off it", async () => {
+    const id = await published("ada", { visibility: "public" })
+    await likeLesson({ id, userId: "bob" }, deps)
+    expect(await deleteLesson({ id, userId: "bob" }, deps)).toMatchObject({
+      status: 403,
+    })
+    expect(await deleteLesson({ id, userId: "ada" }, deps)).toMatchObject({
+      status: 200,
+      body: { deleted: true },
+    })
+    expect(await listLessons(db, "new", 10, { now })).toEqual([])
+    expect(await likedIds(db, "bob", [id])).toEqual(new Set())
+    expect(await deleteLesson({ id, userId: "ada" }, deps)).toMatchObject({
+      status: 404,
+    })
   })
 })
 

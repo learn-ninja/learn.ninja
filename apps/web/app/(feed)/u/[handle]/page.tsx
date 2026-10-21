@@ -61,7 +61,12 @@ export default async function ProfilePage({ params }: Props) {
         completedAt(db, actor!.userId, ids),
       ])
     : [new Set<string>(), new Map<string, number>()]
-  const viewer = { signedIn: actor !== null, liked, completed }
+  const viewer = {
+    signedIn: actor !== null,
+    liked,
+    completed,
+    userId: actor?.userId,
+  }
   // Email-code accounts have no name until GitHub or a later setting gives them one.
   const name = profile.name.trim()
   const joined = new Date(profile.joinedAt).toLocaleDateString("en", {

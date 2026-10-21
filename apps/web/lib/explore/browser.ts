@@ -1,6 +1,7 @@
 import type { Visibility } from "./queries"
 
-// What the like button, the report dialog, and the owner's lesson list call from the browser. The
+// What the like button, the report dialog, the owner's row menu, and the owner's lesson list call
+// from the browser. The
 // components take it as a prop so Storybook can hand them a fake.
 
 export interface Outcome {
@@ -10,6 +11,9 @@ export interface Outcome {
 /** How long a report's reason can be. */
 export const REASON_MAX = 1000
 
+/** How long a title can be, as the lesson spec allows. */
+export const TITLE_MAX = 60
+
 export interface ExploreApi {
   like(id: string): Promise<Outcome & { likes?: number }>
   unlike(id: string): Promise<Outcome & { likes?: number }>
@@ -18,6 +22,8 @@ export interface ExploreApi {
     id: string,
     visibility: Visibility
   ): Promise<Outcome & { visibility?: Visibility }>
+  rename(id: string, title: string): Promise<Outcome & { title?: string }>
+  remove(id: string): Promise<Outcome>
 }
 
 async function call<T extends object>(
@@ -63,6 +69,17 @@ export const exploreApi: ExploreApi = {
     return reply.ok
       ? { visibility: reply.visibility }
       : { error: reply.message }
+  },
+  async rename(id, title) {
+    const reply = await call<{ title: string }>(`/api/lessons/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    })
+    return reply.ok ? { title: reply.title } : { error: reply.message }
+  },
+  async remove(id) {
+    const reply = await call(`/api/lessons/${id}`, { method: "DELETE" })
+    return reply.ok ? {} : { error: reply.message }
   },
 }
 
