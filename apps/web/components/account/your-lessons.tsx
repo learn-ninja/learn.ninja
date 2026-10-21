@@ -16,16 +16,14 @@ import { FormError } from "./form-error"
 
 /**
  * The lessons in the account, newest first, each with a switch that lists it in Explore or takes
- * it back to link-only. A lesson the maker hid stays reachable by its link but can't be listed.
+ * it back to link-only. Shown on the owner's own profile, so it always has a handle to credit.
+ * A lesson the maker hid stays reachable by its link but can't be listed.
  */
 export function YourLessons({
   initial,
-  handle,
   api = exploreApi,
 }: {
   initial: LessonSummary[]
-  /** The account's handle, or null while it has none: Explore credits lessons by handle. */
-  handle: string | null
   api?: ExploreApi
 }) {
   const [lessons, setLessons] = React.useState(initial)
@@ -49,8 +47,7 @@ export function YourLessons({
   if (!lessons.length) {
     return (
       <p className="text-sm text-muted-foreground">
-        No lessons yet. Ask your agent for one; signed in, it&apos;s saved
-        here.
+        No lessons yet. Ask your agent for one; signed in, it&apos;s saved here.
       </p>
     )
   }
@@ -59,23 +56,13 @@ export function YourLessons({
     <div className="flex flex-col gap-4">
       <p className="text-muted-foreground">
         Listed lessons show in{" "}
-        <Link href="/explore" className="underline underline-offset-3 hover:text-foreground">
+        <Link
+          href="/explore"
+          className="underline underline-offset-3 hover:text-foreground"
+        >
           Explore
-        </Link>
-        {handle ? (
-          <>
-            {" "}
-            and on{" "}
-            <Link
-              href={`/u/${handle}`}
-              className="underline underline-offset-3 hover:text-foreground"
-            >
-              your profile
-            </Link>
-          </>
-        ) : null}
-        . Unlisted ones open only from their link.
-        {handle ? null : " Pick a handle first, so Explore can say who made them."}
+        </Link>{" "}
+        and on this page for everyone. Unlisted ones open only from their link.
       </p>
       <ul className="flex flex-col divide-y rounded-xl border">
         {lessons.map((lesson) => {
@@ -121,7 +108,7 @@ export function YourLessons({
                   id={switchId}
                   aria-label={`List ${lesson.title} in Explore`}
                   isSelected={lesson.visibility === "public"}
-                  isDisabled={lesson.hidden || !handle}
+                  isDisabled={lesson.hidden}
                   onChange={(on) =>
                     void setVisibility(lesson, on ? "public" : "unlisted")
                   }

@@ -117,15 +117,17 @@ export function AccountMenu({
             Explore
           </DropdownMenuItem>
           {account.handle ? (
-            <DropdownMenuItem href={`/u/${account.handle}`}>
-              <UserRoundIcon />
-              Profile
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem href={`/u/${account.handle}`}>
+                <UserRoundIcon />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem href={`/u/${account.handle}#lessons`}>
+                <LibraryIcon />
+                Your lessons
+              </DropdownMenuItem>
+            </>
           ) : null}
-          <DropdownMenuItem href="/settings#lessons">
-            <LibraryIcon />
-            Your lessons
-          </DropdownMenuItem>
           <DropdownMenuItem href="/settings">
             <SettingsIcon />
             Settings

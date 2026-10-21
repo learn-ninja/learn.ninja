@@ -216,7 +216,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
   )
 
   const owned = actor
-    ? `Lessons are saved to ${actor.handle ? `@${actor.handle}` : "the user's account"} (this connection is theirs) and start unlisted, so drafts don't show in Explore; the switch is at learn.ninja/settings.`
+    ? `Lessons are saved to ${actor.handle ? `@${actor.handle}` : "the user's account"} (this connection is theirs) and start unlisted, so drafts don't show in Explore; ${actor.handle ? `the switch is on their profile, learn.ninja/u/${actor.handle}` : "once they pick a handle at learn.ninja/settings, the switch is on their profile"}.`
     : null
 
   server.registerTool(

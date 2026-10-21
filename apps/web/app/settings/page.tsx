@@ -9,14 +9,12 @@ import { ConnectChatFallback } from "@/components/account/connect-chat"
 import { ConnectedApps } from "@/components/account/connected-apps"
 import { HandleForm } from "@/components/account/handle-form"
 import { SignOutButton } from "@/components/account/sign-out-button"
-import { YourLessons } from "@/components/account/your-lessons"
 import { ButtonLink } from "@/components/site/button-link"
 import { connectedApps, listKeys, mcpConnection } from "@/lib/auth/account"
 import { accountOf } from "@/lib/auth/account-info"
 import { getAuth } from "@/lib/auth/auth"
 import { currentActor } from "@/lib/auth/session"
 import type { KeySummary } from "@/lib/auth/account"
-import { lessonsOwnedBy } from "@/lib/explore/queries"
 import { getDb } from "@/lib/publish/store"
 
 export const metadata: Metadata = {
@@ -28,18 +26,17 @@ export const metadata: Metadata = {
 // exist on a build machine.
 export const dynamic = "force-dynamic"
 
-/** The account: picture, handle, lessons, connected chat apps, API keys, and sign out. */
+/** The account: picture, handle, connected chat apps, API keys, and sign out. */
 export default async function SettingsPage() {
   const actor = await currentActor()
   if (!actor) redirect("/sign-in?callback=/settings")
   const auth = await getAuth()
   const h = await headers()
   const db = await getDb()
-  const [keys, connection, apps, lessons] = await Promise.all([
+  const [keys, connection, apps] = await Promise.all([
     listKeys(auth, h).then((r) => r.body.keys as KeySummary[]),
     mcpConnection(auth, h),
     connectedApps(db, actor.userId),
-    lessonsOwnedBy(db, actor.userId),
   ])
   return (
     <AccountPage account={accountOf(actor)} wide>
@@ -73,11 +70,6 @@ export default async function SettingsPage() {
           ) : null}
         </div>
         <HandleForm initial={actor.handle} />
-      </section>
-
-      <section id="lessons" className="flex scroll-mt-20 flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Your lessons</h2>
-        <YourLessons initial={lessons} handle={actor.handle} />
       </section>
 
       <section id="apps" className="flex scroll-mt-20 flex-col gap-4">

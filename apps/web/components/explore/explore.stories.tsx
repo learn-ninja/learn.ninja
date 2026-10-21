@@ -11,6 +11,7 @@ import { FeedSkeleton } from "./feed-skeleton"
 import { LessonFeed } from "./lesson-feed"
 import { LessonRow } from "./lesson-row"
 import { LikeButton } from "./like-button"
+import { ProfileTabs } from "./profile-tabs"
 import { ReportDialog } from "./report-dialog"
 
 // Explore's rows and controls with a fake server: likes go through, a report with "fail" in it
@@ -295,12 +296,35 @@ export const Report: Story = {
   },
 }
 
+export const OwnProfileTabs: Story = {
+  name: "Profile tabs (own profile)",
+  render: () => (
+    <div className="mx-auto max-w-2xl">
+      <ProfileTabs
+        lessons={{
+          count: 2,
+          panel: (
+            <LessonFeed
+              lessons={LESSONS.slice(0, 2)}
+              viewer={signedIn}
+              showAuthor={false}
+            />
+          ),
+        }}
+        likes={{
+          count: 1,
+          panel: <LessonFeed lessons={LESSONS.slice(2, 3)} viewer={signedIn} />,
+        }}
+      />
+    </div>
+  ),
+}
+
 export const Settings: Story = {
-  name: "Your lessons (settings)",
+  name: "Your lessons (own profile)",
   render: () => (
     <div className="mx-auto max-w-2xl">
       <YourLessons
-        handle="ada"
         api={fakeApi}
         initial={[
           LESSONS[0]!,
@@ -313,18 +337,9 @@ export const Settings: Story = {
   ),
 }
 
-export const SettingsNoHandle: Story = {
-  name: "Your lessons, no handle yet",
-  render: () => (
-    <div className="mx-auto max-w-2xl">
-      <YourLessons handle={null} api={fakeApi} initial={[LESSONS[0]!]} />
-    </div>
-  ),
-}
-
 export const SettingsEmpty: Story = {
   name: "Your lessons, none",
-  render: () => <YourLessons handle="ada" api={fakeApi} initial={[]} />,
+  render: () => <YourLessons api={fakeApi} initial={[]} />,
 }
 
 function Labeled({

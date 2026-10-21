@@ -67,7 +67,7 @@ ${SITE.name} is a skill for AI agents. The agent turns what the user gives it (a
 ${INSTALL_COMMAND}
 \`\`\`
 
-Then read the skill's SKILL.md and follow it: write the lesson, run \`validate\` until it passes, then \`publish\`, and give the user the link. Lessons are free and need no account. They last 7 days, or forever once the user keeps them in an account (\`learn login\`, which the steps describe; offer it once, in one sentence). Kept lessons are listed in Explore (${SITE.url}/explore); their owner can unlist them from their settings.
+Then read the skill's SKILL.md and follow it: write the lesson, run \`validate\` until it passes, then \`publish\`, and give the user the link. Lessons are free and need no account. They last 7 days, or forever once the user keeps them in an account (\`learn login\`, which the steps describe; offer it once, in one sentence). Kept lessons are listed in Explore (${SITE.url}/explore); their owner can unlist them from their profile.
 
 No shell (a chat app, or a locked-down host)? Connect to the MCP server at ${MCP_URL} instead: call \`get_guide\` once first and follow it, then \`publish_lesson\`, which checks the lesson too. [How to connect each client](${SITE.url}/docs/reference/mcp.md).
 

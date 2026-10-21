@@ -18,7 +18,7 @@ import {
 // the current guides into .learn/skill/ (text only, never code), and `validate` checks the lesson on the
 // server. The copies that came with the install are the fallback when the server can't be reached.
 
-export const SKILL_VERSION = "0.13.0"
+export const SKILL_VERSION = "0.14.0"
 export const DEFAULT_API_URL = "https://learn.ninja"
 /** Where `sync` puts the guides, relative to the current folder. */
 export const SYNC_DIR = ".learn/skill"
@@ -622,9 +622,9 @@ function standingOf(body: Record<string, unknown>): Standing {
  */
 function ownedLine({ handle, listed }: Standing, api: string): string {
   if (handle && listed)
-    return `Saved to @${handle} and listed in Explore. Unlist it any time at ${api}/settings.`
+    return `Saved to @${handle} and listed in Explore. Unlist it any time at ${api}/u/${handle}.`
   if (handle)
-    return `Saved to @${handle}: it doesn't expire. List it in Explore at ${api}/settings.`
+    return `Saved to @${handle}: it doesn't expire. List it in Explore at ${api}/u/${handle}.`
   return `Saved to your account: it doesn't expire. Pick a handle at ${api}/settings and it'll show in Explore.`
 }
 
@@ -635,9 +635,9 @@ function keptLines(kept: Kept[], api: string): string {
   const them = n === 1 ? "it" : "them"
   const where =
     handle && kept.every((k) => k.listed)
-      ? `saved to @${handle} and listed in Explore (unlist ${them} any time at ${api}/settings)`
+      ? `saved to @${handle} and listed in Explore (unlist ${them} any time at ${api}/u/${handle})`
       : handle
-        ? `saved to @${handle} (list ${them} in Explore at ${api}/settings)`
+        ? `saved to @${handle} (list ${them} in Explore at ${api}/u/${handle})`
         : `saved to your account (pick a handle at ${api}/settings and ${n === 1 ? "it'll" : "they'll"} show in Explore)`
   return [
     `Kept ${n} lesson${n === 1 ? "" : "s"} published from this folder, ${where}:`,

@@ -1,7 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { EyeOffIcon, FlagIcon, GlobeIcon, LinkIcon, SettingsIcon } from "lucide-react"
+import {
+  EyeOffIcon,
+  FlagIcon,
+  GlobeIcon,
+  LinkIcon,
+  SettingsIcon,
+} from "lucide-react"
 import { useTheme } from "next-themes"
 
 import {
@@ -22,8 +28,8 @@ export interface LessonViewProps extends LessonPlayerProps {
   lessonId?: string
   /** Whether to offer "Report lesson" in the lesson menu: listed lessons, to anyone but their owner. */
   canReport?: boolean
-  /** When the viewer owns the lesson: how it's listed, with a way to the settings page. */
-  owner?: { visibility: Visibility; hidden: boolean }
+  /** When the viewer owns the lesson: how it's listed, with a way to their profile's list once they have a handle. */
+  owner?: { visibility: Visibility; hidden: boolean; handle: string | null }
   /** Record finishing the lesson to the viewer's account (signed in only), for the check on Explore. */
   recordCompletion?: boolean
 }
@@ -75,10 +81,12 @@ export function LessonView({
               </>
             )}
           </DropdownMenuLabel>
-          <DropdownMenuItem href="/settings#lessons">
-            <SettingsIcon />
-            Your lessons
-          </DropdownMenuItem>
+          {owner.handle ? (
+            <DropdownMenuItem href={`/u/${owner.handle}#lessons`}>
+              <SettingsIcon />
+              Your lessons
+            </DropdownMenuItem>
+          ) : null}
         </>
       ) : null}
       {canReport ? (

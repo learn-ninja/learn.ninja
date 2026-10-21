@@ -578,7 +578,7 @@ describe("learn publish", () => {
     expect(await run(["publish", "lesson.json"], t.io)).toBe(0)
     expect(t.calls.at(-1)).toMatchObject({ method: "POST", apiKey: KEY })
     expect(t.out.join("\n")).toMatch(
-      /Saved to @ada and listed in Explore\. Unlist it any time at https:\/\/learn\.ninja\/settings\./
+      /Saved to @ada and listed in Explore\. Unlist it any time at https:\/\/learn\.ninja\/u\/ada\./
     )
     const saved = JSON.parse(
       readFileSync(join(t.cwd, ".learn/state.json"), "utf8")
@@ -609,7 +609,7 @@ describe("learn publish", () => {
     writeCredentials(t, { "https://learn.ninja": { apiKey: KEY, email: "a" } })
     await run(["publish", "lesson.json"], t.io)
     expect(t.out.join("\n")).toMatch(
-      /Saved to @ada: it doesn't expire\. List it in Explore at https:\/\/learn\.ninja\/settings\./
+      /Saved to @ada: it doesn't expire\. List it in Explore at https:\/\/learn\.ninja\/u\/ada\./
     )
   })
 
@@ -785,7 +785,7 @@ describe("learn login", () => {
       },
     })
     expect(t.out.join("\n")).toMatch(
-      /Signed in as ada@example\.com \(@ada\)\. Saved the key in .*learn\/credentials\.\nKept 1 lesson published from this folder, saved to @ada and listed in Explore \(unlist it any time at https:\/\/learn\.ninja\/settings\):\n  https:\/\/learn\.test\/l\/button-hierarchy-aaaa1111/
+      /Signed in as ada@example\.com \(@ada\)\. Saved the key in .*learn\/credentials\.\nKept 1 lesson published from this folder, saved to @ada and listed in Explore \(unlist it any time at https:\/\/learn\.ninja\/u\/ada\):\n  https:\/\/learn\.test\/l\/button-hierarchy-aaaa1111/
     )
     const state = JSON.parse(
       readFileSync(join(t.cwd, ".learn/state.json"), "utf8")
@@ -937,7 +937,7 @@ describe("learn keep", () => {
       "POST /api/lessons/bbbb2222/claim",
     ])
     expect(t.out.join("\n")).toMatch(
-      /Kept 2 lessons published from this folder, saved to @ada and listed in Explore \(unlist them any time at https:\/\/learn\.ninja\/settings\):\n  https:\/\/learn\.test\/l\/button-hierarchy-aaaa1111\n  https:\/\/learn\.test\/l\/button-hierarchy-bbbb2222/
+      /Kept 2 lessons published from this folder, saved to @ada and listed in Explore \(unlist them any time at https:\/\/learn\.ninja\/u\/ada\):\n  https:\/\/learn\.test\/l\/button-hierarchy-aaaa1111\n  https:\/\/learn\.test\/l\/button-hierarchy-bbbb2222/
     )
     const after = JSON.parse(readFileSync(statePath, "utf8"))
     for (const saved of Object.values(after.lessons) as {

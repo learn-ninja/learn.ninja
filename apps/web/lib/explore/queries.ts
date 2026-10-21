@@ -27,7 +27,7 @@ import {
   type Subject,
 } from "@workspace/spec"
 
-// What Explore, profiles, and the settings page read: lessons as cards, straight from the database
+// What Explore and profiles read: lessons as cards, straight from the database
 // (no listing API in v2). Only what a card shows is selected: a lesson's JSON can be hundreds of
 // kilobytes, so the title and the rest come out of the jsonb column one field at a time.
 
@@ -330,7 +330,7 @@ export async function profileByHandle(
   }
 }
 
-/** Every lesson the user owns, whatever its visibility, newest first: the settings page's list. */
+/** Every lesson the user owns, whatever its visibility, newest first: the list on the owner's own profile. */
 export async function lessonsOwnedBy(
   db: Db,
   ownerId: string
@@ -341,6 +341,34 @@ export async function lessonsOwnedBy(
     .leftJoin(user, eq(user.id, lesson.ownerId))
     .where(eq(lesson.ownerId, ownerId))
     .orderBy(desc(lesson.createdAt))
+  return rows.map(toSummary)
+}
+
+/**
+ * The lessons the user liked, most recently liked first: their profile's Likes tab. Visitors get
+ * `listedOnly`, so only what Explore shows; the user themself also sees liked lessons that went
+ * unlisted, since they had the link. Expired lessons and ones hidden after a report drop out.
+ */
+export async function lessonsLikedBy(
+  db: Db,
+  userId: string,
+  {
+    listedOnly = false,
+    now = Date.now(),
+  }: { listedOnly?: boolean; now?: number } = {}
+): Promise<LessonSummary[]> {
+  const rows = await db
+    .select(columns)
+    .from(like)
+    .innerJoin(lesson, eq(lesson.id, like.lessonId))
+    .leftJoin(user, eq(user.id, lesson.ownerId))
+    .where(
+      and(
+        eq(like.userId, userId),
+        listedOnly ? listed(now) : and(eq(lesson.hidden, false), live(now))
+      )
+    )
+    .orderBy(desc(like.createdAt), desc(lesson.id))
   return rows.map(toSummary)
 }
 

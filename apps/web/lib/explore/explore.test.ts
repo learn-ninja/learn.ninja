@@ -30,6 +30,7 @@ import { MemoryPlayCounter, WriteThroughPlayCounter } from "./plays"
 import {
   authorOf,
   completedAt,
+  lessonsLikedBy,
   lessonsOwnedBy,
   likedIds,
   listLessons,
@@ -229,7 +230,7 @@ describe("profiles", () => {
     expect(await profileByHandle(db, "nobody", now)).toBeNull()
   })
 
-  it("lists everything an owner has for the settings page, and names the author", async () => {
+  it("lists everything an owner has for their own profile, and names the author", async () => {
     const a = await published("ada", { visibility: "public" })
     const b = await published("ada", { hidden: true })
     await published("bob")
@@ -271,6 +272,23 @@ describe("likes", () => {
     })
     expect(changes).toBe(3)
     expect((await listLessons(db, "top", 1, { now }))[0]?.likes).toBe(1)
+  })
+
+  it("lists what a user liked, latest first, leaving out hidden lessons and, for visitors, unlisted ones", async () => {
+    const a = await published("ada", { visibility: "public" })
+    const b = await published("ada")
+    const c = await published("ada", { visibility: "public" })
+    for (const id of [a, b, c]) await likeLesson({ id, userId: "bob" }, deps)
+    await db.update(lesson).set({ hidden: true }).where(eq(lesson.id, c))
+    expect((await lessonsLikedBy(db, "bob", { now })).map((l) => l.id)).toEqual(
+      [b, a]
+    )
+    expect(
+      (await lessonsLikedBy(db, "bob", { listedOnly: true, now })).map(
+        (l) => l.id
+      )
+    ).toEqual([a])
+    expect(await lessonsLikedBy(db, "ghost", { now })).toEqual([])
   })
 
   it("answers 404 for a lesson that's gone", async () => {

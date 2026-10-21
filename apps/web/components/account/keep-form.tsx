@@ -32,9 +32,9 @@ type KeepAction = (
  */
 function keptSentence({ handle, listed }: KeepResult) {
   if (handle && listed)
-    return `is saved to your account and listed in Explore under @${handle}. Unlist it any time from your settings.`
+    return `is saved to your account and listed in Explore under @${handle}. Unlist it any time from your profile.`
   if (handle)
-    return `is saved to your account under @${handle} and won't expire. List it in Explore from your settings.`
+    return `is saved to your account under @${handle} and won't expire. List it in Explore from your profile.`
   return "is saved to your account and won't expire. Pick a handle in your settings and it'll show in Explore."
 }
 

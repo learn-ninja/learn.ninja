@@ -26,7 +26,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ? {
           title: record.lesson.title,
           description: record.lesson.summary,
-          ...(author?.handle ? { authors: [{ name: `@${author.handle}`, url: `/u/${author.handle}` }] } : {}),
+          ...(author?.handle
+            ? {
+                authors: [
+                  { name: `@${author.handle}`, url: `/u/${author.handle}` },
+                ],
+              }
+            : {}),
         }
       : {
           title: "Lesson unavailable",
@@ -59,7 +65,7 @@ export default async function PublishedLessonPage({
   const { slugId } = await params
   const view = await viewPublished(slugId)
   if (!view.record) return <LessonExpired reason={view.reason ?? "expired"} />
-  const { record, isOwner, listed, signedIn } = view
+  const { record, isOwner, listed, signedIn, author } = view
   const { ui } = await searchParams
   return (
     <div className="h-svh">
@@ -74,7 +80,11 @@ export default async function PublishedLessonPage({
         recordCompletion={signedIn}
         owner={
           isOwner
-            ? { visibility: record.visibility, hidden: record.hidden }
+            ? {
+                visibility: record.visibility,
+                hidden: record.hidden,
+                handle: author?.handle ?? null,
+              }
             : undefined
         }
       />
