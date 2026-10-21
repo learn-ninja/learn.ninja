@@ -23,7 +23,7 @@ export const currentActor = cache(async (): Promise<Actor | null> => {
  */
 export function safeCallback(value: string | string[] | undefined): string {
   const path = Array.isArray(value) ? value[0] : value
-  return path && /^\/(?![/\\])/.test(path) ? path : "/settings"
+  return path && /^\/(?![/\\])/.test(path) ? path : "/explore"
 }
 
 type SearchParams = Record<string, string | string[] | undefined>

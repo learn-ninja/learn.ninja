@@ -370,10 +370,10 @@ describe("handles", () => {
   it("only sends the browser to site paths after logging in", () => {
     expect(safeCallback("/keep/abc")).toBe("/keep/abc")
     expect(safeCallback(["/settings", "/x"])).toBe("/settings")
-    expect(safeCallback(undefined)).toBe("/settings")
-    expect(safeCallback("https://evil.com")).toBe("/settings")
-    expect(safeCallback("//evil.com")).toBe("/settings")
-    expect(safeCallback("/\\evil.com")).toBe("/settings")
+    expect(safeCallback(undefined)).toBe("/explore")
+    expect(safeCallback("https://evil.com")).toBe("/explore")
+    expect(safeCallback("//evil.com")).toBe("/explore")
+    expect(safeCallback("/\\evil.com")).toBe("/explore")
   })
 })
 
