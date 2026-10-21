@@ -461,21 +461,18 @@ describe("the reviewers' test account", () => {
 
   it("is off unless both variables are set and the code has six digits", async () => {
     const { reviewSignInFromEnv } = await import("./auth")
-    expect(reviewSignInFromEnv({} as NodeJS.ProcessEnv)).toBeNull()
+    const env = (vars: Record<string, string>) => vars as NodeJS.ProcessEnv
+    expect(reviewSignInFromEnv(env({}))).toBeNull()
+    expect(reviewSignInFromEnv(env({ REVIEW_SIGN_IN_EMAIL: "r@example.com" }))).toBeNull()
     expect(
-      reviewSignInFromEnv({ REVIEW_SIGN_IN_EMAIL: "r@example.com" } as NodeJS.ProcessEnv)
+      reviewSignInFromEnv(
+        env({ REVIEW_SIGN_IN_EMAIL: "r@example.com", REVIEW_SIGN_IN_CODE: "12" })
+      )
     ).toBeNull()
     expect(
-      reviewSignInFromEnv({
-        REVIEW_SIGN_IN_EMAIL: "r@example.com",
-        REVIEW_SIGN_IN_CODE: "12",
-      } as NodeJS.ProcessEnv)
-    ).toBeNull()
-    expect(
-      reviewSignInFromEnv({
-        REVIEW_SIGN_IN_EMAIL: " R@Example.com ",
-        REVIEW_SIGN_IN_CODE: "123456",
-      } as NodeJS.ProcessEnv)
+      reviewSignInFromEnv(
+        env({ REVIEW_SIGN_IN_EMAIL: " R@Example.com ", REVIEW_SIGN_IN_CODE: "123456" })
+      )
     ).toEqual({ email: "r@example.com", code: "123456" })
   })
 })
