@@ -376,3 +376,50 @@ describe("handles", () => {
     expect(safeCallback("/\\evil.com")).toBe("/settings")
   })
 })
+
+describe("with Redis holding sessions", () => {
+  it("starts, and signs in, with a secondary storage like production", async () => {
+    // The OAuth provider refuses to start with a secondary storage unless sessions are also kept
+    // in the database; a missing flag only showed on Vercel, as every discovery route answered 500.
+    const memory = new Map<string, string>()
+    const redisLike = createAuth({
+      db,
+      env: { NODE_ENV: "test" } as NodeJS.ProcessEnv,
+      sendCode: async (email, code) => {
+        codes.set(email, code)
+      },
+      codeLimiter: new MemoryRateLimiter(100),
+      storage: {
+        get: async (key) => memory.get(key) ?? null,
+        getAndDelete: async (key) => {
+          const value = memory.get(key) ?? null
+          memory.delete(key)
+          return value
+        },
+        set: async (key, value) => {
+          memory.set(key, value)
+        },
+        delete: async (key) => {
+          memory.delete(key)
+        },
+        increment: async (key) => {
+          const n = Number(memory.get(key) ?? 0) + 1
+          memory.set(key, String(n))
+          return n
+        },
+      },
+    })
+    await redisLike.$context
+    const email = "redis@example.com"
+    await redisLike.api.sendVerificationOTP({ body: { email, type: "sign-in" } })
+    const res = await redisLike.api.signInEmailOTP({
+      body: { email, otp: codes.get(email)! },
+      asResponse: true,
+    })
+    expect(res.status).toBe(200)
+    const metadata = await redisLike.handler(
+      new Request(`${ORIGIN}/api/auth/.well-known/oauth-authorization-server`)
+    )
+    expect(metadata.status).toBe(200)
+  })
+})

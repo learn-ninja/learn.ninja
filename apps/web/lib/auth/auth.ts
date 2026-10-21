@@ -58,12 +58,14 @@ const REFRESH_TOKEN_SECONDS = 90 * 24 * 60 * 60
 
 /**
  * The site's public origin, as chat apps reach it: LEARN_PUBLIC_URL, else the production domain, a
- * preview deployment's own host, or the dev server on whatever port it got.
+ * preview deployment's branch alias (the URL people paste, not the one-off deployment host), or
+ * the dev server on whatever port it got.
  */
 export function publicSiteFromEnv(env = process.env): string {
   if (env.LEARN_PUBLIC_URL) return env.LEARN_PUBLIC_URL
   if (env.VERCEL_ENV === "production") return "https://learn.ninja"
-  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`
+  const preview = env.VERCEL_BRANCH_URL ?? env.VERCEL_URL
+  if (preview) return `https://${preview}`
   return `http://localhost:${env.PORT ?? 3000}`
 }
 
@@ -147,6 +149,9 @@ export function createAuth(deps: AuthDeps) {
     session: {
       // A signed cookie answers most session checks without a database or Redis read.
       cookieCache: { enabled: true, maxAge: 5 * 60 },
+      // With Redis holding sessions, the OAuth provider still needs them in Postgres: its refresh
+      // tokens point at the session row, and it refuses to start otherwise.
+      storeSessionInDatabase: Boolean(storage),
     },
     user: {
       additionalFields: {
