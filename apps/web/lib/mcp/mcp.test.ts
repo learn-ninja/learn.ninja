@@ -146,7 +146,12 @@ async function signIn(email: string): Promise<string> {
 /** A personal MCP URL's key for `email`, made from the settings page. */
 async function mcpKeyFor(email: string): Promise<string> {
   const cookie = await signIn(email)
-  const made = await connectMcp(auth, new Headers({ cookie }), (await getActor(auth, new Headers({ cookie })))!.userId, deps.origin)
+  const made = await connectMcp(
+    auth,
+    new Headers({ cookie }),
+    (await getActor(auth, new Headers({ cookie })))!.userId,
+    deps.origin
+  )
   expect(made.status).toBe(201)
   return (made.body.url as string).split("/mcp/")[1]!
 }
@@ -163,19 +168,29 @@ describe("tools", () => {
     ])
     for (const tool of tools) {
       expect(tool.title).toEqual(expect.any(String))
+      // Claude's directory reads the title from the annotations, and wants every write tool to
+      // say whether it's destructive.
+      expect(tool.annotations.title).toBe(tool.title)
       expect(tool.annotations).toHaveProperty("readOnlyHint")
+      if (!tool.annotations.readOnlyHint)
+        expect(tool.annotations).toHaveProperty("destructiveHint")
     }
   })
 
   it("says which tools work signed out, the way ChatGPT reads it", async () => {
     const { tools } = await rpc("tools/list", {})
     const schemes = Object.fromEntries(
-      tools.map((t: { name: string; _meta?: { securitySchemes?: unknown } }) => [
-        t.name,
-        t._meta?.securitySchemes,
-      ])
+      tools.map(
+        (t: { name: string; _meta?: { securitySchemes?: unknown } }) => [
+          t.name,
+          t._meta?.securitySchemes,
+        ]
+      )
     )
-    const optional = [{ type: "noauth" }, { type: "oauth2", scopes: ["lessons"] }]
+    const optional = [
+      { type: "noauth" },
+      { type: "oauth2", scopes: ["lessons"] },
+    ]
     expect(schemes).toEqual({
       get_guide: optional,
       validate_lesson: optional,
@@ -311,7 +326,9 @@ describe("publish_lesson and update_lesson", () => {
     )
     // Directory review rejects descriptions that script Claude's behaviour; the keep sentence and
     // the once-only rule live in the guide's steps, which both surfaces follow.
-    expect(publish.description).not.toMatch(/tell the user|say once|never paste/i)
+    expect(publish.description).not.toMatch(
+      /tell the user|say once|never paste/i
+    )
     expect(publish.description).toContain("7 days")
     expect(KEEP_SENTENCE).toContain("sign in once")
     expect(skillBundle().files["steps.md"]).toContain(KEEP_SENTENCE)
@@ -426,7 +443,9 @@ describe("/mcp/{key}, the personal URL", () => {
   it("publishes to the account, unlisted, and the owner updates without a token", async () => {
     const key = await mcpKeyFor("owner@example.com")
     const { tools } = await personal(key).rpc("tools/list", {})
-    const publish = tools.find((t: { name: string }) => t.name === "publish_lesson")
+    const publish = tools.find(
+      (t: { name: string }) => t.name === "publish_lesson"
+    )
     expect(publish.description).toContain("saved to the user's account")
     expect(publish.description).not.toContain("7 days")
 
@@ -529,7 +548,10 @@ describe("/mcp/{key}, the personal URL", () => {
   it("refuses a terminal key in the URL, and an MCP key as a header", async () => {
     const cookie = await signIn("both@example.com")
     const terminal = await createKey(auth, new Headers({ cookie }), "laptop")
-    const res = await personal(terminal.body.key as string).raw("tools/list", {})
+    const res = await personal(terminal.body.key as string).raw(
+      "tools/list",
+      {}
+    )
     expect(res.status).toBe(401)
 
     const mcpKey = await mcpKeyFor("both@example.com")
@@ -552,10 +574,20 @@ describe("/mcp/{key}, the personal URL", () => {
   it("stops working once the URL is rotated or revoked", async () => {
     const cookie = await signIn("rotate@example.com")
     const headers = new Headers({ cookie })
-    const first = await connectMcp(auth, headers, (await getActor(auth, headers))!.userId, deps.origin)
+    const first = await connectMcp(
+      auth,
+      headers,
+      (await getActor(auth, headers))!.userId,
+      deps.origin
+    )
     const key1 = (first.body.url as string).split("/mcp/")[1]!
     expect((await personal(key1).raw("tools/list", {})).status).toBe(200)
-    const second = await connectMcp(auth, headers, (await getActor(auth, headers))!.userId, deps.origin)
+    const second = await connectMcp(
+      auth,
+      headers,
+      (await getActor(auth, headers))!.userId,
+      deps.origin
+    )
     const key2 = (second.body.url as string).split("/mcp/")[1]!
     expect((await personal(key1).raw("tools/list", {})).status).toBe(401)
     expect((await personal(key2).raw("tools/list", {})).status).toBe(200)

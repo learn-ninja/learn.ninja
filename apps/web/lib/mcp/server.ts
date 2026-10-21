@@ -49,9 +49,14 @@ export const KEEP_SENTENCE =
  * with "OAuth or no authentication": which tools work signed out, and which need the account.
  */
 const OPTIONAL_AUTH = {
-  securitySchemes: [{ type: "noauth" }, { type: "oauth2", scopes: [MCP_SCOPE] }],
+  securitySchemes: [
+    { type: "noauth" },
+    { type: "oauth2", scopes: [MCP_SCOPE] },
+  ],
 }
-const NEEDS_AUTH = { securitySchemes: [{ type: "oauth2", scopes: [MCP_SCOPE] }] }
+const NEEDS_AUTH = {
+  securitySchemes: [{ type: "oauth2", scopes: [MCP_SCOPE] }],
+}
 
 const INSTRUCTIONS =
   "learn.ninja turns anything into one short, interactive lesson with a shareable link. Call `get_guide` once before writing a lesson: it returns the whole guide, then follow its steps, including what to tell the user once a lesson is published."
@@ -149,7 +154,11 @@ function registerTools(server: McpServer, deps: McpDeps) {
             "all: every guide but the schema. steps: what to do, in order. planning: scope, size, reading age. teaching: how to teach, which brick to use, visuals. format: every field of the lesson file. levels: picking the level, and each level's guide. schema: the formal JSON Schema, rarely needed."
           ),
       }),
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: {
+        title: "Read the lesson guide",
+        readOnlyHint: true,
+        openWorldHint: false,
+      },
     },
     ({ section }) => {
       const { files } = deps.guide()
@@ -182,7 +191,13 @@ function registerTools(server: McpServer, deps: McpDeps) {
       description:
         "Checks a lesson with the rules publishing uses, without publishing it, and lists every issue. Returns a `draftId` either way, so fixes can be sent as `patches` against the draft instead of the whole lesson. `publish_lesson` runs the same checks, so a lesson that's ready can go straight there.",
       inputSchema: z.object(lessonInput),
-      annotations: { readOnlyHint: false, openWorldHint: false },
+      annotations: {
+        title: "Check a lesson",
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     (input, ctx) =>
       withDraft(
@@ -215,6 +230,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
       }`,
       inputSchema: z.object(lessonInput),
       annotations: {
+        title: "Publish a lesson",
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: false,
@@ -276,6 +292,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
           .describe("The secret edit token, from `publish_lesson`."),
       }),
       annotations: {
+        title: "Keep a lesson in an account",
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: true,
@@ -330,6 +347,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
         ...lessonInput,
       }),
       annotations: {
+        title: "Update a published lesson",
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: true,
