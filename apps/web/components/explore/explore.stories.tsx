@@ -215,9 +215,6 @@ export const RowStates: Story = {
       <Labeled label="Ranked (Top tab)">
         <LessonRow lesson={LESSONS[5]!} viewer={signedIn} rank={1} />
       </Labeled>
-      <Labeled label="On a profile: no author">
-        <LessonRow lesson={LESSONS[0]!} viewer={signedIn} showAuthor={false} />
-      </Labeled>
     </div>
   ),
 }
@@ -357,11 +354,7 @@ export const OwnProfileTabs: Story = {
         lessons={{
           count: 2,
           panel: (
-            <LessonFeed
-              lessons={LESSONS.slice(0, 2)}
-              viewer={signedIn}
-              showAuthor={false}
-            />
+            <LessonFeed lessons={LESSONS.slice(0, 2)} viewer={signedIn} />
           ),
         }}
         likes={{

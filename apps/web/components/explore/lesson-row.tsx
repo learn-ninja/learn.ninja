@@ -41,21 +41,18 @@ const ROW_LINK =
  * cards. Hovering one turns it into a bordered, filled tile that reaches past the column into the
  * gutter (negative margin, matching padding), so the text stays lined up with the page and the
  * tile has room around it; the list hides the two hairlines it would touch. `rank` puts a number
- * in the margin on the Top tab; `showAuthor={false}` drops the author on a profile, where every
- * row shares it, leaving the age alone on the byline. The viewer's own rows open a menu on right
- * click to unpublish, rename, or delete them (LessonMenu).
+ * in the margin on the Top tab. The author shows on a profile too, though every row shares it. The
+ * viewer's own rows open a menu on right click to unpublish, rename, or delete them (LessonMenu).
  */
 export function LessonRow({
   lesson,
   viewer,
   rank,
-  showAuthor = true,
   className,
 }: {
   lesson: LessonSummary
   viewer?: Viewer
   rank?: number
-  showAuthor?: boolean
   className?: string
 }) {
   const href = lessonPath(lesson.slug, lesson.id)
@@ -63,7 +60,7 @@ export function LessonRow({
   const author = lesson.author
   const mine = viewer?.userId !== undefined && author?.id === viewer.userId
   const byline =
-    showAuthor && author ? (
+    author ? (
       author.handle ? (
         <Link
           href={`/u/${author.handle}`}

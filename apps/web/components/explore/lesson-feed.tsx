@@ -7,19 +7,17 @@ import { LessonRow, type Viewer } from "./lesson-row"
 /**
  * The feed: one row per lesson between hairlines, newest or best first, read by scrolling. A hovered
  * row draws its own bordered tile, so the hairlines above and below it hide while it's hovered.
- * `ranked` numbers the rows (the Top tab); `showAuthor={false}` drops the handle (profiles).
+ * `ranked` numbers the rows (the Top tab).
  */
 export function LessonFeed({
   lessons,
   viewer,
   ranked = false,
-  showAuthor = true,
   className,
 }: {
   lessons: LessonSummary[]
   viewer?: Viewer
   ranked?: boolean
-  showAuthor?: boolean
   className?: string
 }) {
   return (
@@ -37,7 +35,6 @@ export function LessonFeed({
             lesson={lesson}
             viewer={viewer}
             rank={ranked ? i + 1 : undefined}
-            showAuthor={showAuthor}
           />
         </li>
       ))}

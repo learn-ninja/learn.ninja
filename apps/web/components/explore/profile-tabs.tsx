@@ -22,7 +22,7 @@ export function ProfileTabs({
 }) {
   return (
     <Tabs className="gap-6">
-      <TabsList variant="line" aria-label="Profile" className="-ms-1.5">
+      <TabsList aria-label="Profile">
         <TabsTrigger id="lessons">
           Lessons
           <Count n={lessons.count} />

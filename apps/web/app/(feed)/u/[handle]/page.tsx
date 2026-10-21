@@ -33,9 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!profile) return { title: "Profile" }
   const n = profile.lessons.length
   return {
-    title: profile.name.trim()
-      ? `${profile.name} (@${profile.handle})`
-      : `@${profile.handle}`,
+    title: profile.handle,
     description: `${n} ${n === 1 ? "lesson" : "lessons"} on ${SITE.name}.`,
     alternates: { canonical: `/u/${profile.handle}` },
   }
@@ -67,29 +65,28 @@ export default async function ProfilePage({ params }: Props) {
     completed,
     userId: actor?.userId,
   }
-  // Email-code accounts have no name until GitHub or a later setting gives them one.
-  const name = profile.name.trim()
   const joined = new Date(profile.joinedAt).toLocaleDateString("en", {
     month: "long",
     year: "numeric",
   })
   return (
     <>
+      {/* A profile goes by its handle alone: no display name, no @. */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-4 sm:gap-5">
-          <UserAvatar
-            image={profile.image}
-            handle={profile.handle}
-            size="profile"
-          />
-          <h1 className="min-w-0 text-3xl font-semibold tracking-tight sm:text-4xl">
-            {name || <bdi dir="ltr">@{profile.handle}</bdi>}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <h1 className="flex min-w-0 items-center gap-2 font-medium text-foreground">
+            <UserAvatar
+              image={profile.image}
+              handle={profile.handle}
+              size="profile"
+            />
+            <bdi dir="ltr" className="min-w-0 truncate">
+              {profile.handle}
+            </bdi>
           </h1>
-        </div>
-        <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-muted-foreground">
-          {name ? <bdi dir="ltr">@{profile.handle}</bdi> : null}
+          <span aria-hidden="true">·</span>
           <span>Joined {joined}</span>
-        </p>
+        </div>
         {profile.bio ? (
           <p className="max-w-xl text-base text-pretty">{profile.bio}</p>
         ) : null}
@@ -100,11 +97,7 @@ export default async function ProfilePage({ params }: Props) {
           panel: (
             <>
               {profile.lessons.length ? (
-                <LessonFeed
-                  lessons={profile.lessons}
-                  viewer={viewer}
-                  showAuthor={false}
-                />
+                <LessonFeed lessons={profile.lessons} viewer={viewer} />
               ) : (
                 <Empty>
                   {own
