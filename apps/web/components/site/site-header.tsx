@@ -10,7 +10,7 @@ import { ButtonLink } from "./button-link"
 import { Wordmark } from "./wordmark"
 
 /**
- * The bar at the top of every page. Visitors get Explore · Docs · Sign in and a wordmark that
+ * The bar at the top of every page. Visitors get Docs · Sign in and a wordmark that
  * links home; once signed in, Explore is home, so the wordmark goes there and the links fold
  * into the account menu behind the profile picture (which also opens on hover). `start` adds
  * page-specific controls before the wordmark (the docs menu), `action` a button after it (copy
@@ -39,15 +39,6 @@ export function SiteHeader({
         <nav aria-label="Site" className="ms-auto flex items-center gap-1">
           {visitor ? (
             <>
-              <ButtonLink
-                href="/explore"
-                variant="ghost"
-                size="sm"
-                className={cn(account === undefined && "invisible")}
-                aria-hidden={account === undefined || undefined}
-              >
-                Explore
-              </ButtonLink>
               {/* On phones the docs menu (`start`) stands in for this link. */}
               <ButtonLink
                 href="/docs"

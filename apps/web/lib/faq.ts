@@ -39,10 +39,6 @@ export const FAQ: { q: string; a: string }[] = [
     a: "Anyone with the link. Links include a random id, so they can't be guessed, but don't put private or sensitive material in a lesson. A lesson saved to an account is also listed in Explore; switch it to unlisted on your profile to keep it link-only.",
   },
   {
-    q: "What is Explore?",
-    a: `${SITE.url}/explore: lessons people saved to an account and chose to share, newest first, each credited to its maker. Anyone can play them and report one that shouldn't be there; liking needs an account.`,
-  },
-  {
     q: "I'm an agent. What should I do first?",
     a: `If you can run commands, install the skill with \`${INSTALL_COMMAND}\`. If you can't, use the MCP server at ${MCP_URL} and call its \`get_guide\` tool first. Either way, ${SITE.url}/docs has the rest.`,
   },

@@ -4,8 +4,6 @@ import * as React from "react"
 import {
   ArrowUpRightIcon,
   BookOpenIcon,
-  CompassIcon,
-  LibraryIcon,
   LogOutIcon,
   SettingsIcon,
   UserRoundIcon,
@@ -112,21 +110,11 @@ export function AccountMenu({
           <DropdownMenuLabel>
             <bdi dir="ltr">{name}</bdi>
           </DropdownMenuLabel>
-          <DropdownMenuItem href="/explore">
-            <CompassIcon />
-            Explore
-          </DropdownMenuItem>
           {account.handle ? (
-            <>
-              <DropdownMenuItem href={`/u/${account.handle}`}>
-                <UserRoundIcon />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem href={`/u/${account.handle}#lessons`}>
-                <LibraryIcon />
-                Your lessons
-              </DropdownMenuItem>
-            </>
+            <DropdownMenuItem href={`/u/${account.handle}`}>
+              <UserRoundIcon />
+              Profile
+            </DropdownMenuItem>
           ) : null}
           <DropdownMenuItem href="/settings">
             <SettingsIcon />
