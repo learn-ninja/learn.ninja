@@ -12,6 +12,7 @@ import { lessonPath } from "@/lib/publish/paths"
 import { CompletedCheck } from "./completed-check"
 import { LessonMenu } from "./lesson-menu"
 import { LikeButton } from "./like-button"
+import { ProgressPie } from "./progress-pie"
 
 /** What the viewer can do on a row: like it (signed in) or be told to sign in. Omit for a read-only row. */
 export interface Viewer {
@@ -35,7 +36,8 @@ const ROW_LINK =
  * picture and handle) at the start and how long ago at the end, so the ages line up as a column
  * down the feed. Then the title, up to two lines of summary, and one meta line with the lesson's
  * first two tags (its label, then the product or field, as the agent wrote them), length and level
- * (after a green check when the viewer has finished it), and the plays and likes at its end. The
+ * (then a green check when the viewer has finished it, or an amber pie of how far they got
+ * when this browser holds their progress), and the plays and likes at its end. The
  * subject is never shown: it's for filters. The whole row opens the lesson; the author, the check,
  * and the heart are their own targets. Rows sit between hairlines (the list adds them), not in
  * cards. Hovering one turns it into a bordered, filled tile that reaches past the column into the
@@ -59,25 +61,24 @@ export function LessonRow({
   const completedAt = viewer?.completed?.get(lesson.id)
   const author = lesson.author
   const mine = viewer?.userId !== undefined && author?.id === viewer.userId
-  const byline =
-    author ? (
-      author.handle ? (
-        <Link
-          href={`/u/${author.handle}`}
-          className="relative z-10 flex min-w-0 items-center gap-1.5 rounded-sm text-foreground outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          <UserAvatar image={author.image} handle={author.handle} size="row" />
-          <bdi dir="ltr" className="min-w-0 truncate">
-            {author.handle}
-          </bdi>
-        </Link>
-      ) : (
-        <span className="flex min-w-0 items-center gap-1.5">
-          <UserAvatar image={author.image} handle={null} size="row" />
-          <span className="min-w-0 truncate">{author.name}</span>
-        </span>
-      )
-    ) : null
+  const byline = author ? (
+    author.handle ? (
+      <Link
+        href={`/u/${author.handle}`}
+        className="relative z-10 flex min-w-0 items-center gap-1.5 rounded-sm text-foreground outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <UserAvatar image={author.image} handle={author.handle} size="row" />
+        <bdi dir="ltr" className="min-w-0 truncate">
+          {author.handle}
+        </bdi>
+      </Link>
+    ) : (
+      <span className="flex min-w-0 items-center gap-1.5">
+        <UserAvatar image={author.image} handle={null} size="row" />
+        <span className="min-w-0 truncate">{author.name}</span>
+      </span>
+    )
+  ) : null
   const facts: React.ReactNode[] = [
     ...lesson.tags.slice(0, 2).map((tag, i) => (
       <bdi key={`tag-${i}`} lang={lesson.language} className="min-w-0 truncate">
@@ -162,7 +163,12 @@ export function LessonRow({
             ))}
             {completedAt !== undefined ? (
               <CompletedCheck at={completedAt} className="relative z-10" />
-            ) : null}
+            ) : (
+              <ProgressPie
+                progressKey={href.slice(1)}
+                className="relative z-10"
+              />
+            )}
           </p>
           <span className="ms-auto flex shrink-0 items-center gap-3">
             <span

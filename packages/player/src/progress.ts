@@ -123,3 +123,45 @@ function prune(storage: Storage) {
   }
   for (const key of stale) storage.removeItem(key)
 }
+
+/**
+ * How far the learner got in a lesson they left midway, for a feed that doesn't hold the lesson
+ * itself: the bricks behind them (the hook, the lesson's bricks, and the challenge; fix-round
+ * retries don't count) out of all of them. Null when nothing is saved under the key or it's over
+ * a week old. Without the lesson there's no fingerprint check, so an edited lesson still shows its
+ * old progress until it's opened.
+ */
+export function savedProgress(
+  storage: Storage,
+  key: string
+): { done: number; total: number } | null {
+  try {
+    const raw = storage.getItem(PREFIX + key)
+    if (!raw) return null
+    const saved = JSON.parse(raw) as Partial<Saved>
+    const state = saved.state
+    if (
+      saved.v !== 1 ||
+      typeof saved.savedAt !== "number" ||
+      Date.now() - saved.savedAt > KEEP_MS ||
+      !state ||
+      !Array.isArray(state.items) ||
+      typeof state.index !== "number"
+    )
+      return null
+    let done = 0
+    let total = 0
+    state.items.forEach((item, i) => {
+      if (
+        !("brick" in item) ||
+        (item.kind === "question" && item.role === "fix")
+      )
+        return
+      total++
+      if (i < state.index) done++
+    })
+    return total > 0 ? { done, total } : null
+  } catch {
+    return null
+  }
+}

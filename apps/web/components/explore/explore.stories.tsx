@@ -187,8 +187,39 @@ export const Row: Story = {
   ),
 }
 
+/** Saves progress for a row the way the player would: `done` of `total` bricks behind the learner. */
+function seedProgress(lesson: LessonSummary, done: number, total: number) {
+  const items = [
+    { kind: "intro" },
+    ...Array.from({ length: total }, () => ({ kind: "concept", brick: {} })),
+    { kind: "fix" },
+    { kind: "wrap" },
+  ]
+  localStorage.setItem(
+    `learn:progress:l/${lesson.slug}-${lesson.id}`,
+    JSON.stringify({
+      v: 1,
+      fingerprint: "story",
+      savedAt: Date.now(),
+      state: { items, index: done + 1 },
+    })
+  )
+}
+
 export const RowStates: Story = {
   name: "Row states",
+  beforeEach: () => {
+    seedProgress(LESSONS[1]!, 3, 8)
+    seedProgress(LESSONS[5]!, 6, 8)
+    return () => {
+      localStorage.removeItem(
+        `learn:progress:l/${LESSONS[1]!.slug}-${LESSONS[1]!.id}`
+      )
+      localStorage.removeItem(
+        `learn:progress:l/${LESSONS[5]!.slug}-${LESSONS[5]!.id}`
+      )
+    }
+  },
   render: () => (
     <div className="grid max-w-5xl gap-x-8 gap-y-4 sm:grid-cols-2">
       <Labeled label="Read-only (home page)">
@@ -200,10 +231,10 @@ export const RowStates: Story = {
       <Labeled label="Signed in, liked and completed">
         <LessonRow lesson={LESSONS[0]!} viewer={signedIn} />
       </Labeled>
-      <Labeled label="Signed in, not liked">
+      <Labeled label="Signed in, not liked, 3 of 8 bricks done">
         <LessonRow lesson={LESSONS[1]!} viewer={signedIn} />
       </Labeled>
-      <Labeled label="Big numbers">
+      <Labeled label="Big numbers, 6 of 8 bricks done">
         <LessonRow lesson={LESSONS[5]!} viewer={signedIn} />
       </Labeled>
       <Labeled label="Owner has no handle yet">
@@ -353,9 +384,7 @@ export const OwnProfileTabs: Story = {
       <ProfileTabs
         lessons={{
           count: 2,
-          panel: (
-            <LessonFeed lessons={LESSONS.slice(0, 2)} viewer={signedIn} />
-          ),
+          panel: <LessonFeed lessons={LESSONS.slice(0, 2)} viewer={signedIn} />,
         }}
         likes={{
           count: 1,

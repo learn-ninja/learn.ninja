@@ -4,11 +4,13 @@ import { describe, expect, it } from "vitest"
 
 import type { Lesson } from "@workspace/spec"
 
+import { buildSequence } from "./flow"
 import { reducer, type State } from "./lesson-player"
 import {
   fingerprint,
   loadProgress,
   resumeScript,
+  savedProgress,
   saveProgress,
 } from "./progress"
 
@@ -131,6 +133,45 @@ describe("saved progress", () => {
       })
     )
     expect(loadProgress(storage, "l/x", lesson)).toBeNull()
+  })
+})
+
+describe("progress for the feed", () => {
+  const total = lesson.bricks.length + 2
+
+  it("counts the bricks behind the learner", () => {
+    const storage = fakeStorage()
+    const state = { ...fresh(), items: buildSequence(lesson), index: 3 }
+    saveProgress(storage, "l/x", lesson, state)
+    expect(savedProgress(storage, "l/x")).toEqual({ done: 2, total })
+  })
+
+  it("leaves fix-round retries out", () => {
+    const storage = fakeStorage()
+    const items = buildSequence(lesson)
+    const fixAt = items.findIndex((i) => i.kind === "fix")
+    items.splice(fixAt, 0, {
+      kind: "question",
+      brick: lesson.hook,
+      role: "fix",
+    })
+    saveProgress(storage, "l/x", lesson, { ...fresh(), items, index: fixAt })
+    expect(savedProgress(storage, "l/x")).toEqual({ done: total, total })
+  })
+
+  it("is null with nothing saved, or saved over a week ago", () => {
+    const storage = fakeStorage()
+    expect(savedProgress(storage, "l/x")).toBeNull()
+    storage.setItem(
+      "learn:progress:l/x",
+      JSON.stringify({
+        v: 1,
+        fingerprint: fingerprint(lesson),
+        savedAt: Date.now() - 8 * 24 * 3.6e6,
+        state: { ...fresh(), items: buildSequence(lesson), index: 3 },
+      })
+    )
+    expect(savedProgress(storage, "l/x")).toBeNull()
   })
 })
 
