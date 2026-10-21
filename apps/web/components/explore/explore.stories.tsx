@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
+import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime"
 import * as React from "react"
 
 import { Button } from "@workspace/ui/components/button"
 
-import { YourLessons } from "@/components/account/your-lessons"
 import type { ExploreApi } from "@/lib/explore/browser"
 import type { LessonSummary } from "@/lib/explore/queries"
 
@@ -379,42 +379,42 @@ export const Report: Story = {
 
 export const OwnProfileTabs: Story = {
   name: "Profile tabs (own profile)",
-  render: () => (
-    <div className="mx-auto max-w-2xl">
-      <ProfileTabs
-        lessons={{
-          count: 2,
-          panel: <LessonFeed lessons={LESSONS.slice(0, 2)} viewer={signedIn} />,
-        }}
-        likes={{
-          count: 1,
-          panel: <LessonFeed lessons={LESSONS.slice(2, 3)} viewer={signedIn} />,
-        }}
-      />
-    </div>
-  ),
+  render: () => {
+    const own = { ...signedIn, userId: "ada" }
+    const author = LESSONS[0]!.author
+    const lessons: LessonSummary[] = [
+      LESSONS[0]!,
+      { ...LESSONS[1]!, author, visibility: "unlisted" },
+      { ...LESSONS[5]!, author, hidden: true },
+    ]
+    // Your own rows' menu refreshes the page through Next's router, which Storybook doesn't mount.
+    return (
+      <AppRouterContext.Provider value={stubRouter}>
+        <div className="mx-auto max-w-2xl">
+          <ProfileTabs
+            lessons={{
+              count: lessons.length,
+              panel: <LessonFeed lessons={lessons} viewer={own} />,
+            }}
+            likes={{
+              count: 1,
+              panel: <LessonFeed lessons={LESSONS.slice(2, 3)} viewer={own} />,
+            }}
+          />
+        </div>
+      </AppRouterContext.Provider>
+    )
+  },
 }
 
-export const Settings: Story = {
-  name: "Your lessons (own profile)",
-  render: () => (
-    <div className="mx-auto max-w-2xl">
-      <YourLessons
-        api={fakeApi}
-        initial={[
-          LESSONS[0]!,
-          { ...LESSONS[1]!, visibility: "unlisted" },
-          { ...LESSONS[2]!, id: "fail0001", visibility: "unlisted" },
-          { ...LESSONS[5]!, hidden: true, visibility: "public" },
-        ]}
-      />
-    </div>
-  ),
-}
-
-export const SettingsEmpty: Story = {
-  name: "Your lessons, none",
-  render: () => <YourLessons api={fakeApi} initial={[]} />,
+const stubRouter = {
+  bfcacheId: "story",
+  back() {},
+  forward() {},
+  refresh() {},
+  push() {},
+  replace() {},
+  prefetch() {},
 }
 
 function Labeled({

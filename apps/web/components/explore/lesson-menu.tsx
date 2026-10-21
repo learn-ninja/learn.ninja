@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { EyeOffIcon, PencilIcon, Trash2Icon } from "lucide-react"
+import { EyeIcon, EyeOffIcon, PencilIcon, Trash2Icon } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -28,12 +28,12 @@ import { FormError } from "@/components/account/form-error"
 import { exploreApi, TITLE_MAX, type ExploreApi } from "@/lib/explore/browser"
 import type { Visibility } from "@/lib/explore/queries"
 
-type Action = "unpublish" | "rename" | "delete"
+type Action = "publish" | "unpublish" | "rename" | "delete"
 
 /**
  * The title link of a row the viewer made, with a menu on right click (or a long press, or
- * Shift+F10): unpublish it (back to link-only, so it leaves Explore and the profile), rename it,
- * or delete it. Each opens a dialog that says what happens and shows the server's error, then the
+ * Shift+F10): publish it (into Explore and onto the profile for everyone) or unpublish it (back
+ * to link-only), rename it, or delete it. A lesson hidden after a report can't be published. Each opens a dialog that says what happens and shows the server's error, then the
  * page refreshes so the row shows the change or goes. The link covers the whole row, so the menu
  * opens anywhere on it except the author, the check, and the heart.
  */
@@ -48,6 +48,7 @@ interface LessonMenuViewProps {
     title: string
     language: string
     visibility: Visibility
+    hidden?: boolean
   }
   href: string
   className?: string
@@ -89,8 +90,11 @@ export function LessonMenuView({
     setBusy(true)
     setError(null)
     const result =
-      action === "unpublish"
-        ? await api.setVisibility(lesson.id, "unlisted")
+      action === "publish" || action === "unpublish"
+        ? await api.setVisibility(
+            lesson.id,
+            action === "publish" ? "public" : "unlisted"
+          )
         : action === "rename"
           ? await api.rename(lesson.id, title)
           : await api.remove(lesson.id)
@@ -123,6 +127,11 @@ export function LessonMenuView({
               <EyeOffIcon aria-hidden="true" />
               Unpublish
             </ContextMenuItem>
+          ) : !lesson.hidden ? (
+            <ContextMenuItem id="publish" textValue="Publish">
+              <EyeIcon aria-hidden="true" />
+              Publish
+            </ContextMenuItem>
           ) : null}
           <ContextMenuItem id="rename" textValue="Rename">
             <PencilIcon aria-hidden="true" />
@@ -142,12 +151,19 @@ export function LessonMenuView({
         }}
       >
         <form onSubmit={(e) => void run(e)} className="contents">
-          {action === "unpublish" ? (
+          {action === "publish" ? (
+            <DialogHeader>
+              <DialogTitle>Publish this lesson?</DialogTitle>
+              <DialogDescription>
+                It shows in Explore and on your profile for everyone.
+              </DialogDescription>
+            </DialogHeader>
+          ) : action === "unpublish" ? (
             <DialogHeader>
               <DialogTitle>Unpublish this lesson?</DialogTitle>
               <DialogDescription>
-                It leaves Explore and your profile. Its link keeps working, and
-                you can list it again in your settings.
+                It leaves Explore, and your profile shows it only to you, marked
+                Private. Its link keeps working.
               </DialogDescription>
             </DialogHeader>
           ) : action === "rename" ? (
@@ -191,11 +207,13 @@ export function LessonMenuView({
               variant={action === "delete" ? "destructive" : "default"}
               isDisabled={busy}
             >
-              {action === "unpublish"
-                ? "Unpublish"
-                : action === "rename"
-                  ? "Save"
-                  : "Delete lesson"}
+              {action === "publish"
+                ? "Publish"
+                : action === "unpublish"
+                  ? "Unpublish"
+                  : action === "rename"
+                    ? "Save"
+                    : "Delete lesson"}
             </Button>
           </DialogFooter>
         </form>

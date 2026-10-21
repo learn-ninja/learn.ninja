@@ -77,12 +77,12 @@ export function LessonView({
             ) : (
               <>
                 <LinkIcon className="size-3.5" aria-hidden="true" />
-                Unlisted: link only
+                Private: link only
               </>
             )}
           </DropdownMenuLabel>
           {owner.handle ? (
-            <DropdownMenuItem href={`/u/${owner.handle}#lessons`}>
+            <DropdownMenuItem href={`/u/${owner.handle}`}>
               <SettingsIcon />
               Your lessons
             </DropdownMenuItem>

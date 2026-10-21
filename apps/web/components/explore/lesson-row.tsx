@@ -2,6 +2,7 @@ import Link from "next/link"
 import { EyeIcon } from "lucide-react"
 
 import { stringsFor, TimeAgo } from "@workspace/player"
+import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { UserAvatar } from "@/components/account/user-avatar"
@@ -44,7 +45,9 @@ const ROW_LINK =
  * gutter (negative margin, matching padding), so the text stays lined up with the page and the
  * tile has room around it; the list hides the two hairlines it would touch. `rank` puts a number
  * in the margin on the Top tab. The author shows on a profile too, though every row shares it. The
- * viewer's own rows open a menu on right click to unpublish, rename, or delete them (LessonMenu).
+ * viewer's own rows open a menu on right click to publish, unpublish, rename, or delete them
+ * (LessonMenu), and a badge after the title marks the ones visitors don't see: Private when only
+ * the link opens it, Hidden after a report.
  */
 export function LessonRow({
   lesson,
@@ -61,6 +64,13 @@ export function LessonRow({
   const completedAt = viewer?.completed?.get(lesson.id)
   const author = lesson.author
   const mine = viewer?.userId !== undefined && author?.id === viewer.userId
+  const badge = !mine
+    ? null
+    : lesson.hidden
+      ? "Hidden"
+      : lesson.visibility !== "public"
+        ? "Private"
+        : null
   const byline = author ? (
     author.handle ? (
       <Link
@@ -124,6 +134,7 @@ export function LessonRow({
                 title: lesson.title,
                 language: lesson.language,
                 visibility: lesson.visibility,
+                hidden: lesson.hidden,
               }}
               href={href}
               className={ROW_LINK}
@@ -141,6 +152,18 @@ export function LessonRow({
               {lesson.title}
             </Link>
           )}
+          {/* A space, not a margin, so a badge that wraps starts its line flush. */}
+          {badge ? (
+            <>
+              {" "}
+              <Badge
+                variant="outline"
+                className="align-text-bottom text-muted-foreground"
+              >
+                {badge}
+              </Badge>
+            </>
+          ) : null}
         </h3>
         <p
           lang={lesson.language}

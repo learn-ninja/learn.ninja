@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { UserAvatar } from "@/components/account/user-avatar"
-import { YourLessons } from "@/components/account/your-lessons"
 import { LessonFeed } from "@/components/explore/lesson-feed"
 import { ProfileTabs } from "@/components/explore/profile-tabs"
 import { normalizeHandle } from "@/lib/auth/handle-rules"
@@ -18,10 +17,11 @@ import { getDb } from "@/lib/publish/store"
 import { SITE } from "@/lib/site"
 
 // A person's public lessons at /u/{handle}, with views and likes. Hidden and unlisted lessons
-// aren't here, nor is anything from an anonymous publish. On your own profile the Lessons tab adds
-// every lesson you own, each with its listed switch. The Likes tab lists the listed lessons they
-// liked, plus, on your own profile, liked lessons that have since gone unlisted. The frame around the page is the (feed)
-// layout's; loading.tsx beside this file stands in until the profile arrives.
+// aren't here, nor is anything from an anonymous publish. On your own profile the Lessons tab
+// shows every lesson you own instead, with a Private or Hidden badge on the ones visitors don't
+// see. The Likes tab lists the listed lessons they liked, plus, on your own profile, liked lessons
+// that have since gone unlisted. The frame around the page is the (feed) layout's; loading.tsx
+// beside this file stands in until the profile arrives.
 
 type Props = { params: Promise<{ handle: string }> }
 
@@ -52,7 +52,8 @@ export default async function ProfilePage({ params }: Props) {
     own ? lessonsOwnedBy(db, profile.id) : null,
     lessonsLikedBy(db, profile.id, { listedOnly: !own }),
   ])
-  const ids = [...profile.lessons, ...likedLessons].map((l) => l.id)
+  const lessons = owned ?? profile.lessons
+  const ids = [...lessons, ...likedLessons].map((l) => l.id)
   const [liked, completed] = actor
     ? await Promise.all([
         likedIds(db, actor!.userId, ids),
@@ -93,30 +94,15 @@ export default async function ProfilePage({ params }: Props) {
       </div>
       <ProfileTabs
         lessons={{
-          count: profile.lessons.length,
-          panel: (
-            <>
-              {profile.lessons.length ? (
-                <LessonFeed lessons={profile.lessons} viewer={viewer} />
-              ) : (
-                <Empty>
-                  {own
-                    ? "None of your lessons are listed yet. Switch one on below."
-                    : "No listed lessons yet."}
-                </Empty>
-              )}
-              {owned ? (
-                <section
-                  id="lessons"
-                  className="flex scroll-mt-20 flex-col gap-4"
-                >
-                  <h2 className="text-xl font-semibold tracking-tight">
-                    Your lessons
-                  </h2>
-                  <YourLessons initial={owned} />
-                </section>
-              ) : null}
-            </>
+          count: lessons.length,
+          panel: lessons.length ? (
+            <LessonFeed lessons={lessons} viewer={viewer} />
+          ) : (
+            <Empty>
+              {own
+                ? "No lessons yet. Ask your agent for one; logged in, it's saved here."
+                : "No listed lessons yet."}
+            </Empty>
           ),
         }}
         likes={{
