@@ -202,7 +202,8 @@ describe("API keys", () => {
       userId,
       email: "chat@example.com",
       viaApiKey: true,
-      keyId: made.body.id,
+      via: "key",
+      limitKey: expect.stringMatching(/^key:/),
     })
     await expect(getActorByKey(auth, db, terminal.body.key as string)).rejects.toBeInstanceOf(
       InvalidApiKeyError

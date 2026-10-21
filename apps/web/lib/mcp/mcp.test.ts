@@ -10,8 +10,6 @@ import { connectMcp, createKey } from "../auth/account"
 import { getActor } from "../auth/actor"
 import { createAuth, type Auth } from "../auth/auth"
 import { handleOf } from "../auth/handles"
-import { claimLesson } from "../publish/handlers"
-import { hashToken } from "../publish/ids"
 import { MemoryRateLimiter } from "../publish/rate-limit"
 import { PostgresLessonStore } from "../publish/store"
 import { skillBundle } from "../skill-files"
@@ -57,7 +55,6 @@ beforeEach(() => {
     limiter: new MemoryRateLimiter(),
     validateLimiter: new MemoryRateLimiter(120),
     origin: "https://learn.test",
-    auth,
     guide: skillBundle,
     drafts: new PostgresDraftStore(db),
     handleOf: (id) => handleOf(db, id),
@@ -168,6 +165,24 @@ describe("tools", () => {
       expect(tool.title).toEqual(expect.any(String))
       expect(tool.annotations).toHaveProperty("readOnlyHint")
     }
+  })
+
+  it("says which tools work signed out, the way ChatGPT reads it", async () => {
+    const { tools } = await rpc("tools/list", {})
+    const schemes = Object.fromEntries(
+      tools.map((t: { name: string; _meta?: { securitySchemes?: unknown } }) => [
+        t.name,
+        t._meta?.securitySchemes,
+      ])
+    )
+    const optional = [{ type: "noauth" }, { type: "oauth2", scopes: ["lessons"] }]
+    expect(schemes).toEqual({
+      get_guide: optional,
+      validate_lesson: optional,
+      publish_lesson: optional,
+      update_lesson: optional,
+      keep_lesson: [{ type: "oauth2", scopes: ["lessons"] }],
+    })
   })
 })
 
@@ -295,7 +310,7 @@ describe("publish_lesson and update_lesson", () => {
       (t: { name: string }) => t.name === "publish_lesson"
     )
     expect(publish.description).toContain(KEEP_SENTENCE)
-    expect(KEEP_SENTENCE).toContain("save it under your email")
+    expect(KEEP_SENTENCE).toContain("sign in once")
     expect(publish.description).toMatch(/once/)
     expect(publish.description).not.toContain("only when they ask")
     // The same sentence the skill's steps give the terminal, so both surfaces say one thing.
@@ -328,86 +343,47 @@ describe("publish_lesson and update_lesson", () => {
 })
 
 describe("keep_lesson", () => {
-  it("returns a fresh keep link for the edit token, and only for it", async () => {
-    const published = await call("publish_lesson", { lesson: buttons })
-    const { id, editToken, claimUrl } = published.structuredContent as {
-      id: string
-      editToken: string
-      claimUrl: string
-    }
-    const wrong = await call("keep_lesson", { id, editToken: "not-the-token" })
-    expect(wrong.isError).toBe(true)
-    expect(wrong.structuredContent).toMatchObject({ error: "unauthorized" })
+  it("takes no email or code, and needs the user signed in", async () => {
+    const { tools } = await rpc("tools/list", {})
+    const keep = tools.find((t: { name: string }) => t.name === "keep_lesson")
+    expect(Object.keys(keep.inputSchema.properties).sort()).toEqual([
+      "editToken",
+      "id",
+    ])
+    expect(keep.description).toMatch(/signed in/)
+    expect(keep.description).not.toMatch(/email|code/)
 
-    const result = await call("keep_lesson", { id, editToken })
-    expect(result.isError).toBeFalsy()
-    expect(result.structuredContent).toEqual({
-      ok: true,
-      id,
-      url: published.structuredContent.url,
-      claimUrl: expect.stringMatching(/^https:\/\/learn\.test\/keep\//),
-      expiresAt: published.structuredContent.expiresAt,
-    })
-    // The token in the chat from publishing is dead; the new link keeps the lesson.
-    const fresh = (result.structuredContent.claimUrl as string).split(
-      "/keep/"
-    )[1]!
-    expect(result.structuredContent.claimUrl).not.toBe(claimUrl)
-    expect(
-      await deps.store.getByClaimTokenHash(
-        hashToken(claimUrl.split("/keep/")[1]!)
-      )
-    ).toBeNull()
-    const kept = await claimLesson(
-      { claimToken: fresh, ownerId: "keeper" },
-      deps
-    )
-    expect(kept.status).toBe(200)
-    expect((await deps.store.get(id))?.ownerId).toBe("keeper")
-
-    // Nothing left to keep.
-    const again = await call("keep_lesson", { id, editToken })
-    expect(again.structuredContent).toMatchObject({ error: "already_claimed" })
-  })
-
-  it("says when the lesson is gone", async () => {
-    const gone = await call("keep_lesson", { id: "nope1234", editToken: "x" })
-    expect(gone.structuredContent).toMatchObject({ error: "not_found" })
-  })
-
-  it("keeps a lesson with an email code, making the account if it's new", async () => {
+    // Signed out, the gate in front of the route answers 401 (oauth.test.ts); the tool itself,
+    // reached by a client that ignored it, says the same in words and keeps nothing.
     const published = await call("publish_lesson", { lesson: buttons })
     const { id, editToken } = published.structuredContent as {
       id: string
       editToken: string
     }
-    const email = "new-keeper@example.com"
-    expect(codes.has(email)).toBe(false)
-
-    const sent = await call("keep_lesson", { id, editToken, email })
-    expect(sent.isError).toBeFalsy()
-    expect(sent.structuredContent).toEqual({
-      ok: true,
-      sent: true,
-      email,
-      message: expect.stringContaining("six-digit code"),
+    const refused = await call("keep_lesson", { id, editToken })
+    expect(refused.isError).toBe(true)
+    expect(refused.structuredContent).toMatchObject({
+      error: "sign_in_required",
     })
-    const code = codes.get(email)!
-    expect(code).toMatch(/^\d{6}$/)
-    // The code never comes back to the chat.
-    expect(JSON.stringify(sent)).not.toContain(code)
+    expect((await deps.store.get(id))?.ownerId).toBeNull()
+    expect(listed).toBe(0)
+  })
 
-    const wrong = await call("keep_lesson", {
+  it("keeps a lesson for the signed-in account, once", async () => {
+    const key = await mcpKeyFor("keeper-two@example.com")
+    const published = await call("publish_lesson", { lesson: buttons })
+    const { id, editToken } = published.structuredContent as {
+      id: string
+      editToken: string
+    }
+    const wrong = await personal(key).call("keep_lesson", {
       id,
-      editToken,
-      email,
-      code: code === "000000" ? "111111" : "000000",
+      editToken: "not-the-token",
     })
     expect(wrong.isError).toBe(true)
-    expect(wrong.structuredContent).toMatchObject({ error: "sign_in_failed" })
-    expect(wrong.structuredContent.message).toMatch(/tries/)
+    expect(wrong.structuredContent).toMatchObject({ error: "unauthorized" })
 
-    const kept = await call("keep_lesson", { id, editToken, email, code })
+    const kept = await personal(key).call("keep_lesson", { id, editToken })
     expect(kept.isError).toBeFalsy()
     expect(kept.structuredContent).toEqual({
       ok: true,
@@ -419,45 +395,30 @@ describe("keep_lesson", () => {
       visibility: "public",
     })
     expect(listed).toBe(1)
-    // The lesson belongs to the account that email now has, and no session was left behind.
-    const [account] = await db.select().from(user).where(eq(user.email, email))
-    expect(account).toBeTruthy()
+    const [account] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, "keeper-two@example.com"))
     expect((await deps.store.get(id))?.ownerId).toBe(account!.id)
-    expect(
-      await db.select().from(session).where(eq(session.userId, account!.id))
-    ).toEqual([])
     // Nothing is in the reply that could sign in as the user.
     expect(JSON.stringify(kept)).not.toMatch(/session|token/i)
 
-    // Kept once; the code is spent.
-    const again = await call("keep_lesson", { id, editToken, email, code })
-    expect(again.structuredContent).toMatchObject({ error: "already_claimed" })
+    // Keeping it again changes nothing: same owner.
+    const again = await personal(key).call("keep_lesson", { id, editToken })
+    expect(again.structuredContent).toMatchObject({ ok: true, id })
+    // Another account can't take it.
+    const other = await mcpKeyFor("keeper-rival@example.com")
+    const taken = await personal(other).call("keep_lesson", { id, editToken })
+    expect(taken.structuredContent).toMatchObject({ error: "already_claimed" })
   })
 
-  it("sends no code for a lesson the caller can't touch", async () => {
-    const published = await call("publish_lesson", { lesson: buttons })
-    const email = "stranger@example.com"
-    const wrong = await call("keep_lesson", {
-      id: published.structuredContent.id,
-      editToken: "not-the-token",
-      email,
+  it("says when the lesson is gone", async () => {
+    const key = await mcpKeyFor("keeper-three@example.com")
+    const gone = await personal(key).call("keep_lesson", {
+      id: "nope1234",
+      editToken: "x",
     })
-    expect(wrong.structuredContent).toMatchObject({ error: "unauthorized" })
-    expect(codes.has(email)).toBe(false)
-
-    const bad = await call("keep_lesson", {
-      id: published.structuredContent.id,
-      editToken: published.structuredContent.editToken,
-      email: "not an email",
-    })
-    expect(bad.structuredContent).toMatchObject({ error: "bad_input" })
-
-    const noEmail = await call("keep_lesson", {
-      id: published.structuredContent.id,
-      editToken: published.structuredContent.editToken,
-      code: "123456",
-    })
-    expect(noEmail.structuredContent).toMatchObject({ error: "bad_input" })
+    expect(gone.structuredContent).toMatchObject({ error: "not_found" })
   })
 })
 
@@ -481,6 +442,8 @@ describe("/mcp/{key}, the personal URL", () => {
       visibility: "unlisted",
     })
     expect(body).not.toHaveProperty("claimUrl")
+    // Nor the edit token: the account edits, and a shared chat shouldn't carry a secret.
+    expect(body).not.toHaveProperty("editToken")
     const [account] = await db
       .select()
       .from(user)
@@ -501,13 +464,13 @@ describe("/mcp/{key}, the personal URL", () => {
     expect((await deps.store.get(body.id as string))?.lesson.title).toBe(
       "Buttons, ranked"
     )
-    // The edit token still works too, from the public server.
-    const viaToken = await call("update_lesson", {
+    // The public server, signed out, can't touch it.
+    const anonymous = await call("update_lesson", {
       id: body.id,
-      editToken: body.editToken,
       patches: [{ op: "set", path: "title", value: "Buttons, sorted" }],
     })
-    expect(viaToken.isError).toBeFalsy()
+    expect(anonymous.isError).toBe(true)
+    expect(anonymous.structuredContent).toMatchObject({ error: "unauthorized" })
   })
 
   it("won't edit another account's lesson, or an anonymous one, without the token", async () => {

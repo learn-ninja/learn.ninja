@@ -4,14 +4,13 @@ import { z } from "zod"
 
 import { LIMITS } from "@workspace/spec"
 
-import type { KeyActor } from "../auth/actor"
-import type { Auth } from "../auth/auth"
+import type { McpActor } from "../auth/actor"
+import { MCP_SCOPE } from "../auth/auth"
 import {
   checkLesson,
   claimLesson,
   mayEdit,
   publishLesson,
-  reissueClaimToken,
   updateLesson,
   type Deps,
   type Reply,
@@ -20,32 +19,39 @@ import type { RateLimiter } from "../publish/rate-limit"
 import { clientKey } from "../publish/request"
 import { StorageNotConfiguredError } from "../publish/store"
 import { applyPatches, PatchError, type DraftStore, type Patch } from "./drafts"
-import { keepByEmail } from "./keep"
 
 // The learn.ninja MCP server: the guide and the publish API as tools, for chat apps that can't
-// run the skill's CLI. At /mcp there are no accounts: lessons publish anonymously, and a user
-// keeps one from the chat with an email code (`keep_lesson`), or by opening the link it returns.
-// At /mcp/{key}, a personal URL from the settings page, the route resolves the account first
-// (`actor`) and every lesson is published to it, unlisted.
+// run the skill's CLI. At /mcp, lessons publish anonymously until the chat app signs in: the gate
+// in front of the route (gate.ts) answers `keep_lesson` from a signed-out app with a 401 that
+// makes the app run OAuth against Better Auth, and from then on every call carries a token and
+// `actor` is the account. At /mcp/{key}, a personal URL from the settings page, the key in the
+// path is the account instead. Either way, lessons are published to it, unlisted.
 
 export interface McpDeps extends Deps {
-  /** Better Auth, for the email code `keep_lesson` sends and checks. */
-  auth: Auth
   /** The looser limit checks use, as /api/validate does. */
   validateLimiter: RateLimiter
   /** The skill's synced files (steps, guides, levels, schema), by path. */
   guide: () => { files: Record<string, string> }
   /** Lessons sent to the tools, kept so later calls can send patches. */
   drafts: DraftStore
-  /** The account behind a personal URL; absent on the public /mcp. */
-  actor?: KeyActor | null
+  /** The signed-in account (an OAuth token, or a personal URL's key); null or absent when anonymous. */
+  actor?: McpActor | null
   /** Called when a lesson becomes listed in Explore (a keep), so cached lists refresh. */
   exploreChanged?: () => void
 }
 
 /** The keep sentence the model says once after an anonymous publish, on every surface (steps.md step 6). */
 export const KEEP_SENTENCE =
-  "It lasts 7 days. To keep it, say so and I'll save it under your email."
+  "It lasts 7 days. Say \"keep it\" and I'll save it to your learn.ninja account; you'll sign in once."
+
+/**
+ * Per-tool `securitySchemes`, as ChatGPT reads them from a tool's metadata when a server is added
+ * with "OAuth or no authentication": which tools work signed out, and which need the account.
+ */
+const OPTIONAL_AUTH = {
+  securitySchemes: [{ type: "noauth" }, { type: "oauth2", scopes: [MCP_SCOPE] }],
+}
+const NEEDS_AUTH = { securitySchemes: [{ type: "oauth2", scopes: [MCP_SCOPE] }] }
 
 const INSTRUCTIONS =
   "learn.ninja turns anything into one short, interactive lesson with a shareable link. Call `get_guide` once before writing a lesson: it returns the whole guide, then follow its steps."
@@ -120,7 +126,7 @@ export function createLearnMcp(
   deps: McpDeps
 ): (req: Request) => Promise<Response> {
   return createMcpHandler((server) => registerTools(server, deps), {
-    serverInfo: { name: "learn.ninja", version: "1.2.0" },
+    serverInfo: { name: "learn.ninja", version: "2.0.0" },
     instructions: INSTRUCTIONS,
   })
 }
@@ -132,6 +138,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
     "get_guide",
     {
       title: "Read the lesson guide",
+      _meta: OPTIONAL_AUTH,
       description:
         "Returns the guide for writing a learn.ninja lesson. Call it once with `all` (the default) before writing: the steps, planning, teaching, format, and level guides together.",
       inputSchema: z.object({
@@ -171,6 +178,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
     "validate_lesson",
     {
       title: "Check a lesson",
+      _meta: OPTIONAL_AUTH,
       description:
         "Checks a lesson with the rules publishing uses, without publishing it. Usually skip this and call `publish_lesson`, which runs the same checks. Returns a `draftId` either way: fix the issues by sending `draftId` and `patches`, not the whole lesson.",
       inputSchema: z.object(lessonInput),
@@ -200,9 +208,10 @@ function registerTools(server: McpServer, deps: McpDeps) {
     "publish_lesson",
     {
       title: "Publish a lesson",
-      description: `Checks and publishes a lesson, and returns its link (\`url\`). If the check fails, nothing is published: it returns the issues and a \`draftId\`, so call it again with \`draftId\` and \`patches\` that fix every issue, not the whole lesson. Keep the \`id\` and \`editToken\` to change it later with \`update_lesson\`. ${
+      _meta: OPTIONAL_AUTH,
+      description: `Checks and publishes a lesson, and returns its link (\`url\`). If the check fails, nothing is published: it returns the issues and a \`draftId\`, so call it again with \`draftId\` and \`patches\` that fix every issue, not the whole lesson. Keep the \`id\`${actor ? "" : " and `editToken`"} to change it later with \`update_lesson\`. ${
         owned ??
-        `The link lasts 7 days. After it, tell the user once, in one sentence: "${KEEP_SENTENCE}" Don't repeat it, and never paste the keep link (\`claimUrl\`) on your own. When they say they want to keep the lesson, ask for their email and call \`keep_lesson\`.`
+        `The link lasts 7 days. After it, tell the user once, in one sentence: "${KEEP_SENTENCE}" Don't repeat it, and never paste the keep link (\`claimUrl\`) on your own. When they say they want to keep the lesson, call \`keep_lesson\`: this app asks them to sign in to learn.ninja first (once; later lessons are then saved as they're published). Only if they'd rather not sign in here, give them \`claimUrl\` to open in a browser instead.`
       }`,
       inputSchema: z.object(lessonInput),
       annotations: {
@@ -243,8 +252,8 @@ function registerTools(server: McpServer, deps: McpDeps) {
           "ok",
           "id",
           "url",
-          "editToken",
-          "claimUrl",
+          // A signed-in app edits by account, so its chat never sees the token (chats get shared).
+          ...(actor ? [] : ["editToken", "claimUrl"]),
           "expiresAt",
           "owner",
           "visibility",
@@ -256,81 +265,45 @@ function registerTools(server: McpServer, deps: McpDeps) {
     "keep_lesson",
     {
       title: "Keep a lesson in an account",
+      _meta: NEEDS_AUTH,
       description: actor
-        ? `Saves a lesson that was published anonymously (in another chat, or through the public learn.ninja/mcp) to ${actor.handle ? `@${actor.handle}` : "the user's account"}, given its \`id\` and \`editToken\`. Lessons published here are already saved, so it's rarely needed.`
-        : `Saves a published lesson to the user's learn.ninja account, so it stops expiring and is listed in Explore under their handle. Call it only when the user says they want to keep the lesson. Pass the \`id\` and \`editToken\` from \`publish_lesson\`. Three ways: with \`email\`, it emails them a six-digit code (then ask for the code); with \`email\` and \`code\`, it signs them in and keeps the lesson, and the reply names the account (\`owner.handle\`, \`visibility\`); with neither, it returns a link (\`claimUrl\`) to paste instead, which keeps the lesson when opened in a browser. A wrong code answers \`sign_in_failed\`: ask again, or call without a code for a new one. A lesson already in an account answers \`already_claimed\`.`,
+        ? `Saves a lesson that was published anonymously (in another chat, or before the user signed in) to ${actor.handle ? `@${actor.handle}` : "the user's account"}, given its \`id\` and \`editToken\`, and lists it in Explore. Lessons published here are already saved, so it's rarely needed.`
+        : `Saves a published lesson to the user's learn.ninja account, so it stops expiring and is listed in Explore under their handle. Call it only when the user says they want to keep the lesson, with the \`id\` and \`editToken\` from \`publish_lesson\`. It needs the user signed in: this app asks them to, once, then retries the call on its own. The reply names the account (\`owner.handle\`, \`visibility\`). A lesson already in an account answers \`already_claimed\`.`,
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z
           .string()
           .describe("The secret edit token, from `publish_lesson`."),
-        email: z
-          .string()
-          .optional()
-          .describe(
-            "The user's email address, to send a sign-in code to. Ask them for it; never guess it."
-          ),
-        code: z
-          .string()
-          .optional()
-          .describe(
-            "The six-digit code the user got by email, on the second call. Needs `email` too."
-          ),
       }),
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
-        idempotentHint: false,
+        idempotentHint: true,
         openWorldHint: true,
       },
     },
-    ({ id, editToken, email, code }, ctx) => {
-      // Keeping is cheap, and chat apps share an egress IP: the checks' limit, not the publish one.
-      const limited = { ...deps, limiter: deps.validateLimiter }
-      const client = clientOf(ctx, actor)
-      const kept = [
-        "ok",
-        "id",
-        "url",
-        "title",
-        "expiresAt",
-        "owner",
-        "visibility",
-      ]
-      if (actor) {
-        return toolResult(async () => {
-          if (!(await limited.limiter.allow(client)))
-            return RATE_LIMITED
-          const reply = await claimLesson(
-            { id, editToken, ownerId: actor.userId },
-            { ...deps, handleOf: async () => actor.handle }
-          )
-          if (reply.status === 200) deps.exploreChanged?.()
-          return reply
-        }, kept)
-      }
-      if (code && !email) {
+    ({ id, editToken }, ctx) => {
+      // Signed out: the gate answers this call with a 401 before it gets here; this is for a
+      // client that ignored it.
+      if (!actor) {
         return errorResult({
           ok: false,
-          error: "bad_input",
-          message: "Send `email` with the `code`: the same address the code was sent to.",
+          error: "sign_in_required",
+          message:
+            "Keeping a lesson needs the user signed in to learn.ninja. Connect this server with OAuth, or open the lesson's `claimUrl` in a browser.",
         })
       }
-      if (email) {
-        return toolResult(async () => {
-          const reply = await keepByEmail(
-            { id, editToken, email, code, client },
-            limited
-          )
-          if (reply.status === 200 && reply.body.owned)
-            deps.exploreChanged?.()
-          return reply
-        }, [...kept, "sent", "email", "message"])
-      }
-      return toolResult(
-        () => reissueClaimToken({ id, editToken, client }, limited),
-        ["ok", "id", "url", "claimUrl", "expiresAt", "notes"]
-      )
+      // Keeping is cheap, and chat apps share an egress IP: the checks' limit, not the publish one.
+      return toolResult(async () => {
+        if (!(await deps.validateLimiter.allow(clientOf(ctx, actor))))
+          return RATE_LIMITED
+        const reply = await claimLesson(
+          { id, editToken, ownerId: actor.userId },
+          { ...deps, handleOf: async () => actor.handle }
+        )
+        if (reply.status === 200) deps.exploreChanged?.()
+        return reply
+      }, ["ok", "id", "url", "title", "expiresAt", "owner", "visibility"])
     }
   )
 
@@ -338,6 +311,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
     "update_lesson",
     {
       title: "Update a published lesson",
+      _meta: OPTIONAL_AUTH,
       description: `Replaces a published lesson with a new version at the same link. Pass the \`id\`${
         actor
           ? " (the end of the lesson's URL); a lesson in the user's account needs no `editToken`, one published elsewhere does"
@@ -510,14 +484,14 @@ const RATE_LIMITED: Reply = {
 }
 
 /**
- * Who the rate limits count: the key behind a personal URL (one person, wherever they call from),
- * or else the IP of the HTTP request the tool call came in on.
+ * Who the rate limits count: the signed-in account (one person, wherever they call from), or
+ * else the IP of the HTTP request the tool call came in on.
  */
 function clientOf(
   ctx: { http?: { req?: Request } },
-  actor?: KeyActor | null
+  actor?: McpActor | null
 ): string {
-  if (actor) return `key:${actor.keyId}`
+  if (actor) return actor.limitKey
   return ctx.http?.req ? clientKey(ctx.http.req) : "local"
 }
 

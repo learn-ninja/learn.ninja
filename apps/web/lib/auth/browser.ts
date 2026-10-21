@@ -1,3 +1,4 @@
+import { oauthProviderClient } from "@better-auth/oauth-provider/client"
 import { emailOTPClient } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 
@@ -9,7 +10,7 @@ import { decodeAccount, encodeAccount, type AccountInfo } from "./account-info"
 // take it as a prop so Storybook can hand them a fake.
 
 export const authClient = createAuthClient({
-  plugins: [emailOTPClient()],
+  plugins: [emailOTPClient(), oauthProviderClient()],
 })
 
 export interface Outcome {
@@ -46,6 +47,11 @@ export interface AccountApi {
   connectChat(): Promise<Outcome & { connection?: NewMcpConnection }>
   /** Revokes the personal MCP URL. */
   disconnectChat(): Promise<Outcome>
+  /**
+   * Answers the consent page for the OAuth request in the page's query (a chat app signing in);
+   * `url` is where to send the browser next: back to the app, with a code or a refusal.
+   */
+  consent(accept: boolean): Promise<Outcome & { url?: string }>
 }
 
 export interface NewMcpConnection extends McpConnection {
@@ -150,6 +156,12 @@ export const accountApi: AccountApi = {
   async disconnectChat() {
     const reply = await call("/api/account/mcp", { method: "DELETE" })
     return reply.ok ? {} : { error: reply.message }
+  },
+  async consent(accept) {
+    const { data, error } = await authClient.oauth2.consent({ accept })
+    if (error) return { error: error.message ?? FAILED }
+    const url = (data as { url?: string } | null)?.url
+    return url ? { url } : { error: FAILED }
   },
 }
 

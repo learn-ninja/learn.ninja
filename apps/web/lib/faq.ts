@@ -20,7 +20,7 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Do I need an account?",
-    a: "No. Not to make lessons, and not to play them. Lessons last 7 days. To keep one, ask your agent for a lesson and say keep it: it saves the lesson under your email (a code, no password) and lists it in Explore under your handle.",
+    a: "No. Not to make lessons, and not to play them. Lessons last 7 days. To keep one, say keep it: you sign in once (GitHub or an email code, no password), the lesson is saved to your account and listed in Explore under your handle, and every lesson after it is saved too.",
   },
   {
     q: "How long do lessons last?",

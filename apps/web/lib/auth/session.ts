@@ -25,3 +25,27 @@ export function safeCallback(value: string | string[] | undefined): string {
   const path = Array.isArray(value) ? value[0] : value
   return path && /^\/(?![/\\])/.test(path) ? path : "/settings"
 }
+
+type SearchParams = Record<string, string | string[] | undefined>
+
+/** The page's query string, as the browser sent it. */
+export function queryOf(params: SearchParams): string {
+  const q = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    for (const v of Array.isArray(value) ? value : value === undefined ? [] : [value])
+      q.append(key, v)
+  }
+  return q.toString()
+}
+
+/**
+ * Where to go after signing in when a chat app's OAuth request brought the user here: Better Auth
+ * sends a signed-out user to /sign-in with the whole authorize request (client_id, redirect_uri,
+ * scope, PKCE challenge…) signed into the query, and once a session exists, re-entering
+ * /api/auth/oauth2/authorize with that same query carries on to consent and back to the app.
+ * Null when the query isn't one of those.
+ */
+export function oauthResume(params: SearchParams): string | null {
+  if (!params.client_id || !params.sig) return null
+  return `/api/auth/oauth2/authorize?${queryOf(params)}`
+}

@@ -28,9 +28,10 @@ import { SITE } from "@/lib/site"
 import { FormError } from "./form-error"
 
 /**
- * "Connect a chat app": the account's personal MCP URL, for Claude.ai, ChatGPT, and other apps
- * that take only a URL. The URL is a secret that stands for the account (the key at its end), so
- * it's shown once when made, then masked; Rotate makes a new one and Revoke ends it.
+ * "Connect a chat app": the account's personal MCP URL, for apps that take only a URL and can't
+ * sign in over OAuth (Claude.ai, ChatGPT, and Claude Code sign in on their own). The URL is a
+ * secret that stands for the account (the key at its end), so it's shown once when made, then
+ * masked; Rotate makes a new one and Revoke ends it.
  */
 export function ConnectChat({
   initial,
@@ -83,9 +84,10 @@ export function ConnectChat({
   return (
     <div className="flex flex-col gap-6">
       <p className="text-muted-foreground">
-        Claude, ChatGPT, and other chat apps connect to learn.ninja through a
-        URL. Give them your own, and every lesson they make is saved to your
-        account: no code to type, unlisted until you list it here.
+        Claude, ChatGPT, and Claude Code sign in to your account on their own
+        the first time you keep a lesson, with the public URL. For an app that
+        only takes a URL and can&apos;t sign in, make your own: every lesson it
+        publishes is saved to your account, unlisted until you list it here.
       </p>
 
       {fresh ? (
@@ -155,7 +157,7 @@ export function ConnectChat({
             <bdi dir="ltr" className="font-mono text-xs">
               {SITE.url}/mcp
             </bdi>{" "}
-            and lessons are kept by email code.
+            and sign in to your account when you keep a lesson.
           </p>
           <div>
             <Button variant="outline" isDisabled={busy} onPress={() => void connect()}>

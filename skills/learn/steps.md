@@ -26,26 +26,24 @@ There are two ways to follow these steps. In a terminal with the skill installed
    ```
    Over MCP, call `publish_lesson` with the lesson's JSON text as `lesson`. Publishing needs network access.
 6. **Tell the user** the link and where the lesson stands, in one sentence, as `publish` printed it (over MCP, from the reply's `owned`, `owner`, and `visibility`):
-   - Anonymous: "Published: {url}. It lasts 7 days. To keep it, say so and I'll save it under your email."
+   - Anonymous: "Published: {url}. It lasts 7 days. Say "keep it" and I'll save it to your learn.ninja account; you'll sign in once."
    - Saved to an account and listed (`owner.handle` set, `visibility` public): "Saved to @{handle} and listed in Explore. Unlist it any time at learn.ninja/settings."
    - Saved but not listed yet: "Saved to @{handle}; list it in Explore at learn.ninja/settings." With no handle yet: "Saved to your account; pick a handle at learn.ninja/settings and it'll show in Explore."
 
    Then, in one line, the three choices you made: level, size, and reading age (e.g. "Beginner · standard · adult"), and that you can remake it with any of them changed. For a path, list the lessons still to make and offer to make the next one; make it only when the user asks. To change a lesson, edit the same file and run `publish` again: it updates the same link (the edit token is saved in `.learn/state.json`; don't delete or share that file). Use `publish lesson.json --new` only if the user wants a separate copy with a new link. Over MCP, call `update_lesson` with the `id` and `editToken` that `publish_lesson` returned and `patches` for just what changed (send the whole `lesson` only when most of it changed); it updates the same link. Keep that token to yourself, and call `publish_lesson` again only if the user wants a separate copy.
-7. **Keep it, once.** The keep sentence in step 6 is said once per lesson; don't bring it up again, and never paste the keep link (`claimUrl`) into the chat on your own. Only when the user says they want to keep the lesson, the same two steps on both surfaces:
-   1. Ask for their email address, then send the code:
-      ```bash
-      node <skill-folder>/scripts/learn.mjs login --email <address>
-      ```
-      Over MCP, call `keep_lesson` with the lesson's `id` and `editToken` and the `email`. Either way it emails them a six-digit code. Never guess the address.
-   2. Ask the user for the code, then sign in with it:
-      ```bash
-      node <skill-folder>/scripts/learn.mjs login --email <address> --code <code>
-      ```
-      Over MCP, call `keep_lesson` again with the same `id`, `editToken`, and `email`, plus the `code`. Tell the user where the lesson stands, as the reply says (saved to @handle and listed in Explore, as in step 6). A wrong code answers `sign_in_failed`: codes work for 5 minutes and three tries, so ask again, or go back to the first step for a new one.
+7. **Keep it, once.** The keep sentence in step 6 is said once per lesson; don't bring it up again, and never paste the keep link (`claimUrl`) into the chat on your own. Only when the user says they want to keep the lesson:
 
-   In the terminal, the login also saves a key on this machine and keeps every lesson published from this folder; tell the user which ones it kept. From now on, every lesson you publish here is saved to their account, so skip the keep sentence and say the saved-and-listed sentence instead. Already signed in on this machine, but the lesson was published anonymously (an earlier folder, or before the login)? Run `learn keep`: it saves every lesson published from this folder without a new code. `learn whoami` says who's signed in; `learn logout` forgets the key. Never tell the user to look in `.learn/` or in the credentials file.
+   In the terminal, sign them in with an email code, in two steps. Ask for their email address, then send the code:
+   ```bash
+   node <skill-folder>/scripts/learn.mjs login --email <address>
+   ```
+   Then ask for the six-digit code they got, and sign in with it:
+   ```bash
+   node <skill-folder>/scripts/learn.mjs login --email <address> --code <code>
+   ```
+   Never guess the address. A wrong code fails with `sign_in_failed`: codes work for 5 minutes and three tries, so ask again, or send a new one. The login also saves a key on this machine and keeps every lesson published from this folder; tell the user which ones it kept, as the output says (saved to @handle and listed in Explore, as in step 6). From now on, every lesson you publish here is saved to their account, so skip the keep sentence and say the saved-and-listed sentence instead. Already signed in on this machine, but the lesson was published anonymously (an earlier folder, or before the login)? Run `learn keep`: it saves every lesson published from this folder without a new code. `learn whoami` says who's signed in; `learn logout` forgets the key. Never tell the user to look in `.learn/` or in the credentials file.
 
-   Over MCP, each lesson is kept on its own, and nothing is saved in the chat app: the next lesson gets the keep sentence again. If the user would rather have every lesson saved without asking, they can connect their own URL from learn.ninja/settings (then `publish_lesson`'s reply has an `owner`, and you say the saved sentence instead). `keep_lesson` without an email still returns a `claimUrl` to paste, for a user who prefers to sign in on the website.
+   Over MCP, call `keep_lesson` with the lesson's `id` and `editToken`. Nothing to ask for: if the user isn't signed in yet, the chat app itself asks them to (a sign-in prompt in the conversation that opens learn.ninja), then retries the call on its own. Tell the user where the lesson stands, as the reply says. From then on the app stays signed in, every lesson you publish is saved to their account as it's published (the reply has an `owner`, and you say the saved sentence instead of the keep sentence), and `update_lesson` needs no `editToken` for their lessons. If the user would rather not sign in from this app, give them the lesson's `claimUrl` to open in a browser: it saves that one lesson once they sign in there.
 
 If a command prints that a newer version of the skill is available, tell the user the update command it shows.
 

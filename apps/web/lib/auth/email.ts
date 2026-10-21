@@ -38,11 +38,11 @@ export function codeSenderFromEnv(env = process.env): CodeSender {
 }
 
 export function codeText(code: string): string {
-  return `Your ${SITE.name} sign-in code is ${code}.\n\nIt works for 5 minutes. If you didn't ask for it, ignore this email.`
+  return `Your ${SITE.name} sign-in code is ${code}.\n\nEnter it on ${SITE.url}, or in the terminal where your agent asked for it. It works for 5 minutes. Nobody from ${SITE.name} will ever ask you for it; if you didn't ask for it, ignore this email.`
 }
 
 function codeHtml(code: string): string {
   return `<p>Your ${SITE.name} sign-in code is</p>
 <p style="font-size:28px;font-weight:600;letter-spacing:0.2em;font-family:ui-monospace,monospace">${code}</p>
-<p>It works for 5 minutes. If you didn't ask for it, ignore this email.</p>`
+<p>Enter it on ${SITE.url}, or in the terminal where your agent asked for it. It works for 5 minutes. Nobody from ${SITE.name} will ever ask you for it; if you didn't ask for it, ignore this email.</p>`
 }

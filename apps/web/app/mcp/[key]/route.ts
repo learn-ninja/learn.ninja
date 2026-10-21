@@ -18,7 +18,6 @@ async function handler(
   const db = await getDb()
   return handlePersonalMcp(req, (await params).key, await getAuth(), db, {
     ...(await depsFor(req)),
-    auth: await getAuth(),
     validateLimiter: getRateLimiter("validate"),
     guide: skillBundle,
     drafts: new PostgresDraftStore(db),

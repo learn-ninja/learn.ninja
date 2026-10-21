@@ -10,7 +10,8 @@ import {
 } from "./auth"
 
 // Who's making a request: a signed-in user (session cookie), a terminal (x-api-key), a chat app
-// on its personal MCP URL (the key in the path), or nobody.
+// that signed in over OAuth (a bearer token on /mcp) or uses its personal MCP URL (the key in the
+// path), or nobody.
 
 export interface Actor {
   userId: string
@@ -22,9 +23,14 @@ export interface Actor {
   viaApiKey: boolean
 }
 
-/** The actor behind a personal MCP URL: the account, and which key it came through (rate limits key on it). */
-export interface KeyActor extends Actor {
-  keyId: string
+/**
+ * The account behind an MCP call: through an OAuth token the chat app got by signing in, or
+ * through the key in a personal URL. `limitKey` is what the rate limits count: one person,
+ * wherever they call from.
+ */
+export interface McpActor extends Actor {
+  via: "oauth" | "key"
+  limitKey: string
 }
 
 export class InvalidApiKeyError extends Error {
@@ -90,7 +96,7 @@ export async function getActorByKey(
   auth: Auth,
   db: Db,
   key: string
-): Promise<KeyActor> {
+): Promise<McpActor> {
   if (!key.startsWith(MCP_KEY_PREFIX)) throw new InvalidApiKeyError(BAD_MCP_URL)
   let verified: Awaited<ReturnType<Auth["api"]["verifyApiKey"]>>
   try {
@@ -102,6 +108,32 @@ export async function getActorByKey(
     throw e
   }
   if (!verified.valid || !verified.key) throw new InvalidApiKeyError(BAD_MCP_URL)
+  // A banned account keeps its keys but can't act through them, as it can't sign in.
+  const actor = await actorForUser(db, verified.key.referenceId, {
+    via: "key",
+    limitKey: `key:${verified.key.id}`,
+  })
+  if (!actor) throw new InvalidApiKeyError(BAD_MCP_URL)
+  return actor
+}
+
+/**
+ * The account an OAuth access token names (its `sub`), for the public /mcp once a chat app has
+ * signed in. Null when the user is gone or banned; the gate then answers as it does for a bad
+ * token, and the app signs in again.
+ */
+export async function getActorByUserId(
+  db: Db,
+  userId: string
+): Promise<McpActor | null> {
+  return actorForUser(db, userId, { via: "oauth", limitKey: `user:${userId}` })
+}
+
+async function actorForUser(
+  db: Db,
+  userId: string,
+  how: Pick<McpActor, "via" | "limitKey">
+): Promise<McpActor | null> {
   const [row] = await db
     .select({
       id: user.id,
@@ -112,9 +144,8 @@ export async function getActorByKey(
       banned: user.banned,
     })
     .from(user)
-    .where(eq(user.id, verified.key.referenceId))
-  // A banned account keeps its keys but can't act through them, as it can't sign in.
-  if (!row || row.banned) throw new InvalidApiKeyError(BAD_MCP_URL)
+    .where(eq(user.id, userId))
+  if (!row || row.banned) return null
   return {
     userId: row.id,
     email: row.email,
@@ -122,7 +153,7 @@ export async function getActorByKey(
     handle: row.handle ?? null,
     image: row.image ?? null,
     viaApiKey: true,
-    keyId: verified.key.id,
+    ...how,
   }
 }
 

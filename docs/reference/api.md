@@ -54,7 +54,7 @@ x-api-key: <key>
 
 The body is `{ "claimToken": "…" }` or `{ "editToken": "…" }` from publishing (both together is fine; either one proves the lesson is yours). Needs a signed-in caller: an API key or a session cookie. The lesson then belongs to that account, stops expiring, and the claim token stops working; the edit token keeps working. Returns `200` with `id`, `url`, `title`, `owned: true`, `expiresAt: null`, `owner`, and `visibility`; `401 unauthorized` if neither token matches; `409 already_claimed` if another account has it; `404` once it has expired.
 
-`claimUrl` from publishing (`/keep/{claimToken}`) does the same thing in the browser: it signs the visitor in, then keeps that one lesson. The MCP server's `keep_lesson` tool keeps a lesson with an email code instead (the two sign-in calls below, then this one, all on the server), or makes a fresh `claimUrl` from the edit token when called without an email; the previous link then stops working.
+`claimUrl` from publishing (`/keep/{claimToken}`) does the same thing in the browser: it signs the visitor in, then keeps that one lesson. The MCP server's `keep_lesson` tool does the same for a chat app that has signed the user in over OAuth (see [Connect with your account](/docs/reference/mcp#connect-with-your-account)).
 
 ## List a lesson in Explore
 

@@ -8,6 +8,7 @@ import { AccountMenu } from "./account-menu"
 import { ApiKeys } from "./api-keys"
 import { AvatarForm } from "./avatar-form"
 import { ConnectChat } from "./connect-chat"
+import { ConsentForm } from "./consent-form"
 import { HandleForm } from "./handle-form"
 import { KeepForm, type KeepResult } from "./keep-form"
 import { SignInForm } from "./sign-in-form"
@@ -88,6 +89,10 @@ const fakeApi = (over: Partial<AccountApi> = {}): AccountApi => ({
   async disconnectChat() {
     await wait()
     return {}
+  },
+  async consent(accept) {
+    await wait()
+    return { url: accept ? "https://claude.ai/…?code=…" : "https://claude.ai/…?error=access_denied" }
   },
   ...over,
 })
@@ -293,5 +298,19 @@ export const HeaderMenu: Story = {
         />
       </div>
     </div>
+  ),
+}
+
+/** The consent step of a chat app signing in over OAuth (/consent). */
+export const Consent: Story = {
+  render: () => (
+    <ConsentForm app="claude.ai" handle="ada" api={fakeApi()} navigate={navigate} />
+  ),
+}
+
+export const ConsentNoHandle: Story = {
+  name: "Consent, no handle yet",
+  render: () => (
+    <ConsentForm app="A chat app" handle={null} api={fakeApi()} navigate={navigate} />
   ),
 }
