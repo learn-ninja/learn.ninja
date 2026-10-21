@@ -40,7 +40,7 @@ export default async function SignInPage({
         {...(resume && {
           title: "Sign in to connect your app",
           description:
-            "A chat app wants to publish lessons to your account. Sign in, then you'll be asked to allow it.",
+            "An agent wants to publish lessons to your account. Sign in, then you’ll be asked to allow it.",
         })}
       />
     </AuthPanel>
