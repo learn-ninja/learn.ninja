@@ -54,7 +54,7 @@ claude mcp add --transport http learn https://learn.ninja/mcp
 ### Claude.ai and Claude Desktop
 
 1. Open **Settings → Connectors** and choose **Add custom connector**.
-2. Name it `learn` and paste `https://learn.ninja/mcp` as the URL. Leave the OAuth fields empty: Claude signs in on its own when you first keep a lesson.
+2. Name it `learn` and paste `https://learn.ninja/mcp` as the URL. Under **Authentication**, pick **Sign in when needed**: Claude connects without an account and asks you to sign in the first time you keep a lesson. ("No sign-in" would turn that prompt into an error.)
 3. In a chat, turn the connector on from the tools menu if it isn't already.
 
 The Free plan allows one custom connector.
