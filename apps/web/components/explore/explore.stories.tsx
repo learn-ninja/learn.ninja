@@ -73,7 +73,7 @@ const summary = (over: Partial<LessonSummary> = {}): LessonSummary => ({
   minutes: 6,
   language: "en",
   author: { id: "ada", handle: "ada", name: "Ada Lovelace", image: PORTRAIT },
-  plays: 1284,
+  views: 1284,
   likes: 37,
   visibility: "public",
   hidden: false,
@@ -98,7 +98,7 @@ const LESSONS: LessonSummary[] = [
       name: "Bob",
       image: null,
     },
-    plays: 412,
+    views: 412,
     likes: 9,
   }),
   summary({
@@ -112,7 +112,7 @@ const LESSONS: LessonSummary[] = [
     minutes: 4,
     language: "es",
     author: { id: "maria", handle: "maria", name: "María", image: null },
-    plays: 88,
+    views: 88,
     likes: 2,
   }),
   summary({
@@ -126,7 +126,7 @@ const LESSONS: LessonSummary[] = [
     minutes: 5,
     language: "ar",
     author: { id: "noor", handle: "noor", name: "Noor", image: null },
-    plays: 40,
+    views: 40,
     likes: 5,
   }),
   summary({
@@ -146,7 +146,7 @@ const LESSONS: LessonSummary[] = [
       name: "Someone without a handle",
       image: null,
     },
-    plays: 0,
+    views: 0,
     likes: 0,
   }),
   summary({
@@ -159,7 +159,7 @@ const LESSONS: LessonSummary[] = [
     level: "intermediate",
     minutes: 7,
     author: { id: "dev", handle: "dev", name: "Dev", image: null },
-    plays: 3100,
+    views: 3100,
     likes: 120,
   }),
 ]

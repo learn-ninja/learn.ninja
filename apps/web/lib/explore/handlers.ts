@@ -7,18 +7,18 @@ import { hashToken, lessonPath, newToken } from "@/lib/publish/ids"
 import type { RateLimiter } from "@/lib/publish/rate-limit"
 
 import { REASON_MAX, TITLE_MAX } from "./browser"
-import { flushPlays, type PlayCounter } from "./plays"
+import { flushViews, type ViewCounter } from "./views"
 import type { Visibility } from "./queries"
 import type { ReportSender } from "./report-email"
 
 export { REASON_MAX, TITLE_MAX }
 
-// The API behind likes, completions, visibility, reports, and plays, independent of Next.js so it can be tested
+// The API behind likes, completions, visibility, reports, and views, independent of Next.js so it can be tested
 // directly. Routes under app/api/lessons/[id]/ call these.
 
 export interface ExploreDeps {
   db: Db
-  plays: PlayCounter
+  views: ViewCounter
   /** Reports per client. */
   limiter: RateLimiter
   sendReport: ReportSender
@@ -317,17 +317,17 @@ export async function reportLesson(
   return { status: 201, body: { ok: true } }
 }
 
-/** POST /api/lessons/{id}/play: one more play, counted after the response is sent. */
-export async function recordPlay(
+/** POST /api/lessons/{id}/view: one more view, counted after the response is sent. */
+export async function recordView(
   id: string,
-  deps: Pick<ExploreDeps, "plays">
+  deps: Pick<ExploreDeps, "views">
 ): Promise<void> {
-  await deps.plays.record(id)
+  await deps.views.record(id)
 }
 
-/** Adds pending plays to lesson.plays (the daily cron, and the Explore lists when they refresh). */
-export async function flushPendingPlays(
-  deps: Pick<ExploreDeps, "db" | "plays">
+/** Adds pending views to lesson.views (the daily cron, and the Explore lists when they refresh). */
+export async function flushPendingViews(
+  deps: Pick<ExploreDeps, "db" | "views">
 ): Promise<number> {
-  return flushPlays(deps.db, deps.plays)
+  return flushViews(deps.db, deps.views)
 }

@@ -178,7 +178,7 @@ export function LessonMenuView({
             <DialogHeader>
               <DialogTitle>Delete this lesson?</DialogTitle>
               <DialogDescription>
-                It&apos;s gone for good, with its plays and likes, and its link
+                It&apos;s gone for good, with its views and likes, and its link
                 stops working. This can&apos;t be undone.
               </DialogDescription>
             </DialogHeader>

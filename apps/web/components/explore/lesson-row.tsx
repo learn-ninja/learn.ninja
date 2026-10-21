@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { PlayIcon } from "lucide-react"
+import { EyeIcon } from "lucide-react"
 
 import { stringsFor, TimeAgo } from "@workspace/player"
 import { cn } from "@workspace/ui/lib/utils"
@@ -37,7 +37,7 @@ const ROW_LINK =
  * down the feed. Then the title, up to two lines of summary, and one meta line with the lesson's
  * first two tags (its label, then the product or field, as the agent wrote them), length and level
  * (then a green check when the viewer has finished it, or an amber pie of how far they got
- * when this browser holds their progress), and the plays and likes at its end. The
+ * when this browser holds their progress), and the views and likes at its end. The
  * subject is never shown: it's for filters. The whole row opens the lesson; the author, the check,
  * and the heart are their own targets. Rows sit between hairlines (the list adds them), not in
  * cards. Hovering one turns it into a bordered, filled tile that reaches past the column into the
@@ -173,10 +173,10 @@ export function LessonRow({
           <span className="ms-auto flex shrink-0 items-center gap-3">
             <span
               className="flex items-center gap-1 tabular-nums"
-              aria-label={`${lesson.plays} ${lesson.plays === 1 ? "play" : "plays"}`}
+              aria-label={`${lesson.views} ${lesson.views === 1 ? "view" : "views"}`}
             >
-              <PlayIcon className="size-3.5" aria-hidden="true" />
-              {compact(lesson.plays)}
+              <EyeIcon className="size-3.5" aria-hidden="true" />
+              {compact(lesson.views)}
             </span>
             {viewer ? (
               <LikeButton

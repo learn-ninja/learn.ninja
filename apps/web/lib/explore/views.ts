@@ -3,22 +3,23 @@ import type { Redis } from "@upstash/redis"
 
 import { lesson, type Db } from "@workspace/db"
 
-// Play counts. A lesson page records one play per browser per day (the beacon in
-// components/explore/play-beacon.tsx, deduplicated in localStorage) after the response is sent.
-// With Redis the plays pile up in a hash and are added to lesson.plays in one write when the Explore
-// lists revalidate or the daily cron runs; without it (development, tests) each play is written
+// View counts. A lesson page records a view each time it opens (the beacon in
+// components/explore/view-beacon.tsx), counted after the response is sent.
+// With Redis the views pile up in a hash and are added to lesson.views in one write when the Explore
+// lists revalidate or the daily cron runs; without it (development, tests) each view is written
 // through to Postgres at once.
 
-export interface PlayCounter {
-  /** One more play for `id`. */
+export interface ViewCounter {
+  /** One more view for `id`. */
   record(id: string): Promise<void>
-  /** Takes every play not yet in Postgres, as lesson id → count, and forgets it. */
+  /** Takes every view not yet in Postgres, as lesson id → count, and forgets it. */
   drain(): Promise<Record<string, number>>
 }
 
+// The keys keep the names they had when these were plays, so nothing pending is lost on deploy.
 const PENDING = "plays:pending"
 
-export class RedisPlayCounter implements PlayCounter {
+export class RedisViewCounter implements ViewCounter {
   constructor(private redis: Redis) {}
 
   async record(id: string) {
@@ -26,7 +27,7 @@ export class RedisPlayCounter implements PlayCounter {
   }
 
   async drain() {
-    // Moved aside first, so plays recorded while this runs land in the next batch and two drains
+    // Moved aside first, so views recorded while this runs land in the next batch and two drains
     // at once never count the same batch twice: RENAME fails for the second one.
     const batch = `plays:flushing:${Date.now()}:${Math.random().toString(36).slice(2)}`
     try {
@@ -42,14 +43,14 @@ export class RedisPlayCounter implements PlayCounter {
   }
 }
 
-/** Without Redis: every play goes straight to lesson.plays. */
-export class WriteThroughPlayCounter implements PlayCounter {
+/** Without Redis: every view goes straight to lesson.views. */
+export class WriteThroughViewCounter implements ViewCounter {
   constructor(private db: Db) {}
 
   async record(id: string) {
     await this.db
       .update(lesson)
-      .set({ plays: sql`${lesson.plays} + 1` })
+      .set({ views: sql`${lesson.views} + 1` })
       .where(eq(lesson.id, id))
   }
 
@@ -58,8 +59,8 @@ export class WriteThroughPlayCounter implements PlayCounter {
   }
 }
 
-/** Keeps plays in memory until drained; for tests of the flush. */
-export class MemoryPlayCounter implements PlayCounter {
+/** Keeps views in memory until drained; for tests of the flush. */
+export class MemoryViewCounter implements ViewCounter {
   private counts = new Map<string, number>()
 
   async record(id: string) {
@@ -73,10 +74,10 @@ export class MemoryPlayCounter implements PlayCounter {
   }
 }
 
-/** Adds the drained plays to lesson.plays. Returns how many plays were written. */
-export async function flushPlays(
+/** Adds the drained views to lesson.views. Returns how many views were written. */
+export async function flushViews(
   db: Db,
-  counter: PlayCounter
+  counter: ViewCounter
 ): Promise<number> {
   const counts = await counter.drain()
   let total = 0
@@ -84,7 +85,7 @@ export async function flushPlays(
     if (!(n > 0)) continue
     await db
       .update(lesson)
-      .set({ plays: sql`${lesson.plays} + ${n}` })
+      .set({ views: sql`${lesson.views} + ${n}` })
       .where(eq(lesson.id, id))
     total += n
   }

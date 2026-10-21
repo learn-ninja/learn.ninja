@@ -63,13 +63,13 @@ test("Explore lists only lessons their makers chose to share", async ({
     data: { visibility: "public" },
   })
   expect(patch.status()).toBe(401)
-  // Anyone can report, and the page counts a play.
+  // Anyone can report, and the page counts a view.
   const report = await request.post(`/api/lessons/${id}/report`, {
     data: { reason: "Smoke test" },
   })
   expect(report.status()).toBe(201)
-  const play = await request.post(`/api/lessons/${id}/play`)
-  expect(play.status()).toBe(202)
+  const view = await request.post(`/api/lessons/${id}/view`)
+  expect(view.status()).toBe(202)
 })
 
 test("a published lesson opens at its link, and a dead link shows the expired page", async ({

@@ -48,7 +48,7 @@ it("migrates a fresh PGlite database", async () => {
   expect(row).toMatchObject({
     visibility: "unlisted",
     hidden: false,
-    plays: 0,
+    views: 0,
     likes: 0,
     ownerId: null,
     expiresAt: null,

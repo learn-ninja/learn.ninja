@@ -12,8 +12,8 @@ export const VALIDATE_LIMIT = { requests: 120, windowSeconds: 60 * 60 }
 export const CODE_LIMIT = { requests: 5, windowSeconds: 60 * 60 }
 /** Reports per client: each one is an email to the maker. */
 export const REPORT_LIMIT = { requests: 5, windowSeconds: 60 * 60 }
-/** Plays per client: a learner opens a few lessons an hour, a script opens thousands. */
-export const PLAY_LIMIT = { requests: 120, windowSeconds: 60 * 60 }
+/** Views per client: a learner opens a few lessons an hour, a script opens thousands. */
+export const VIEW_LIMIT = { requests: 120, windowSeconds: 60 * 60 }
 /** Profile picture uploads per user: each one is decoded and resized on the server. */
 export const AVATAR_LIMIT = { requests: 20, windowSeconds: 60 * 60 }
 
@@ -22,7 +22,7 @@ const LIMITS = {
   validate: VALIDATE_LIMIT,
   code: CODE_LIMIT,
   report: REPORT_LIMIT,
-  play: PLAY_LIMIT,
+  view: VIEW_LIMIT,
   avatar: AVATAR_LIMIT,
 }
 export type LimitName = keyof typeof LIMITS

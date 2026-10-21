@@ -27,9 +27,9 @@ export default function PrivacyPage() {
           are deleted 7 days after publishing; lessons saved to an account stay
           until you delete them. The tokens that allow updating or keeping a
           lesson are stored only as hashes. A lesson you list in Explore is
-          shown with your handle, and we count how many times it is played and
-          liked; a play is counted once a day per browser and is not tied to
-          you.
+          shown with your handle, and we count how many times it is viewed and
+          liked; a view is counted each time the lesson is opened and is not
+          tied to you.
         </li>
         <li>
           <strong>Likes, completions, and reports.</strong> Liking a lesson

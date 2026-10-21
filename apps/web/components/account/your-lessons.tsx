@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { EyeOffIcon, HeartIcon, PlayIcon } from "lucide-react"
+import { EyeIcon, EyeOffIcon, HeartIcon } from "lucide-react"
 
 import { Badge } from "@workspace/ui/components/badge"
 import { Label } from "@workspace/ui/components/label"
@@ -83,9 +83,9 @@ export function YourLessons({
                 </Link>
                 <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground tabular-nums">
                   <span className="flex items-center gap-1">
-                    <PlayIcon className="size-3.5" aria-hidden="true" />
-                    {compact(lesson.plays)}
-                    <span className="sr-only">plays</span>
+                    <EyeIcon className="size-3.5" aria-hidden="true" />
+                    {compact(lesson.views)}
+                    <span className="sr-only">views</span>
                   </span>
                   <span className="flex items-center gap-1">
                     <HeartIcon className="size-3.5" aria-hidden="true" />

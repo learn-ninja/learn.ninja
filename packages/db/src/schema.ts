@@ -408,7 +408,8 @@ export const lesson = pgTable(
     orgId: text("org_id"),
     visibility: visibility("visibility").notNull().default("unlisted"),
     hidden: boolean("hidden").notNull().default(false),
-    plays: integer("plays").notNull().default(0),
+    /** The column keeps its first name, plays: renaming it would break the deployment still serving while the next one migrates. */
+    views: integer("plays").notNull().default(0),
     likes: integer("likes").notNull().default(0),
     createdAt: time("created_at").notNull().defaultNow(),
     updatedAt: time("updated_at").notNull().defaultNow(),

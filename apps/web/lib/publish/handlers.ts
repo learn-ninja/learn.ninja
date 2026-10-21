@@ -213,7 +213,7 @@ export async function publishLesson(
     // owner can switch it in their settings); an anonymous one stays link-only until it's kept.
     visibility: owner ? (req.visibility ?? "public") : "unlisted",
     hidden: false,
-    plays: 0,
+    views: 0,
     likes: 0,
     createdAt: now,
     expiresAt: owner ? null : now + LESSON_TTL_SECONDS * 1000,

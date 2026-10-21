@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 import { withCharts } from "@workspace/player/prepare"
 
-import { PlayBeacon } from "@/components/explore/play-beacon"
+import { ViewBeacon } from "@/components/explore/view-beacon"
 import { LessonView } from "@/components/lesson-view"
 import { LessonExpired } from "@/components/site/lesson-expired"
 import { shareMetadata } from "@/lib/metadata"
@@ -88,7 +88,7 @@ export default async function PublishedLessonPage({
             : undefined
         }
       />
-      <PlayBeacon id={record.id} />
+      <ViewBeacon id={record.id} />
     </div>
   )
 }

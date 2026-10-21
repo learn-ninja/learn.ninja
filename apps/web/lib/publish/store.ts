@@ -48,7 +48,7 @@ export interface StoredLesson {
   visibility: "public" | "unlisted" | "team"
   /** Set by hand after a report: out of Explore and profiles, and only the owner can open the link. */
   hidden: boolean
-  plays: number
+  views: number
   likes: number
   createdAt: number
   /** Null when it never expires (owned lessons). */
@@ -94,7 +94,7 @@ export class PostgresLessonStore implements LessonStore {
       ownerId: record.ownerId,
       visibility: record.visibility,
       hidden: record.hidden,
-      plays: record.plays,
+      views: record.views,
       likes: record.likes,
       createdAt: new Date(record.createdAt),
       updatedAt: new Date(record.updatedAt ?? record.createdAt),
@@ -198,7 +198,7 @@ function toStored(row: typeof lesson.$inferSelect): StoredLesson {
     ownerId: row.ownerId,
     visibility: row.visibility,
     hidden: row.hidden,
-    plays: row.plays,
+    views: row.views,
     likes: row.likes,
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),

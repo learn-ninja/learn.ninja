@@ -57,25 +57,25 @@ export interface LessonSummary {
     name: string
     image: string | null
   } | null
-  plays: number
+  views: number
   likes: number
   visibility: Visibility
   hidden: boolean
   createdAt: number
 }
 
-/** Trending: plays plus three times likes, halved every 48 hours. */
+/** Trending: views plus three times likes, halved every 48 hours. */
 export const TRENDING_HALF_LIFE_SECONDS = 48 * 60 * 60
 export const LIKE_WEIGHT = 3
 
 /** Trending as a number, for tests and for the SQL below. */
 export function trendingScore(
-  row: { plays: number; likes: number; createdAt: number },
+  row: { views: number; likes: number; createdAt: number },
   now: number
 ): number {
   const age = Math.max(0, now - row.createdAt) / 1000
   return (
-    (row.plays + LIKE_WEIGHT * row.likes) *
+    (row.views + LIKE_WEIGHT * row.likes) *
     Math.pow(0.5, age / TRENDING_HALF_LIFE_SECONDS)
   )
 }
@@ -96,7 +96,7 @@ const columns = {
   minutes: field("estimatedMinutes"),
   language: field("language"),
   targetLanguage: field("targetLanguage"),
-  plays: lesson.plays,
+  views: lesson.views,
   likes: lesson.likes,
   visibility: lesson.visibility,
   hidden: lesson.hidden,
@@ -121,7 +121,7 @@ interface Row {
   minutes: string | number
   language: string
   targetLanguage: string | null
-  plays: number
+  views: number
   likes: number
   visibility: Visibility
   hidden: boolean
@@ -179,7 +179,7 @@ function toSummary(row: Row): LessonSummary {
             image: row.authorImage,
           }
         : null,
-    plays: row.plays,
+    views: row.views,
     likes: row.likes,
     visibility: row.visibility,
     hidden: row.hidden,
@@ -204,11 +204,11 @@ function orderFor(sort: ExploreSort, now: number) {
     case "new":
       return [desc(lesson.createdAt), desc(lesson.id)]
     case "top":
-      return [desc(lesson.likes), desc(lesson.plays), desc(lesson.createdAt)]
+      return [desc(lesson.likes), desc(lesson.views), desc(lesson.createdAt)]
     case "trending":
       return [
         desc(
-          sql`(${lesson.plays} + ${sql.raw(String(LIKE_WEIGHT))} * ${lesson.likes}) * power(0.5, extract(epoch from (to_timestamp(${sql.raw(String(Math.floor(now / 1000)))}) - ${lesson.createdAt})) / ${sql.raw(`${TRENDING_HALF_LIFE_SECONDS}.0`)})`
+          sql`(${lesson.views} + ${sql.raw(String(LIKE_WEIGHT))} * ${lesson.likes}) * power(0.5, extract(epoch from (to_timestamp(${sql.raw(String(Math.floor(now / 1000)))}) - ${lesson.createdAt})) / ${sql.raw(`${TRENDING_HALF_LIFE_SECONDS}.0`)})`
         ),
         desc(lesson.createdAt),
       ]
@@ -295,7 +295,7 @@ export interface Profile {
   /** The person's listed lessons, newest first. */
   lessons: LessonSummary[]
   /** Totals over those lessons. */
-  plays: number
+  views: number
   likes: number
 }
 
@@ -332,7 +332,7 @@ export async function profileByHandle(
     bio: person.bio,
     joinedAt: person.createdAt.getTime(),
     lessons,
-    plays: lessons.reduce((n, l) => n + l.plays, 0),
+    views: lessons.reduce((n, l) => n + l.views, 0),
     likes: lessons.reduce((n, l) => n + l.likes, 0),
   }
 }

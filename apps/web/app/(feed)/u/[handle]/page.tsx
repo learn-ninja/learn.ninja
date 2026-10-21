@@ -17,7 +17,7 @@ import {
 import { getDb } from "@/lib/publish/store"
 import { SITE } from "@/lib/site"
 
-// A person's public lessons at /u/{handle}, with plays and likes. Hidden and unlisted lessons
+// A person's public lessons at /u/{handle}, with views and likes. Hidden and unlisted lessons
 // aren't here, nor is anything from an anonymous publish. On your own profile the Lessons tab adds
 // every lesson you own, each with its listed switch. The Likes tab lists the listed lessons they
 // liked, plus, on your own profile, liked lessons that have since gone unlisted. The frame around the page is the (feed)

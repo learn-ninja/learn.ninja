@@ -17,18 +17,18 @@ import { MemoryRateLimiter } from "@/lib/publish/rate-limit"
 import { PostgresLessonStore } from "@/lib/publish/store"
 
 import {
-  flushPendingPlays,
+  flushPendingViews,
   completeLesson,
   deleteLesson,
   likeLesson,
-  recordPlay,
+  recordView,
   renameLesson,
   reportLesson,
   setVisibility,
   unlikeLesson,
   type ExploreDeps,
 } from "./handlers"
-import { MemoryPlayCounter, WriteThroughPlayCounter } from "./plays"
+import { MemoryViewCounter, WriteThroughViewCounter } from "./views"
 import {
   authorOf,
   completedAt,
@@ -44,7 +44,7 @@ import { backfillTags, formatBackfill } from "./backfill"
 import { formatTagReport, tagReport } from "./tag-report"
 
 // Explore over an in-memory Postgres: what gets listed, how the tabs sort, likes, visibility,
-// completions, reports, and plays.
+// completions, reports, and views.
 
 const example = (file: string) =>
   readFileSync(new URL(`../../../../examples/${file}`, import.meta.url), "utf8")
@@ -83,7 +83,7 @@ beforeEach(async () => {
   }
   deps = {
     db,
-    plays: new WriteThroughPlayCounter(db),
+    views: new WriteThroughViewCounter(db),
     limiter: new MemoryRateLimiter(1000),
     sendReport: async (r) => {
       sent.push(r)
@@ -102,7 +102,7 @@ async function published(
     text?: string
     visibility?: "public" | "unlisted"
     hidden?: boolean
-    plays?: number
+    views?: number
     likes?: number
   } = {}
 ): Promise<string> {
@@ -117,7 +117,7 @@ async function published(
     .set({
       visibility: options.visibility ?? "unlisted",
       hidden: options.hidden ?? false,
-      plays: options.plays ?? 0,
+      views: options.views ?? 0,
       likes: options.likes ?? 0,
     })
     .where(eq(lesson.id, id))
@@ -145,7 +145,7 @@ describe("what Explore lists", () => {
         name: "Ada Lovelace",
         image: null,
       },
-      plays: 0,
+      views: 0,
       likes: 0,
       visibility: "public",
       hidden: false,
@@ -154,22 +154,22 @@ describe("what Explore lists", () => {
     expect(rows[0]!.summary).toBeTruthy()
   })
 
-  it("sorts New by date, Top by likes then plays, and Trending by a decaying score", async () => {
+  it("sorts New by date, Top by likes then views, and Trending by a decaying score", async () => {
     const old = await published("ada", {
       visibility: "public",
-      plays: 100,
+      views: 100,
       likes: 10,
     })
     now += 2 * DAY
     const middle = await published("ada", {
       visibility: "public",
-      plays: 40,
+      views: 40,
       likes: 5,
     })
     now += 2 * DAY
     const fresh = await published("bob", {
       visibility: "public",
-      plays: 10,
+      views: 10,
       likes: 1,
     })
     const ids = async (sort: "new" | "top" | "trending") =>
@@ -178,17 +178,17 @@ describe("what Explore lists", () => {
     expect(await ids("top")).toEqual([old, middle, fresh])
     // Scores: old 130 halved twice = 32.5; middle 55 halved once = 27.5; fresh 13.
     expect(
-      trendingScore({ plays: 100, likes: 10, createdAt: now - 4 * DAY }, now)
+      trendingScore({ views: 100, likes: 10, createdAt: now - 4 * DAY }, now)
     ).toBeCloseTo(32.5)
     expect(
-      trendingScore({ plays: 40, likes: 5, createdAt: now - 2 * DAY }, now)
+      trendingScore({ views: 40, likes: 5, createdAt: now - 2 * DAY }, now)
     ).toBeCloseTo(27.5)
     expect(await ids("trending")).toEqual([old, middle, fresh])
     // Two days on, the old one has halved again (16.25) and the fresh one (13 → 6.5) still trails.
     now += 2 * DAY
     expect(await ids("trending")).toEqual([old, middle, fresh])
-    // A burst of plays on the fresh one takes it to the top.
-    await db.update(lesson).set({ plays: 200 }).where(eq(lesson.id, fresh))
+    // A burst of views on the fresh one takes it to the top.
+    await db.update(lesson).set({ views: 200 }).where(eq(lesson.id, fresh))
     expect(await ids("trending")).toEqual([fresh, old, middle])
   })
 
@@ -213,14 +213,14 @@ describe("profiles", () => {
   it("shows a person's listed lessons with totals", async () => {
     const a = await published("ada", {
       visibility: "public",
-      plays: 7,
+      views: 7,
       likes: 2,
     })
     now += 1000
     const b = await published("ada", {
       visibility: "public",
       text: spanish,
-      plays: 3,
+      views: 3,
       likes: 1,
     })
     await published("ada") // unlisted: not shown
@@ -231,7 +231,7 @@ describe("profiles", () => {
       id: "ada",
       handle: "ada",
       name: "Ada Lovelace",
-      plays: 10,
+      views: 10,
       likes: 3,
     })
     expect(profile?.lessons.map((l) => l.id)).toEqual([b, a])
@@ -500,33 +500,33 @@ describe("reports", () => {
   })
 })
 
-describe("plays", () => {
+describe("views", () => {
   it("writes straight through without Redis", async () => {
     const id = await published("ada", { visibility: "public" })
-    await recordPlay(id, deps)
-    await recordPlay(id, deps)
-    await recordPlay("nope1234", deps) // an unknown id changes nothing
-    expect((await listLessons(db, "new", 1, { now }))[0]?.plays).toBe(2)
-    expect(await flushPendingPlays(deps)).toBe(0)
+    await recordView(id, deps)
+    await recordView(id, deps)
+    await recordView("nope1234", deps) // an unknown id changes nothing
+    expect((await listLessons(db, "new", 1, { now }))[0]?.views).toBe(2)
+    expect(await flushPendingViews(deps)).toBe(0)
   })
 
-  it("adds a batch of pending plays to the table in one flush", async () => {
-    const a = await published("ada", { visibility: "public", plays: 5 })
+  it("adds a batch of pending views to the table in one flush", async () => {
+    const a = await published("ada", { visibility: "public", views: 5 })
     const b = await published("bob", { visibility: "public" })
-    const counter = new MemoryPlayCounter()
-    const batched = { ...deps, plays: counter }
-    await recordPlay(a, batched)
-    await recordPlay(a, batched)
-    await recordPlay(b, batched)
+    const counter = new MemoryViewCounter()
+    const batched = { ...deps, views: counter }
+    await recordView(a, batched)
+    await recordView(a, batched)
+    await recordView(b, batched)
     // Nothing in the table yet.
     expect(
-      (await listLessons(db, "top", 10, { now })).map((l) => l.plays)
+      (await listLessons(db, "top", 10, { now })).map((l) => l.views)
     ).toEqual([5, 0])
-    expect(await flushPendingPlays(batched)).toBe(3)
-    expect(await flushPendingPlays(batched)).toBe(0)
+    expect(await flushPendingViews(batched)).toBe(3)
+    expect(await flushPendingViews(batched)).toBe(0)
     const rows = await listLessons(db, "top", 10, { now })
-    expect(rows.find((l) => l.id === a)?.plays).toBe(7)
-    expect(rows.find((l) => l.id === b)?.plays).toBe(1)
+    expect(rows.find((l) => l.id === a)?.views).toBe(7)
+    expect(rows.find((l) => l.id === b)?.views).toBe(1)
   })
 })
 

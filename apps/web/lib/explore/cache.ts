@@ -6,12 +6,12 @@ import {
   StorageNotConfiguredError,
 } from "@/lib/publish/store"
 
-import { flushPendingPlays } from "./handlers"
+import { flushPendingViews } from "./handlers"
 import {
-  RedisPlayCounter,
-  WriteThroughPlayCounter,
-  type PlayCounter,
-} from "./plays"
+  RedisViewCounter,
+  WriteThroughViewCounter,
+  type ViewCounter,
+} from "./views"
 import type { Subject } from "@workspace/spec"
 
 import {
@@ -25,7 +25,7 @@ import {
 
 // The Explore lists and profiles are read from the database through Next's data cache, tagged so a
 // like, a publish, or a visibility switch refreshes them at once (revalidateExplore), and refreshed
-// anyway every minute so play counts stay close to live. "Liked by me" is read per request on top
+// anyway every minute so view counts stay close to live. "Liked by me" is read per request on top
 // (see app/(feed)/explore/page.tsx).
 
 export const EXPLORE_TAG = "explore"
@@ -40,20 +40,20 @@ export function revalidateExplore() {
   revalidateTag(EXPLORE_TAG, { expire: 0 })
 }
 
-const shared = globalThis as { learnPlays?: PlayCounter }
+const shared = globalThis as { learnViews?: ViewCounter }
 
-/** Where plays pile up: Redis when it's configured, otherwise straight into Postgres. */
-export async function getPlayCounter(): Promise<PlayCounter> {
-  if (!shared.learnPlays) {
+/** Where views pile up: Redis when it's configured, otherwise straight into Postgres. */
+export async function getViewCounter(): Promise<ViewCounter> {
+  if (!shared.learnViews) {
     const redis = redisFromEnv()
-    shared.learnPlays = redis
-      ? new RedisPlayCounter(redis)
-      : new WriteThroughPlayCounter(await getDb())
+    shared.learnViews = redis
+      ? new RedisViewCounter(redis)
+      : new WriteThroughViewCounter(await getDb())
   }
-  return shared.learnPlays
+  return shared.learnViews
 }
 
-/** The Explore list for one tab, narrowed to a subject and tag when given. Pending plays are added to the table first, so the counts are current. */
+/** The Explore list for one tab, narrowed to a subject and tag when given. Pending views are added to the table first, so the counts are current. */
 export function cachedLessons(
   sort: ExploreSort,
   limit = EXPLORE_PAGE_SIZE,
@@ -62,7 +62,7 @@ export function cachedLessons(
   return unstable_cache(
     async () => {
       const db = await getDb()
-      await flushPendingPlays({ db, plays: await getPlayCounter() })
+      await flushPendingViews({ db, views: await getViewCounter() })
       return listLessons(db, sort, limit, { subject, tag })
     },
     ["explore", sort, subject ?? "all", tag ?? "", String(limit)],

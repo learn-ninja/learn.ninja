@@ -84,9 +84,9 @@ Content-Type: application/json
 
 The body is `{ "reason": "…" }`, up to 1,000 characters. No account needed; 5 reports an hour from one place. The report goes to the people who run learn.ninja with the link and the reason, and only a hash of the reporter's address is kept. Returns `201`. Lessons that break the [terms](https://learn.ninja/terms) are taken out of Explore and profiles; their owner can still open the link.
 
-## Plays
+## Views
 
-Each lesson page counts a play once per browser per day, through `POST /api/lessons/{id}/play` (no body, no reply). Play and like counts show on Explore cards and profiles.
+Each lesson page counts a view every time it opens, through `POST /api/lessons/{id}/view` (no body, no reply). View and like counts show on Explore cards and profiles.
 
 ## API keys
 
