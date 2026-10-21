@@ -40,7 +40,7 @@ export default async function SignInPage({
         {...(resume && {
           title: "Sign in to connect your app",
           description:
-            "A chat app wants to publish lessons to your learn.ninja account. Sign in or make a free account first, then you'll be asked to allow it.",
+            "A chat app wants to publish lessons to your account. Sign in, then you'll be asked to allow it.",
         })}
       />
     </AuthPanel>

@@ -5,7 +5,8 @@ import { Wordmark } from "@/components/site/wordmark"
 /**
  * The frame for signing in and connecting a chat app (Agendolo's auth panel): no site header or
  * footer, just the wordmark linking home and the page's content beneath it, centered in a narrow
- * column with the viewport's height around it. `footer` (the legal line) sits at the bottom.
+ * column with the viewport's height around it. `footer` (the legal line) sits at the bottom. The
+ * whole panel fades and rises in over 300ms when it loads (skipped for reduced motion).
  */
 export function AuthPanel({
   children,
@@ -15,7 +16,7 @@ export function AuthPanel({
   footer?: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-svh flex-col px-4 sm:px-6">
+    <div className="flex min-h-svh flex-col px-4 sm:px-6 motion-safe:animate-in motion-safe:duration-300 motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1 motion-safe:fill-mode-both">
       <main className="flex flex-1 flex-col items-center justify-center py-12">
         <div className="flex w-full max-w-sm flex-col items-center gap-8 text-center">
           <Wordmark />
