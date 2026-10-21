@@ -304,16 +304,16 @@ describe("publish_lesson and update_lesson", () => {
     )
   })
 
-  it("carries the keep sentence in publish_lesson's description, and the once-only rule", async () => {
+  it("describes publishing without telling the model what to say: the guide does that", async () => {
     const { tools } = await rpc("tools/list", {})
     const publish = tools.find(
       (t: { name: string }) => t.name === "publish_lesson"
     )
-    expect(publish.description).toContain(KEEP_SENTENCE)
+    // Directory review rejects descriptions that script Claude's behaviour; the keep sentence and
+    // the once-only rule live in the guide's steps, which both surfaces follow.
+    expect(publish.description).not.toMatch(/tell the user|say once|never paste/i)
+    expect(publish.description).toContain("7 days")
     expect(KEEP_SENTENCE).toContain("sign in once")
-    expect(publish.description).toMatch(/once/)
-    expect(publish.description).not.toContain("only when they ask")
-    // The same sentence the skill's steps give the terminal, so both surfaces say one thing.
     expect(skillBundle().files["steps.md"]).toContain(KEEP_SENTENCE)
   })
 
@@ -427,8 +427,8 @@ describe("/mcp/{key}, the personal URL", () => {
     const key = await mcpKeyFor("owner@example.com")
     const { tools } = await personal(key).rpc("tools/list", {})
     const publish = tools.find((t: { name: string }) => t.name === "publish_lesson")
-    expect(publish.description).toContain("Saved to your account")
-    expect(publish.description).not.toContain(KEEP_SENTENCE)
+    expect(publish.description).toContain("saved to the user's account")
+    expect(publish.description).not.toContain("7 days")
 
     const published = await personal(key).call("publish_lesson", {
       lesson: buttons,

@@ -54,7 +54,7 @@ const OPTIONAL_AUTH = {
 const NEEDS_AUTH = { securitySchemes: [{ type: "oauth2", scopes: [MCP_SCOPE] }] }
 
 const INSTRUCTIONS =
-  "learn.ninja turns anything into one short, interactive lesson with a shareable link. Call `get_guide` once before writing a lesson: it returns the whole guide, then follow its steps."
+  "learn.ninja turns anything into one short, interactive lesson with a shareable link. Call `get_guide` once before writing a lesson: it returns the whole guide, then follow its steps, including what to tell the user once a lesson is published."
 
 const LEVELS = ["beginner", "intermediate", "advanced"]
 
@@ -140,7 +140,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
       title: "Read the lesson guide",
       _meta: OPTIONAL_AUTH,
       description:
-        "Returns the guide for writing a learn.ninja lesson. Call it once with `all` (the default) before writing: the steps, planning, teaching, format, and level guides together.",
+        "Returns the guide for writing a learn.ninja lesson: the steps to follow, and the planning, teaching, format, and level guides, together by default. Read it once before writing a lesson.",
       inputSchema: z.object({
         section: z
           .enum(SECTIONS)
@@ -180,7 +180,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
       title: "Check a lesson",
       _meta: OPTIONAL_AUTH,
       description:
-        "Checks a lesson with the rules publishing uses, without publishing it. Usually skip this and call `publish_lesson`, which runs the same checks. Returns a `draftId` either way: fix the issues by sending `draftId` and `patches`, not the whole lesson.",
+        "Checks a lesson with the rules publishing uses, without publishing it, and lists every issue. Returns a `draftId` either way, so fixes can be sent as `patches` against the draft instead of the whole lesson. `publish_lesson` runs the same checks, so a lesson that's ready can go straight there.",
       inputSchema: z.object(lessonInput),
       annotations: { readOnlyHint: false, openWorldHint: false },
     },
@@ -201,7 +201,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
   )
 
   const owned = actor
-    ? `Lessons are saved to ${actor.handle ? `@${actor.handle}` : "the user's account"} (this URL is theirs) and start unlisted, so drafts don't show in Explore. After the link, say once: "Saved to ${actor.handle ? `@${actor.handle}` : "your account"}; list it in Explore at learn.ninja/settings${actor.handle ? "" : ", where you can also pick a handle"}."`
+    ? `Lessons are saved to ${actor.handle ? `@${actor.handle}` : "the user's account"} (this connection is theirs) and start unlisted, so drafts don't show in Explore; the switch is at learn.ninja/settings.`
     : null
 
   server.registerTool(
@@ -209,9 +209,9 @@ function registerTools(server: McpServer, deps: McpDeps) {
     {
       title: "Publish a lesson",
       _meta: OPTIONAL_AUTH,
-      description: `Checks and publishes a lesson, and returns its link (\`url\`). If the check fails, nothing is published: it returns the issues and a \`draftId\`, so call it again with \`draftId\` and \`patches\` that fix every issue, not the whole lesson. Keep the \`id\`${actor ? "" : " and `editToken`"} to change it later with \`update_lesson\`. ${
+      description: `Checks and publishes a lesson, and returns its link (\`url\`). If the check fails, nothing is published: the reply lists the issues and a \`draftId\`, so the fixes can be sent as \`patches\` against the draft instead of the whole lesson. The reply's \`id\`${actor ? "" : " and `editToken`"} let \`update_lesson\` change the lesson later. ${
         owned ??
-        `The link lasts 7 days. After it, tell the user once, in one sentence: "${KEEP_SENTENCE}" Don't repeat it, and never paste the keep link (\`claimUrl\`) on your own. When they say they want to keep the lesson, call \`keep_lesson\`: this app asks them to sign in to learn.ninja first (once; later lessons are then saved as they're published). Only if they'd rather not sign in here, give them \`claimUrl\` to open in a browser instead.`
+        `Published anonymously, the link lasts 7 days; \`keep_lesson\` saves it to the user's account, and \`claimUrl\` is a link that does the same from a browser. The guide's steps cover what follows publishing.`
       }`,
       inputSchema: z.object(lessonInput),
       annotations: {
@@ -268,7 +268,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
       _meta: NEEDS_AUTH,
       description: actor
         ? `Saves a lesson that was published anonymously (in another chat, or before the user signed in) to ${actor.handle ? `@${actor.handle}` : "the user's account"}, given its \`id\` and \`editToken\`, and lists it in Explore. Lessons published here are already saved, so it's rarely needed.`
-        : `Saves a published lesson to the user's learn.ninja account, so it stops expiring and is listed in Explore under their handle. Call it only when the user says they want to keep the lesson, with the \`id\` and \`editToken\` from \`publish_lesson\`. It needs the user signed in: this app asks them to, once, then retries the call on its own. The reply names the account (\`owner.handle\`, \`visibility\`). A lesson already in an account answers \`already_claimed\`.`,
+        : `Saves a published lesson to the user's learn.ninja account, given the \`id\` and \`editToken\` from \`publish_lesson\`: it stops expiring and is listed in Explore under their handle. For when the user asks to keep a lesson. It needs the user signed in; this app asks them to, once, then retries the call. The reply names the account (\`owner.handle\`, \`visibility\`), and a lesson already in an account answers \`already_claimed\`.`,
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z

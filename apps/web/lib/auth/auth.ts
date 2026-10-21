@@ -83,6 +83,23 @@ export function oauthIssuerFromEnv(env = process.env): string {
   return env.BETTER_AUTH_URL ?? `${publicSiteFromEnv(env)}/api/auth`
 }
 
+/**
+ * A fixed sign-in for Anthropic's directory reviewers, who need a test account but can't read our
+ * email: REVIEW_SIGN_IN_EMAIL always gets REVIEW_SIGN_IN_CODE, and no email is sent to it. Unset in
+ * development and tests unless passed in.
+ */
+export interface ReviewSignIn {
+  email: string
+  code: string
+}
+
+export function reviewSignInFromEnv(env = process.env): ReviewSignIn | null {
+  const email = env.REVIEW_SIGN_IN_EMAIL?.trim().toLowerCase()
+  const code = env.REVIEW_SIGN_IN_CODE?.trim()
+  if (!email || !code || !/^\d{6}$/.test(code)) return null
+  return { email, code }
+}
+
 export interface AuthDeps {
   db: Db
   env?: NodeJS.ProcessEnv
@@ -94,6 +111,8 @@ export interface AuthDeps {
   codeLimiter?: RateLimiter
   /** The MCP server's URL that OAuth tokens are bound to; `mcpResourceFromEnv` otherwise. */
   resource?: string
+  /** The reviewers' fixed sign-in; `reviewSignInFromEnv` otherwise. */
+  reviewSignIn?: ReviewSignIn | null
 }
 
 /** The GitHub OAuth app, when its keys are set. The sign-in page hides GitHub otherwise. */
@@ -122,6 +141,10 @@ export function createAuth(deps: AuthDeps) {
   const storage = deps.storage ?? undefined
   const codeLimiter = deps.codeLimiter ?? getRateLimiter("code")
   const resource = deps.resource ?? mcpResourceFromEnv(env)
+  const review =
+    deps.reviewSignIn === undefined ? reviewSignInFromEnv(env) : deps.reviewSignIn
+  const isReviewer = (email: string) =>
+    review !== null && email.trim().toLowerCase() === review.email
 
   return betterAuth({
     appName: SITE.name,
@@ -182,8 +205,11 @@ export function createAuth(deps: AuthDeps) {
         expiresIn: CODE_EXPIRY_SECONDS,
         allowedAttempts: CODE_ATTEMPTS,
         storeOTP: "hashed",
+        // Reviewers get their fixed code and no email; everyone else a random one.
+        generateOTP: ({ email, type }) =>
+          type === "sign-in" && isReviewer(email) ? review!.code : undefined,
         async sendVerificationOTP({ email, otp, type }) {
-          if (type === "sign-in") await sendCode(email, otp)
+          if (type === "sign-in" && !isReviewer(email)) await sendCode(email, otp)
         },
       }),
       // Signs the OAuth access tokens (and serves their public keys at /jwks).
