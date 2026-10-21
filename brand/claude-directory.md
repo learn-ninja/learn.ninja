@@ -45,7 +45,7 @@ Synced from the server. All five have a title and annotations:
 
 **Categories** (1–5, pick from the portal's list): Education, Productivity, Content creation. Add Developer tools if the list has it, since many users come from Claude Code.
 
-**Documentation URL**: `https://learn.ninja/docs/reference/mcp`
+**Documentation URL**: `https://learn.ninja/docs#mcp` (the docs are one page; `/docs/reference/mcp` only exists as `.md`)
 
 **Privacy policy URL**: `https://learn.ninja/privacy`
 
