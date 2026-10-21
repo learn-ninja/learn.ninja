@@ -18,7 +18,7 @@ export interface KeepResult {
   listed?: boolean
 }
 
-/** The Keep button on /keep/{token}: claims the lesson for the signed-in user. */
+/** The Keep button on /keep/{token}: claims the lesson for the logged-in user. */
 export async function keepLesson(
   _previous: KeepResult | null,
   formData: FormData
@@ -34,7 +34,7 @@ export async function keepLesson(
     `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`
   const reply = await claimLesson(
     { claimToken: token, ownerId: actor.userId },
-    // The keeper is the signed-in user, so their handle needs no lookup.
+    // The keeper is the logged-in user, so their handle needs no lookup.
     { store: await getLessonStore(), origin, handleOf: async () => actor.handle }
   )
   if (!reply.body.ok)

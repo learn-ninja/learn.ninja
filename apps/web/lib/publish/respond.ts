@@ -3,7 +3,7 @@ import { InvalidApiKeyError } from "@/lib/auth/actor"
 import type { Reply } from "./handlers"
 import { StorageNotConfiguredError } from "./store"
 
-/** A reply for a request that needs a signed-in user and has none. */
+/** A reply for a request that needs a logged-in user and has none. */
 export const SIGN_IN_REQUIRED: Reply = {
   status: 401,
   body: {

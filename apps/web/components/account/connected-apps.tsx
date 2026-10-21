@@ -19,9 +19,9 @@ import { accountApi, type AccountApi } from "@/lib/auth/browser"
 import { FormError } from "./form-error"
 
 /**
- * "Connected apps": the chat apps that signed in to the account over OAuth (Claude.ai, ChatGPT,
+ * "Connected apps": the chat apps that logged in to the account over OAuth (Claude.ai, ChatGPT,
  * Claude Code) and were allowed on /consent. Disconnect ends the app's tokens at once; it asks
- * the user to sign in again the next time they keep a lesson from it.
+ * the user to log in again the next time they keep a lesson from it.
  */
 export function ConnectedApps({
   initial,
@@ -50,7 +50,7 @@ export function ConnectedApps({
   return (
     <div className="flex flex-col gap-6">
       <p className="text-muted-foreground">
-        Chat apps that signed in to your account. Each one publishes lessons as
+        Chat apps that logged in to your account. Each one publishes lessons as
         you, and keeps the ones you ask it to. Disconnect any you don&apos;t
         recognize.
       </p>
@@ -86,7 +86,7 @@ export function ConnectedApps({
         </ul>
       ) : (
         <p className="text-sm text-muted-foreground">
-          No apps yet. Claude, ChatGPT, and Claude Code sign in on their own the
+          No apps yet. Claude, ChatGPT, and Claude Code log in on their own the
           first time you keep a lesson from them (
           <Link
             href="/docs#connect-with-your-account"
@@ -110,7 +110,7 @@ export function ConnectedApps({
             Disconnect <bdi dir="ltr">{disconnecting?.name}</bdi>?
           </DialogTitle>
           <DialogDescription>
-            It stops publishing to your account at once, and asks you to sign in
+            It stops publishing to your account at once, and asks you to log in
             again the next time you keep a lesson from it. Lessons it published
             stay in your account.
           </DialogDescription>

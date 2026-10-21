@@ -121,7 +121,7 @@ const created = (id = "abcd1234") => ({
   },
 })
 
-/** What the server answers a signed-in publish with: owned, no expiry, no claim token, listed under @ada. */
+/** What the server answers a logged-in publish with: owned, no expiry, no claim token, listed under @ada. */
 const createdOwned = (
   id = "own12345",
   handle: string | null = "ada",
@@ -154,8 +154,8 @@ const keptReply = (handle: string | null = "ada", visibility = "public") => ({
 })
 
 const KEY = "learn_" + "k".repeat(64)
-/** The sign-in routes a `login` goes through, ending with a key for ada@example.com. */
-const signInRoutes = (): Routes => ({
+/** The log-in routes a `login` goes through, ending with a key for ada@example.com. */
+const loginRoutes = (): Routes => ({
   "POST /api/auth/email-otp/send-verification-otp": {
     status: 200,
     body: { success: true },
@@ -613,7 +613,7 @@ describe("learn publish", () => {
     )
   })
 
-  it("keeps an older anonymous lesson when updating it signed in", async () => {
+  it("keeps an older anonymous lesson when updating it logged in", async () => {
     t = setup({
       "POST /api/lessons": created(),
       "PUT /api/lessons/abcd1234": {
@@ -631,7 +631,7 @@ describe("learn publish", () => {
           ? keptReply()
           : { status: 401, body: { ok: false } },
     })
-    // Published anonymously, then signed in elsewhere.
+    // Published anonymously, then logged in elsewhere.
     await run(["publish", "lesson.json"], t.io)
     writeCredentials(t, { "https://learn.ninja": { apiKey: KEY, email: "a" } })
     expect(await run(["publish", "lesson.json"], t.io)).toBe(0)
@@ -723,9 +723,9 @@ const readCredentials = (t: ReturnType<typeof setup>) =>
   JSON.parse(readFileSync(join(t.io.configDir, CREDENTIALS_FILE), "utf8"))
 
 describe("learn login", () => {
-  it("sends the code, then signs in with --code, saves the key, and keeps the folder's lessons", async () => {
+  it("sends the code, then logs in with --code, saves the key, and keeps the folder's lessons", async () => {
     const t = setup({
-      ...signInRoutes(),
+      ...loginRoutes(),
       "POST /api/lessons": [created("aaaa1111"), created("bbbb2222")],
       "POST /api/lessons/aaaa1111/claim": (call) =>
         call.apiKey === KEY &&
@@ -785,7 +785,7 @@ describe("learn login", () => {
       },
     })
     expect(t.out.join("\n")).toMatch(
-      /Signed in as ada@example\.com \(@ada\)\. Saved the key in .*learn\/credentials\.\nKept 1 lesson published from this folder, saved to @ada and listed in Explore \(unlist it any time at https:\/\/learn\.ninja\/u\/ada\):\n  https:\/\/learn\.test\/l\/button-hierarchy-aaaa1111/
+      /Logged in as ada@example\.com \(@ada\)\. Saved the key in .*learn\/credentials\.\nKept 1 lesson published from this folder, saved to @ada and listed in Explore \(unlist it any time at https:\/\/learn\.ninja\/u\/ada\):\n  https:\/\/learn\.test\/l\/button-hierarchy-aaaa1111/
     )
     const state = JSON.parse(
       readFileSync(join(t.cwd, ".learn/state.json"), "utf8")
@@ -805,7 +805,7 @@ describe("learn login", () => {
 
   it("keeps a claim token when the claim fails for a passing reason", async () => {
     const t = setup({
-      ...signInRoutes(),
+      ...loginRoutes(),
       "POST /api/lessons": [created("aaaa1111"), created("bbbb2222")],
       "POST /api/lessons/aaaa1111/claim": offline,
       "POST /api/lessons/bbbb2222/claim": {
@@ -833,7 +833,7 @@ describe("learn login", () => {
   })
 
   it("asks for the email and code at a terminal", async () => {
-    const t = setup(signInRoutes())
+    const t = setup(loginRoutes())
     const answers = ["ada@example.com", "123456"]
     t.io.prompt = async () => answers.shift()!
     expect(await run(["login"], t.io)).toBe(0)
@@ -844,14 +844,14 @@ describe("learn login", () => {
   })
 
   it("explains a wrong code", async () => {
-    const t = setup(signInRoutes())
+    const t = setup(loginRoutes())
     expect(
       await run(
         ["login", "--email", "ada@example.com", "--code", "000000"],
         t.io
       )
     ).toBe(1)
-    expect(t.err.join("\n")).toMatch(/Couldn't sign in: Invalid OTP/)
+    expect(t.err.join("\n")).toMatch(/Couldn't log in: Invalid OTP/)
     expect(existsSync(join(t.io.configDir, CREDENTIALS_FILE))).toBe(false)
   })
 
@@ -862,7 +862,7 @@ describe("learn login", () => {
   })
 
   it("reports in JSON", async () => {
-    const t = setup(signInRoutes())
+    const t = setup(loginRoutes())
     expect(
       await run(["login", "--email", "ada@example.com", "--json"], t.io)
     ).toBe(0)
@@ -891,13 +891,13 @@ describe("learn keep", () => {
   it("needs a login first", async () => {
     const t = setup()
     expect(await run(["keep"], t.io)).toBe(1)
-    expect(t.err.join("\n")).toMatch(/Not signed in\. Run `learn login`/)
+    expect(t.err.join("\n")).toMatch(/Not logged in\. Run `learn login`/)
     expect(t.methods()).toEqual([])
   })
 
   it("keeps the folder's lessons with the saved key and no new code", async () => {
     const t = setup({
-      ...signInRoutes(),
+      ...loginRoutes(),
       "POST /api/lessons": [
         created("aaaa1111"),
         created("bbbb2222"),
@@ -957,7 +957,7 @@ describe("learn keep", () => {
       /Every lesson published from this folder is already saved to your account\./
     )
     // An empty folder says so.
-    const empty = setup(signInRoutes())
+    const empty = setup(loginRoutes())
     writeCredentials(empty, {
       "https://learn.ninja": { apiKey: KEY, email: "a" },
     })
@@ -969,7 +969,7 @@ describe("learn keep", () => {
 
   it("says when the lessons are already saved or gone, and when to retry", async () => {
     const t = setup({
-      ...signInRoutes(),
+      ...loginRoutes(),
       "POST /api/lessons": [created("aaaa1111"), created("bbbb2222")],
       "POST /api/lessons/aaaa1111/claim": {
         status: 404,
@@ -1012,7 +1012,7 @@ describe("learn keep", () => {
 describe("learn keep leaves alone what it can't keep", () => {
   it("skips expired and foreign-owned lessons, and keeps a token behind an unreadable success", async () => {
     const t = setup({
-      ...signInRoutes(),
+      ...loginRoutes(),
       "POST /api/lessons": [
         created("aaaa1111"),
         created("bbbb2222"),
@@ -1034,7 +1034,7 @@ describe("learn keep leaves alone what it can't keep", () => {
       writeFileSync(join(t.cwd, file), lesson)
       await run(["publish", file], t.io)
     }
-    // Signed in after publishing, so nothing was claimed on the way.
+    // Logged in after publishing, so nothing was claimed on the way.
     writeCredentials(t, { "https://learn.ninja": { apiKey: KEY, email: "a" } })
     const statePath = join(t.cwd, ".learn/state.json")
     const state = JSON.parse(readFileSync(statePath, "utf8"))
@@ -1074,10 +1074,10 @@ describe("learn keep leaves alone what it can't keep", () => {
 })
 
 describe("learn whoami and logout", () => {
-  it("prints the account, or says to sign in", async () => {
-    const t = setup(signInRoutes())
+  it("prints the account, or says to log in", async () => {
+    const t = setup(loginRoutes())
     expect(await run(["whoami"], t.io)).toBe(1)
-    expect(t.err.join("\n")).toMatch(/Not signed in\. Run `learn login`/)
+    expect(t.err.join("\n")).toMatch(/Not logged in\. Run `learn login`/)
     writeCredentials(t, {
       "https://learn.ninja": {
         apiKey: KEY,
@@ -1091,7 +1091,7 @@ describe("learn whoami and logout", () => {
 
   it("revokes the key and forgets it", async () => {
     const t = setup({
-      ...signInRoutes(),
+      ...loginRoutes(),
       "DELETE /api/keys/key1": (call) =>
         call.apiKey === KEY
           ? { status: 200, body: { ok: true } }
@@ -1108,17 +1108,17 @@ describe("learn whoami and logout", () => {
     expect(await run(["logout"], t.io)).toBe(0)
     expect(t.methods()).toEqual(["DELETE /api/keys/key1"])
     expect(t.out.at(-1)).toBe(
-      "Signed out of https://learn.ninja. The key was revoked."
+      "Logged out of https://learn.ninja. The key was revoked."
     )
     // Other servers' keys stay.
     expect(readCredentials(t)).toEqual({
       "https://other.test": { apiKey: "learn_other", email: "b" },
     })
     expect(await run(["logout"], t.io)).toBe(0)
-    expect(t.out.at(-1)).toBe("Not signed in.")
+    expect(t.out.at(-1)).toBe("Not logged in.")
     // A key from the environment can't be forgotten from here; say so.
     t.io.env.LEARN_API_KEY = KEY
     expect(await run(["logout"], t.io)).toBe(0)
-    expect(t.out.at(-1)).toMatch(/LEARN_API_KEY is set.*Unset it to sign out\./)
+    expect(t.out.at(-1)).toMatch(/LEARN_API_KEY is set.*Unset it to log out\./)
   })
 })

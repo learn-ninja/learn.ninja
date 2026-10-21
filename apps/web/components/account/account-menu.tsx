@@ -23,7 +23,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { AccountInfo } from "@/lib/auth/account-info"
 import { accountApi, type AccountApi } from "@/lib/auth/browser"
 
-import { signOutAndLeave } from "./sign-out-button"
+import { logOutAndLeave } from "./log-out-button"
 import { UserAvatar } from "./user-avatar"
 
 /** How long the pointer rests on the picture before the menu opens, and off it before it closes. */
@@ -31,9 +31,9 @@ const OPEN_DELAY = 100
 const CLOSE_DELAY = 200
 
 /**
- * The header's account control once signed in: the profile picture, with a menu of everywhere
+ * The header's account control once logged in: the profile picture, with a menu of everywhere
  * the user can go (Explore, their profile, their lessons, settings, the docs in a new tab) and
- * sign out. With a mouse the menu opens on hover and stays while the pointer is on it; a tap,
+ * log out. With a mouse the menu opens on hover and stays while the pointer is on it; a tap,
  * a click, or Enter opens it too, so phones and keyboards aren't left out.
  */
 export function AccountMenu({
@@ -45,7 +45,7 @@ export function AccountMenu({
 }: {
   account: AccountInfo
   api?: AccountApi
-  /** Where to go after signing out; the browser's own navigation by default. */
+  /** Where to go after logging out; the browser's own navigation by default. */
   navigate?: (to: string) => void
   /** For stories: start with the menu open. */
   defaultOpen?: boolean
@@ -132,10 +132,10 @@ export function AccountMenu({
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem
-            onAction={() => void signOutAndLeave(api, navigate)}
+            onAction={() => void logOutAndLeave(api, navigate)}
           >
             <LogOutIcon />
-            Sign out
+            Log out
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenu>

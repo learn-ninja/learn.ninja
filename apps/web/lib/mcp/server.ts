@@ -21,8 +21,8 @@ import { StorageNotConfiguredError } from "../publish/store"
 import { applyPatches, PatchError, type DraftStore, type Patch } from "./drafts"
 
 // The learn.ninja MCP server: the guide and the publish API as tools, for chat apps that can't
-// run the skill's CLI. At /mcp, lessons publish anonymously until the chat app signs in: the gate
-// in front of the route (gate.ts) answers `keep_lesson` from a signed-out app with a 401 that
+// run the skill's CLI. At /mcp, lessons publish anonymously until the chat app logs in: the gate
+// in front of the route (gate.ts) answers `keep_lesson` from a logged-out app with a 401 that
 // makes the app run OAuth against Better Auth, and from then on every call carries a token and
 // `actor` is the account. At /mcp/{key}, a personal URL from the settings page, the key in the
 // path is the account instead. Either way, lessons are published to it, unlisted.
@@ -34,7 +34,7 @@ export interface McpDeps extends Deps {
   guide: () => { files: Record<string, string> }
   /** Lessons sent to the tools, kept so later calls can send patches. */
   drafts: DraftStore
-  /** The signed-in account (an OAuth token, or a personal URL's key); null or absent when anonymous. */
+  /** The logged-in account (an OAuth token, or a personal URL's key); null or absent when anonymous. */
   actor?: McpActor | null
   /** Called when a lesson becomes listed in Explore (a keep), so cached lists refresh. */
   exploreChanged?: () => void
@@ -42,11 +42,11 @@ export interface McpDeps extends Deps {
 
 /** The keep sentence the model says once after an anonymous publish, on every surface (steps.md step 6). */
 export const KEEP_SENTENCE =
-  "It lasts 7 days. Say \"keep it\" and I'll save it to your learn.ninja account; you'll sign in once."
+  "It lasts 7 days. Say \"keep it\" and I'll save it to your learn.ninja account; you'll log in once."
 
 /**
  * Per-tool `securitySchemes`, as ChatGPT reads them from a tool's metadata when a server is added
- * with "OAuth or no authentication": which tools work signed out, and which need the account.
+ * with "OAuth or no authentication": which tools work logged out, and which need the account.
  */
 const OPTIONAL_AUTH = {
   securitySchemes: [
@@ -268,7 +268,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
           "ok",
           "id",
           "url",
-          // A signed-in app edits by account, so its chat never sees the token (chats get shared).
+          // A logged-in app edits by account, so its chat never sees the token (chats get shared).
           ...(actor ? [] : ["editToken", "claimUrl"]),
           "expiresAt",
           "owner",
@@ -283,8 +283,8 @@ function registerTools(server: McpServer, deps: McpDeps) {
       title: "Keep a lesson in an account",
       _meta: NEEDS_AUTH,
       description: actor
-        ? `Saves a lesson that was published anonymously (in another chat, or before the user signed in) to ${actor.handle ? `@${actor.handle}` : "the user's account"}, given its \`id\` and \`editToken\`, and lists it in Explore. Lessons published here are already saved, so it's rarely needed.`
-        : `Saves a published lesson to the user's learn.ninja account, given the \`id\` and \`editToken\` from \`publish_lesson\`: it stops expiring and is listed in Explore under their handle. For when the user asks to keep a lesson. It needs the user signed in; this app asks them to, once, then retries the call. The reply names the account (\`owner.handle\`, \`visibility\`), and a lesson already in an account answers \`already_claimed\`.`,
+        ? `Saves a lesson that was published anonymously (in another chat, or before the user logged in) to ${actor.handle ? `@${actor.handle}` : "the user's account"}, given its \`id\` and \`editToken\`, and lists it in Explore. Lessons published here are already saved, so it's rarely needed.`
+        : `Saves a published lesson to the user's learn.ninja account, given the \`id\` and \`editToken\` from \`publish_lesson\`: it stops expiring and is listed in Explore under their handle. For when the user asks to keep a lesson. It needs the user logged in; this app asks them to, once, then retries the call. The reply names the account (\`owner.handle\`, \`visibility\`), and a lesson already in an account answers \`already_claimed\`.`,
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z
@@ -300,14 +300,14 @@ function registerTools(server: McpServer, deps: McpDeps) {
       },
     },
     ({ id, editToken }, ctx) => {
-      // Signed out: the gate answers this call with a 401 before it gets here; this is for a
+      // Logged out: the gate answers this call with a 401 before it gets here; this is for a
       // client that ignored it.
       if (!actor) {
         return errorResult({
           ok: false,
           error: "sign_in_required",
           message:
-            "Keeping a lesson needs the user signed in to learn.ninja. Connect this server with OAuth, or open the lesson's `claimUrl` in a browser.",
+            "Keeping a lesson needs the user logged in to learn.ninja. Connect this server with OAuth, or open the lesson's `claimUrl` in a browser.",
         })
       }
       // Keeping is cheap, and chat apps share an egress IP: the checks' limit, not the publish one.
@@ -502,7 +502,7 @@ const RATE_LIMITED: Reply = {
 }
 
 /**
- * Who the rate limits count: the signed-in account (one person, wherever they call from), or
+ * Who the rate limits count: the logged-in account (one person, wherever they call from), or
  * else the IP of the HTTP request the tool call came in on.
  */
 function clientOf(

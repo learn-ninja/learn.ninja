@@ -26,11 +26,11 @@ const CAN = [
 ]
 
 /**
- * The consent step of a chat app signing in over OAuth, laid out like Agendolo's: the app and
- * learn.ninja side by side, what it could do, who is signed in, then Allow or Cancel. Either
+ * The consent step of a chat app logging in over OAuth, laid out like Agendolo's: the app and
+ * learn.ninja side by side, what it could do, who is logged in, then Allow or Cancel. Either
  * answer goes to Better Auth with the signed request from the page's query, which replies with
- * where to send the browser: back to the app with a code, or with a refusal. Switch signs out and
- * goes to sign in, which comes back here. A user without a handle (a new account: the sign-in
+ * where to send the browser: back to the app with a code, or with a refusal. Switch logs out and
+ * goes to log in, which comes back here. A user without a handle (a new account: the log-in
  * page skips the handle step on this path) can pick one here, so the app's lessons have a name to
  * be listed under; it's optional, and settings has it too.
  */
@@ -45,13 +45,13 @@ export function ConsentForm({
 }: {
   /** Who is asking, as shown to the user: the app's host (claude.ai) or its name. */
   app: string
-  /** The signed-in user's handle, or null when they haven't picked one. */
+  /** The logged-in user's handle, or null when they haven't picked one. */
   handle: string | null
-  /** The signed-in user's email, shown when there's no handle yet. */
+  /** The logged-in user's email, shown when there's no handle yet. */
   email: string
   /** The host the browser goes back to (claude.ai), or null when it can't be read. */
   returnTo: string | null
-  /** Where Switch goes once signed out: sign in, then back to this request. */
+  /** Where Switch goes once logged out: log in, then back to this request. */
   switchHref: string
   api?: AccountApi
   navigate?: (to: string) => void
@@ -99,7 +99,7 @@ export function ConsentForm({
         }
       >
         It will make lessons as you. It can&apos;t read your email, change your
-        handle, or sign in on the website.
+        handle, or log in on the website.
       </AuthHeading>
       <ul className="w-full divide-y rounded-xl border text-start">
         {CAN.map(({ icon: Icon, text }) => (
@@ -116,7 +116,7 @@ export function ConsentForm({
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3 rounded-lg bg-muted py-2.5 ps-4 pe-3 text-start text-sm dark:bg-input/30">
             <span className="min-w-0 truncate">
-              Signed in as{" "}
+              Logged in as{" "}
               <bdi dir="ltr" className="font-medium">
                 {handle ? `@${handle}` : email}
               </bdi>

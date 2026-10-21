@@ -3,7 +3,7 @@ import { getDb } from "@/lib/publish/store"
 import { actorFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 
-// GET /api/account/apps: the chat apps that signed in over OAuth and the user allowed, for the
+// GET /api/account/apps: the chat apps that logged in over OAuth and the user allowed, for the
 // settings page. Needs a browser session, not a key.
 
 export async function GET(req: Request) {

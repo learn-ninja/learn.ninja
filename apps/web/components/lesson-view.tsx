@@ -30,7 +30,7 @@ export interface LessonViewProps extends LessonPlayerProps {
   canReport?: boolean
   /** When the viewer owns the lesson: how it's listed, with a way to their profile's list once they have a handle. */
   owner?: { visibility: Visibility; hidden: boolean; handle: string | null }
-  /** Record finishing the lesson to the viewer's account (signed in only), for the check on Explore. */
+  /** Record finishing the lesson to the viewer's account (logged in only), for the check on Explore. */
   recordCompletion?: boolean
 }
 
@@ -39,7 +39,7 @@ export interface LessonViewProps extends LessonPlayerProps {
  * pass `uiLanguage` (the prerendered /lessons pages) still honors ?ui=, read after mounting, the
  * same moment the player loads saved preferences, so the page can stay static. Published lessons
  * add the site's own items to the lesson menu: a report, or the owner's listing status, and tell
- * the server when a signed-in viewer reaches the wrap-up.
+ * the server when a logged-in viewer reaches the wrap-up.
  */
 export function LessonView({
   lessonId,

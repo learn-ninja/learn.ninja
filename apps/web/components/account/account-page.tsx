@@ -2,13 +2,13 @@ import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import type { AccountInfo } from "@/lib/auth/account-info"
 
-/** The frame for the sign-in, settings, and keep pages: a narrow centered column. */
+/** The frame for the log-in, settings, and keep pages: a narrow centered column. */
 export function AccountPage({
   account,
   wide = false,
   children,
 }: {
-  /** The signed-in user, or null when nobody is signed in. */
+  /** The logged-in user, or null when nobody is logged in. */
   account: AccountInfo | null
   wide?: boolean
   children: React.ReactNode

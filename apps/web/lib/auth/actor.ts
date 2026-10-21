@@ -9,8 +9,8 @@ import {
   type Auth,
 } from "./auth"
 
-// Who's making a request: a signed-in user (session cookie), a terminal (x-api-key), a chat app
-// that signed in over OAuth (a bearer token on /mcp) or uses its personal MCP URL (the key in the
+// Who's making a request: a logged-in user (session cookie), a terminal (x-api-key), a chat app
+// that logged in over OAuth (a bearer token on /mcp) or uses its personal MCP URL (the key in the
 // path), or nobody.
 
 export interface Actor {
@@ -24,7 +24,7 @@ export interface Actor {
 }
 
 /**
- * The account behind an MCP call: through an OAuth token the chat app got by signing in, or
+ * The account behind an MCP call: through an OAuth token the chat app got by logging in, or
  * through the key in a personal URL. `limitKey` is what the rate limits count: one person,
  * wherever they call from.
  */
@@ -108,7 +108,7 @@ export async function getActorByKey(
     throw e
   }
   if (!verified.valid || !verified.key) throw new InvalidApiKeyError(BAD_MCP_URL)
-  // A banned account keeps its keys but can't act through them, as it can't sign in.
+  // A banned account keeps its keys but can't act through them, as it can't log in.
   const actor = await actorForUser(db, verified.key.referenceId, {
     via: "key",
     limitKey: `key:${verified.key.id}`,
@@ -119,8 +119,8 @@ export async function getActorByKey(
 
 /**
  * The account an OAuth access token names (its `sub`), for the public /mcp once a chat app has
- * signed in. Null when the user is gone or banned; the gate then answers as it does for a bad
- * token, and the app signs in again.
+ * logged in. Null when the user is gone or banned; the gate then answers as it does for a bad
+ * token, and the app logs in again.
  */
 export async function getActorByUserId(
   db: Db,

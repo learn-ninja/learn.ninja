@@ -11,7 +11,7 @@ import { skillBundle } from "@/lib/skill-files"
 // /mcp: the learn.ninja MCP server (spec 2026-07-28, stateless; 2025-era clients fall back to
 // stateless Streamable HTTP). No cookies: lessons publish anonymously until the chat app signs the
 // user in over OAuth (lib/mcp/gate.ts), after which every call carries a token and publishes to
-// the account. /mcp/{key} is the twin for apps that can't sign in.
+// the account. /mcp/{key} is the twin for apps that can't log in.
 
 async function handler(req: Request) {
   const db = await getDb()

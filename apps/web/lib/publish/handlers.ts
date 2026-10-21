@@ -70,7 +70,7 @@ interface PublishRequest {
   client: string
   /** The installed skill's version, from the x-learn-skill-version header. */
   skillVersion?: string | null
-  /** The signed-in user (session cookie or API key), or null for an anonymous publish. */
+  /** The logged-in user (session cookie or API key), or null for an anonymous publish. */
   ownerId?: string | null
   /** The owner's handle when the caller already knows it (the route has the actor), so the reply needn't look it up. */
   ownerHandle?: string | null
@@ -246,7 +246,7 @@ export async function updateLesson(
   req: PublishRequest & {
     id: string
     editToken: string | null
-    /** The signed-in user, when the caller has one; an owner needs no token. */
+    /** The logged-in user, when the caller has one; an owner needs no token. */
     actorId?: string | null
   },
   deps: Deps
@@ -312,7 +312,7 @@ export async function updateLesson(
   }
 }
 
-/** Whether the edit token, or the signed-in user's ownership, allows changing `existing`. */
+/** Whether the edit token, or the logged-in user's ownership, allows changing `existing`. */
 export function mayEdit(
   existing: Pick<StoredLesson, "editTokenHash" | "ownerId">,
   editToken: string | null | undefined,

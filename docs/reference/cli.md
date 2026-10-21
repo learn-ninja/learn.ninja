@@ -39,7 +39,7 @@ Checks the lesson, then publishes it and prints the link. If this lesson was pub
 node scripts/learn.mjs publish lesson.json
 ```
 
-An anonymous lesson lasts 7 days; the tool says so, and gives the agent the one sentence to offer keeping it. Once you're signed in (`login`), every lesson you publish is saved to your account, never expires, and is listed in Explore under your handle; the tool says so. Signed in and updating a lesson that was published anonymously, it keeps that lesson as it goes.
+An anonymous lesson lasts 7 days; the tool says so, and gives the agent the one sentence to offer keeping it. Once you're logged in (`login`), every lesson you publish is saved to your account, never expires, and is listed in Explore under your handle; the tool says so. Logged in and updating a lesson that was published anonymously, it keeps that lesson as it goes.
 
 The edit token for each published lesson is saved in `.learn/state.json` next to where you run it, along with the claim token that `login` and `keep` use. Don't delete or share that file. The tool adds a `.gitignore` to `.learn/` so none of it gets committed.
 
@@ -68,13 +68,13 @@ Codes work for 5 minutes and three tries. The tool saves an API key for this mac
 
 ### `keep`
 
-Saves every lesson published from this folder to the signed-in account, without sending a new code. For a folder that a `login` elsewhere didn't cover, and for lessons published by an older tool that saved no claim token: the edit token in `.learn/state.json` is proof enough.
+Saves every lesson published from this folder to the logged-in account, without sending a new code. For a folder that a `login` elsewhere didn't cover, and for lessons published by an older tool that saved no claim token: the edit token in `.learn/state.json` is proof enough.
 
 ```bash
 node scripts/learn.mjs keep
 ```
 
-It prints the lessons it kept and where they stand (saved to @handle and listed in Explore), says when there's nothing new to keep, exits 1 when the server couldn't be reached for any of them, and asks you to run `login` first when you're not signed in.
+It prints the lessons it kept and where they stand (saved to @handle and listed in Explore), says when there's nothing new to keep, exits 1 when the server couldn't be reached for any of them, and asks you to run `login` first when you're not logged in.
 
 ### `logout`
 
@@ -86,7 +86,7 @@ node scripts/learn.mjs logout
 
 ### `whoami`
 
-Prints the signed-in email and handle, or says to sign in.
+Prints the logged-in email and handle, or says to log in.
 
 ```bash
 node scripts/learn.mjs whoami

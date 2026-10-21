@@ -9,8 +9,8 @@ import { cn } from "@workspace/ui/lib/utils"
 import { compact, exploreApi, type ExploreApi } from "@/lib/explore/browser"
 
 /**
- * A heart with the count. Signed in, it toggles the like at once and settles on the server's
- * answer. Signed out, pressing it turns it into a "Sign in to like" link in place: no modal.
+ * A heart with the count. Logged in, it toggles the like at once and settles on the server's
+ * answer. Logged out, pressing it turns it into a "Log in to like" link in place: no modal.
  */
 export function LikeButton({
   id,
@@ -39,14 +39,14 @@ export function LikeButton({
         : window.location.pathname + window.location.search
     return (
       <LinkButton
-        href={`/sign-in?callback=${encodeURIComponent(here)}`}
+        href={`/login?callback=${encodeURIComponent(here)}`}
         variant="link"
         size="xs"
         className={cn("px-0", className)}
         autoFocus
       >
         <HeartIcon data-icon="inline-start" />
-        Sign in to like
+        Log in to like
       </LinkButton>
     )
   }

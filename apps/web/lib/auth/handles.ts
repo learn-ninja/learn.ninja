@@ -7,7 +7,7 @@ import { normalizeHandle, RESERVED } from "./handle-rules"
 export * from "./handle-rules"
 
 // GitHub users get their login (made unique if taken); email users pick one the first time they
-// open the site signed in.
+// open the site logged in.
 
 /** The user who has `handle`, if any. */
 export async function findByHandle(db: Db, handle: string) {
@@ -29,7 +29,7 @@ export async function handleOf(db: Db, id: string): Promise<string | null> {
 
 /**
  * A handle close to `wanted` that nobody has: the normalized name itself, or with a number after
- * it ("colin", "colin-2", "colin-3"...). Used for GitHub logins at first sign-in.
+ * it ("colin", "colin-2", "colin-3"...). Used for GitHub logins at first log-in.
  */
 export async function freeHandle(db: Db, wanted: string): Promise<string> {
   const base = (normalizeHandle(wanted) || "ninja").padEnd(3, "0")

@@ -26,11 +26,11 @@ import { authStorageFromEnv } from "./storage"
 // Better Auth, as plans/accounts-v2.md describes: GitHub (website only) and a six-digit email code
 // (website and terminal), API keys for the terminal, sessions cached in a cookie and kept in Redis.
 // Users live in our Postgres through the Drizzle adapter (packages/db has the tables). It is also
-// the OAuth 2.1 server chat apps sign in through (`mcp`, below): the MCP server at /mcp answers a
-// `keep_lesson` call from a signed-out app with a 401, the app sends the user to /sign-in and
+// the OAuth 2.1 server chat apps log in through (`mcp`, below): the MCP server at /mcp answers a
+// `keep_lesson` call from a logged-out app with a 401, the app sends the user to /login and
 // /consent here, and comes back with a token that names the account on every later call.
 
-/** How long a sign-in code works, in seconds, and how many guesses it allows. */
+/** How long a log-in code works, in seconds, and how many guesses it allows. */
 export const CODE_EXPIRY_SECONDS = 5 * 60
 export const CODE_ATTEMPTS = 3
 /** API keys start with this, so a leaked one is easy to recognize. */
@@ -51,9 +51,9 @@ export const MCP_KEY_AS_HEADER =
 
 /** The one OAuth scope the MCP server asks for: publishing and keeping lessons as the user. */
 export const MCP_SCOPE = "lessons"
-/** Every scope the OAuth server issues; `offline_access` is what makes a chat app stay signed in. */
+/** Every scope the OAuth server issues; `offline_access` is what makes a chat app stay logged in. */
 export const OAUTH_SCOPES = ["openid", "offline_access", MCP_SCOPE] as const
-/** How long a chat app stays signed in without being used, in seconds (refresh tokens rotate on use). */
+/** How long a chat app stays logged in without being used, in seconds (refresh tokens rotate on use). */
 const REFRESH_TOKEN_SECONDS = 90 * 24 * 60 * 60
 
 /**
@@ -78,22 +78,22 @@ export function mcpResourceFromEnv(env = process.env): string {
   return `${publicSiteFromEnv(env)}/mcp`
 }
 
-/** The OAuth issuer: Better Auth's base URL, which is where chat apps sign in and get tokens. */
+/** The OAuth issuer: Better Auth's base URL, which is where chat apps log in and get tokens. */
 export function oauthIssuerFromEnv(env = process.env): string {
   return env.BETTER_AUTH_URL ?? `${publicSiteFromEnv(env)}/api/auth`
 }
 
 /**
- * A fixed sign-in for Anthropic's directory reviewers, who need a test account but can't read our
+ * A fixed log-in for Anthropic's directory reviewers, who need a test account but can't read our
  * email: REVIEW_SIGN_IN_EMAIL always gets REVIEW_SIGN_IN_CODE, and no email is sent to it. Unset in
  * development and tests unless passed in.
  */
-export interface ReviewSignIn {
+export interface ReviewLogin {
   email: string
   code: string
 }
 
-export function reviewSignInFromEnv(env = process.env): ReviewSignIn | null {
+export function reviewLoginFromEnv(env = process.env): ReviewLogin | null {
   const email = env.REVIEW_SIGN_IN_EMAIL?.trim().toLowerCase()
   const code = env.REVIEW_SIGN_IN_CODE?.trim()
   if (!email || !code || !/^\d{6}$/.test(code)) return null
@@ -103,7 +103,7 @@ export function reviewSignInFromEnv(env = process.env): ReviewSignIn | null {
 export interface AuthDeps {
   db: Db
   env?: NodeJS.ProcessEnv
-  /** Delivers a sign-in code; the console in development. */
+  /** Delivers a log-in code; the console in development. */
   sendCode?: CodeSender
   /** Redis for sessions and Better Auth's rate limits; null keeps sessions in Postgres. */
   storage?: SecondaryStorage | null
@@ -111,11 +111,11 @@ export interface AuthDeps {
   codeLimiter?: RateLimiter
   /** The MCP server's URL that OAuth tokens are bound to; `mcpResourceFromEnv` otherwise. */
   resource?: string
-  /** The reviewers' fixed sign-in; `reviewSignInFromEnv` otherwise. */
-  reviewSignIn?: ReviewSignIn | null
+  /** The reviewers' fixed log-in; `reviewLoginFromEnv` otherwise. */
+  reviewLogin?: ReviewLogin | null
 }
 
-/** The GitHub OAuth app, when its keys are set. The sign-in page hides GitHub otherwise. */
+/** The GitHub OAuth app, when its keys are set. The log-in page hides GitHub otherwise. */
 export function githubFromEnv(env = process.env) {
   const clientId = env.GITHUB_CLIENT_ID
   const clientSecret = env.GITHUB_CLIENT_SECRET
@@ -142,7 +142,7 @@ export function createAuth(deps: AuthDeps) {
   const codeLimiter = deps.codeLimiter ?? getRateLimiter("code")
   const resource = deps.resource ?? mcpResourceFromEnv(env)
   const review =
-    deps.reviewSignIn === undefined ? reviewSignInFromEnv(env) : deps.reviewSignIn
+    deps.reviewLogin === undefined ? reviewLoginFromEnv(env) : deps.reviewLogin
   const isReviewer = (email: string) =>
     review !== null && email.trim().toLowerCase() === review.email
 
@@ -218,7 +218,7 @@ export function createAuth(deps: AuthDeps) {
       // Document (`cimd`, what Claude and ChatGPT do) or, for older apps, register dynamically.
       mcp({
         resource,
-        loginPage: "/sign-in",
+        loginPage: "/login",
         consentPage: "/consent",
         scopes: [...OAUTH_SCOPES],
         refreshTokenExpiresIn: REFRESH_TOKEN_SECONDS,
@@ -255,7 +255,7 @@ export function createAuth(deps: AuthDeps) {
         // A key may not mint keys: only a browser session can (POST /api/keys does the same).
         if (ctx.path === "/api-key/create" && apiKeyHeader) {
           throw new APIError("FORBIDDEN", {
-            message: "Make new keys from the website, signed in.",
+            message: "Make new keys from the website, logged in.",
           })
         }
         if (ctx.path !== "/email-otp/send-verification-otp") return
@@ -303,7 +303,7 @@ export function createAuth(deps: AuthDeps) {
       },
       session: {
         create: {
-          // A banned user keeps the account but can't sign in.
+          // A banned user keeps the account but can't log in.
           before: async (session) => {
             const [row] = await deps.db
               .select({ banned: user.banned })
@@ -311,7 +311,7 @@ export function createAuth(deps: AuthDeps) {
               .where(eq(user.id, session.userId))
             if (row?.banned) {
               throw new APIError("FORBIDDEN", {
-                message: "This account can't sign in.",
+                message: "This account can't log in.",
               })
             }
           },

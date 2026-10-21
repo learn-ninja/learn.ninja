@@ -3,7 +3,7 @@ import { exploreDepsFor } from "@/lib/explore/request"
 import { actorFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 
-// POST /api/lessons/{id}/like likes a lesson for the signed-in user (cookie or x-api-key); DELETE
+// POST /api/lessons/{id}/like likes a lesson for the logged-in user (cookie or x-api-key); DELETE
 // takes the like back. One like per user per lesson: repeating either changes nothing.
 
 type Params = { params: Promise<{ id: string }> }

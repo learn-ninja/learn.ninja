@@ -28,7 +28,7 @@ import {
 import { freeHandle, handleProblem, normalizeHandle } from "./handles"
 import { safeCallback } from "./session"
 
-// Better Auth over an in-memory Postgres: the email code flow the CLI and the sign-in page use,
+// Better Auth over an in-memory Postgres: the email code flow the CLI and the log-in page use,
 // API keys as sessions, and handles.
 
 const buttons = readFileSync(
@@ -338,7 +338,7 @@ describe("handles", () => {
       email: "h1@example.com",
       handle: "ada-lovelace",
     })
-    // So does a fresh sign-in.
+    // So does a fresh log-in.
     const again = (await getActor(
       auth,
       new Headers({ cookie: await signIn("h1@example.com") })
@@ -367,7 +367,7 @@ describe("handles", () => {
     expect(await freeHandle(db, "ab")).toBe("ab0")
   })
 
-  it("only sends the browser to site paths after signing in", () => {
+  it("only sends the browser to site paths after logging in", () => {
     expect(safeCallback("/keep/abc")).toBe("/keep/abc")
     expect(safeCallback(["/settings", "/x"])).toBe("/settings")
     expect(safeCallback(undefined)).toBe("/settings")
@@ -378,7 +378,7 @@ describe("handles", () => {
 })
 
 describe("with Redis holding sessions", () => {
-  it("starts, and signs in, with a secondary storage like production", async () => {
+  it("starts, and logs in, with a secondary storage like production", async () => {
     // The OAuth provider refuses to start with a secondary storage unless sessions are also kept
     // in the database; a missing flag only showed on Vercel, as every discovery route answered 500.
     const memory = new Map<string, string>()
@@ -425,7 +425,7 @@ describe("with Redis holding sessions", () => {
 })
 
 describe("the reviewers' test account", () => {
-  it("signs in with the fixed code and gets no email; everyone else is unchanged", async () => {
+  it("logs in with the fixed code and gets no email; everyone else is unchanged", async () => {
     const sent: string[] = []
     const reviewed = createAuth({
       db,
@@ -435,7 +435,7 @@ describe("the reviewers' test account", () => {
         codes.set(email, code)
       },
       codeLimiter: new MemoryRateLimiter(100),
-      reviewSignIn: { email: "reviewer@example.com", code: "246810" },
+      reviewLogin: { email: "reviewer@example.com", code: "246810" },
     })
     await reviewed.api.sendVerificationOTP({
       body: { email: "Reviewer@example.com", type: "sign-in" },
@@ -460,17 +460,17 @@ describe("the reviewers' test account", () => {
   })
 
   it("is off unless both variables are set and the code has six digits", async () => {
-    const { reviewSignInFromEnv } = await import("./auth")
+    const { reviewLoginFromEnv } = await import("./auth")
     const env = (vars: Record<string, string>) => vars as NodeJS.ProcessEnv
-    expect(reviewSignInFromEnv(env({}))).toBeNull()
-    expect(reviewSignInFromEnv(env({ REVIEW_SIGN_IN_EMAIL: "r@example.com" }))).toBeNull()
+    expect(reviewLoginFromEnv(env({}))).toBeNull()
+    expect(reviewLoginFromEnv(env({ REVIEW_SIGN_IN_EMAIL: "r@example.com" }))).toBeNull()
     expect(
-      reviewSignInFromEnv(
+      reviewLoginFromEnv(
         env({ REVIEW_SIGN_IN_EMAIL: "r@example.com", REVIEW_SIGN_IN_CODE: "12" })
       )
     ).toBeNull()
     expect(
-      reviewSignInFromEnv(
+      reviewLoginFromEnv(
         env({ REVIEW_SIGN_IN_EMAIL: " R@Example.com ", REVIEW_SIGN_IN_CODE: "123456" })
       )
     ).toEqual({ email: "r@example.com", code: "123456" })

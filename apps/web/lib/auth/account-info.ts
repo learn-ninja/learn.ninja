@@ -4,13 +4,13 @@ import type { Actor } from "./actor"
 // browser (which keeps a copy in a cookie). Pure, so server and client code can both use it.
 
 export interface AccountInfo {
-  /** The handle, or null for a signed-in user who hasn't picked one. */
+  /** The handle, or null for a logged-in user who hasn't picked one. */
   handle: string | null
   /** The profile picture's URL (ours or GitHub's), or null. */
   image: string | null
 }
 
-/** The header's view of the signed-in user, or null for a visitor. */
+/** The header's view of the logged-in user, or null for a visitor. */
 export function accountOf(actor: Actor | null): AccountInfo | null {
   return actor ? { handle: actor.handle, image: actor.image } : null
 }
@@ -22,7 +22,7 @@ export function encodeAccount(account: AccountInfo): string {
 
 /**
  * Reads the marker cookie's value. Earlier cookies held the handle alone, or "1" for a user
- * without one; those still read as signed in, without a picture, until a page corrects them.
+ * without one; those still read as logged in, without a picture, until a page corrects them.
  */
 export function decodeAccount(value: string): AccountInfo {
   if (value.startsWith("{")) {

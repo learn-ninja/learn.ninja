@@ -10,15 +10,15 @@ import {
 } from "@workspace/spec"
 
 // The command the lesson skill runs: sync the guides, validate a lesson file, publish it, or update
-// it; and sign in, so published lessons are kept in an account instead of expiring (`keep` moves
-// the ones published before signing in).
+// it; and log in, so published lessons are kept in an account instead of expiring (`keep` moves
+// the ones published before logging in).
 // Bundled into skills/learn/scripts/learn.mjs, so the skill works without installing anything.
 //
 // The guides and checker rules live on learn.ninja and change often, so `sync` downloads
 // the current guides into .learn/skill/ (text only, never code), and `validate` checks the lesson on the
 // server. The copies that came with the install are the fallback when the server can't be reached.
 
-export const SKILL_VERSION = "0.14.0"
+export const SKILL_VERSION = "0.14.1"
 export const DEFAULT_API_URL = "https://learn.ninja"
 /** Where `sync` puts the guides, relative to the current folder. */
 export const SYNC_DIR = ".learn/skill"
@@ -54,7 +54,7 @@ interface SavedLesson {
   ownedElsewhere?: true
 }
 
-/** One signed-in server, in the credentials file. */
+/** One logged-in server, in the credentials file. */
 interface Credential {
   apiKey: string
   /** The key's id on the server, so `logout` can revoke it. */
@@ -89,18 +89,18 @@ Usage:
   learn validate <lesson.json>       Check a lesson against the spec and print every issue
   learn publish <lesson.json>        Check, then publish (or update the same link if published before)
   learn publish <lesson.json> --new  Publish as a new lesson with a new link
-  learn login                        Sign in with an email code, then keep the lessons published here
+  learn login                        Log in with an email code, then keep the lessons published here
   learn login --email <address>      Send the code without a terminal; then add --code <code>
-  learn keep                         Save the lessons published here to the signed-in account
+  learn keep                         Save the lessons published here to the logged-in account
   learn logout                       Forget the saved key and revoke it
-  learn whoami                       Print the signed-in email and handle
+  learn whoami                       Print the logged-in email and handle
   learn schema                       Print the path to the lesson JSON Schema
 
 Options:
   --api <url>   Server to use (default: $LEARN_API_URL or ${DEFAULT_API_URL})
   --json        Print machine-readable JSON instead of text
 
-Signed in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account, never
+Logged in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account, never
 expires, and is listed in Explore under your handle. Anonymous lessons last 7 days; \`login\` and
 \`keep\` save the ones published from this folder.`
 
@@ -517,7 +517,7 @@ async function publish(
   >
 
   // The saved lesson expired on the server, or its token no longer works: publish a new one instead.
-  // (A bad API key is a different 401, reported below, so a signed-in publish never falls back to
+  // (A bad API key is a different 401, reported below, so a logged-in publish never falls back to
   // an anonymous one by accident.)
   if (
     live &&
@@ -556,8 +556,8 @@ async function publish(
     (body.claimToken as string | undefined) ??
     (owned ? undefined : live?.claimToken)
   if (claimToken) record.claimToken = claimToken
-  // Signed in, but updating a lesson published before signing in (from another folder's login):
-  // keep it now rather than telling the user to sign in again.
+  // Logged in, but updating a lesson published before logging in (from another folder's login):
+  // keep it now rather than telling the user to log in again.
   if (credential && !owned) {
     const claimed = await claimOne(io, o.api, credential, record)
     if (claimed.outcome === "kept") {
@@ -659,7 +659,7 @@ async function login(
   const email = (o.email ?? (await io.prompt?.("Email: ")))?.trim()
   if (!email) {
     io.err(
-      "Give the email address to sign in with: learn login --email <address>"
+      "Give the email address to log in with: learn login --email <address>"
     )
     return 1
   }
@@ -717,7 +717,7 @@ async function login(
       o.json,
       { ok: false, error: "sign_in_failed", message: (e as Error).message },
       () =>
-        `Couldn't sign in: ${(e as Error).message}\nCodes work for 5 minutes and three tries. Run \`learn login\` to get a new one.`
+        `Couldn't log in: ${(e as Error).message}\nCodes work for 5 minutes and three tries. Run \`learn login\` to get a new one.`
     )
     return 1
   }
@@ -744,7 +744,7 @@ async function login(
       io,
       o.json,
       { ok: false, error: "key_failed", message: (e as Error).message },
-      () => `Signed in, but couldn't make an API key: ${(e as Error).message}`
+      () => `Logged in, but couldn't make an API key: ${(e as Error).message}`
     )
     return 1
   }
@@ -761,7 +761,7 @@ async function login(
     { ok: true, email, handle, credentials: credentialsPath(io), kept },
     () =>
       [
-        `Signed in as ${email}${handle ? ` (@${handle})` : ""}. Saved the key in ${credentialsPath(io)}.`,
+        `Logged in as ${email}${handle ? ` (@${handle})` : ""}. Saved the key in ${credentialsPath(io)}.`,
         kept.length
           ? keptLines(kept, o.api)
           : `No lessons from this folder to keep. From now on, every lesson you publish is saved to your account${handle ? ` and listed in Explore under @${handle}` : ""}.`,
@@ -776,7 +776,7 @@ async function login(
 }
 
 /**
- * Saves every lesson published from this folder to the signed-in account, without a new code:
+ * Saves every lesson published from this folder to the logged-in account, without a new code:
  * for the folder a `login` elsewhere didn't cover, and for lessons an older tool published
  * without a claim token (the edit token is proof enough).
  */
@@ -786,9 +786,9 @@ async function keep(io: Io, api: string, json: boolean): Promise<number> {
     report(
       io,
       json,
-      { ok: false, error: "signed_out", message: "Not signed in." },
+      { ok: false, error: "signed_out", message: "Not logged in." },
       () =>
-        "Not signed in. Run `learn login`: it signs in with an email code and keeps the lessons published here too."
+        "Not logged in. Run `learn login`: it logs in with an email code and keeps the lessons published here too."
     )
     return 1
   }
@@ -808,7 +808,7 @@ async function keep(io: Io, api: string, json: boolean): Promise<number> {
             ? "Nothing new to keep: the lessons published from this folder are already saved, or have expired."
             : total
               ? "Every lesson published from this folder is already saved to your account."
-              : "No lessons have been published from this folder yet; signed in, `learn publish` saves them to your account as it goes.",
+              : "No lessons have been published from this folder yet; logged in, `learn publish` saves them to your account as it goes.",
         retry
           ? `Couldn't reach the server for ${retry} lesson${retry === 1 ? "" : "s"}; run \`learn keep\` again in a minute.`
           : null,
@@ -905,8 +905,8 @@ async function logout(io: Io, api: string, json: boolean): Promise<number> {
   if (!credential) {
     report(io, json, { ok: true, signedIn: envKey, envKey }, () =>
       envKey
-        ? "No saved key to forget, but LEARN_API_KEY is set in this shell, so publishing still uses it. Unset it to sign out."
-        : "Not signed in."
+        ? "No saved key to forget, but LEARN_API_KEY is set in this shell, so publishing still uses it. Unset it to log out."
+        : "Not logged in."
     )
     return 0
   }
@@ -924,9 +924,9 @@ async function logout(io: Io, api: string, json: boolean): Promise<number> {
   await writeCredentials(io, all)
   report(io, json, { ok: true, signedIn: envKey, revoked, envKey }, () =>
     [
-      `Signed out of ${api}.${revoked ? " The key was revoked." : " The key couldn't be revoked from here; revoke it at " + api + "/settings if it may have leaked."}`,
+      `Logged out of ${api}.${revoked ? " The key was revoked." : " The key couldn't be revoked from here; revoke it at " + api + "/settings if it may have leaked."}`,
       envKey
-        ? "LEARN_API_KEY is still set in this shell, so publishing keeps using it. Unset it to sign out."
+        ? "LEARN_API_KEY is still set in this shell, so publishing keeps using it. Unset it to log out."
         : null,
     ]
       .filter(Boolean)
@@ -941,8 +941,8 @@ async function whoami(io: Io, api: string, json: boolean): Promise<number> {
     report(
       io,
       json,
-      { ok: false, error: "signed_out", message: "Not signed in." },
-      () => "Not signed in. Run `learn login` to keep lessons in an account."
+      { ok: false, error: "signed_out", message: "Not logged in." },
+      () => "Not logged in. Run `learn login` to keep lessons in an account."
     )
     return 1
   }

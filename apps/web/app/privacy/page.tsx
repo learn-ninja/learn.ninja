@@ -35,21 +35,21 @@ export default function PrivacyPage() {
           <strong>Likes, completions, and reports.</strong> Liking a lesson
           stores that your account liked it. Once you have a handle, the listed
           lessons you liked show on your profile. Finishing a lesson while
-          signed in stores when you first finished it, so Explore can mark it
+          logged in stores when you first finished it, so Explore can mark it
           for you. Reporting a lesson stores the reason and a hash of your IP
           address, never the address itself, and emails the report to us.
         </li>
         <li>
           <strong>Your account, if you make one.</strong> Your email address,
-          and the name, avatar, and username GitHub shares when you sign in with
-          it. We use your email to send sign-in codes and nothing else. Codes
+          and the name, avatar, and username GitHub shares when you log in with
+          it. We use your email to send log-in codes and nothing else. Codes
           are stored hashed and deleted after 5 minutes. API keys are stored
           hashed; you can see and revoke them in your settings.
         </li>
         <li>
-          <strong>Sign-in cookies.</strong> Signing in sets a session cookie so
-          you stay signed in, and a small cookie that tells the site to show
-          your handle instead of a sign-in link. There are no other cookies.
+          <strong>Log-in cookies.</strong> Logging in sets a session cookie so
+          you stay logged in, and a small cookie that tells the site to show
+          your handle instead of a log-in link. There are no other cookies.
         </li>
         <li>
           <strong>Your settings.</strong> Text size, theme, language, and the
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
 
       <h2>What is not done</h2>
       <ul>
-        <li>No passwords: sign-in uses GitHub or a one-time code.</li>
+        <li>No passwords: log-in uses GitHub or a one-time code.</li>
         <li>No analytics, advertising, or tracking scripts.</li>
         <li>
           Nothing is sold or shared with third parties beyond the providers that

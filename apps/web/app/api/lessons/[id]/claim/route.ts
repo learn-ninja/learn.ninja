@@ -5,7 +5,7 @@ import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 
 // POST /api/lessons/{id}/claim: move an anonymous lesson into the caller's account. The body is
 // { "claimToken": "…" } or { "editToken": "…" } from publishing (either proves authorship); the
-// caller signs in with a cookie or x-api-key.
+// caller logs in with a cookie or x-api-key.
 
 export async function POST(
   req: Request,

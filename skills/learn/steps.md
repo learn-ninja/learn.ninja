@@ -26,7 +26,7 @@ There are two ways to follow these steps. In a terminal with the skill installed
    ```
    Over MCP, call `publish_lesson` with the lesson's JSON text as `lesson`. Publishing needs network access.
 6. **Tell the user** the link and where the lesson stands, in one sentence, as `publish` printed it (over MCP, from the reply's `owned`, `owner`, and `visibility`):
-   - Anonymous: "Published: {url}. It lasts 7 days. Say "keep it" and I'll save it to your learn.ninja account; you'll sign in once."
+   - Anonymous: "Published: {url}. It lasts 7 days. Say "keep it" and I'll save it to your learn.ninja account; you'll log in once."
    - Saved to an account and listed (`owner.handle` set, `visibility` public): "Saved to @{handle} and listed in Explore. Unlist it any time at learn.ninja/u/{handle}."
    - Saved but not listed yet: "Saved to @{handle}; list it in Explore at learn.ninja/u/{handle}." With no handle yet: "Saved to your account; pick a handle at learn.ninja/settings and it'll show in Explore."
 
@@ -37,13 +37,13 @@ There are two ways to follow these steps. In a terminal with the skill installed
    ```bash
    node <skill-folder>/scripts/learn.mjs login --email <address>
    ```
-   Then ask for the six-digit code they got, and sign in with it:
+   Then ask for the six-digit code they got, and log in with it:
    ```bash
    node <skill-folder>/scripts/learn.mjs login --email <address> --code <code>
    ```
-   Never guess the address. A wrong code fails with `sign_in_failed`: codes work for 5 minutes and three tries, so ask again, or send a new one. The login also saves a key on this machine and keeps every lesson published from this folder; tell the user which ones it kept, as the output says (saved to @handle and listed in Explore, as in step 6). From now on, every lesson you publish here is saved to their account, so skip the keep sentence and say the saved-and-listed sentence instead. Already signed in on this machine, but the lesson was published anonymously (an earlier folder, or before the login)? Run `learn keep`: it saves every lesson published from this folder without a new code. `learn whoami` says who's signed in; `learn logout` forgets the key. Never tell the user to look in `.learn/` or in the credentials file.
+   Never guess the address. A wrong code fails with `sign_in_failed`: codes work for 5 minutes and three tries, so ask again, or send a new one. The login also saves a key on this machine and keeps every lesson published from this folder; tell the user which ones it kept, as the output says (saved to @handle and listed in Explore, as in step 6). From now on, every lesson you publish here is saved to their account, so skip the keep sentence and say the saved-and-listed sentence instead. Already logged in on this machine, but the lesson was published anonymously (an earlier folder, or before the login)? Run `learn keep`: it saves every lesson published from this folder without a new code. `learn whoami` says who's logged in; `learn logout` forgets the key. Never tell the user to look in `.learn/` or in the credentials file.
 
-   Over MCP, call `keep_lesson` with the lesson's `id` and `editToken`. Nothing to ask for: if the user isn't signed in yet, the chat app itself asks them to (a sign-in prompt in the conversation that opens learn.ninja), then retries the call on its own. Tell the user where the lesson stands, as the reply says. From then on the app stays signed in, every lesson you publish is saved to their account as it's published (the reply has an `owner`, and you say the saved sentence instead of the keep sentence), and `update_lesson` needs no `editToken` for their lessons. If the user would rather not sign in from this app, give them the lesson's `claimUrl` to open in a browser: it saves that one lesson once they sign in there.
+   Over MCP, call `keep_lesson` with the lesson's `id` and `editToken`. Nothing to ask for: if the user isn't logged in yet, the chat app itself asks them to (a log-in prompt in the conversation that opens learn.ninja), then retries the call on its own. Tell the user where the lesson stands, as the reply says. From then on the app stays logged in, every lesson you publish is saved to their account as it's published (the reply has an `owner`, and you say the saved sentence instead of the keep sentence), and `update_lesson` needs no `editToken` for their lessons. If the user would rather not log in from this app, give them the lesson's `claimUrl` to open in a browser: it saves that one lesson once they log in there.
 
 If a command prints that a newer version of the skill is available, tell the user the update command it shows.
 

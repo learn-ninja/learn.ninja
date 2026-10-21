@@ -10,13 +10,13 @@ import { ButtonLink } from "./button-link"
 import { Wordmark } from "./wordmark"
 
 /**
- * The bar at the top of every page. Visitors get Docs · Sign in and a wordmark that
- * links home; once signed in, Explore is home, so the wordmark goes there and the links fold
+ * The bar at the top of every page. Visitors get Docs · Log in and a wordmark that
+ * links home; once logged in, Explore is home, so the wordmark goes there and the links fold
  * into the account menu behind the profile picture (which also opens on hover). `start` adds
  * page-specific controls before the wordmark (the docs menu), `action` a button after it (copy
  * prompt). `account` is what a page that checked the session knows about the user; static pages
  * leave it out and the marker cookie decides after hydration. Until then the visitor's links are
- * kept but invisible, so the header doesn't shift for the many visitors who aren't signed in.
+ * kept but invisible, so the header doesn't shift for the many visitors who aren't logged in.
  */
 export function SiteHeader({
   start,
@@ -25,7 +25,7 @@ export function SiteHeader({
 }: {
   start?: React.ReactNode
   action?: React.ReactNode
-  /** The signed-in user, or null when nobody is. */
+  /** The logged-in user, or null when nobody is. */
   account?: AccountInfo | null
 }) {
   const account = useAccount(known)

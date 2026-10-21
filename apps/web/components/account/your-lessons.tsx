@@ -47,7 +47,7 @@ export function YourLessons({
   if (!lessons.length) {
     return (
       <p className="text-sm text-muted-foreground">
-        No lessons yet. Ask your agent for one; signed in, it&apos;s saved here.
+        No lessons yet. Ask your agent for one; logged in, it&apos;s saved here.
       </p>
     )
   }

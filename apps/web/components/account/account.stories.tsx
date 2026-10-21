@@ -18,8 +18,8 @@ import { AuthHeading, AuthPanel, LegalConsent } from "./auth-panel"
 import { ConsentForm } from "./consent-form"
 import { HandleForm } from "./handle-form"
 import { KeepForm, type KeepResult } from "./keep-form"
-import { SignInForm } from "./sign-in-form"
-import { SignOutButton } from "./sign-out-button"
+import { LoginForm } from "./login-form"
+import { LogOutButton } from "./log-out-button"
 
 // The account screens with a fake server: any code "123456" works, the handle "taken" is taken,
 // and a picture named "big" is refused by the server (the browser refuses real oversized files first).
@@ -39,7 +39,7 @@ const fakeApi = (over: Partial<AccountApi> = {}): AccountApi => ({
       ? { account: { handle: null, image: null } }
       : { error: "That code isn't right. 2 tries left." }
   },
-  async signInWithGitHub() {
+  async loginWithGitHub() {
     await wait()
     return { error: "GitHub isn't wired up in Storybook." }
   },
@@ -180,10 +180,10 @@ type Story = StoryObj
 
 const navigate = (to: string) => alert(`→ ${to}`)
 
-export const SignIn: Story = {
+export const Login: Story = {
   render: () => (
     <AuthPanel footer={<LegalConsent />}>
-      <SignInForm
+      <LoginForm
         github
         callback="/settings"
         api={fakeApi()}
@@ -193,11 +193,11 @@ export const SignIn: Story = {
   ),
 }
 
-export const SignInEmailOnly: Story = {
-  name: "Sign in, email only",
+export const LoginEmailOnly: Story = {
+  name: "Log in, email only",
   render: () => (
     <AuthPanel footer={<LegalConsent />}>
-      <SignInForm
+      <LoginForm
         github={false}
         callback="/settings"
         api={fakeApi()}
@@ -207,17 +207,17 @@ export const SignInEmailOnly: Story = {
   ),
 }
 
-export const SignInFromChatApp: Story = {
-  name: "Sign in, from a chat app",
+export const LoginFromChatApp: Story = {
+  name: "Log in, from a chat app",
   render: () => (
-    // A chat app's OAuth sign-in: no handle step here, /consent offers it instead.
+    // A chat app's OAuth log-in: no handle step here, /consent offers it instead.
     <AuthPanel footer={<LegalConsent />}>
-      <SignInForm
+      <LoginForm
         github
         callback="/consent?client_id=…"
         pickHandle={false}
-        title="Sign in to connect your app"
-        description="An agent wants to publish lessons to your account. Sign in, then you’ll be asked to allow it."
+        title="Log in to connect your app"
+        description="An agent wants to publish lessons to your account. Log in, then you’ll be asked to allow it."
         api={fakeApi()}
         navigate={navigate}
       />
@@ -225,11 +225,11 @@ export const SignInFromChatApp: Story = {
   ),
 }
 
-export const SignInWithHandle: Story = {
-  name: "Sign in, user has a handle",
+export const LoginWithHandle: Story = {
+  name: "Log in, user has a handle",
   render: () => (
     <AuthPanel footer={<LegalConsent />}>
-      <SignInForm
+      <LoginForm
         github
         callback="/settings"
         api={fakeApi({
@@ -305,15 +305,15 @@ export const ConnectedAppsFails: Story = {
       api={fakeApi({
         disconnectApp: async () => {
           await wait()
-          return { error: "Sign in again to disconnect an app." }
+          return { error: "Log in again to disconnect an app." }
         },
       })}
     />
   ),
 }
 
-export const AppsWithoutSignIn: Story = {
-  name: "Apps that can't sign in",
+export const AppsWithoutLogin: Story = {
+  name: "Apps that can't log in",
   render: () => (
     // The fallback under Connected apps: open when the account has a URL, collapsed otherwise.
     <div className="flex flex-col gap-6">
@@ -341,15 +341,15 @@ export const ConnectChatAppFails: Story = {
       api={fakeApi({
         connectChat: async () => {
           await wait()
-          return { error: "Sign in again to make a URL." }
+          return { error: "Log in again to make a URL." }
         },
       })}
     />
   ),
 }
 
-export const SignOut: Story = {
-  render: () => <SignOutButton api={fakeApi()} navigate={navigate} />,
+export const LogOut: Story = {
+  render: () => <LogOutButton api={fakeApi()} navigate={navigate} />,
 }
 
 /** A stand-in for the server action: keeps unless the token is "spent". */
@@ -379,8 +379,8 @@ export const KeepFails: Story = {
 export const HeaderLinks: Story = {
   name: "Header states",
   render: () => (
-    // Signed out, signed in without a handle, signed in with and without a picture: Explore only
-    // shows for visitors, and the wordmark links there once signed in.
+    // Logged out, logged in without a handle, logged in with and without a picture: Explore only
+    // shows for visitors, and the wordmark links there once logged in.
     <div className="flex flex-col gap-2 [&_header]:static">
       <SiteHeader account={null} />
       <SiteHeader account={{ handle: null, image: null }} />
@@ -393,7 +393,7 @@ export const HeaderLinks: Story = {
 export const HeaderMenu: Story = {
   name: "Header menu",
   render: () => (
-    // The signed-in header's menu, open: hover the picture to open it on the other headers.
+    // The logged-in header's menu, open: hover the picture to open it on the other headers.
     <div className="flex h-72 flex-col gap-2 [&_header]:static">
       <SiteHeader account={{ handle: "ada-lovelace", image: PICTURE }} />
       <div className="flex justify-end px-8">
@@ -408,7 +408,7 @@ export const HeaderMenu: Story = {
   ),
 }
 
-/** The consent step of a chat app signing in over OAuth (/consent). */
+/** The consent step of a chat app logging in over OAuth (/consent). */
 export const Consent: Story = {
   render: () => (
     <AuthPanel>
@@ -417,7 +417,7 @@ export const Consent: Story = {
         handle="ada"
         email="ada@example.com"
         returnTo="claude.ai"
-        switchHref="/sign-in"
+        switchHref="/login"
         api={fakeApi()}
         navigate={navigate}
       />
@@ -434,7 +434,7 @@ export const ConsentNoHandle: Story = {
         handle={null}
         email="ada@example.com"
         returnTo={null}
-        switchHref="/sign-in"
+        switchHref="/login"
         api={fakeApi()}
         navigate={navigate}
       />

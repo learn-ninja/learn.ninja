@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { accountOf, decodeAccount, encodeAccount } from "./account-info"
 
-describe("the signed-in marker", () => {
+describe("the logged-in marker", () => {
   it("round-trips the handle and picture", () => {
     const account = { handle: "ada", image: "/avatars/abc" }
     expect(decodeAccount(encodeAccount(account))).toEqual(account)

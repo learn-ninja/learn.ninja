@@ -19,8 +19,8 @@ import { PostgresDraftStore } from "./drafts"
 import { callsProtectedTool, gateMcp } from "./gate"
 import { createLearnMcp, type McpDeps } from "./server"
 
-// The OAuth server chat apps sign in through, end to end against PGlite: discovery, the authorize
-// → sign-in → consent → token flow a client like Claude runs, and the token's verification by the
+// The OAuth server chat apps log in through, end to end against PGlite: discovery, the authorize
+// → log-in → consent → token flow a client like Claude runs, and the token's verification by the
 // MCP route's gate.
 
 const SITE = "https://learn.test"
@@ -152,18 +152,18 @@ describe("discovery", () => {
   })
 })
 
-describe("signing in from a chat app", () => {
-  it("sends a signed-out user to /sign-in, then on to consent and a token", async () => {
+describe("logging in from a chat app", () => {
+  it("sends a logged-out user to /login, then on to consent and a token", async () => {
     const clientId = await registerClient()
     const { verifier, challenge } = pkce()
 
-    // 1. No session: the authorize request goes to the sign-in page with the request signed into its query.
+    // 1. No session: the authorize request goes to the log-in page with the request logged into its query.
     const first = location(await get(authorizeUrl(clientId, challenge)))
-    expect(first.pathname).toBe("/sign-in")
+    expect(first.pathname).toBe("/login")
     expect(first.searchParams.get("client_id")).toBe(clientId)
     expect(first.searchParams.get("sig")).toBeTruthy()
 
-    // 2. The sign-in page sends the user back into authorize with that same query, now with a session.
+    // 2. The log-in page sends the user back into authorize with that same query, now with a session.
     const cookie = await signIn("ada@example.com")
     const second = location(
       await get(`/api/auth/oauth2/authorize?${first.searchParams}`, { cookie })
@@ -346,7 +346,7 @@ describe("the gate in front of /mcp", () => {
     expect(callsProtectedTool("keep_lesson")).toBe(false)
   })
 
-  it("lets a signed-out app list tools and publish, and answers keep_lesson with the 401 that starts sign-in", async () => {
+  it("lets a logged-out app list tools and publish, and answers keep_lesson with the 401 that starts log-in", async () => {
     const tools = await resultOf(await rpc("tools/list", {}))
     expect(tools).toHaveProperty("tools")
     const published = await resultOf(await call("publish_lesson", { lesson: buttons }))
@@ -395,7 +395,7 @@ describe("the gate in front of /mcp", () => {
     expect((await store.get(body.id as string))?.ownerId).toBe(ada!.id)
     expect(listed).toBe(0)
 
-    // The signed-in app edits its lessons by account, no token in the chat.
+    // The logged-in app edits its lessons by account, no token in the chat.
     const updated = await resultOf(
       await call(
         "update_lesson",
@@ -405,7 +405,7 @@ describe("the gate in front of /mcp", () => {
     )
     expect(updated.isError).toBeFalsy()
 
-    // A lesson published signed out, then kept once the app signed in: listed under the account.
+    // A lesson published logged out, then kept once the app logged in: listed under the account.
     const anonymous = await resultOf(await call("publish_lesson", { lesson: buttons }))
     const kept = await resultOf(
       await call(
@@ -425,7 +425,7 @@ describe("the gate in front of /mcp", () => {
     expect((await store.get(anonymous.structuredContent.id as string))?.ownerId).toBe(ada!.id)
   })
 
-  it("treats a banned account's token as signed out", async () => {
+  it("treats a banned account's token as logged out", async () => {
     await db.update(user).set({ banned: true }).where(eq(user.email, "ada@example.com"))
     try {
       const res = await rpc("tools/list", {}, bearer())
@@ -454,7 +454,7 @@ describe("Connected apps", () => {
       })
     )
 
-  it("lists the app that signed in, by its registered name, with when it was allowed and last used", async () => {
+  it("lists the app that logged in, by its registered name, with when it was allowed and last used", async () => {
     expect(accessToken && refreshToken && testClientId).toBeTruthy()
     const apps = await connectedApps(db, await userId())
     expect(apps).toEqual([
@@ -514,7 +514,7 @@ describe("Connected apps", () => {
     expect(noRefresh.status).toBe(400)
     expect(((await noRefresh.json()) as { error: string }).error).toBe("invalid_grant")
 
-    // Signing in again asks for consent again, rather than going straight back to the app.
+    // Logging in again asks for consent again, rather than going straight back to the app.
     const cookie = await signIn("ada@example.com")
     const again = location(await get(authorizeUrl(testClientId, pkce().challenge, "s3"), { cookie }))
     expect(again.pathname).toBe("/consent")

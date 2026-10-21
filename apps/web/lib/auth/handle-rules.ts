@@ -24,6 +24,8 @@ export const RESERVED = new Set([
   "signin",
   "sign-out",
   "signout",
+  "log-in",
+  "log-out",
   "support",
   "team",
   "teams",

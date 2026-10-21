@@ -178,7 +178,7 @@ describe("tools", () => {
     }
   })
 
-  it("says which tools work signed out, the way ChatGPT reads it", async () => {
+  it("says which tools work logged out, the way ChatGPT reads it", async () => {
     const { tools } = await rpc("tools/list", {})
     const schemes = Object.fromEntries(
       tools.map(
@@ -342,7 +342,7 @@ describe("publish_lesson and update_lesson", () => {
       /tell the user|say once|never paste/i
     )
     expect(publish.description).toContain("7 days")
-    expect(KEEP_SENTENCE).toContain("sign in once")
+    expect(KEEP_SENTENCE).toContain("log in once")
     expect(skillBundle().files["steps.md"]).toContain(KEEP_SENTENCE)
   })
 
@@ -372,17 +372,17 @@ describe("publish_lesson and update_lesson", () => {
 })
 
 describe("keep_lesson", () => {
-  it("takes no email or code, and needs the user signed in", async () => {
+  it("takes no email or code, and needs the user logged in", async () => {
     const { tools } = await rpc("tools/list", {})
     const keep = tools.find((t: { name: string }) => t.name === "keep_lesson")
     expect(Object.keys(keep.inputSchema.properties).sort()).toEqual([
       "editToken",
       "id",
     ])
-    expect(keep.description).toMatch(/signed in/)
+    expect(keep.description).toMatch(/logged in/)
     expect(keep.description).not.toMatch(/email|code/)
 
-    // Signed out, the gate in front of the route answers 401 (oauth.test.ts); the tool itself,
+    // Logged out, the gate in front of the route answers 401 (oauth.test.ts); the tool itself,
     // reached by a client that ignored it, says the same in words and keeps nothing.
     const published = await call("publish_lesson", { lesson: buttons })
     const { id, editToken } = published.structuredContent as {
@@ -398,7 +398,7 @@ describe("keep_lesson", () => {
     expect(listed).toBe(0)
   })
 
-  it("keeps a lesson for the signed-in account, once", async () => {
+  it("keeps a lesson for the logged-in account, once", async () => {
     const key = await mcpKeyFor("keeper-two@example.com")
     const published = await call("publish_lesson", { lesson: buttons })
     const { id, editToken } = published.structuredContent as {
@@ -429,7 +429,7 @@ describe("keep_lesson", () => {
       .from(user)
       .where(eq(user.email, "keeper-two@example.com"))
     expect((await deps.store.get(id))?.ownerId).toBe(account!.id)
-    // Nothing is in the reply that could sign in as the user.
+    // Nothing is in the reply that could log in as the user.
     expect(JSON.stringify(kept)).not.toMatch(/session|token/i)
 
     // Keeping it again changes nothing: same owner.
@@ -495,7 +495,7 @@ describe("/mcp/{key}, the personal URL", () => {
     expect((await deps.store.get(body.id as string))?.lesson.title).toBe(
       "Buttons, ranked"
     )
-    // The public server, signed out, can't touch it.
+    // The public server, logged out, can't touch it.
     const anonymous = await call("update_lesson", {
       id: body.id,
       patches: [{ op: "set", path: "title", value: "Buttons, sorted" }],

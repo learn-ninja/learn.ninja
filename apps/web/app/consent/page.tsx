@@ -23,10 +23,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 /**
- * The consent step of a chat app signing in over OAuth. Better Auth sends the signed-in user here
- * with the authorize request signed into the query; the page checks that signature, names the app
- * asking and the host it goes back to, and the form posts the answer. A signed-out visitor signs
- * in first and comes back; one without a handle (a new account, since the sign-in page skips that
+ * The consent step of a chat app logging in over OAuth. Better Auth sends the logged-in user here
+ * with the authorize request logged into the query; the page checks that signature, names the app
+ * asking and the host it goes back to, and the form posts the answer. A logged-out visitor logs
+ * in first and comes back; one without a handle (a new account, since the log-in page skips that
  * step on this path) picks it here, beside Allow. The layout is Agendolo's consent page: a bare
  * panel with no header, since the visitor is mid-way through connecting an app.
  */
@@ -59,7 +59,7 @@ export default async function ConsentPage({
     )
   }
 
-  const back = `/sign-in?callback=${encodeURIComponent(`/consent?${query}`)}`
+  const back = `/login?callback=${encodeURIComponent(`/consent?${query}`)}`
   const actor = await currentActor()
   if (!actor) redirect(back)
 

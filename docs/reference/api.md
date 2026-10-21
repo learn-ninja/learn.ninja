@@ -3,7 +3,7 @@ title: Publish API
 description: The HTTP API behind publishing. The CLI uses it; you can too.
 ---
 
-Base URL: `https://learn.ninja`. Requests and responses are JSON. No account is needed: publishing returns an edit token for that one lesson, and anonymous lessons last 7 days. Signed in, with a session cookie or an API key, lessons are saved to your account, never expire, and are listed in Explore under your handle.
+Base URL: `https://learn.ninja`. Requests and responses are JSON. No account is needed: publishing returns an edit token for that one lesson, and anonymous lessons last 7 days. Logged in, with a session cookie or an API key, lessons are saved to your account, never expire, and are listed in Explore under your handle.
 
 ## Publish a lesson
 
@@ -52,7 +52,7 @@ Content-Type: application/json
 x-api-key: <key>
 ```
 
-The body is `{ "claimToken": "…" }` or `{ "editToken": "…" }` from publishing (both together is fine; either one proves the lesson is yours). Needs a signed-in caller: an API key or a session cookie. The lesson then belongs to that account, stops expiring, and the claim token stops working; the edit token keeps working. Returns `200` with `id`, `url`, `title`, `owned: true`, `expiresAt: null`, `owner`, and `visibility`; `401 unauthorized` if neither token matches; `409 already_claimed` if another account has it; `404` once it has expired.
+The body is `{ "claimToken": "…" }` or `{ "editToken": "…" }` from publishing (both together is fine; either one proves the lesson is yours). Needs a logged-in caller: an API key or a session cookie. The lesson then belongs to that account, stops expiring, and the claim token stops working; the edit token keeps working. Returns `200` with `id`, `url`, `title`, `owned: true`, `expiresAt: null`, `owner`, and `visibility`; `401 unauthorized` if neither token matches; `409 already_claimed` if another account has it; `404` once it has expired.
 
 `claimUrl` from publishing (`/keep/{claimToken}`) does the same thing in the browser: it signs the visitor in, then keeps that one lesson. The MCP server's `keep_lesson` tool does the same for a chat app that has signed the user in over OAuth (see [Connect with your account](/docs/reference/mcp#connect-with-your-account)).
 
@@ -64,7 +64,7 @@ Content-Type: application/json
 x-api-key: <key>
 ```
 
-The body is `{ "visibility": "public" }` to list a lesson in [Explore](/explore) and on your profile, or `{ "visibility": "unlisted" }` to make it link-only again. Owner only (`403 not_owner` otherwise). A lesson is listed once it's saved to an account (published signed in, or kept); anonymous lessons are always link-only. Returns `200` with `id`, `url`, and `visibility`. The same switch is under **Your lessons** on your own profile.
+The body is `{ "visibility": "public" }` to list a lesson in [Explore](/explore) and on your profile, or `{ "visibility": "unlisted" }` to make it link-only again. Owner only (`403 not_owner` otherwise). A lesson is listed once it's saved to an account (published logged in, or kept); anonymous lessons are always link-only. Returns `200` with `id`, `url`, and `visibility`. The same switch is under **Your lessons** on your own profile.
 
 ## Like a lesson
 
@@ -121,7 +121,7 @@ DELETE /api/account/mcp
 
 The account's personal MCP URL (`https://learn.ninja/mcp/{key}`, see [Connect with your account](/docs/reference/mcp#connect-with-your-account)). `POST` makes it, revoking any earlier one, and returns `{ "ok": true, "id": "…", "url": "…", "start": "learn_mcp_ab12", "createdAt": "…" }`: the only time the URL is shown. `DELETE` revokes it. Both need a session cookie. The key in the URL starts with `learn_mcp_` and is not an API key: sent as `x-api-key` it answers `401 invalid_api_key` everywhere, and it's not listed by `GET /api/keys`. The MCP server on that URL publishes to the account with `visibility: "unlisted"`, and a key that was revoked or never existed answers `401 invalid_api_key` with nothing published.
 
-Sign-in itself goes through [Better Auth](https://better-auth.com)'s routes under `/api/auth/`: `POST /api/auth/email-otp/send-verification-otp` with `{ "email": "…", "type": "sign-in" }` emails a six-digit code, and `POST /api/auth/sign-in/email-otp` with `{ "email": "…", "otp": "…" }` signs in and sets the session cookie. The CLI's `login` command does exactly this.
+Logging in goes through [Better Auth](https://better-auth.com)'s routes under `/api/auth/`: `POST /api/auth/email-otp/send-verification-otp` with `{ "email": "…", "type": "sign-in" }` emails a six-digit code, and `POST /api/auth/sign-in/email-otp` with `{ "email": "…", "otp": "…" }` logs in and sets the session cookie. The CLI's `login` command does exactly this.
 
 ## Check a lesson
 
@@ -163,6 +163,6 @@ Errors return `"ok": false` with an `error` code and a `message`.
 ## Limits
 
 - 20 publishes or updates an hour from one place.
-- 5 sign-in codes an hour to one email address, 3 a minute from one place; each code works for 5 minutes and three tries.
+- 5 log-in codes an hour to one email address, 3 a minute from one place; each code works for 5 minutes and three tries.
 - 5 reports an hour from one place.
 - Anonymous lessons expire 7 days after they're first published. Owned lessons never expire.

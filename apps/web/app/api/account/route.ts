@@ -3,7 +3,7 @@ import { getAuth } from "@/lib/auth/auth"
 import { actorFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 
-// GET /api/account: the signed-in user's email and handle (`learn whoami`).
+// GET /api/account: the logged-in user's email and handle (`learn whoami`).
 // PATCH /api/account with { "handle": "…" }: choose or change the handle.
 
 export async function GET(req: Request) {

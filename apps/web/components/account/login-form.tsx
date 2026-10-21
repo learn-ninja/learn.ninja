@@ -28,23 +28,23 @@ import { FormError } from "./form-error"
 const CODE_LENGTH = 6
 
 /**
- * Sign in with GitHub or a six-digit email code, drawn for the centered auth panel (AuthPanel).
+ * Log in with GitHub or a six-digit email code, drawn for the centered auth panel (AuthPanel).
  * Email users without a handle pick one before leaving, unless `pickHandle` is off: a chat app's
- * OAuth sign-in goes straight on to /consent, which offers the handle there. Ends by sending the
+ * OAuth log-in goes straight on to /consent, which offers the handle there. Ends by sending the
  * browser to `callback`.
  */
-export function SignInForm({
+export function LoginForm({
   github,
   callback,
   pickHandle = true,
-  title = "Sign in",
+  title = "Log in",
   description = "Only to keep lessons beyond 7 days. Making and playing them needs no account.",
   api = accountApi,
   navigate = (to) => window.location.assign(to),
 }: {
   /** Whether the GitHub OAuth app is configured. */
   github: boolean
-  /** Where to go once signed in, a site path. */
+  /** Where to go once logged in, a site path. */
   callback: string
   /** Whether a new email user picks a handle here before going on. */
   pickHandle?: boolean
@@ -94,10 +94,10 @@ export function SignInForm({
     else setStep("handle")
   }
 
-  async function githubSignIn() {
+  async function githubLogin() {
     setBusy(true)
     setError(null)
-    const { error } = await api.signInWithGitHub(callback)
+    const { error } = await api.loginWithGitHub(callback)
     if (error) {
       setBusy(false)
       setError(error)
@@ -181,7 +181,7 @@ export function SignInForm({
               className="w-full"
               isDisabled={busy || code.length < CODE_LENGTH}
             >
-              Sign in
+              Log in
             </Button>
             <Button
               variant="ghost"
@@ -214,7 +214,7 @@ export function SignInForm({
               variant="outline"
               className="w-full"
               isDisabled={busy}
-              onPress={() => void githubSignIn()}
+              onPress={() => void githubLogin()}
             >
               <GitHubLogo />
               Continue with GitHub

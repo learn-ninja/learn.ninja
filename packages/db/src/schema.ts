@@ -52,7 +52,7 @@ export const user = pgTable(
     /** The public name in /u/{handle}. GitHub users get their login; email users pick one. */
     handle: text("handle"),
     bio: text("bio"),
-    /** Flipped by hand; a banned user can't sign in. */
+    /** Flipped by hand; a banned user can't log in. */
     banned: boolean("banned").notNull().default(false),
     createdAt: time("created_at").notNull().defaultNow(),
     updatedAt: time("updated_at").notNull().defaultNow(),
@@ -156,7 +156,7 @@ export const apikey = pgTable(
   ]
 )
 
-// ---------- OAuth provider (chat apps signing in through MCP) ----------
+// ---------- OAuth provider (chat apps logging in through MCP) ----------
 // Better Auth's jwt and oauth-provider plugins own these: property names are their field names,
 // SQL names are ours. `string[]` fields are text arrays, `json` fields are jsonb, as Better Auth's
 // own generator writes them for Postgres.
@@ -172,7 +172,7 @@ export const jwks = pgTable("jwks", {
   crv: text("crv"),
 })
 
-/** An OAuth client: a chat app that signed in (by Client ID Metadata Document or registration). */
+/** An OAuth client: a chat app that logged in (by Client ID Metadata Document or registration). */
 export const oauthClient = pgTable(
   "oauth_client",
   {
@@ -262,7 +262,7 @@ export const oauthClientResource = pgTable(
   ]
 )
 
-/** A refresh token (hashed), issued with `offline_access` so a chat app stays signed in. */
+/** A refresh token (hashed), issued with `offline_access` so a chat app stays logged in. */
 export const oauthRefreshToken = pgTable(
   "oauth_refresh_token",
   {

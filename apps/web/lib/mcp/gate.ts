@@ -6,11 +6,11 @@ import { hasConsent } from "../auth/account"
 import { getActorByUserId, type McpActor } from "../auth/actor"
 import { MCP_SCOPE } from "../auth/auth"
 
-// The sign-in gate in front of the public /mcp. Anyone can call the tools that need no account;
+// The log-in gate in front of the public /mcp. Anyone can call the tools that need no account;
 // when a chat app calls one that does (`keep_lesson`) without a token, the HTTP request itself is
 // refused with 401 and a `WWW-Authenticate` header naming the server's discovery document. That is
-// what makes Claude, ChatGPT, and Claude Code show their sign-in prompt, run the OAuth flow against
-// Better Auth, and retry the same call with a token; a tool result saying "sign in" would not. A
+// what makes Claude, ChatGPT, and Claude Code show their log-in prompt, run the OAuth flow against
+// Better Auth, and retry the same call with a token; a tool result saying "log in" would not. A
 // request that carries a token is verified whichever tool it calls (signature against /jwks,
 // issuer, audience, scope), then checked against the user's consent for that app: access tokens
 // are signed JWTs that aren't stored, so Disconnect in the settings deletes the consent row and
@@ -77,20 +77,20 @@ export function gateMcp({
         .clone()
         .json()
         .catch(() => null)
-      // No token and a protected tool: this is the 401 that starts sign-in.
+      // No token and a protected tool: this is the 401 that starts log-in.
       if (callsProtectedTool(body)) return withToken(req)
     }
     return build(null)(req)
   }
 }
 
-/** The 401 for a valid token whose user is gone or banned: the app treats it as signed out. */
+/** The 401 for a valid token whose user is gone or banned: the app treats it as logged out. */
 const noSuchAccount = (resource: string) =>
-  invalidToken(resource, "This account can't sign in.")
+  invalidToken(resource, "This account can't log in.")
 
-/** The 401 for a valid token whose app the user disconnected: the app asks them to sign in again. */
+/** The 401 for a valid token whose app the user disconnected: the app asks them to log in again. */
 const disconnected = (resource: string) =>
-  invalidToken(resource, "This app was disconnected from the account. Sign in again.")
+  invalidToken(resource, "This app was disconnected from the account. Log in again.")
 
 function invalidToken(resource: string, description: string): Response {
   const metadata = new URL(resource)

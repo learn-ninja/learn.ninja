@@ -34,9 +34,9 @@ import { SITE } from "@/lib/site"
 import { FormError } from "./form-error"
 
 /**
- * "Apps that can't sign in", the fallback under Connected apps: the account's personal MCP URL,
- * for apps that take only a URL and can't sign in over OAuth (Claude.ai, ChatGPT, and Claude Code
- * sign in on their own and show up in Connected apps). Collapsed until the account has a URL,
+ * "Apps that can't log in", the fallback under Connected apps: the account's personal MCP URL,
+ * for apps that take only a URL and can't log in over OAuth (Claude.ai, ChatGPT, and Claude Code
+ * log in on their own and show up in Connected apps). Collapsed until the account has a URL,
  * so the main path stays in view.
  */
 export function ConnectChatFallback(props: {
@@ -50,7 +50,7 @@ export function ConnectChatFallback(props: {
     >
       <AccordionItem id="chat">
         <AccordionTrigger className="py-3 text-base font-semibold">
-          Apps that can&apos;t sign in
+          Apps that can&apos;t log in
         </AccordionTrigger>
         <AccordionContent className="pb-4 text-base">
           <ConnectChat {...props} />
@@ -115,8 +115,8 @@ export function ConnectChat({
   return (
     <div className="flex flex-col gap-6">
       <p className="text-muted-foreground">
-        The fallback for an app that only takes a URL and has no sign-in step.
-        Claude, ChatGPT, and Claude Code don&apos;t need it: they sign in on
+        The fallback for an app that only takes a URL and has no log-in step.
+        Claude, ChatGPT, and Claude Code don&apos;t need it: they log in on
         their own with the public URL. For the others, make your own: every
         lesson it publishes is saved to your account, unlisted until you list
         it here.
@@ -189,7 +189,7 @@ export function ConnectChat({
             <bdi dir="ltr" className="font-mono text-xs">
               {SITE.url}/mcp
             </bdi>{" "}
-            and sign in to your account when you keep a lesson.
+            and log in to your account when you keep a lesson.
           </p>
           <div>
             <Button variant="outline" isDisabled={busy} onPress={() => void connect()}>

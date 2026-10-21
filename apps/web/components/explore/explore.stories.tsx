@@ -225,13 +225,13 @@ export const RowStates: Story = {
       <Labeled label="Read-only (home page)">
         <LessonRow lesson={LESSONS[0]!} />
       </Labeled>
-      <Labeled label="Signed out: pressing the heart asks to sign in">
+      <Labeled label="Logged out: pressing the heart asks to log in">
         <LessonRow lesson={LESSONS[0]!} viewer={signedOut} />
       </Labeled>
-      <Labeled label="Signed in, liked and completed">
+      <Labeled label="Logged in, liked and completed">
         <LessonRow lesson={LESSONS[0]!} viewer={signedIn} />
       </Labeled>
-      <Labeled label="Signed in, not liked, 3 of 8 bricks done">
+      <Labeled label="Logged in, not liked, 3 of 8 bricks done">
         <LessonRow lesson={LESSONS[1]!} viewer={signedIn} />
       </Labeled>
       <Labeled label="Big numbers, 6 of 8 bricks done">
@@ -344,13 +344,13 @@ export const Like: Story = {
   name: "Like button",
   render: () => (
     <div className="flex flex-col items-start gap-4">
-      <Labeled label="Signed out">
+      <Labeled label="Logged out">
         <LikeButton id="a" likes={37} signedIn={false} api={fakeApi} />
       </Labeled>
-      <Labeled label="Signed in">
+      <Labeled label="Logged in">
         <LikeButton id="b" likes={12} signedIn api={fakeApi} />
       </Labeled>
-      <Labeled label="Signed in, liked">
+      <Labeled label="Logged in, liked">
         <LikeButton id="c" likes={13} liked signedIn api={fakeApi} />
       </Labeled>
     </div>

@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { AccountPage } from "@/components/account/account-page"
 import { AuthPanel, LegalConsent } from "@/components/account/auth-panel"
 import { KeepForm } from "@/components/account/keep-form"
-import { SignInForm } from "@/components/account/sign-in-form"
+import { LoginForm } from "@/components/account/login-form"
 import { ButtonLink } from "@/components/site/button-link"
 import { accountOf } from "@/lib/auth/account-info"
 import { githubFromEnv } from "@/lib/auth/auth"
@@ -61,13 +61,13 @@ export default async function KeepPage({
   if (!actor) {
     return (
       <AuthPanel footer={<LegalConsent />}>
-        <SignInForm
+        <LoginForm
           github={githubFromEnv() !== null}
           callback={`/keep/${token}`}
-          title="Sign in to keep this lesson"
+          title="Log in to keep this lesson"
           description={
             <>
-              Sign in or make a free account, and{" "}
+              Log in or make a free account, and{" "}
               <span className="font-medium text-foreground">
                 {record.lesson.title}
               </span>{" "}

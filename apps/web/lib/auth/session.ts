@@ -7,7 +7,7 @@ import { getAuth } from "./auth"
 export type { Actor }
 
 /**
- * The signed-in user behind the current server render, or null. Reads the request headers first:
+ * The logged-in user behind the current server render, or null. Reads the request headers first:
  * that marks the page dynamic, so `next build` never prerenders it (and never opens the database
  * on a build machine without one). Memoized per request, so a layout and its page both asking
  * cost one session check.
@@ -18,7 +18,7 @@ export const currentActor = cache(async (): Promise<Actor | null> => {
 })
 
 /**
- * A safe place to send the browser after signing in: a site path, never another site. One slash,
+ * A safe place to send the browser after logging in: a site path, never another site. One slash,
  * then anything but a slash or backslash (browsers read "/\\evil.com" as "//evil.com").
  */
 export function safeCallback(value: string | string[] | undefined): string {
@@ -39,9 +39,9 @@ export function queryOf(params: SearchParams): string {
 }
 
 /**
- * Where to go after signing in when a chat app's OAuth request brought the user here: Better Auth
- * sends a signed-out user to /sign-in with the whole authorize request (client_id, redirect_uri,
- * scope, PKCE challenge…) signed into the query, and once a session exists, re-entering
+ * Where to go after logging in when a chat app's OAuth request brought the user here: Better Auth
+ * sends a logged-out user to /login with the whole authorize request (client_id, redirect_uri,
+ * scope, PKCE challenge…) logged into the query, and once a session exists, re-entering
  * /api/auth/oauth2/authorize with that same query carries on to consent and back to the app.
  * Null when the query isn't one of those.
  */

@@ -5,8 +5,8 @@ import { createAuthClient } from "better-auth/react"
 import type { ConnectedApp, KeySummary, McpConnection } from "./account"
 import { decodeAccount, encodeAccount, type AccountInfo } from "./account-info"
 
-// What the sign-in and settings pages call from the browser: Better Auth's client for sign-in
-// and sign-out, and the account API (lib/auth/account.ts) for handles and keys. The components
+// What the log-in and settings pages call from the browser: Better Auth's client for log-in
+// and log-out, and the account API (lib/auth/account.ts) for handles and keys. The components
 // take it as a prop so Storybook can hand them a fake.
 
 export const authClient = createAuthClient({
@@ -34,7 +34,7 @@ export interface AccountApi {
     code: string
   ): Promise<Outcome & { account?: AccountInfo }>
   /** Sends the browser to GitHub, and back to `callback` afterwards. */
-  signInWithGitHub(callback: string): Promise<Outcome>
+  loginWithGitHub(callback: string): Promise<Outcome>
   setHandle(handle: string): Promise<Outcome & { handle?: string }>
   /** Uploads a profile picture (PNG, JPEG, WebP, or GIF, up to 5 MB); `image` is its new URL. */
   uploadAvatar(file: File): Promise<Outcome & { image?: string }>
@@ -47,12 +47,12 @@ export interface AccountApi {
   connectChat(): Promise<Outcome & { connection?: NewMcpConnection }>
   /** Revokes the personal MCP URL. */
   disconnectChat(): Promise<Outcome>
-  /** The chat apps that signed in over OAuth and were allowed. */
+  /** The chat apps that logged in over OAuth and were allowed. */
   listApps(): Promise<ConnectedApp[]>
   /** Disconnects one of them: its tokens stop working at once. */
   disconnectApp(id: string): Promise<Outcome>
   /**
-   * Answers the consent page for the OAuth request in the page's query (a chat app signing in);
+   * Answers the consent page for the OAuth request in the page's query (a chat app logging in);
    * `url` is where to send the browser next: back to the app, with a code or a refusal.
    */
   consent(accept: boolean): Promise<Outcome & { url?: string }>
@@ -98,7 +98,7 @@ export const accountApi: AccountApi = {
       account: { handle: user?.handle ?? null, image: user?.image ?? null },
     }
   },
-  async signInWithGitHub(callback) {
+  async loginWithGitHub(callback) {
     const { error } = await authClient.signIn.social({
       provider: "github",
       callbackURL: callback,
@@ -179,16 +179,16 @@ export const accountApi: AccountApi = {
   },
 }
 
-// ---------- the "signed in" marker ----------
+// ---------- the "logged in" marker ----------
 // The session cookie is httpOnly, so the header can't read it. A plain cookie says whether to
-// show "Sign in" or the account's picture, without a request on every page. It can go stale (an
-// expired session); /settings then redirects to sign in. Every change fires ACCOUNT_EVENT on
+// show "Log in" or the account's picture, without a request on every page. It can go stale (an
+// expired session); /settings then redirects to log in. Every change fires ACCOUNT_EVENT on
 // window, so a header already on the page follows along.
 
 const MARKER = "learn.account"
 export const ACCOUNT_EVENT = "learn:account"
 
-/** Records a signed-in user. A partial patch keeps what the cookie already knows (a new handle keeps the picture). */
+/** Records a logged-in user. A partial patch keeps what the cookie already knows (a new handle keeps the picture). */
 export function rememberAccount(patch: Partial<AccountInfo>) {
   const current = readAccount() ?? { handle: null, image: null }
   const value = encodeURIComponent(encodeAccount({ ...current, ...patch }))
@@ -201,7 +201,7 @@ export function forgetAccount() {
   window.dispatchEvent(new Event(ACCOUNT_EVENT))
 }
 
-/** The signed-in user as the cookie remembers them, or null when nobody is signed in. */
+/** The logged-in user as the cookie remembers them, or null when nobody is logged in. */
 export function readAccount(): AccountInfo | null {
   const match = document.cookie
     .split("; ")

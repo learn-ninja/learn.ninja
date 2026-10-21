@@ -38,7 +38,7 @@ function keptSentence({ handle, listed }: KeepResult) {
   return "is saved to your account and won't expire. Pick a handle in your settings and it'll show in Explore."
 }
 
-/** The /keep page for a signed-in user: the lesson's title and one button. */
+/** The /keep page for a logged-in user: the lesson's title and one button. */
 export function KeepForm({
   token,
   title,

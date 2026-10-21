@@ -50,7 +50,7 @@ export default function TermsPage() {
           A lesson you list in Explore is public and shown with your handle.
           Anyone can report a listed lesson. A lesson that breaks these terms
           is taken out of Explore and profiles; you can still open it from its
-          link while signed in.
+          link while logged in.
         </li>
       </ul>
 
@@ -58,7 +58,7 @@ export default function TermsPage() {
       <ul>
         <li>
           An account is optional. It exists so lessons can be kept and credited
-          to you. You can sign in with GitHub or with a code sent to your
+          to you. You can log in with GitHub or with a code sent to your
           email.
         </li>
         <li>

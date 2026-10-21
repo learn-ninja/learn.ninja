@@ -1,6 +1,6 @@
 import { SITE } from "@/lib/site"
 
-// Sign-in codes go out through Resend (RESEND_API_KEY) as sensei@learn.ninja, which is a real inbox
+// Log-in codes go out through Resend (RESEND_API_KEY) as sensei@learn.ninja, which is a real inbox
 // in the learn.ninja Google Workspace, so replies reach a person. Without the key, the code is
 // printed to the server console instead, so development needs no account; a production build
 // without the key refuses to send, since its logs would otherwise hold every user's code.
@@ -14,11 +14,11 @@ export function codeSenderFromEnv(env = process.env): CodeSender {
   if (!key) {
     if (env.NODE_ENV === "production") {
       return async () => {
-        throw new Error("RESEND_API_KEY isn't set, so sign-in codes can't be sent.")
+        throw new Error("RESEND_API_KEY isn't set, so log-in codes can't be sent.")
       }
     }
     return async (email, code) => {
-      console.log(`[${SITE.name}] Sign-in code for ${email}: ${code}`)
+      console.log(`[${SITE.name}] Log-in code for ${email}: ${code}`)
     }
   }
   const from = env.EMAIL_FROM ?? DEFAULT_FROM
@@ -44,11 +44,11 @@ export function codeSenderFromEnv(env = process.env): CodeSender {
 }
 
 export function codeText(code: string): string {
-  return `Your ${SITE.name} sign-in code is ${code}.\n\nEnter it on ${SITE.url}, or in the terminal where your agent asked for it. It works for 5 minutes. Nobody from ${SITE.name} will ever ask you for it; if you didn't ask for it, ignore this email.`
+  return `Your ${SITE.name} log-in code is ${code}.\n\nEnter it on ${SITE.url}, or in the terminal where your agent asked for it. It works for 5 minutes. Nobody from ${SITE.name} will ever ask you for it; if you didn't ask for it, ignore this email.`
 }
 
 function codeHtml(code: string): string {
-  return `<p>Your ${SITE.name} sign-in code is</p>
+  return `<p>Your ${SITE.name} log-in code is</p>
 <p style="font-size:28px;font-weight:600;letter-spacing:0.2em;font-family:ui-monospace,monospace">${code}</p>
 <p>Enter it on ${SITE.url}, or in the terminal where your agent asked for it. It works for 5 minutes. Nobody from ${SITE.name} will ever ask you for it; if you didn't ask for it, ignore this email.</p>`
 }

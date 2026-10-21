@@ -20,7 +20,7 @@ export function LessonExpired({
         </h1>
         <p className="text-muted-foreground">
           {reason === "hidden"
-            ? "It was taken down after a report. If it's yours, sign in and it still opens for you."
+            ? "It was taken down after a report. If it's yours, log in and it still opens for you."
             : "Lessons expire 7 days after they're published. Ask whoever shared it to publish it again for a new link."}
         </p>
       </div>
@@ -29,8 +29,8 @@ export function LessonExpired({
           Make your own
         </ButtonLink>
         {reason === "hidden" ? (
-          <ButtonLink href="/sign-in" variant="ghost" size="sm">
-            Sign in
+          <ButtonLink href="/login" variant="ghost" size="sm">
+            Log in
           </ButtonLink>
         ) : null}
       </div>

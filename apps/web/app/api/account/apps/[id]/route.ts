@@ -3,7 +3,7 @@ import { getDb } from "@/lib/publish/store"
 import { actorFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 
-// DELETE /api/account/apps/{id}: disconnect a chat app that signed in over OAuth; {id} is the
+// DELETE /api/account/apps/{id}: disconnect a chat app that logged in over OAuth; {id} is the
 // one GET /api/account/apps lists. Its tokens stop working at once. Needs a browser session.
 
 export async function DELETE(

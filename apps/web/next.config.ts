@@ -185,9 +185,9 @@ const nextConfig: NextConfig = {
       { source: `${from}.md`, destination: `${to}.md`, permanent: true },
     ]
     return [
-      // Once signed in, Explore is home. The header's marker cookie (lib/auth/browser.ts) says so
+      // Once logged in, Explore is home. The header's marker cookie (lib/auth/browser.ts) says so
       // without a session check, so the home page stays static for everyone else. A stale marker
-      // lands on Explore signed out, which clears it; signing out clears it before going home.
+      // lands on Explore logged out, which clears it; logging out clears it before going home.
       {
         source: "/",
         has: [{ type: "cookie", key: "learn.account", value: ".+" }],
@@ -195,6 +195,8 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       { source: "/create", destination: "/docs", permanent: false },
+      // The login page was /sign-in until October 2026; old links and keep emails still point there.
+      { source: "/sign-in", destination: "/login", permanent: true },
       ...section("/docs/lessons/lesson-format", "lesson-format"),
       ...section("/docs/lessons/levels", "levels"),
       ...section("/docs/reference/cli", "cli"),

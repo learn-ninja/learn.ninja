@@ -3,7 +3,7 @@ import { exploreDepsFor } from "@/lib/explore/request"
 import { actorFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 
-// POST /api/lessons/{id}/complete records that the signed-in user (cookie or x-api-key) finished
+// POST /api/lessons/{id}/complete records that the logged-in user (cookie or x-api-key) finished
 // the lesson, sent by the lesson page when the wrap-up shows. Only the first time is kept.
 
 type Params = { params: Promise<{ id: string }> }

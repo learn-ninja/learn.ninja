@@ -14,7 +14,7 @@ import { LessonMenu } from "./lesson-menu"
 import { LikeButton } from "./like-button"
 import { ProgressPie } from "./progress-pie"
 
-/** What the viewer can do on a row: like it (signed in) or be told to sign in. Omit for a read-only row. */
+/** What the viewer can do on a row: like it (logged in) or be told to log in. Omit for a read-only row. */
 export interface Viewer {
   signedIn: boolean
   /** Ids of the lessons the viewer has liked. */

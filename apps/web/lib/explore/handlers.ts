@@ -121,7 +121,7 @@ export async function unlikeLesson(
 }
 
 /**
- * POST /api/lessons/{id}/complete: the signed-in learner reached the wrap-up. Only the first time
+ * POST /api/lessons/{id}/complete: the logged-in learner reached the wrap-up. Only the first time
  * is kept, so the check on Explore says when they first finished it.
  */
 export async function completeLesson(

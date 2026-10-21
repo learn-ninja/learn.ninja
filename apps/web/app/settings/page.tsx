@@ -8,7 +8,7 @@ import { AvatarForm } from "@/components/account/avatar-form"
 import { ConnectChatFallback } from "@/components/account/connect-chat"
 import { ConnectedApps } from "@/components/account/connected-apps"
 import { HandleForm } from "@/components/account/handle-form"
-import { SignOutButton } from "@/components/account/sign-out-button"
+import { LogOutButton } from "@/components/account/log-out-button"
 import { ButtonLink } from "@/components/site/button-link"
 import { connectedApps, listKeys, mcpConnection } from "@/lib/auth/account"
 import { accountOf } from "@/lib/auth/account-info"
@@ -26,10 +26,10 @@ export const metadata: Metadata = {
 // exist on a build machine.
 export const dynamic = "force-dynamic"
 
-/** The account: picture, handle, connected chat apps, API keys, and sign out. */
+/** The account: picture, handle, connected chat apps, API keys, and log out. */
 export default async function SettingsPage() {
   const actor = await currentActor()
-  if (!actor) redirect("/sign-in?callback=/settings")
+  if (!actor) redirect("/login?callback=/settings")
   const auth = await getAuth()
   const h = await headers()
   const db = await getDb()
@@ -43,7 +43,7 @@ export default async function SettingsPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
-          Signed in as{" "}
+          Logged in as{" "}
           <bdi dir="ltr" className="font-medium text-foreground">
             {actor.email}
           </bdi>
@@ -84,7 +84,7 @@ export default async function SettingsPage() {
       </section>
 
       <section className="flex flex-col gap-4 border-t pt-8">
-        <SignOutButton />
+        <LogOutButton />
       </section>
     </AccountPage>
   )

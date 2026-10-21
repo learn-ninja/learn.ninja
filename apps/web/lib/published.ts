@@ -27,7 +27,7 @@ export interface PublishedView {
   record: StoredLesson | null
   /** Why `record` is null: the link is dead, or the lesson was hidden after a report and the visitor isn't its owner. */
   reason: "expired" | "hidden" | null
-  /** Whether the visitor is signed in, and whether they own the lesson. */
+  /** Whether the visitor is logged in, and whether they own the lesson. */
   signedIn: boolean
   isOwner: boolean
   /** In Explore and on the owner's profile: owned, public, and not hidden. */

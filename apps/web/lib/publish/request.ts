@@ -26,7 +26,7 @@ export async function depsFor(req: Request): Promise<Deps> {
   }
 }
 
-/** The signed-in user behind the request (cookie or x-api-key), or null. Throws InvalidApiKeyError for a bad key. */
+/** The logged-in user behind the request (cookie or x-api-key), or null. Throws InvalidApiKeyError for a bad key. */
 export async function actorFor(req: Request): Promise<Actor | null> {
   return getActor(await getAuth(), req.headers)
 }

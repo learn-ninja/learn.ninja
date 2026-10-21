@@ -176,7 +176,7 @@ async function revokeMcpKeys(auth: Auth, headers: Headers) {
 }
 
 // ---------- connected apps ----------
-// The chat apps that signed in over OAuth (Claude.ai, ChatGPT, Claude Code): one consent row per
+// The chat apps that logged in over OAuth (Claude.ai, ChatGPT, Claude Code): one consent row per
 // app and user, written when the user answered Allow on /consent, and the refresh tokens the app
 // has had since. Access tokens are JWTs that aren't stored, so the gate in front of /mcp checks
 // the consent row on every call (lib/mcp/gate.ts): deleting it is what disconnects the app.
@@ -190,7 +190,7 @@ export interface ConnectedApp {
   name: string
   /** When the user allowed it. */
   allowedAt: string
-  /** When it last got a token, by signing in or refreshing one; null when it never did. */
+  /** When it last got a token, by logging in or refreshing one; null when it never did. */
   lastUsedAt: string | null
 }
 
@@ -227,7 +227,7 @@ export async function connectedApps(
     .where(eq(oauthConsent.userId, userId))
     .orderBy(desc(oauthConsent.createdAt))
   if (consents.length === 0) return []
-  // Every token the user's apps were issued, newest per app: a refresh token at sign-in and at
+  // Every token the user's apps were issued, newest per app: a refresh token at log-in and at
   // each rotation, and an access token row when one is opaque (none is today, but the column's there).
   const [refreshed, accessed] = await Promise.all([
     db
@@ -261,7 +261,7 @@ export async function connectedApps(
 /**
  * DELETE /api/account/apps/{id}: disconnects an app. Its consent goes, so the gate refuses the
  * access token it holds at once, and its refresh tokens are revoked, so it can't get another;
- * the app shows its sign-in prompt again the next time the user keeps a lesson.
+ * the app shows its log-in prompt again the next time the user keeps a lesson.
  */
 export async function disconnectApp(
   db: Db,
