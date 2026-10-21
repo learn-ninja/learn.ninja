@@ -17,7 +17,6 @@ import { ConnectedApps } from "./connected-apps"
 import { AuthHeading, AuthPanel, LegalConsent } from "./auth-panel"
 import { ConsentForm } from "./consent-form"
 import { HandleForm } from "./handle-form"
-import { KeepForm, type KeepResult } from "./keep-form"
 import { LoginForm } from "./login-form"
 import { LogOutButton } from "./log-out-button"
 
@@ -350,30 +349,6 @@ export const ConnectChatAppFails: Story = {
 
 export const LogOut: Story = {
   render: () => <LogOutButton api={fakeApi()} navigate={navigate} />,
-}
-
-/** A stand-in for the server action: keeps unless the token is "spent". */
-const keep = async (
-  _: KeepResult | null,
-  data: FormData
-): Promise<KeepResult> => {
-  await wait()
-  return data.get("token") === "spent"
-    ? { ok: false, message: "This lesson was already saved to an account." }
-    : { ok: true, message: "Kept.", url: "#", title: "Basic Spanish greetings" }
-}
-
-export const Keep: Story = {
-  render: () => (
-    <KeepForm token="fresh" title="Basic Spanish greetings" action={keep} />
-  ),
-}
-
-export const KeepFails: Story = {
-  name: "Keep, already kept",
-  render: () => (
-    <KeepForm token="spent" title="Basic Spanish greetings" action={keep} />
-  ),
 }
 
 export const HeaderLinks: Story = {

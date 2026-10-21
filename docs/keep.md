@@ -36,7 +36,7 @@ Rules for agents, from the skill's own steps:
 
 ## Keep from the browser
 
-Publishing also returns a keep link, `https://learn.ninja/keep/…`. Opening it logs you in, with GitHub or an email code, and one button saves that lesson. Each keep link works once. This is the way to keep a lesson without logging in from the chat app at all.
+Publishing also returns a keep link, `https://learn.ninja/keep/…`. Opening it logs you in, with GitHub or an email code, saves that lesson to your account, and opens it. Each keep link works once. This is the way to keep a lesson without logging in from the chat app at all.
 
 ## Show it in Explore
 

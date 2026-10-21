@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
+import { redirect } from "next/navigation"
 
 import { AccountPage } from "@/components/account/account-page"
 import { AuthPanel, LegalConsent } from "@/components/account/auth-panel"
-import { KeepForm } from "@/components/account/keep-form"
 import { LoginForm } from "@/components/account/login-form"
 import { ButtonLink } from "@/components/site/button-link"
 import { accountOf } from "@/lib/auth/account-info"
@@ -10,8 +10,6 @@ import { githubFromEnv } from "@/lib/auth/auth"
 import { currentActor } from "@/lib/auth/session"
 import { hashToken } from "@/lib/publish/ids"
 import { getLessonStore } from "@/lib/publish/store"
-
-import { keepLesson } from "./actions"
 
 export const metadata: Metadata = {
   title: "Keep this lesson",
@@ -23,8 +21,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 /**
- * The claim link from publishing: /keep/{claimToken}. Signs the visitor in if needed, then one
- * button moves the lesson into their account.
+ * The claim link from publishing: /keep/{claimToken}. Logs the visitor in if needed, then
+ * /keep/{claimToken}/claim moves the lesson into their account and opens it.
  */
 export default async function KeepPage({
   params,
@@ -63,7 +61,7 @@ export default async function KeepPage({
       <AuthPanel footer={<LegalConsent />}>
         <LoginForm
           github={githubFromEnv() !== null}
-          callback={`/keep/${token}`}
+          callback={`/keep/${token}/claim`}
           title="Log in to keep this lesson"
           description={
             <>
@@ -79,9 +77,5 @@ export default async function KeepPage({
     )
   }
 
-  return (
-    <AccountPage account={account}>
-      <KeepForm token={token} title={record.lesson.title} action={keepLesson} />
-    </AccountPage>
-  )
+  redirect(`/keep/${token}/claim`)
 }
