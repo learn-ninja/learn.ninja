@@ -38,7 +38,11 @@ export default async function SignInPage({
           to continue; you&apos;ll be asked to allow it next.
         </p>
       )}
-      <SignInForm github={githubFromEnv() !== null} callback={callback} />
+      <SignInForm
+        github={githubFromEnv() !== null}
+        callback={callback}
+        pickHandle={resume === null}
+      />
     </AccountPage>
   )
 }

@@ -9,6 +9,7 @@ import { oauthClient } from "@workspace/db"
 import { AccountPage } from "@/components/account/account-page"
 import { ConsentForm } from "@/components/account/consent-form"
 import { ButtonLink } from "@/components/site/button-link"
+import { appLabel } from "@/lib/auth/account"
 import { accountOf } from "@/lib/auth/account-info"
 import { getAuth } from "@/lib/auth/auth"
 import { currentActor, queryOf } from "@/lib/auth/session"
@@ -25,7 +26,9 @@ export const dynamic = "force-dynamic"
 /**
  * The consent step of a chat app signing in over OAuth. Better Auth sends the signed-in user here
  * with the authorize request signed into the query; the page checks that signature, names the app
- * asking, and the form posts the answer. A signed-out visitor signs in first and comes back.
+ * asking, and the form posts the answer. A signed-out visitor signs in first and comes back; one
+ * without a handle (a new account, since the sign-in page skips that step on this path) picks it
+ * here, beside Allow.
  */
 export default async function ConsentPage({
   searchParams,
@@ -72,22 +75,11 @@ export default async function ConsentPage({
   )
 }
 
-/**
- * Who is asking. A client that identifies itself with a Client ID Metadata Document (Claude,
- * ChatGPT) has a URL for an id: show its host, since the document's own name is self-asserted. A
- * registered client is shown by the name it registered with.
- */
+/** Who is asking, as the settings' Connected apps will show it (appLabel). */
 async function appName(clientId: string): Promise<string> {
-  if (/^https:\/\//.test(clientId)) {
-    try {
-      return new URL(clientId).host
-    } catch {
-      // fall through to the lookup
-    }
-  }
   const [row] = await (await getDb())
     .select({ name: oauthClient.name })
     .from(oauthClient)
     .where(eq(oauthClient.clientId, clientId))
-  return row?.name?.trim() || "A chat app"
+  return appLabel(clientId, row?.name)
 }

@@ -23,11 +23,13 @@ const CODE_LENGTH = 6
 
 /**
  * Sign in with GitHub or a six-digit email code. Email users without a handle pick one before
- * leaving. Ends by sending the browser to `callback`.
+ * leaving, unless `pickHandle` is off: a chat app's OAuth sign-in goes straight on to /consent,
+ * which offers the handle there. Ends by sending the browser to `callback`.
  */
 export function SignInForm({
   github,
   callback,
+  pickHandle = true,
   api = accountApi,
   navigate = (to) => window.location.assign(to),
 }: {
@@ -35,6 +37,8 @@ export function SignInForm({
   github: boolean
   /** Where to go once signed in, a site path. */
   callback: string
+  /** Whether a new email user picks a handle here before going on. */
+  pickHandle?: boolean
   api?: AccountApi
   navigate?: (to: string) => void
 }) {
@@ -46,8 +50,8 @@ export function SignInForm({
 
   const [account, setAccount] = React.useState<AccountInfo | null>(null)
 
-  const finish = (handle: string | null) => {
-    rememberAccount({ handle, image: account?.image ?? null })
+  const finish = (handle: string | null, image = account?.image ?? null) => {
+    rememberAccount({ handle, image })
     navigate(callback)
   }
 
@@ -73,7 +77,8 @@ export function SignInForm({
       return setError(result.error)
     }
     setAccount(result.account ?? null)
-    if (result.account?.handle) finish(result.account.handle)
+    if (result.account?.handle || !pickHandle)
+      finish(result.account?.handle ?? null, result.account?.image ?? null)
     else setStep("handle")
   }
 

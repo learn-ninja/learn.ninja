@@ -21,11 +21,14 @@ export function HandleForm({
   initial,
   api = accountApi,
   submitLabel = "Save",
+  submitVariant = "default",
   onSaved,
 }: {
   initial: string | null
   api?: AccountApi
   submitLabel?: string
+  /** `outline` when the form sits beside the screen's main action, which keeps the one filled button. */
+  submitVariant?: React.ComponentProps<typeof Button>["variant"]
   onSaved?: (handle: string) => void
 }) {
   const [value, setValue] = React.useState(initial ?? "")
@@ -86,7 +89,11 @@ export function HandleForm({
       </div>
       <FormError>{error}</FormError>
       <div className="flex items-center gap-3">
-        <Button type="submit" isDisabled={busy || unchanged || !normalized}>
+        <Button
+          type="submit"
+          variant={submitVariant}
+          isDisabled={busy || unchanged || !normalized}
+        >
           {submitLabel}
         </Button>
         <span aria-live="polite" className="text-sm text-muted-foreground">

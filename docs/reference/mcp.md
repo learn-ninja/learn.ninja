@@ -31,11 +31,11 @@ Nothing to set up: the first time you tell the app to keep a lesson, it asks you
 
 That's a standard OAuth sign-in, and it sticks: the app keeps a token for your account, so in every later chat its lessons are saved as they're published. They start **unlisted**, so a half-finished draft doesn't land in Explore under your name; the agent says "Saved to @handle; list it in Explore at learn.ninja/settings", and the switch is under **Your lessons**. `update_lesson` needs no edit token for a lesson in your account, so "edit https://learn.ninja/l/…" works in a new chat, and `keep_lesson` moves a lesson published anonymously elsewhere into your account when given its edit token.
 
-The token can only publish and keep lessons as you: it can't read your email, change your handle, make API keys, or sign in on the website. To disconnect, remove the connector (or its sign-in) in the chat app; learn.ninja asks you to sign in again the next time you keep a lesson from it. If you'd rather not sign in from a chat app at all, ask the agent for the lesson's keep link and open it in your browser.
+The token can only publish and keep lessons as you: it can't read your email, change your handle, make API keys, or sign in on the website. Every app that signed in is listed under **Connected apps** at [learn.ninja/settings](https://learn.ninja/settings), with when you allowed it and when it last used the account; **Disconnect** ends its token at once, and learn.ninja asks you to sign in again the next time you keep a lesson from it. If you'd rather not sign in from a chat app at all, ask the agent for the lesson's keep link and open it in your browser.
 
 ### Apps that can't sign in
 
-An app that only takes a URL, with no sign-in step, can still publish to your account through a personal URL. Open [learn.ninja/settings](https://learn.ninja/settings), find **Connect a chat app**, and choose **Make my URL**. It looks like this, and you paste it wherever the instructions below say `https://learn.ninja/mcp`:
+An app that only takes a URL, with no sign-in step, can still publish to your account through a personal URL. Open [learn.ninja/settings](https://learn.ninja/settings), open **Apps that can't sign in** under **Connected apps**, and choose **Make my URL**. It looks like this, and you paste it wherever the instructions below say `https://learn.ninja/mcp`:
 
 ```text
 https://learn.ninja/mcp/learn_mcp_…

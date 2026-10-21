@@ -1,4 +1,13 @@
 import { APIError } from "better-auth/api"
+import { and, desc, eq, isNull, max } from "drizzle-orm"
+
+import {
+  oauthAccessToken,
+  oauthClient,
+  oauthConsent,
+  oauthRefreshToken,
+  type Db,
+} from "@workspace/db"
 
 import type { Reply } from "@/lib/publish/handlers"
 import { mcpPath } from "@/lib/publish/paths"
@@ -164,6 +173,140 @@ async function revokeMcpKeys(auth: Auth, headers: Headers) {
   for (const key of apiKeys.filter(isMcpKey)) {
     await auth.api.deleteApiKey({ headers, body: { keyId: key.id } })
   }
+}
+
+// ---------- connected apps ----------
+// The chat apps that signed in over OAuth (Claude.ai, ChatGPT, Claude Code): one consent row per
+// app and user, written when the user answered Allow on /consent, and the refresh tokens the app
+// has had since. Access tokens are JWTs that aren't stored, so the gate in front of /mcp checks
+// the consent row on every call (lib/mcp/gate.ts): deleting it is what disconnects the app.
+
+/** What the settings page shows for each app. */
+export interface ConnectedApp {
+  /** The consent row's id: what Disconnect takes, since a client id can be a URL. */
+  id: string
+  clientId: string
+  /** The app as shown to the user: the host of a client identified by a URL, else its registered name. */
+  name: string
+  /** When the user allowed it. */
+  allowedAt: string
+  /** When it last got a token, by signing in or refreshing one; null when it never did. */
+  lastUsedAt: string | null
+}
+
+/**
+ * Who an OAuth client is, as shown to the user. A client that identifies itself with a Client ID
+ * Metadata Document (Claude, ChatGPT) has a URL for an id: its host, since the document's own
+ * name is self-asserted. A registered client is shown by the name it registered with.
+ */
+export function appLabel(clientId: string, name?: string | null): string {
+  if (/^https:\/\//.test(clientId)) {
+    try {
+      return new URL(clientId).host
+    } catch {
+      // fall through to the name
+    }
+  }
+  return name?.trim() || "A chat app"
+}
+
+/** GET /api/account/apps: the apps the user has allowed, newest first. */
+export async function connectedApps(
+  db: Db,
+  userId: string
+): Promise<ConnectedApp[]> {
+  const consents = await db
+    .select({
+      id: oauthConsent.id,
+      clientId: oauthConsent.clientId,
+      name: oauthClient.name,
+      createdAt: oauthConsent.createdAt,
+    })
+    .from(oauthConsent)
+    .leftJoin(oauthClient, eq(oauthClient.clientId, oauthConsent.clientId))
+    .where(eq(oauthConsent.userId, userId))
+    .orderBy(desc(oauthConsent.createdAt))
+  if (consents.length === 0) return []
+  // Every token the user's apps were issued, newest per app: a refresh token at sign-in and at
+  // each rotation, and an access token row when one is opaque (none is today, but the column's there).
+  const [refreshed, accessed] = await Promise.all([
+    db
+      .select({ clientId: oauthRefreshToken.clientId, at: max(oauthRefreshToken.createdAt) })
+      .from(oauthRefreshToken)
+      .where(eq(oauthRefreshToken.userId, userId))
+      .groupBy(oauthRefreshToken.clientId),
+    db
+      .select({ clientId: oauthAccessToken.clientId, at: max(oauthAccessToken.createdAt) })
+      .from(oauthAccessToken)
+      .where(eq(oauthAccessToken.userId, userId))
+      .groupBy(oauthAccessToken.clientId),
+  ])
+  const lastUse = new Map<string, number>()
+  for (const { clientId, at } of [...refreshed, ...accessed]) {
+    const t = at ? new Date(at).getTime() : 0
+    if (t > (lastUse.get(clientId) ?? 0)) lastUse.set(clientId, t)
+  }
+  return consents.map((c) => {
+    const used = lastUse.get(c.clientId)
+    return {
+      id: c.id,
+      clientId: c.clientId,
+      name: appLabel(c.clientId, c.name),
+      allowedAt: c.createdAt.toISOString(),
+      lastUsedAt: used ? new Date(used).toISOString() : null,
+    }
+  })
+}
+
+/**
+ * DELETE /api/account/apps/{id}: disconnects an app. Its consent goes, so the gate refuses the
+ * access token it holds at once, and its refresh tokens are revoked, so it can't get another;
+ * the app shows its sign-in prompt again the next time the user keeps a lesson.
+ */
+export async function disconnectApp(
+  db: Db,
+  userId: string,
+  consentId: string
+): Promise<Reply> {
+  const [consent] = await db
+    .select({ clientId: oauthConsent.clientId })
+    .from(oauthConsent)
+    .where(and(eq(oauthConsent.id, consentId), eq(oauthConsent.userId, userId)))
+  if (!consent) {
+    return {
+      status: 404,
+      body: { ok: false, error: "not_found", message: "That app isn't connected." },
+    }
+  }
+  const mine = (table: typeof oauthRefreshToken | typeof oauthAccessToken) =>
+    and(
+      eq(table.userId, userId),
+      eq(table.clientId, consent.clientId),
+      isNull(table.revoked)
+    )
+  const now = new Date()
+  await db.update(oauthRefreshToken).set({ revoked: now }).where(mine(oauthRefreshToken))
+  await db.update(oauthAccessToken).set({ revoked: now }).where(mine(oauthAccessToken))
+  await db
+    .delete(oauthConsent)
+    .where(
+      and(eq(oauthConsent.userId, userId), eq(oauthConsent.clientId, consent.clientId))
+    )
+  return { status: 200, body: { ok: true } }
+}
+
+/** Whether `userId` still allows `clientId`: what makes an OAuth token good, beyond its signature. */
+export async function hasConsent(
+  db: Db,
+  userId: string,
+  clientId: string
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: oauthConsent.id })
+    .from(oauthConsent)
+    .where(and(eq(oauthConsent.userId, userId), eq(oauthConsent.clientId, clientId)))
+    .limit(1)
+  return row !== undefined
 }
 
 export const KEY_NAME_MAX = 32

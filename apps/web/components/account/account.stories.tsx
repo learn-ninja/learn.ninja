@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
-import type { KeySummary, McpConnection } from "@/lib/auth/account"
+import type { ConnectedApp, KeySummary, McpConnection } from "@/lib/auth/account"
 import type { AccountApi } from "@/lib/auth/browser"
 import { SiteHeader } from "@/components/site/site-header"
 
 import { AccountMenu } from "./account-menu"
 import { ApiKeys } from "./api-keys"
 import { AvatarForm } from "./avatar-form"
-import { ConnectChat } from "./connect-chat"
+import { ConnectChat, ConnectChatFallback } from "./connect-chat"
+import { ConnectedApps } from "./connected-apps"
 import { ConsentForm } from "./consent-form"
 import { HandleForm } from "./handle-form"
 import { KeepForm, type KeepResult } from "./keep-form"
@@ -90,6 +91,13 @@ const fakeApi = (over: Partial<AccountApi> = {}): AccountApi => ({
     await wait()
     return {}
   },
+  async listApps() {
+    return APPS
+  },
+  async disconnectApp() {
+    await wait()
+    return {}
+  },
   async consent(accept) {
     await wait()
     return { url: accept ? "https://claude.ai/…?code=…" : "https://claude.ai/…?error=access_denied" }
@@ -103,6 +111,30 @@ const CONNECTION: McpConnection = {
   createdAt: new Date(Date.now() - 10 * 864e5).toISOString(),
   lastUsedAt: new Date(Date.now() - 864e5).toISOString(),
 }
+
+const APPS: ConnectedApp[] = [
+  {
+    id: "c1",
+    clientId: "https://claude.ai/.well-known/oauth-client",
+    name: "claude.ai",
+    allowedAt: new Date(Date.now() - 20 * 864e5).toISOString(),
+    lastUsedAt: new Date().toISOString(),
+  },
+  {
+    id: "c2",
+    clientId: "https://chatgpt.com/.well-known/oauth-client",
+    name: "chatgpt.com",
+    allowedAt: new Date(Date.now() - 5 * 864e5).toISOString(),
+    lastUsedAt: new Date(Date.now() - 2 * 864e5).toISOString(),
+  },
+  {
+    id: "c3",
+    clientId: "k9ZlQ2m4",
+    name: "Claude Code",
+    allowedAt: new Date(Date.now() - 45 * 864e5).toISOString(),
+    lastUsedAt: null,
+  },
+]
 
 const KEYS: KeySummary[] = [
   {
@@ -155,6 +187,20 @@ export const SignInEmailOnly: Story = {
     <SignInForm
       github={false}
       callback="/settings"
+      api={fakeApi()}
+      navigate={navigate}
+    />
+  ),
+}
+
+export const SignInFromChatApp: Story = {
+  name: "Sign in, from a chat app",
+  render: () => (
+    // A chat app's OAuth sign-in: no handle step here, /consent offers it instead.
+    <SignInForm
+      github
+      callback="/consent?client_id=…"
+      pickHandle={false}
       api={fakeApi()}
       navigate={navigate}
     />
@@ -214,6 +260,47 @@ export const Keys: Story = {
 export const KeysNone: Story = {
   name: "Keys, none yet",
   render: () => <ApiKeys initial={[]} api={fakeApi()} />,
+}
+
+export const ConnectedAppsList: Story = {
+  name: "Connected apps",
+  render: () => <ConnectedApps initial={APPS} api={fakeApi()} />,
+}
+
+export const ConnectedAppsOne: Story = {
+  name: "Connected apps, one",
+  render: () => <ConnectedApps initial={APPS.slice(0, 1)} api={fakeApi()} />,
+}
+
+export const ConnectedAppsNone: Story = {
+  name: "Connected apps, none yet",
+  render: () => <ConnectedApps initial={[]} api={fakeApi()} />,
+}
+
+export const ConnectedAppsFails: Story = {
+  name: "Connected apps, server refuses",
+  render: () => (
+    <ConnectedApps
+      initial={APPS}
+      api={fakeApi({
+        disconnectApp: async () => {
+          await wait()
+          return { error: "Sign in again to disconnect an app." }
+        },
+      })}
+    />
+  ),
+}
+
+export const AppsWithoutSignIn: Story = {
+  name: "Apps that can't sign in",
+  render: () => (
+    // The fallback under Connected apps: open when the account has a URL, collapsed otherwise.
+    <div className="flex flex-col gap-6">
+      <ConnectChatFallback initial={CONNECTION} api={fakeApi()} />
+      <ConnectChatFallback initial={null} api={fakeApi()} />
+    </div>
+  ),
 }
 
 export const ConnectChatApp: Story = {

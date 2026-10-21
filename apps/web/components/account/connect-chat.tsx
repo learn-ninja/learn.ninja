@@ -4,6 +4,12 @@ import * as React from "react"
 import Link from "next/link"
 import { LinkIcon } from "lucide-react"
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@workspace/ui/components/accordion"
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -28,10 +34,35 @@ import { SITE } from "@/lib/site"
 import { FormError } from "./form-error"
 
 /**
- * "Connect a chat app": the account's personal MCP URL, for apps that take only a URL and can't
- * sign in over OAuth (Claude.ai, ChatGPT, and Claude Code sign in on their own). The URL is a
- * secret that stands for the account (the key at its end), so it's shown once when made, then
- * masked; Rotate makes a new one and Revoke ends it.
+ * "Apps that can't sign in", the fallback under Connected apps: the account's personal MCP URL,
+ * for apps that take only a URL and can't sign in over OAuth (Claude.ai, ChatGPT, and Claude Code
+ * sign in on their own and show up in Connected apps). Collapsed until the account has a URL,
+ * so the main path stays in view.
+ */
+export function ConnectChatFallback(props: {
+  initial: McpConnection | null
+  api?: AccountApi
+}) {
+  return (
+    <Accordion
+      className="rounded-xl border px-4"
+      defaultExpandedKeys={props.initial ? ["chat"] : []}
+    >
+      <AccordionItem id="chat">
+        <AccordionTrigger className="py-3 text-base font-semibold">
+          Apps that can&apos;t sign in
+        </AccordionTrigger>
+        <AccordionContent className="pb-4 text-base">
+          <ConnectChat {...props} />
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  )
+}
+
+/**
+ * The personal MCP URL itself. It's a secret that stands for the account (the key at its end),
+ * so it's shown once when made, then masked; Rotate makes a new one and Revoke ends it.
  */
 export function ConnectChat({
   initial,
@@ -84,10 +115,11 @@ export function ConnectChat({
   return (
     <div className="flex flex-col gap-6">
       <p className="text-muted-foreground">
-        Claude, ChatGPT, and Claude Code sign in to your account on their own
-        the first time you keep a lesson, with the public URL. For an app that
-        only takes a URL and can&apos;t sign in, make your own: every lesson it
-        publishes is saved to your account, unlisted until you list it here.
+        The fallback for an app that only takes a URL and has no sign-in step.
+        Claude, ChatGPT, and Claude Code don&apos;t need it: they sign in on
+        their own with the public URL. For the others, make your own: every
+        lesson it publishes is saved to your account, unlisted until you list
+        it here.
       </p>
 
       {fresh ? (

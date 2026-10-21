@@ -7,8 +7,9 @@ import { readFileSync } from "node:fs"
 import { createMcpProtectedRequestHandler } from "@better-auth/mcp"
 import { eq } from "drizzle-orm"
 
-import { connectPglite, user, type Db } from "@workspace/db"
+import { connectPglite, oauthConsent, user, type Db } from "@workspace/db"
 
+import { connectedApps, disconnectApp } from "../auth/account"
 import { createAuth, MCP_SCOPE, type Auth } from "../auth/auth"
 import { handleOf } from "../auth/handles"
 import { MemoryRateLimiter } from "../publish/rate-limit"
@@ -257,11 +258,15 @@ describe("signing in from a chat app", () => {
     expect(again.origin + again.pathname).toBe(REDIRECT)
     expect(again.searchParams.get("code")).toBeTruthy()
     accessToken = tokens.access_token
+    refreshToken = tokens.refresh_token!
+    testClientId = clientId
   })
 })
 
-/** The access token the flow above produced, for the gate tests. */
+/** The tokens the flow above produced, for the gate and Connected apps tests. */
 let accessToken = ""
+let refreshToken = ""
+let testClientId = ""
 
 const buttons = readFileSync(
   new URL("../../../../examples/button-hierarchy.json", import.meta.url),
@@ -429,5 +434,89 @@ describe("the gate in front of /mcp", () => {
     } finally {
       await db.update(user).set({ banned: false }).where(eq(user.email, "ada@example.com"))
     }
+  })
+})
+
+describe("Connected apps", () => {
+  const userId = async () =>
+    (await db.select({ id: user.id }).from(user).where(eq(user.email, "ada@example.com")))[0]!.id
+  const refresh = () =>
+    auth.handler(
+      new Request(`${ISSUER}/oauth2/token`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+          client_id: testClientId,
+          resource: RESOURCE,
+        }),
+      })
+    )
+
+  it("lists the app that signed in, by its registered name, with when it was allowed and last used", async () => {
+    expect(accessToken && refreshToken && testClientId).toBeTruthy()
+    const apps = await connectedApps(db, await userId())
+    expect(apps).toEqual([
+      {
+        id: expect.any(String),
+        clientId: testClientId,
+        name: "Test chat app",
+        allowedAt: expect.any(String),
+        lastUsedAt: expect.any(String),
+      },
+    ])
+    // Refreshing the token counts as a use.
+    const before = apps[0]!.lastUsedAt!
+    await new Promise((r) => setTimeout(r, 1100))
+    const refreshed = await refresh()
+    expect(refreshed.status, await refreshed.clone().text()).toBe(200)
+    refreshToken = ((await refreshed.json()) as { refresh_token: string }).refresh_token
+    const [after] = await connectedApps(db, await userId())
+    expect(Date.parse(after!.lastUsedAt!)).toBeGreaterThan(Date.parse(before))
+    // Someone else sees nothing, and can't disconnect it.
+    expect(await connectedApps(db, "nobody")).toEqual([])
+    expect((await disconnectApp(db, "nobody", apps[0]!.id)).status).toBe(404)
+    expect(await connectedApps(db, await userId())).toHaveLength(1)
+  })
+
+  it("disconnects the app: the list empties, its token is refused at /mcp, and it can't refresh", async () => {
+    const id = await userId()
+    const [app] = await connectedApps(db, id)
+    const protect = gateMcp({
+      db,
+      issuer: ISSUER,
+      resource: RESOURCE,
+      build: () => async () => new Response("ok"),
+    })
+    const withToken = () =>
+      protect(
+        new Request(RESOURCE, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+        })
+      )
+    expect((await withToken()).status).toBe(200)
+
+    expect((await disconnectApp(db, id, app!.id)).status).toBe(200)
+    expect(await connectedApps(db, id)).toEqual([])
+    expect(await db.select().from(oauthConsent).where(eq(oauthConsent.userId, id))).toEqual([])
+
+    const refused = await withToken()
+    expect(refused.status).toBe(401)
+    expect(refused.headers.get("www-authenticate")).toContain('error="invalid_token"')
+    expect(refused.headers.get("www-authenticate")).toContain("resource_metadata=")
+    const noRefresh = await refresh()
+    expect(noRefresh.status).toBe(400)
+    expect(((await noRefresh.json()) as { error: string }).error).toBe("invalid_grant")
+
+    // Signing in again asks for consent again, rather than going straight back to the app.
+    const cookie = await signIn("ada@example.com")
+    const again = location(await get(authorizeUrl(testClientId, pkce().challenge, "s3"), { cookie }))
+    expect(again.pathname).toBe("/consent")
   })
 })
