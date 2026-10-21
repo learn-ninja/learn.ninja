@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { timeAgo } from "./time"
+import { shortTimeAgo, timeAgo } from "./time"
 import { UI_LANGUAGES } from "./strings"
 
 const MINUTE = 60_000
@@ -41,6 +41,30 @@ describe("timeAgo", () => {
     for (const { code } of UI_LANGUAGES) {
       expect(timeAgo(NOW, NOW, code)).toMatch(/\S/)
       expect(timeAgo(NOW - 3 * HOUR, NOW, code)).toMatch(/\S/)
+    }
+  })
+})
+
+describe("shortTimeAgo", () => {
+  it.each([
+    [0, "just now"],
+    [MINUTE, "1m"],
+    [33 * MINUTE, "33m"],
+    [3 * HOUR, "3h"],
+    [23 * HOUR, "23h"],
+    [DAY, "1d"],
+    [6 * DAY, "6d"],
+    [7 * DAY, "Oct 13"],
+    [30 * DAY, "Sep 20"],
+    [365 * DAY, "Oct 20, 2025"],
+  ])("%d ms ago in English is %s", (age, text) => {
+    expect(shortTimeAgo(NOW - age, NOW, "en")).toBe(text)
+  })
+
+  it("has words for every player language", () => {
+    for (const { code } of UI_LANGUAGES) {
+      expect(shortTimeAgo(NOW - 3 * HOUR, NOW, code)).toMatch(/\S/)
+      expect(shortTimeAgo(NOW - 30 * DAY, NOW, code)).toMatch(/\S/)
     }
   })
 })

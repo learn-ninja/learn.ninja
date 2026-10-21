@@ -2,10 +2,12 @@ import * as React from "react"
 
 import { stringsFor } from "./strings"
 
-// How long ago a lesson was published, as people say it: "just now", "5 minutes ago", "yesterday",
-// "2 weeks ago", "last year". Full words, never "5m", so it can't be read as a lesson's length
-// ("12 min") on the same row. Intl.RelativeTimeFormat says it in every player language; only
-// "just now" is the player's own string, since Intl's "now" reads like a status.
+// How long ago a lesson was published. On screen it's the short form feeds use: "33m", "3h",
+// "2d" for the first week, then the date ("Oct 14", with the year once it isn't this year's).
+// The units are one letter, so "33m" in the byline doesn't read as the lesson's length ("12 min")
+// on the meta line. Screen readers get the full words instead: "just now", "5 minutes ago",
+// "yesterday". Intl says both in every player language; only "just now" is the player's own
+// string, since Intl's "now" reads like a status.
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
@@ -29,13 +31,34 @@ export function timeAgo(at: number, now: number, lang: string): string {
   return say("year", YEAR)
 }
 
+/** The short age of `at` at `now`: "just now", "33m", "3h", "2d", "Oct 14", "Oct 14, 2025". */
+export function shortTimeAgo(at: number, now: number, lang: string): string {
+  const age = now - at
+  if (age < MINUTE) return stringsFor(lang).justNow
+  const say = (unit: "minute" | "hour" | "day", size: number) =>
+    new Intl.NumberFormat(lang, {
+      style: "unit",
+      unit,
+      unitDisplay: "narrow",
+    }).format(Math.floor(age / size))
+  if (age < HOUR) return say("minute", MINUTE)
+  if (age < DAY) return say("hour", HOUR)
+  if (age < WEEK) return say("day", DAY)
+  const sameYear = new Date(at).getFullYear() === new Date(now).getFullYear()
+  return new Intl.DateTimeFormat(lang, {
+    month: "short",
+    day: "numeric",
+    year: sameYear ? undefined : "numeric",
+  }).format(at)
+}
+
 /** The date, for a tooltip: "20 Oct 2026". The date only: a clock time rendered on the server would be in its time zone, not the reader's. */
 export function exactTime(at: number, lang: string): string {
   return new Intl.DateTimeFormat(lang, { dateStyle: "medium" }).format(at)
 }
 
 /**
- * "5 minutes ago" as a <time>, with the date on hover. The age is taken at render, so
+ * "33m" as a <time>, with the date on hover and "33 minutes ago" for screen readers. The age is taken at render, so
  * the server's and the browser's can differ by a few seconds; the warning is suppressed since
  * that only matters right at a boundary, and the browser's text wins on the next render.
  */
@@ -58,7 +81,8 @@ export function TimeAgo({
       className={className}
       suppressHydrationWarning
     >
-      {timeAgo(at, now, lang)}
+      <span aria-hidden="true">{shortTimeAgo(at, now, lang)}</span>
+      <span className="sr-only">{timeAgo(at, now, lang)}</span>
     </time>
   )
 }
