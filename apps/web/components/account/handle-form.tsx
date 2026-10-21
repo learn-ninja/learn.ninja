@@ -11,7 +11,11 @@ import {
 } from "@workspace/ui/components/input-group"
 import { Label } from "@workspace/ui/components/label"
 
-import { accountApi, rememberAccount, type AccountApi } from "@/lib/auth/browser"
+import {
+  accountApi,
+  rememberAccount,
+  type AccountApi,
+} from "@/lib/auth/browser"
 import { HANDLE_RULES, normalizeHandle } from "@/lib/auth/handle-rules"
 
 import { FormError } from "./form-error"
@@ -22,6 +26,7 @@ export function HandleForm({
   api = accountApi,
   submitLabel = "Save",
   submitVariant = "default",
+  stretch = false,
   onSaved,
 }: {
   initial: string | null
@@ -29,6 +34,8 @@ export function HandleForm({
   submitLabel?: string
   /** `outline` when the form sits beside the screen's main action, which keeps the one filled button. */
   submitVariant?: React.ComponentProps<typeof Button>["variant"]
+  /** Full-width input and button, for the centered auth panel. */
+  stretch?: boolean
   onSaved?: (handle: string) => void
 }) {
   const [value, setValue] = React.useState(initial ?? "")
@@ -59,7 +66,7 @@ export function HandleForm({
     <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
       <div className="flex flex-col gap-2">
         <Label htmlFor="handle">Handle</Label>
-        <InputGroup className="max-w-xs">
+        <InputGroup className={stretch ? undefined : "max-w-xs"}>
           <InputGroupAddon>
             <InputGroupText>@</InputGroupText>
           </InputGroupAddon>
@@ -88,18 +95,29 @@ export function HandleForm({
         </p>
       </div>
       <FormError>{error}</FormError>
-      <div className="flex items-center gap-3">
+      {stretch ? (
         <Button
           type="submit"
           variant={submitVariant}
+          className="w-full"
           isDisabled={busy || unchanged || !normalized}
         >
           {submitLabel}
         </Button>
-        <span aria-live="polite" className="text-sm text-muted-foreground">
-          {done && unchanged ? "Saved" : ""}
-        </span>
-      </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          <Button
+            type="submit"
+            variant={submitVariant}
+            isDisabled={busy || unchanged || !normalized}
+          >
+            {submitLabel}
+          </Button>
+          <span aria-live="polite" className="text-sm text-muted-foreground">
+            {done && unchanged ? "Saved" : ""}
+          </span>
+        </div>
+      )}
     </form>
   )
 }

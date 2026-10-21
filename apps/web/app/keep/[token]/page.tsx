@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import { AccountPage } from "@/components/account/account-page"
+import { AuthPanel, LegalConsent } from "@/components/account/auth-panel"
 import { KeepForm } from "@/components/account/keep-form"
 import { SignInForm } from "@/components/account/sign-in-form"
 import { ButtonLink } from "@/components/site/button-link"
@@ -46,8 +47,8 @@ export default async function KeepPage({
           </h1>
           <p className="text-muted-foreground">
             This lesson was already saved to an account, it expired before
-            anyone kept it, or a newer keep link was made for it. Each keep
-            link works once.
+            anyone kept it, or a newer keep link was made for it. Each keep link
+            works once.
           </p>
         </div>
         <ButtonLink href="/" variant="outline" className="self-start">
@@ -59,19 +60,22 @@ export default async function KeepPage({
 
   if (!actor) {
     return (
-      <AccountPage account={null}>
-        <p className="text-sm text-muted-foreground">
-          To keep{" "}
-          <span className="font-medium text-foreground">
-            {record.lesson.title}
-          </span>
-          , sign in first.
-        </p>
+      <AuthPanel footer={<LegalConsent />}>
         <SignInForm
           github={githubFromEnv() !== null}
           callback={`/keep/${token}`}
+          title="Sign in to keep this lesson"
+          description={
+            <>
+              Sign in or make a free account, and{" "}
+              <span className="font-medium text-foreground">
+                {record.lesson.title}
+              </span>{" "}
+              stops expiring.
+            </>
+          }
         />
-      </AccountPage>
+      </AuthPanel>
     )
   }
 

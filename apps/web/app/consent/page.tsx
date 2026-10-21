@@ -6,11 +6,10 @@ import { eq } from "drizzle-orm"
 
 import { oauthClient } from "@workspace/db"
 
-import { AccountPage } from "@/components/account/account-page"
+import { AuthHeading, AuthPanel } from "@/components/account/auth-panel"
 import { ConsentForm } from "@/components/account/consent-form"
 import { ButtonLink } from "@/components/site/button-link"
 import { appLabel } from "@/lib/auth/account"
-import { accountOf } from "@/lib/auth/account-info"
 import { getAuth } from "@/lib/auth/auth"
 import { currentActor, queryOf } from "@/lib/auth/session"
 import { getDb } from "@/lib/publish/store"
@@ -26,9 +25,10 @@ export const dynamic = "force-dynamic"
 /**
  * The consent step of a chat app signing in over OAuth. Better Auth sends the signed-in user here
  * with the authorize request signed into the query; the page checks that signature, names the app
- * asking, and the form posts the answer. A signed-out visitor signs in first and comes back; one
- * without a handle (a new account, since the sign-in page skips that step on this path) picks it
- * here, beside Allow.
+ * asking and the host it goes back to, and the form posts the answer. A signed-out visitor signs
+ * in first and comes back; one without a handle (a new account, since the sign-in page skips that
+ * step on this path) picks it here, beside Allow. The layout is Agendolo's consent page: a bare
+ * panel with no header, since the visitor is mid-way through connecting an app.
  */
 export default async function ConsentPage({
   searchParams,
@@ -47,37 +47,51 @@ export default async function ConsentPage({
 
   if (!valid || !clientId) {
     return (
-      <AccountPage account={accountOf(await currentActor())}>
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            This sign-in has expired
-          </h1>
-          <p className="text-muted-foreground">
-            The request from your chat app is no longer valid. Go back to the
-            app and try connecting again.
-          </p>
-        </div>
-        <ButtonLink href="/" variant="outline" className="self-start">
+      <AuthPanel>
+        <AuthHeading title="This request has expired">
+          Go back to your chat app and connect learn.ninja again. It only takes
+          a moment.
+        </AuthHeading>
+        <ButtonLink href="/" variant="outline" className="w-full">
           Go to learn.ninja
         </ButtonLink>
-      </AccountPage>
+      </AuthPanel>
     )
   }
 
+  const back = `/sign-in?callback=${encodeURIComponent(`/consent?${query}`)}`
   const actor = await currentActor()
-  if (!actor)
-    redirect(`/sign-in?callback=${encodeURIComponent(`/consent?${query}`)}`)
+  if (!actor) redirect(back)
 
   return (
-    <AccountPage account={accountOf(actor)}>
-      <ConsentForm app={await appName(clientId)} handle={actor.handle} />
-    </AccountPage>
+    <AuthPanel>
+      <ConsentForm
+        app={await appName(clientId)}
+        handle={actor.handle}
+        email={actor.email}
+        returnTo={hostOf(params.redirect_uri)}
+        switchHref={back}
+      />
+    </AuthPanel>
   )
+}
+
+/** The address the app goes back to, as a person would read it: "claude.ai", "localhost". */
+function hostOf(uri: string | string[] | undefined): string | null {
+  const value = Array.isArray(uri) ? uri[0] : uri
+  if (!value) return null
+  try {
+    return new URL(value).hostname || null
+  } catch {
+    return null
+  }
 }
 
 /** Who is asking, as the settings' Connected apps will show it (appLabel). */
 async function appName(clientId: string): Promise<string> {
-  const [row] = await (await getDb())
+  const [row] = await (
+    await getDb()
+  )
     .select({ name: oauthClient.name })
     .from(oauthClient)
     .where(eq(oauthClient.clientId, clientId))

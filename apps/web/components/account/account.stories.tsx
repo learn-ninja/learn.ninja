@@ -1,7 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
-import type { ConnectedApp, KeySummary, McpConnection } from "@/lib/auth/account"
+import type {
+  ConnectedApp,
+  KeySummary,
+  McpConnection,
+} from "@/lib/auth/account"
 import type { AccountApi } from "@/lib/auth/browser"
+import { ButtonLink } from "@/components/site/button-link"
 import { SiteHeader } from "@/components/site/site-header"
 
 import { AccountMenu } from "./account-menu"
@@ -9,6 +14,7 @@ import { ApiKeys } from "./api-keys"
 import { AvatarForm } from "./avatar-form"
 import { ConnectChat, ConnectChatFallback } from "./connect-chat"
 import { ConnectedApps } from "./connected-apps"
+import { AuthHeading, AuthPanel, LegalConsent } from "./auth-panel"
 import { ConsentForm } from "./consent-form"
 import { HandleForm } from "./handle-form"
 import { KeepForm, type KeepResult } from "./keep-form"
@@ -100,7 +106,11 @@ const fakeApi = (over: Partial<AccountApi> = {}): AccountApi => ({
   },
   async consent(accept) {
     await wait()
-    return { url: accept ? "https://claude.ai/…?code=…" : "https://claude.ai/…?error=access_denied" }
+    return {
+      url: accept
+        ? "https://claude.ai/…?code=…"
+        : "https://claude.ai/…?error=access_denied",
+    }
   },
   ...over,
 })
@@ -172,24 +182,28 @@ const navigate = (to: string) => alert(`→ ${to}`)
 
 export const SignIn: Story = {
   render: () => (
-    <SignInForm
-      github
-      callback="/settings"
-      api={fakeApi()}
-      navigate={navigate}
-    />
+    <AuthPanel footer={<LegalConsent />}>
+      <SignInForm
+        github
+        callback="/settings"
+        api={fakeApi()}
+        navigate={navigate}
+      />
+    </AuthPanel>
   ),
 }
 
 export const SignInEmailOnly: Story = {
   name: "Sign in, email only",
   render: () => (
-    <SignInForm
-      github={false}
-      callback="/settings"
-      api={fakeApi()}
-      navigate={navigate}
-    />
+    <AuthPanel footer={<LegalConsent />}>
+      <SignInForm
+        github={false}
+        callback="/settings"
+        api={fakeApi()}
+        navigate={navigate}
+      />
+    </AuthPanel>
   ),
 }
 
@@ -197,29 +211,35 @@ export const SignInFromChatApp: Story = {
   name: "Sign in, from a chat app",
   render: () => (
     // A chat app's OAuth sign-in: no handle step here, /consent offers it instead.
-    <SignInForm
-      github
-      callback="/consent?client_id=…"
-      pickHandle={false}
-      api={fakeApi()}
-      navigate={navigate}
-    />
+    <AuthPanel footer={<LegalConsent />}>
+      <SignInForm
+        github
+        callback="/consent?client_id=…"
+        pickHandle={false}
+        title="Sign in to connect your app"
+        description="A chat app wants to publish lessons to your learn.ninja account. Sign in or make a free account first, then you'll be asked to allow it."
+        api={fakeApi()}
+        navigate={navigate}
+      />
+    </AuthPanel>
   ),
 }
 
 export const SignInWithHandle: Story = {
   name: "Sign in, user has a handle",
   render: () => (
-    <SignInForm
-      github
-      callback="/settings"
-      api={fakeApi({
-        verifyCode: async () => ({
-          account: { handle: "ada", image: PICTURE },
-        }),
-      })}
-      navigate={navigate}
-    />
+    <AuthPanel footer={<LegalConsent />}>
+      <SignInForm
+        github
+        callback="/settings"
+        api={fakeApi({
+          verifyCode: async () => ({
+            account: { handle: "ada", image: PICTURE },
+          }),
+        })}
+        navigate={navigate}
+      />
+    </AuthPanel>
   ),
 }
 
@@ -391,13 +411,48 @@ export const HeaderMenu: Story = {
 /** The consent step of a chat app signing in over OAuth (/consent). */
 export const Consent: Story = {
   render: () => (
-    <ConsentForm app="claude.ai" handle="ada" api={fakeApi()} navigate={navigate} />
+    <AuthPanel>
+      <ConsentForm
+        app="claude.ai"
+        handle="ada"
+        email="ada@example.com"
+        returnTo="claude.ai"
+        switchHref="/sign-in"
+        api={fakeApi()}
+        navigate={navigate}
+      />
+    </AuthPanel>
   ),
 }
 
 export const ConsentNoHandle: Story = {
   name: "Consent, no handle yet",
   render: () => (
-    <ConsentForm app="A chat app" handle={null} api={fakeApi()} navigate={navigate} />
+    <AuthPanel>
+      <ConsentForm
+        app="A chat app"
+        handle={null}
+        email="ada@example.com"
+        returnTo={null}
+        switchHref="/sign-in"
+        api={fakeApi()}
+        navigate={navigate}
+      />
+    </AuthPanel>
+  ),
+}
+
+export const ConsentExpired: Story = {
+  name: "Consent, expired",
+  render: () => (
+    <AuthPanel>
+      <AuthHeading title="This request has expired">
+        Go back to your chat app and connect learn.ninja again. It only takes a
+        moment.
+      </AuthHeading>
+      <ButtonLink href="/" variant="outline" className="w-full">
+        Go to learn.ninja
+      </ButtonLink>
+    </AuthPanel>
   ),
 }

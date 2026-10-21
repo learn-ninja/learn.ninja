@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
 
+import { AuthPanel, LegalConsent } from "@/components/account/auth-panel"
 import { SignInForm } from "@/components/account/sign-in-form"
-import { AccountPage } from "@/components/account/account-page"
 import { githubFromEnv } from "@/lib/auth/auth"
 import { currentActor, oauthResume, safeCallback } from "@/lib/auth/session"
 
@@ -19,7 +19,8 @@ export const dynamic = "force-dynamic"
 /**
  * GitHub or an email code; `?callback=` says where to go afterwards (the /keep link uses it). A
  * chat app signing in over OAuth arrives with the authorize request in the query instead, and goes
- * back into it (then to /consent) once signed in.
+ * back into it (then to /consent) once signed in. Drawn in the same bare panel as /consent, so
+ * connecting an app looks like one flow.
  */
 export default async function SignInPage({
   searchParams,
@@ -31,18 +32,17 @@ export default async function SignInPage({
   const callback = resume ?? safeCallback(params.callback)
   if (await currentActor()) redirect(callback)
   return (
-    <AccountPage account={null}>
-      {resume && (
-        <p className="text-sm text-muted-foreground">
-          A chat app wants to save lessons to your learn.ninja account. Sign in
-          to continue; you&apos;ll be asked to allow it next.
-        </p>
-      )}
+    <AuthPanel footer={<LegalConsent />}>
       <SignInForm
         github={githubFromEnv() !== null}
         callback={callback}
         pickHandle={resume === null}
+        {...(resume && {
+          title: "Sign in to connect your app",
+          description:
+            "A chat app wants to publish lessons to your learn.ninja account. Sign in or make a free account first, then you'll be asked to allow it.",
+        })}
       />
-    </AccountPage>
+    </AuthPanel>
   )
 }
