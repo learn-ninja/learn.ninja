@@ -114,7 +114,7 @@ cloud.web -> api                      # reach inside a container with a dot
 api.style.bold: true                  # emphasis: style.bold, style.stroke-width, style.stroke-dash, style.multiple
 ```
 
-Colors and fonts are the player's: don't set `style.fill`, `style.stroke`, or `style.font-color`. Icons come from the kit (`icon: lucide/database`, `icon: octicon/repo-16`; sets `lucide`, `octicon`, `simple-icons`, `logos`, `vscode-icons`), never from a URL; `shape: image` with an icon shows the icon as the box. Links and tooltips aren't allowed, and Markdown labels (`|md ... |`) can't contain HTML or images. Publishing compiles the D2 and reports the line of any error.
+Colors and fonts are the player's: don't set `style.fill`, `style.stroke`, or `style.font-color`. Icons come from the kit (`icon: lucide/database`, `icon: octicon/repo-16`; sets `lucide`, `octicon`, `simple-icons`, `logos`, `vscode-icons`), never from a URL; `icon.near` and `label.near` place them (`top-left` … `bottom-right`); `shape: image` with an icon shows the icon as the box, 56px unless `width` and `height` say otherwise. Links and tooltips aren't allowed, and Markdown labels (`|md ... |`) can't contain HTML or images. Publishing compiles the D2 and reports the line of any error.
 
 ## Options
 

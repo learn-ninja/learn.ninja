@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import { checkDiagram, compileErrors, renderDiagram, themed } from "./diagram"
+import {
+  checkDiagram,
+  compileErrors,
+  renderDiagram,
+  themed,
+  withImageSizes,
+} from "./diagram"
 
 // Diagrams are laid out by D2 on the server into SVG that carries only theme tokens, so one drawing
 // serves light and dark, and the checks keep out what the sandboxed frame shouldn't show.
@@ -53,12 +59,33 @@ describe("renderDiagram", () => {
     expect(svg).not.toContain("<image")
     const icons = svg.match(/<svg [^>]*role="img"[^>]*>/g) ?? []
     expect(icons).toHaveLength(2)
-    // In place, at D2's size, in the drawing's text color.
+    // Centered where D2 put it, at the box size, in the drawing's text color.
     expect(icons[0]).toMatch(/viewBox="0 0 16 16"/)
+    expect(icons[0]).toMatch(/width="32" height="32"/)
     expect(icons[0]).toMatch(/color="var\(--d2-N1\)"/)
-    expect(icons[1]).toMatch(/width="128" height="128"/)
+    // A shape: image box is the icon itself, 56px unless the D2 sets a size.
+    expect(icons[1]).toMatch(/width="56" height="56"/)
     expect(svg).toContain(">Repo<")
   }, 20_000)
+
+  it("keeps the size the D2 gives an image shape", async () => {
+    const svg = await renderDiagram(
+      "db: {shape: image; icon: lucide/database; width: 40; height: 40}"
+    )
+    expect(svg).toMatch(/<svg [^>]*width="40" height="40"[^>]*role="img"/)
+  }, 20_000)
+
+  it("sizes image shapes by their full id, inside containers too", () => {
+    const sized = withImageSizes("x", [
+      { id: "cloud", type: "rectangle", width: 200, height: 100 },
+      { id: "cloud.web app", type: "image", width: 128, height: 128 },
+      { id: "cloud.db", type: "image", width: 40, height: 40 },
+      { id: 'odd"id', type: "image", width: 128, height: 128 },
+    ])
+    expect(sized).toBe(
+      'x\n"cloud"."web app".width: 56\n"cloud"."web app".height: 56\n'
+    )
+  })
 })
 
 describe("checkDiagram", () => {

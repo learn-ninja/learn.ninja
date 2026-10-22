@@ -209,10 +209,41 @@ function iconPath(icon: unknown): string | null {
 
 // ---------- drawing ----------
 
+/** How big an icon is drawn inside a labelled box, whatever D2 reserved for it. */
+export const BOX_ICON_SIZE = 32
+/** The size of a `shape: image` box (the icon itself) when the D2 sets none. D2's own default is 128. */
+export const IMAGE_SHAPE_SIZE = 56
+
+/**
+ * The D2 with a default size appended for every `shape: image` box left at D2's 128px default,
+ * so an icon-as-box comes out the size of a big icon, not a picture. Boxes whose id can't be
+ * written back safely (a quote in a segment) keep D2's size.
+ */
+export function withImageSizes(
+  source: string,
+  shapes: { id: string; type?: string; width?: number; height?: number }[]
+): string {
+  const lines = shapes
+    .filter((s) => s.type === "image" && s.width === 128 && s.height === 128)
+    .map((s) => s.id.split(".").map((seg) => `"${seg}"`))
+    .filter((segs) => segs.every((seg) => !/["\n]/.test(seg.slice(1, -1))))
+    .flatMap((segs) => {
+      const path = segs.join(".")
+      return [
+        `${path}.width: ${IMAGE_SHAPE_SIZE}`,
+        `${path}.height: ${IMAGE_SHAPE_SIZE}`,
+      ]
+    })
+  return lines.length ? `${source}\n${lines.join("\n")}\n` : source
+}
+
 /** The diagram as an SVG string in the theme's colors. Throws when the D2 doesn't compile. */
 export async function renderDiagram(source: string): Promise<string> {
   const svg = await run(async (d2) => {
-    const { diagram, renderOptions } = await d2.compile(source)
+    let { diagram, renderOptions } = await d2.compile(source)
+    const sized = withImageSizes(source, diagram.shapes)
+    if (sized !== source)
+      ({ diagram, renderOptions } = await d2.compile(sized))
     return d2.render(diagram, {
       ...renderOptions,
       // Light-mode classes only: the theme tokens below recolor them for both modes.
@@ -227,9 +258,12 @@ export async function renderDiagram(source: string): Promise<string> {
 }
 
 /**
- * Draws each icon in place of the <image> D2 emitted for it, at the same spot and size. One-color
- * icons take the drawing's text color; D2's own stroke and fill (from `shape: image`) are dropped,
- * since they'd outline the picture. An unknown icon is removed, leaving the shape's label.
+ * Draws each icon in place of the <image> D2 emitted for it, centered on the same spot. An icon
+ * in a labelled box is drawn at BOX_ICON_SIZE (D2 reserves about 46px, which reads heavy next to
+ * 16px labels); a `shape: image` box, which D2 marks with its stroke and fill classes, is the
+ * icon itself and keeps its size. One-color icons take the drawing's text color; D2's own stroke
+ * and fill are dropped, since they'd outline the picture. An unknown icon is removed, leaving
+ * the shape's label.
  */
 export async function withIcons(svg: string): Promise<string> {
   const images = [...svg.matchAll(/<image\s([^>]*?)\/?>(?:<\/image>)?/g)]
@@ -240,18 +274,31 @@ export async function withIcons(svg: string): Promise<string> {
       [...m[1]!.matchAll(/([a-zA-Z:-]+)="([^"]*)"/g)].map((a) => [a[1]!, a[2]!])
     )
     const ref = attrs.href ? parseIconRef(attrs.href) : null
-    const size = Object.fromEntries(
-      ["x", "y", "width", "height"]
-        .filter((k) => attrs[k] !== undefined)
-        .map((k) => [k, String(Number(attrs[k]))])
-    )
+    const box = {
+      x: Number(attrs.x ?? 0),
+      y: Number(attrs.y ?? 0),
+      width: Number(attrs.width ?? 0),
+      height: Number(attrs.height ?? 0),
+    }
+    const isImageShape = attrs.class !== undefined
+    const size = isImageShape
+      ? Math.min(box.width, box.height)
+      : Math.min(box.width, box.height, BOX_ICON_SIZE)
+    const place = {
+      x: round(box.x + (box.width - size) / 2),
+      y: round(box.y + (box.height - size) / 2),
+      width: String(size),
+      height: String(size),
+    }
     const drawn = ref
-      ? await iconSvg(ref, { ...size, color: "var(--d2-N1)" })
+      ? await iconSvg(ref, { ...place, color: "var(--d2-N1)" })
       : null
     out = out.replace(m[0], drawn ?? "")
   }
   return out
 }
+
+const round = (n: number) => String(Math.round(n * 100) / 100)
 
 /** A letter from a right-to-left script: Hebrew, Arabic, Syriac, Thaana, and their forms. */
 const RTL_LETTER = /[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff]/
