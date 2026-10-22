@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 
 import { Visual } from "../visuals"
 import { PlayerFrame } from "./fixtures"
-import { visualKit } from "./visual-kit"
+import { visualKit, visualKitDiagram } from "./visual-kit"
 
 // Every component of the built-in UI kit, each in its own sandboxed visual, as lessons show them.
 // Overlays (dialogs, toasts, open menus, tooltips) should appear whole, sized to their content.
@@ -30,6 +30,19 @@ export const AllComponents: Story = {
             />
           </figure>
         ))}
+        <figure className="flex flex-col gap-2">
+          <figcaption className="text-sm font-medium text-muted-foreground">
+            Diagram with icons
+          </figcaption>
+          <Visual
+            visual={{
+              kind: "diagram",
+              d2: visualKitDiagram,
+              alt: "A repo, a branch, and a pull request, each with its icon.",
+            }}
+            label="Diagram with icons"
+          />
+        </figure>
       </div>
     </PlayerFrame>
   ),

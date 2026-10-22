@@ -2,10 +2,19 @@ import "server-only"
 
 import { D2 } from "@terrastruct/d2"
 
+import {
+  ICON_SETS,
+  iconExists,
+  iconSvg,
+  parseIconRef,
+  suggestIcons,
+} from "./icons"
+
 // Server-only: lays out and draws a lesson's D2 diagrams (https://d2lang.com) with D2.js, a WASM
 // build of D2 that runs in a worker thread, once per lesson. The SVG is recolored to the theme's
 // tokens, so one drawing serves light and dark, and the player shows it in the same script-free
-// sandboxed frame as HTML visuals: D2's Markdown labels pass raw HTML through.
+// sandboxed frame as HTML visuals: D2's Markdown labels pass raw HTML through. Icons are named
+// `set/name` (icons.ts) and drawn inline after layout, in place of the <image> D2 would load.
 
 /** D2's own palette codes, which the drawing uses as class names (fill-B6, stroke-N1, ...). */
 const THEME_CODE = /^(?:N[1-7]|B[1-6]|AA[245]|AB[45])$/
@@ -120,9 +129,10 @@ export function compileErrors(error: unknown): string[] {
 
 /**
  * What's wrong with a diagram's D2, as messages an LLM can act on, or none. Compiles it, then
- * rejects what the lesson page can't or shouldn't show: icons and links (they'd load or open
- * other sites), tooltips (they need scripts), HTML or images in Markdown labels, and colors of
- * its own (the drawing takes the theme's, so it reads in light and dark).
+ * rejects what the lesson page can't or shouldn't show: icons the kit doesn't have (an icon is
+ * `set/name`, never a URL), links (they'd open other sites), tooltips (they need scripts), HTML or
+ * images in Markdown labels, and colors of its own (the drawing takes the theme's, so it reads in
+ * light and dark).
  */
 export async function checkDiagram(source: string): Promise<string[]> {
   let compiled: Compiled
@@ -141,11 +151,26 @@ export async function checkDiagram(source: string): Promise<string[]> {
       .map((s) => `"${s.id}"`)
       .join(", ")
 
-  const withIcon = shapes.filter((s) => s.icon || s.type === "image")
-  if (withIcon.length)
-    problems.push(
-      `Diagrams can't show icons or images (${named(withIcon)}): the lesson loads nothing from other sites. Use a label instead.`
-    )
+  for (const shape of shapes) {
+    const icon = iconPath(shape.icon)
+    if (!icon) continue
+    const ref = parseIconRef(icon)
+    if (!ref || !ICON_SETS.includes(ref.set)) {
+      problems.push(
+        `"${shape.id}" has icon "${icon}", but icons come from the kit, never a URL: write icon: set/name with a set from ${ICON_SETS.join(", ")}, like lucide/git-branch or octicon/repo-16.`
+      )
+      continue
+    }
+    if (!(await iconExists(ref))) {
+      const close = await suggestIcons(ref)
+      problems.push(
+        `"${shape.id}" names an icon that doesn't exist: ${icon}.` +
+          (close.length
+            ? ` Did you mean ${close.join(", ")}?`
+            : ` Check the name in the ${ref.set} set.`)
+      )
+    }
+  }
   const withLink = [...shapes, ...connections].filter(
     (s) => s.link || s.tooltip
   )
@@ -174,6 +199,14 @@ export async function checkDiagram(source: string): Promise<string[]> {
   return problems
 }
 
+/** The icon as the D2 was written (`lucide/git-branch`): D2 parses it as a URL and keeps the path. */
+function iconPath(icon: unknown): string | null {
+  if (!icon || typeof icon !== "object") return null
+  const url = icon as { Scheme?: string; Host?: string; Path?: string }
+  if (url.Scheme || url.Host) return `${url.Scheme}://${url.Host}${url.Path}`
+  return url.Path || null
+}
+
 // ---------- drawing ----------
 
 /** The diagram as an SVG string in the theme's colors. Throws when the D2 doesn't compile. */
@@ -190,7 +223,34 @@ export async function renderDiagram(source: string): Promise<string> {
       noXMLTag: true,
     })
   })
-  return themed(svg, RTL_LETTER.test(source) ? "rtl" : "ltr")
+  return themed(await withIcons(svg), RTL_LETTER.test(source) ? "rtl" : "ltr")
+}
+
+/**
+ * Draws each icon in place of the <image> D2 emitted for it, at the same spot and size. One-color
+ * icons take the drawing's text color; D2's own stroke and fill (from `shape: image`) are dropped,
+ * since they'd outline the picture. An unknown icon is removed, leaving the shape's label.
+ */
+export async function withIcons(svg: string): Promise<string> {
+  const images = [...svg.matchAll(/<image\s([^>]*?)\/?>(?:<\/image>)?/g)]
+  if (images.length === 0) return svg
+  let out = svg
+  for (const m of images) {
+    const attrs = Object.fromEntries(
+      [...m[1]!.matchAll(/([a-zA-Z:-]+)="([^"]*)"/g)].map((a) => [a[1]!, a[2]!])
+    )
+    const ref = attrs.href ? parseIconRef(attrs.href) : null
+    const size = Object.fromEntries(
+      ["x", "y", "width", "height"]
+        .filter((k) => attrs[k] !== undefined)
+        .map((k) => [k, String(Number(attrs[k]))])
+    )
+    const drawn = ref
+      ? await iconSvg(ref, { ...size, color: "var(--d2-N1)" })
+      : null
+    out = out.replace(m[0], drawn ?? "")
+  }
+  return out
 }
 
 /** A letter from a right-to-left script: Hebrew, Arabic, Syriac, Thaana, and their forms. */

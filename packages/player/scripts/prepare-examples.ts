@@ -6,10 +6,12 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 
 import { validateLesson } from "@workspace/spec"
 
+import { renderDiagram } from "../src/diagram"
 import { prepareLesson } from "../src/prepare"
+import { diagramKey } from "../src/prepared"
 import { visualClasses, visualsCssFor } from "../src/visual-css"
 import type { Prepared } from "../src/prepared"
-import { visualKit } from "../src/stories/visual-kit"
+import { visualKit, visualKitDiagram } from "../src/stories/visual-kit"
 
 const dir = new URL("../../../examples/", import.meta.url)
 const merged: Prepared = {
@@ -32,6 +34,8 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
   for (const c of visualClasses(result.lesson)) classes.add(c)
 }
 for (const c of visualClasses(visualKit)) classes.add(c)
+merged.diagrams![diagramKey(visualKitDiagram)] =
+  await renderDiagram(visualKitDiagram)
 merged.visualsCss = await visualsCssFor([...classes])
 
 const out = new URL("../src/stories/prepared.generated.json", import.meta.url)

@@ -13,6 +13,10 @@ export const visualKit: KitSample[] = [
     html: `<div class="flex flex-wrap gap-2"><button class="btn">Save</button><button class="btn" data-variant="secondary">Secondary</button><button class="btn" data-variant="outline">Outline</button><button class="btn" data-variant="ghost">Ghost</button><button class="btn" data-variant="link">Link</button><button class="btn" data-variant="destructive">Delete</button></div>`,
   },
   {
+    name: "Icons",
+    html: `<div class="grid gap-3 text-sm"><div class="flex flex-wrap items-center gap-4"><span class="inline-flex items-center gap-1.5"><span class="icon-[octicon--repo-16]"></span> repo</span><span class="inline-flex items-center gap-1.5"><span class="icon-[octicon--git-branch-16]"></span> branch</span><span class="inline-flex items-center gap-1.5"><span class="icon-[octicon--git-commit-16]"></span> commit</span><span class="inline-flex items-center gap-1.5"><span class="icon-[octicon--git-pull-request-16] text-chart-2"></span> pull request</span><span class="inline-flex items-center gap-1.5"><span class="icon-[octicon--issue-opened-16] text-destructive"></span> issue</span></div><div class="flex flex-wrap items-center gap-4 text-muted-foreground"><span class="icon-[lucide--database] size-8 text-primary"></span><span class="icon-[lucide--git-merge] size-8"></span><span class="icon-[logos--github-icon] size-8"></span><span class="icon-[vscode-icons--file-type-python] size-8"></span><span class="icon-[simple-icons--react] size-8 text-chart-1"></span></div></div>`,
+  },
+  {
     name: "Badges and keys",
     html: `<div class="flex flex-wrap items-center gap-2"><span class="badge">New</span><span class="badge" data-variant="secondary">Draft</span><span class="badge" data-variant="outline">Beta</span><span class="badge" data-variant="destructive">Failed</span><kbd class="kbd">⌘K</kbd></div>`,
   },
@@ -97,3 +101,11 @@ export const visualKit: KitSample[] = [
     html: `<button class="btn" data-variant="outline" data-tooltip="Copy link">Share</button>`,
   },
 ]
+
+/** A diagram with the kit's icons, the way a GitHub lesson would draw one, for the kit story. */
+export const visualKitDiagram = `direction: right
+repo: Repo {icon: octicon/repo-16}
+branch: Branch {shape: image; icon: lucide/git-branch}
+pr: Pull request {icon: octicon/git-pull-request-16}
+repo -> branch: branch
+branch -> pr: open`

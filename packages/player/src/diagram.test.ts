@@ -45,6 +45,20 @@ describe("renderDiagram", () => {
   it("throws on D2 that doesn't compile", async () => {
     await expect(renderDiagram("a -> {")).rejects.toThrow()
   }, 20_000)
+
+  it("draws icons inline where D2 would load an image", async () => {
+    const svg = await renderDiagram(
+      "repo: Repo {icon: octicon/repo-16}\nbranch: Branch {shape: image; icon: lucide/git-branch}\nrepo -> branch"
+    )
+    expect(svg).not.toContain("<image")
+    const icons = svg.match(/<svg [^>]*role="img"[^>]*>/g) ?? []
+    expect(icons).toHaveLength(2)
+    // In place, at D2's size, in the drawing's text color.
+    expect(icons[0]).toMatch(/viewBox="0 0 16 16"/)
+    expect(icons[0]).toMatch(/color="var\(--d2-N1\)"/)
+    expect(icons[1]).toMatch(/width="128" height="128"/)
+    expect(svg).toContain(">Repo<")
+  }, 20_000)
 })
 
 describe("checkDiagram", () => {
@@ -57,12 +71,26 @@ describe("checkDiagram", () => {
     expect(message).toMatch(/doesn't compile: line 1: unknown shape "blob"/)
   }, 20_000)
 
-  it("rejects icons, links, and tooltips", async () => {
+  it("rejects icons from URLs, links, and tooltips", async () => {
     const problems = await checkDiagram(
       "a: {icon: https://example.com/a.svg}\nb: {link: https://example.com}\nc: {tooltip: hi}"
     )
-    expect(problems.join("\n")).toMatch(/icons or images \("a"\)/)
+    expect(problems.join("\n")).toMatch(
+      /"a" has icon "https:\/\/example.com\/a.svg", but icons come from the kit/
+    )
     expect(problems.join("\n")).toMatch(/links or tooltips \("b", "c"\)/)
+  }, 20_000)
+
+  it("accepts the kit's icons and suggests a fix for a misspelt one", async () => {
+    expect(
+      await checkDiagram(
+        "repo: Repo {icon: octicon/repo-16}\nbranch: {shape: image; icon: lucide/git-branch}"
+      )
+    ).toEqual([])
+    const problems = await checkDiagram("a: {icon: lucide/git-brnch}")
+    expect(problems.join("\n")).toMatch(
+      /"a" names an icon that doesn't exist: lucide\/git-brnch. Did you mean lucide\/git-branch/
+    )
   }, 20_000)
 
   it("rejects HTML in Markdown labels", async () => {

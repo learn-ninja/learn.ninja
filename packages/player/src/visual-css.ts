@@ -5,6 +5,7 @@ import { compile } from "tailwindcss"
 
 import type { Lesson } from "@workspace/spec"
 
+import { iconCss, parseIconClass } from "./icons"
 import { VISUAL_THEME } from "./visual-theme"
 
 // Server-side: the Tailwind CSS a lesson's HTML visuals need, compiled at publish time.
@@ -49,9 +50,19 @@ export function visualClasses(lesson: Lesson | object): string[] {
   return [...classes]
 }
 
-/** Tailwind CSS for the given classes; unknown classes are ignored. Basecoat comes from the shared stylesheet. */
+/**
+ * Tailwind CSS for the given classes, after the CSS of any icon classes (icon-[lucide--git-branch])
+ * in the components layer, so size and color utilities on an icon win; unknown classes and icons
+ * are ignored (checkIcons reports them). Basecoat comes from the shared stylesheet.
+ */
 export async function visualsCssFor(classes: string[]): Promise<string> {
   if (classes.length === 0) return ""
+  const icons: string[] = []
+  for (const c of classes) {
+    const ref = parseIconClass(c)
+    const css = ref && (await iconCss(c, ref))
+    if (css) icons.push(css)
+  }
   // A fresh compiler each time: Tailwind's build() keeps every class it has seen.
   const compiler = await compile(
     `@layer theme, base, components, utilities;\n@import "tailwindcss/theme" layer(theme);\n@import "tailwindcss/utilities" layer(utilities);\n${VISUAL_THEME}`,
@@ -60,7 +71,8 @@ export async function visualsCssFor(classes: string[]): Promise<string> {
       loadStylesheet: async (id) => tailwindStylesheet(id),
     }
   )
-  return compiler.build(classes)
+  const iconLayer = icons.length ? `@layer components{${icons.join("")}}` : ""
+  return iconLayer + compiler.build(classes)
 }
 
 function walkStrings(

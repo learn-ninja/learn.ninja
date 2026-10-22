@@ -50,6 +50,20 @@ describe("visuals CSS", () => {
     expect(css).not.toContain(".grid")
   })
 
+  it("draws icon classes before the utilities, so sizes can override", async () => {
+    const css = await visualsCssFor([
+      "icon-[lucide--git-branch]",
+      "icon-[lucide--not-an-icon]",
+      "size-6",
+    ])
+    expect(css.startsWith("@layer components{.icon-\\[lucide--git-branch\\]{")).toBe(
+      true
+    )
+    expect(css).toContain("mask-image")
+    expect(css).toMatch(/@layer utilities\s*\{[\s\S]*\.size-6/)
+    expect(css).not.toContain("not-an-icon")
+  })
+
   it("returns nothing when there are no classes", async () => {
     expect(await visualsCssFor([])).toBe("")
   })

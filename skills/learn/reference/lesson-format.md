@@ -114,7 +114,7 @@ cloud.web -> api                      # reach inside a container with a dot
 api.style.bold: true                  # emphasis: style.bold, style.stroke-width, style.stroke-dash, style.multiple
 ```
 
-Colors and fonts are the player's: don't set `style.fill`, `style.stroke`, or `style.font-color`. Icons, images, links, and tooltips aren't allowed, and Markdown labels (`|md ... |`) can't contain HTML or images. Publishing compiles the D2 and reports the line of any error.
+Colors and fonts are the player's: don't set `style.fill`, `style.stroke`, or `style.font-color`. Icons come from the kit (`icon: lucide/database`, `icon: octicon/repo-16`; sets `lucide`, `octicon`, `simple-icons`, `logos`, `vscode-icons`), never from a URL; `shape: image` with an icon shows the icon as the box. Links and tooltips aren't allowed, and Markdown labels (`|md ... |`) can't contain HTML or images. Publishing compiles the D2 and reports the line of any error.
 
 ## Options
 
@@ -169,5 +169,5 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 - Formulas in `\( … \)` are balanced and render; language codes are valid BCP 47.
 - Code sits in backticks: a command like `git push`, a flag, a call, a file name, a path, or an HTML tag written as plain text in a prompt, option, pair, item, feedback, or explanation is rejected.
 - `subject` is one of the slugs above; 1–5 `tags`, each a label of 2–30 characters (letters, digits, spaces, and `- + # . & / '`, not starting with `#`), none whose key repeats the subject, a level, or a language the lesson sets, no two with the same key.
-- HTML visuals: no scripts, event handlers, iframes, forms, objects, embeds, `javascript:` links, or external URLs; each under 20 KB; the whole file under 500 KB. A concept's or question's HTML visual has `alt`.
-- Diagram visuals: the D2 compiles, with no colors, icons, images, links, tooltips, or HTML of its own; a concept's or question's diagram has `alt`.
+- HTML visuals: no scripts, event handlers, iframes, forms, objects, embeds, `javascript:` links, or external URLs; each under 20 KB; the whole file under 500 KB. Every icon class (`icon-[lucide--git-branch]`) names an icon the kit has. A concept's or question's HTML visual has `alt`.
+- Diagram visuals: the D2 compiles, with no colors, links, tooltips, or HTML of its own, and every icon is `set/name` from the kit; a concept's or question's diagram has `alt`.

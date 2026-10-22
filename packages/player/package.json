@@ -16,6 +16,12 @@
     "pretypecheck": "npm run stories:prepare"
   },
   "dependencies": {
+    "@iconify-json/logos": "^1.2.17",
+    "@iconify-json/lucide": "^1.2.147",
+    "@iconify-json/octicon": "^1.2.39",
+    "@iconify-json/simple-icons": "^1.2.100",
+    "@iconify-json/vscode-icons": "^1.2.92",
+    "@iconify/utils": "^3.1.7",
     "@observablehq/plot": "^0.6.17",
     "@terrastruct/d2": "^0.1.33",
     "@workspace/spec": "^0.0.0",

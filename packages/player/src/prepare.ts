@@ -16,6 +16,7 @@ import {
 
 import { renderChart } from "./chart"
 import { checkDiagram, renderDiagram } from "./diagram"
+import { iconExists, parseIconClass, suggestIcons } from "./icons"
 import {
   chartKey,
   codeKey,
@@ -161,6 +162,43 @@ export async function checkDiagrams(lesson: Lesson): Promise<Issue[]> {
       issues.push({ kind: "structure", path: `${path}.d2`, message })
   }
   return issues
+}
+
+/**
+ * The publish-time check for icon classes in HTML visuals (icon-[lucide--git-branch]), which
+ * needs the icon sets and so can't live in the spec's rules: each named icon must exist, or the
+ * learner sees an empty box where the picture should be.
+ */
+export async function checkIcons(lesson: Lesson): Promise<Issue[]> {
+  const issues: Issue[] = []
+  for (const { visual, path } of everyVisual(lesson)) {
+    if (visual.kind !== "html") continue
+    const seen = new Set<string>()
+    for (const className of visualClasses({ html: visual.html })) {
+      const ref = parseIconClass(className)
+      if (!ref || seen.has(className)) continue
+      seen.add(className)
+      if (await iconExists(ref)) continue
+      const close = (await suggestIcons(ref)).map(
+        (s) => `icon-[${s.replace("/", "--")}]`
+      )
+      issues.push({
+        kind: "structure",
+        path: `${path}.html`,
+        message:
+          `The icon ${className} doesn't exist.` +
+          (close.length
+            ? ` Did you mean ${close.join(", ")}?`
+            : ` Icons are icon-[set--name] with a set from lucide, octicon, simple-icons, logos, or vscode-icons.`),
+      })
+    }
+  }
+  return issues
+}
+
+/** Every publish-time check that needs the server: diagrams and icons. */
+export async function checkVisuals(lesson: Lesson): Promise<Issue[]> {
+  return [...(await checkDiagrams(lesson)), ...(await checkIcons(lesson))]
 }
 
 /** The lesson's chart visuals: a brick's own at full size, an option's or item's compact. */

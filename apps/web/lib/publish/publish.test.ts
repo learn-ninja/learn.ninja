@@ -793,6 +793,43 @@ describe("checking", () => {
     expect(Object.values(stored!.prepared.diagrams!)[0]).toContain(">draft<")
   }, 20_000)
 
+  it("rejects an icon the kit doesn't have, and embeds one it does", async () => {
+    const lesson = JSON.parse(buttons)
+    const visual = lesson.bricks[0].visual
+    lesson.bricks[0].visual = {
+      ...visual,
+      html: '<span class="icon-[lucide--git-brnch]"></span>',
+    }
+    const checked = await checkLesson(
+      { text: JSON.stringify(lesson), client: "x" },
+      deps
+    )
+    expect(checked.status).toBe(422)
+    expect(checked.body.issues).toEqual([
+      expect.objectContaining({
+        path: "bricks[0].visual.html",
+        message: expect.stringMatching(
+          /icon-\[lucide--git-brnch\] doesn't exist. Did you mean icon-\[lucide--git-branch\]/
+        ),
+      }),
+    ])
+
+    lesson.bricks[0].visual = {
+      ...visual,
+      html: '<span class="icon-[lucide--git-branch] text-primary"></span>',
+    }
+    const reply = await publishLesson(
+      { text: JSON.stringify(lesson), client: "x" },
+      deps
+    )
+    expect(reply.status).toBe(201)
+    const stored = await deps.store.get(reply.body.id as string)
+    expect(stored!.prepared.visualsCss).toContain(
+      ".icon-\\[lucide--git-branch\\]{"
+    )
+    expect(stored!.prepared.visualsCss).toContain("mask-image")
+  }, 20_000)
+
   it("tells an old skill to update", async () => {
     const reply = await checkLesson(
       { text: buttons, client: "x", skillVersion: "0.1.0" },

@@ -1,4 +1,4 @@
-import { checkDiagrams, prepareLesson } from "@workspace/player/prepare"
+import { checkVisuals, prepareLesson } from "@workspace/player/prepare"
 import {
   canUpgrade,
   LIMITS,
@@ -121,8 +121,8 @@ async function checkLessonText(text: string, skillVersion?: string | null) {
     }
   }
   const result = validateLesson(canUpgrade(data) ? upgradeLesson(data) : text)
-  // Diagrams are checked by compiling their D2, which needs the server, not just the spec's rules.
-  const issues = result.ok ? await checkDiagrams(result.lesson) : result.issues
+  // Diagrams and icons are checked on the server: D2 must compile, and icons must exist in the kit.
+  const issues = result.ok ? await checkVisuals(result.lesson) : result.issues
   if (!result.ok || issues.length) {
     return {
       error: {

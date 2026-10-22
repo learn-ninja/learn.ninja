@@ -56,7 +56,7 @@ If a command prints that a newer version of the skill is available, tell the use
 - **Teach before you test.** Every term, fact, or method a question or the challenge needs appears first in a concept brick: its body or visual. Feedback, hints, and explanations explain the answer but never introduce anything new, because a learner who answers right may never see them.
 - **Every wrong option teaches.** Each wrong option needs `feedback` that explains the misconception, and every question brick needs an `explanation`. Build wrong options from real, common mistakes. Name an option by what it says, never by its place ("the second statement", "option B"): the player shuffles options, and the checker rejects it.
 - **v1 limits:** no `number` bricks (ask numeric questions as `choice` with mistake-based options), every `blank` uses word chips (`choices`), no images or photos, no typed answers.
-- **Visuals are plain HTML with the built-in UI kit** (Basecoat classes and Tailwind utilities). No scripts, event handlers, iframes, forms, or external URLs; the checker rejects them.
+- **Visuals are plain HTML with the built-in UI kit** (Basecoat classes, Tailwind utilities, and icon classes like `icon-[lucide--git-branch]`). No scripts, event handlers, iframes, forms, or external URLs; the checker rejects them.
 - **Language:** write all learner-facing text in the lesson's `language`. Never translate code.
 
 ## Files
