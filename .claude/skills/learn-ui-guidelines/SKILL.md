@@ -42,7 +42,7 @@ Every screen has visible layers in both themes. Windows are outlined, not filled
 
 The control recipe lives in one place, `packages/player/src/controls.ts`; bricks import it instead of copying classes. `controlStyles` is the control on a card with its hover and selected states (`controlSurface` without them, for a picture of a control), `controlPadding` (`px-3 py-2.5 text-sm font-medium`) sizes a one-line control, `slotStyles` is the dashed empty place (an open order slot, an empty sort lane, a used word), and `markStyles` colors a checked answer.
 
-- A one-line control is its padding plus one line of `text-sm` (42px at the default text size, 47px at Large), never a fixed `min-h-*`, so it grows with the learner's text size. An empty slot gets the same padding and an aria-hidden zero-width space for its line, so it's exactly as tall as a filled one.
+- A one-line control is its padding plus one line of `text-sm` (42px at the default text size, 47px at Large; on phones 45px and 51px), never a fixed `min-h-*`, so it grows with the learner's text size. An empty slot gets the same padding and an aria-hidden zero-width space for its line, so it's exactly as tall as a filled one.
 - Anything beside the text in a control (match's pair badge) must not make it taller than one line.
 - Two deliberate exceptions: choice rows are roomier for their key hint (`min-h-12 px-4 py-3`, `rounded-lg`), and blank's word chips are the sentence's size, since they sit in its text.
 
@@ -51,6 +51,7 @@ The control recipe lives in one place, `packages/player/src/controls.ts`; bricks
 - Screens are a centered column: `max-w-sm` for the intro, `max-w-lg` for questions and concepts, `max-w-2xl` when there's a visual or a side-by-side brick. Headings are `text-2xl font-semibold`; options and body copy in tight spaces are `text-sm font-medium`.
 - Use Tailwind's text scale only (`text-xs` to `text-4xl`). No pixel or arbitrary sizes.
 - Lesson content scales with the learner's text size setting: wrap it in an element with `data-text-size={textSize}`. The app frame (header, footer, buttons) never scales.
+- Phones (below `sm`) take a bigger step for each setting (`globals.css`), so `text-sm` answers and body text are 16, 18, and 20px at Small, Medium, and Large instead of 14, 15.75, and 17.5px. Code blocks step back down to `text-xs` there (about 14px at Small), since their lines need the width.
 - Two weights do most of the work: `font-medium` for labels and `font-semibold`/`font-bold` for headings. Supporting text is `text-muted-foreground`, never reduced opacity.
 - Sentence case everywhere.
 

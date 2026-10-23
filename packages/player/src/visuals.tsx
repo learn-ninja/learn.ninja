@@ -449,7 +449,8 @@ function CodeBlock({
         !plain && "rounded-xl border bg-muted/40"
       )}
     >
-      <pre className="m-0 flex min-w-max flex-col py-3 font-mono text-sm leading-7">
+      {/* Phones scale lesson text up a step; code steps back down, since its lines need the width. */}
+      <pre className="m-0 flex min-w-max flex-col py-3 font-mono text-sm leading-7 max-sm:text-xs">
         {lines.map((tokens, i) => {
           const n = i + 1
           const id = hotspots ? spotByLine.get(n) : undefined
