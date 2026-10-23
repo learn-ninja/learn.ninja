@@ -68,20 +68,18 @@ export const mathVisual = z
 
 /** A plain number or a category name on the x axis; y is always a number. */
 const chartX = z.union([z.number(), z.string().min(1).max(40)])
+const axisLabel = z.string().min(1).max(60).optional()
 
-export const chartVisual = z
+/** A chart drawn from points the lesson gives. */
+const dataChartVisual = z
   .strictObject({
     kind: z.literal("chart"),
     /** scatter: numeric x and y. bar and line: x is a category or a number, in the order given. */
     type: z.enum(["scatter", "bar", "line"]),
     /** One sentence saying what the chart shows, for screen readers. Required (rules.ts). */
     alt: z.string().min(1).max(200).optional(),
-    x: z
-      .strictObject({ label: z.string().min(1).max(60).optional() })
-      .optional(),
-    y: z
-      .strictObject({ label: z.string().min(1).max(60).optional() })
-      .optional(),
+    x: z.strictObject({ label: axisLabel }).optional(),
+    y: z.strictObject({ label: axisLabel }).optional(),
     /** The points, in order. `label` names a point on a scatter; `series` groups points into lines or colors (up to 3). */
     data: z
       .array(
@@ -97,6 +95,45 @@ export const chartVisual = z
     /** A fitted trend line through the points (scatter only). */
     trend: z.boolean().optional(),
   })
+  .meta({ id: "DataChartVisual" })
+
+/**
+ * A chart of one to three functions of x, each written as an expression ("sin(x)", "x^2 - 2",
+ * "1000 * 1.05^x"). The player samples and draws them at publish time (packages/player/src/curve.ts
+ * reads the expressions; the checker rejects one it can't read or that has no finite value).
+ */
+const functionChartVisual = z
+  .strictObject({
+    kind: z.literal("chart"),
+    type: z.literal("function"),
+    /** One sentence saying what the chart shows, for screen readers. Required (rules.ts). */
+    alt: z.string().min(1).max(200).optional(),
+    /** The range of x to draw, and an optional axis label. */
+    x: z.strictObject({ label: axisLabel, min: z.number(), max: z.number() }),
+    /** An optional label and range for the y axis; without a range it fits the curves. */
+    y: z
+      .strictObject({
+        label: axisLabel,
+        min: z.number().optional(),
+        max: z.number().optional(),
+      })
+      .optional(),
+    /** The curves (at most LIMITS.chartSeries). `label` names one where the curve ends; it defaults to the expression. */
+    series: z
+      .array(
+        z.strictObject({
+          /** A formula in x: numbers, x, pi, e, + - * / ^, parentheses, and functions like sin, sqrt, exp, ln, abs. */
+          expression: z.string().min(1).max(120),
+          label: z.string().min(1).max(24).optional(),
+        })
+      )
+      .min(1)
+      .max(3),
+  })
+  .meta({ id: "FunctionChartVisual" })
+
+export const chartVisual = z
+  .discriminatedUnion("type", [dataChartVisual, functionChartVisual])
   .meta({ id: "ChartVisual" })
 
 export const diagramVisual = z
@@ -378,4 +415,6 @@ export type QuestionBrick = z.infer<typeof questionBrick>
 export type ConceptBrick = z.infer<typeof conceptBrick>
 export type Visual = z.infer<typeof visual>
 export type ChartVisual = z.infer<typeof chartVisual>
+export type DataChartVisual = z.infer<typeof dataChartVisual>
+export type FunctionChartVisual = z.infer<typeof functionChartVisual>
 export type DiagramVisual = z.infer<typeof diagramVisual>

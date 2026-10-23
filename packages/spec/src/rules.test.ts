@@ -337,6 +337,89 @@ describe("chart visuals", () => {
   })
 })
 
+describe("function charts", () => {
+  const curve = (over: Record<string, unknown> = {}) => ({
+    kind: "chart",
+    type: "function",
+    alt: "A sine wave.",
+    x: { label: "x", min: -6, max: 6 },
+    series: [{ expression: "sin(x)" }],
+    ...over,
+  })
+  function withCurve(over: Record<string, unknown> = {}) {
+    const l = buttons()
+    l.bricks[0].visual = curve(over)
+    return l
+  }
+
+  it("accepts up to three curves over an x range, with an optional y range", () => {
+    expect(validateLesson(withCurve()).ok).toBe(true)
+    expect(
+      validateLesson(
+        withCurve({
+          y: { label: "y", min: -2, max: 2 },
+          series: [
+            { expression: "sin(x)", label: "sine" },
+            { expression: "cos(x)", label: "cosine" },
+            { expression: "x / 3" },
+          ],
+        })
+      ).ok
+    ).toBe(true)
+    expect(
+      validateLesson(
+        withCurve({
+          series: ["a", "b", "c", "d"].map((label) => ({
+            expression: "x",
+            label,
+          })),
+        })
+      ).ok
+    ).toBe(false)
+  })
+
+  it("wants alt text and an x range that goes up", () => {
+    const l = withCurve()
+    delete l.bricks[0].visual.alt
+    expectIssue(l, { path: "bricks[0].visual", message: /chart has no "alt"/ })
+    expectIssue(withCurve({ x: { min: 3, max: 3 } }), {
+      path: "bricks[0].visual",
+      message: /"x.min" \(3\) must be less than its "x.max" \(3\)/,
+    })
+    expectIssue(withCurve({ y: { min: 2, max: -2 } }), {
+      path: "bricks[0].visual",
+      message: /"y.min" \(2\) must be less than its "y.max" \(-2\)/,
+    })
+  })
+
+  it("wants a label of its own for each curve", () => {
+    expectIssue(
+      withCurve({
+        series: [{ expression: "x", label: "f" }, { expression: "2x", label: "f" }],
+      }),
+      { path: "bricks[0].visual", message: /"f" is used twice/ }
+    )
+    expectIssue(
+      withCurve({ series: [{ expression: "x" }, { expression: "x" }] }),
+      { message: /"x" is used twice/ }
+    )
+  })
+
+  it("rejects the fields of a data chart on a function chart", () => {
+    expect(
+      validateLesson(
+        withCurve({
+          data: [
+            { x: 1, y: 1 },
+            { x: 2, y: 2 },
+          ],
+        })
+      ).ok
+    ).toBe(false)
+    expect(validateLesson(withCurve({ x: { label: "x" } })).ok).toBe(false)
+  })
+})
+
 describe("diagram visuals", () => {
   function withDiagram(over: Record<string, unknown> = {}) {
     const l = buttons()

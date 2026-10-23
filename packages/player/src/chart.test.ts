@@ -73,6 +73,73 @@ describe("renderChart", () => {
   })
 })
 
+describe("renderChart (function)", () => {
+  const growth: ChartVisual = {
+    kind: "chart",
+    type: "function",
+    alt: "Compound interest pulls away from simple interest.",
+    x: { label: "Years", min: 0, max: 30 },
+    y: { label: "Balance", min: 0 },
+    series: [
+      { expression: "1000 * 1.07^x", label: "Compound" },
+      { expression: "1000 + 70x", label: "Simple" },
+    ],
+  }
+
+  it("draws each curve in a series color, named at its end, with axis labels", () => {
+    const svg = renderChart(growth)
+    expect(svg.startsWith("<svg")).toBe(true)
+    expect(svg).toContain("Years")
+    expect(svg).toContain("Balance")
+    expect(svg).toContain(">Compound<")
+    expect(svg).toContain(">Simple<")
+    expect(svg).toContain("var(--primary)")
+    expect(svg).toContain("var(--chart-2)")
+    expect(svg).not.toContain("<script")
+    expect(renderChart(growth, true)).toContain('width="320"')
+  })
+
+  it("keeps the x range as given and clips curves to the y range", () => {
+    const svg = renderChart({
+      kind: "chart",
+      type: "function",
+      alt: "The tangent function.",
+      x: { min: -3, max: 3 },
+      y: { min: -4, max: 4 },
+      series: [{ expression: "tan(x)" }],
+    })
+    expect(svg).toContain(">−3<")
+    expect(svg).toContain(">3<")
+    expect(svg).toContain(">4<")
+    expect(svg).not.toContain(">5<")
+    expect(svg).toContain("clip-path")
+    // The curve breaks at each asymptote instead of drawing a vertical line across the frame.
+    const curve = svg.match(/<path d="(M[^"]{200,})"/)?.[1] ?? ""
+    expect(curve.match(/M/g)).toHaveLength(3)
+  })
+
+  it("draws what it can when an expression doesn't read, rather than failing the page", () => {
+    const svg = renderChart({
+      kind: "chart",
+      type: "function",
+      alt: "A parabola.",
+      x: { min: -2, max: 2 },
+      series: [{ expression: "x^2" }, { expression: "nope(x)", label: "?" }],
+    })
+    expect(svg).toContain(">x^2<")
+    expect(svg).toContain("<path")
+    expect(() =>
+      renderChart({
+        kind: "chart",
+        type: "function",
+        alt: "Nothing.",
+        x: { min: -2, max: 2 },
+        series: [{ expression: "sqrt(-1 - x^2)" }],
+      })
+    ).not.toThrow()
+  })
+})
+
 describe("chartKey", () => {
   it("ignores key order, since Postgres jsonb reorders a stored lesson's keys", () => {
     const reordered = JSON.parse(
