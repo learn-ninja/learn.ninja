@@ -97,6 +97,14 @@ export const TrayClosed: Story = {
   loaders: withPrefs({ tray: "closed" }),
 }
 /**
+ * On a phone: the header is the logo, the progress bar, and one menu (the settings and the footer's
+ * links move into it), the actions span the tray, and feedback is a card in the tray above them.
+ */
+export const Phone: Story = {
+  args: { lesson: lessons.buttons },
+  globals: { viewport: { value: "mobile2", isRotated: false } },
+}
+/**
  * The ninja as the sensei: he settles and bows in, breathes while he waits, and bows at the earned
  * moments. On a lesson you can play through by keyboard, to reach the wrap-up and his line there.
  */

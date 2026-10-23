@@ -22,6 +22,11 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button, LinkButton } from "@workspace/ui/components/button"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { DirectionProvider } from "@workspace/ui/components/direction"
+import {
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@workspace/ui/components/dropdown-menu"
 import { cn } from "@workspace/ui/lib/utils"
 
 import {
@@ -89,10 +94,13 @@ import { seeded } from "./random"
 import { plainText, RichText } from "./rich-text"
 import {
   AppSettings,
+  AppSettingsItems,
+  BRAND,
   LessonFooter,
   LessonHeader,
   PanelRightFilledIcon,
   PlayerSettings,
+  PlayerSettingsItems,
   TheoryPanel,
   TRAY_BUTTON,
   TRAY_GHOST,
@@ -199,7 +207,7 @@ export function LessonPlayer({
   React.useEffect(() => setTitle(lesson.title), [lesson.title])
   const shown = React.useMemo(() => ({ ...lesson, title }), [lesson, title])
   const [prefs, setPrefs] = usePreferences()
-  const coarse = useCoarsePointer()
+  const fixedTray = useFixedTray()
   // The keyboard shortcuts dialog lives in the footer; "?" (handled in the player) opens it too.
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false)
   // A choice made in the footer wins over the page's default for this session.
@@ -208,6 +216,22 @@ export function LessonPlayer({
   const t = stringsFor(ui)
   const locale = ariaLocaleFor(ui)
   const dir = /^(ar|he|fa|ur)\b/i.test(ui) ? "rtl" : "ltr"
+  const appSettings = {
+    theme,
+    onThemeChange,
+    uiLanguage: ui,
+    onPrefs: (patch: Partial<Preferences>) => {
+      if (patch.uiLanguage) setChosen(patch.uiLanguage)
+      setPrefs(patch)
+    },
+    t,
+  }
+  // The footer's links, which phones find in the header's menu instead.
+  const footerLinks = [
+    [docsHref, t.docs],
+    [privacyHref, t.privacy],
+    [termsHref, t.terms],
+  ].filter((l): l is [string, string] => Boolean(l[0]))
   return (
     <DirectionProvider locale={locale}>
       <PlayerProvider
@@ -244,20 +268,31 @@ export function LessonPlayer({
             prefs={prefs}
             onPrefs={setPrefs}
             onShortcuts={() => setShortcutsOpen((open) => !open)}
-            headerSettings={
-              <AppSettings
-                theme={theme}
-                onThemeChange={onThemeChange}
-                uiLanguage={ui}
-                onPrefs={(patch) => {
-                  if (patch.uiLanguage) setChosen(patch.uiLanguage)
-                  setPrefs(patch)
-                }}
-                t={t}
-              />
+            headerSettings={<AppSettings {...appSettings} />}
+            phoneMenu={
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup aria-label={t.settings}>
+                  <PlayerSettingsItems prefs={prefs} onPrefs={setPrefs} t={t} />
+                  <AppSettingsItems {...appSettings} />
+                </DropdownMenuGroup>
+                {footerLinks.length ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup aria-label={BRAND.name}>
+                      {footerLinks.map(([href, label]) => (
+                        <DropdownMenuItem key={href} href={href}>
+                          {label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </>
+                ) : null}
+              </>
             }
-            // Touch screens have no hotkeys to fall back on, so the tray stays open there.
-            trayOpen={coarse || prefs.tray !== "closed"}
+            // Touch screens have no hotkeys to fall back on, and phones need the main action, so the
+            // tray stays open there.
+            trayOpen={fixedTray || prefs.tray !== "closed"}
             onTrayToggle={() =>
               setPrefs({ tray: prefs.tray === "closed" ? "open" : "closed" })
             }
@@ -622,6 +657,7 @@ function Player({
   onPrefs,
   onShortcuts,
   headerSettings,
+  phoneMenu,
   trayOpen,
   onTrayToggle,
   onRename,
@@ -641,6 +677,8 @@ function Player({
   onShortcuts: () => void
   /** The app's settings, shown in the header. */
   headerSettings?: React.ReactNode
+  /** The end of the header's menu on phones: the settings and links that have no room there. */
+  phoneMenu?: React.ReactNode
   trayOpen: boolean
   onTrayToggle: () => void
   onRename: (title: string) => void
@@ -724,11 +762,15 @@ function Player({
   React.useEffect(() => {
     if (item.kind === "wrap" && !startAt) completeRef.current?.()
   }, [item.kind, state.run, startAt])
-  const coarse = useCoarsePointer()
+  const fixedTray = useFixedTray()
   // The tray holds the screen's buttons in the middle and the player's settings at the end. The notch
   // opens and closes it (Enter keeps working either way); the buttons render into `actionsEl`.
   const [trayEl, setTrayEl] = React.useState<HTMLDivElement | null>(null)
   const [actionsEl, setActionsEl] = React.useState<HTMLDivElement | null>(null)
+  // On phones the feedback sits in the tray above the buttons instead of floating over the answers.
+  const [feedbackEl, setFeedbackEl] = React.useState<HTMLDivElement | null>(
+    null
+  )
   const trayId = React.useId()
   // The tray's natural height, and its height while the notch is being dragged.
   const [trayHeight, setTrayHeight] = React.useState(0)
@@ -747,13 +789,13 @@ function Player({
   // "?" shows the keyboard shortcuts, as it does on most of the web. D opens and closes the tray and
   // W the theory card (Why?), matched by key position so they work on any keyboard layout; touch
   // screens have no notch to toggle.
-  const keys = React.useRef({ onShortcuts, onTrayToggle, coarse })
-  keys.current = { onShortcuts, onTrayToggle, coarse }
+  const keys = React.useRef({ onShortcuts, onTrayToggle, fixedTray })
+  keys.current = { onShortcuts, onTrayToggle, fixedTray }
   const toggleWhy = React.useRef<(() => void) | null>(null)
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const help = e.key === "?"
-      const tray = e.code === "KeyD" && !e.shiftKey && !keys.current.coarse
+      const tray = e.code === "KeyD" && !e.shiftKey && !keys.current.fixedTray
       const why = e.code === "KeyW" && !e.shiftKey && toggleWhy.current
       if (
         !(help || tray || why) ||
@@ -845,6 +887,20 @@ function Player({
   // The ninja lives on the card and reacts to each check: pleased when it's right, sorry when it's not.
   const cardRef = React.useRef<HTMLDivElement>(null)
   const q = state.question
+  // On phones the tray grows to show feedback, which can push the marked answers below the fold:
+  // once it has settled, bring the last of them back into view.
+  React.useEffect(() => {
+    if (!q?.result || q.phase === "answering") return
+    if (!matchMedia("(width < 40rem)").matches) return
+    const id = window.setTimeout(() => {
+      const marked = scrollRef.current?.querySelectorAll("[data-status]")
+      marked?.[marked.length - 1]?.scrollIntoView({
+        block: "nearest",
+        behavior: reducedMotion() ? "auto" : "smooth",
+      })
+    }, 250)
+    return () => window.clearTimeout(id)
+  }, [q?.result, q?.phase])
   // A scenario opens with his brief (story mode): he steps up to tell it, then goes back to his
   // corner for the question. Each telling has its own key, so a replay starts fresh. With him off
   // there's no brief: the situation is on the question screen.
@@ -917,6 +973,7 @@ function Player({
           shareUrl={shareUrl}
           settings={headerSettings}
           menuItems={menuItems}
+          phoneMenu={phoneMenu}
           onRestart={() => {
             setTheoryOpen(false)
             dispatch({ type: "restart", lesson })
@@ -934,7 +991,8 @@ function Player({
         {/* The window: the content card on the tray's grey, so the card's corners stay round above it. */}
         <div
           className={cn(
-            "relative flex min-w-0 flex-1 overflow-clip border-y bg-muted sm:rounded-4xl sm:border",
+            // On phones the tray is as dark as the card: one surface, with the actions at its foot.
+            "relative flex min-w-0 flex-1 overflow-clip border-y bg-muted max-sm:bg-background sm:rounded-4xl sm:border",
             // In a product shot the mock browser frames the window; its own border would double up.
             !chrome && "border-0"
           )}
@@ -962,6 +1020,10 @@ function Player({
                   key={state.index}
                   className={cn(
                     "mx-auto flex min-h-full w-full flex-col justify-center-safe gap-8 px-4 py-16",
+                    // On phones a lesson screen starts at the top, so nothing moves when the tray
+                    // grows to show feedback; the intro and wrap-up stay centered.
+                    (item.kind === "concept" || item.kind === "question") &&
+                      "max-sm:justify-start max-sm:py-6",
                     vanishing && "vanish",
                     leaving
                       ? "motion-safe:animate-out motion-safe:duration-200 motion-safe:fade-out-0 motion-safe:fill-mode-forwards motion-safe:slide-out-to-end-24"
@@ -970,8 +1032,8 @@ function Player({
                           "motion-safe:animate-in motion-safe:duration-300 motion-safe:fade-in-0 motion-safe:slide-in-from-end-24"
                         : "motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1",
                     columnWidth(item),
-                    // Room under the content for the feedback toast.
-                    item.kind === "question" && "pb-40"
+                    // Room under the content for the feedback toast (on phones it's in the tray).
+                    item.kind === "question" && "sm:pb-40"
                   )}
                 >
                   <div
@@ -1009,7 +1071,7 @@ function Player({
                     state={state}
                     dispatch={dispatch}
                     textSize={textSize}
-                    tray={{ el: actionsEl, id: trayId }}
+                    tray={{ el: actionsEl, id: trayId, feedbackEl }}
                     ninja={ninja !== "off"}
                     level={ninja}
                     pickLine={pickLine}
@@ -1064,7 +1126,7 @@ function Player({
                   </Badge>
                 </div>
               ) : null}
-              {coarse ? null : (
+              {fixedTray ? null : (
                 <TrayNotch
                   open={trayOpen}
                   controls={trayId}
@@ -1100,35 +1162,39 @@ function Player({
               <div
                 id={trayId}
                 ref={setTrayEl}
-                className="flex items-center gap-2 px-4 py-4"
+                // Phones: the feedback, then the actions across the width, clear of the home bar.
+                className="flex flex-col gap-3 p-4 max-sm:pb-[max(1rem,env(safe-area-inset-bottom))]"
               >
-                {/* Equal sides keep the actions in the middle (they give way when a phone is too narrow). */}
-                <div className="flex flex-1 items-center gap-1">
-                  <PlayerSettings prefs={prefs} onPrefs={onPrefs} t={t} />
-                </div>
-                <div
-                  ref={setActionsEl}
-                  className="flex flex-wrap items-center justify-center gap-2"
-                />
-                <div className="flex flex-1 items-center justify-end gap-1">
-                  {/* The end of the tray holds help. Theory stays hidden while it's redesigned. */}
-                  {SHOW_THEORY ? (
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className={cn(TRAY_BUTTON, TRAY_GHOST)}
-                      aria-expanded={theoryOpen}
-                      aria-controls={theoryOpen ? theoryId : undefined}
-                      onPress={() => setTheoryOpen((open) => !open)}
-                    >
-                      {theoryOpen ? (
-                        <PanelRightFilledIcon className="rtl:-scale-x-100" />
-                      ) : (
-                        <PanelRightIcon className="rtl:-scale-x-100" />
-                      )}
-                      {t.theory}
-                    </Button>
-                  ) : null}
+                <div ref={setFeedbackEl} className="empty:hidden sm:hidden" />
+                <div className="flex items-center gap-2">
+                  {/* Equal sides keep the actions in the middle. On phones the settings are in the header's menu. */}
+                  <div className="flex flex-1 items-center gap-1 max-sm:hidden">
+                    <PlayerSettings prefs={prefs} onPrefs={onPrefs} t={t} />
+                  </div>
+                  <div
+                    ref={setActionsEl}
+                    className="flex flex-wrap items-center justify-center gap-2 max-sm:flex-1 max-sm:flex-nowrap"
+                  />
+                  <div className="flex flex-1 items-center justify-end gap-1 max-sm:hidden">
+                    {/* The end of the tray holds help. Theory stays hidden while it's redesigned. */}
+                    {SHOW_THEORY ? (
+                      <Button
+                        variant="ghost"
+                        size="lg"
+                        className={cn(TRAY_BUTTON, TRAY_GHOST)}
+                        aria-expanded={theoryOpen}
+                        aria-controls={theoryOpen ? theoryId : undefined}
+                        onPress={() => setTheoryOpen((open) => !open)}
+                      >
+                        {theoryOpen ? (
+                          <PanelRightFilledIcon className="rtl:-scale-x-100" />
+                        ) : (
+                          <PanelRightIcon className="rtl:-scale-x-100" />
+                        )}
+                        {t.theory}
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1758,6 +1824,8 @@ type Tone = "neutral" | "good" | "warn"
 
 /** The feedback toast's recipe for each tone. */
 const TOAST = "rounded-xl border px-4 py-3 shadow-xs"
+/** On phones the tray's buttons share its width at a thumb-sized height. */
+const PHONE_BAR = "max-sm:h-12 max-sm:flex-1 max-sm:text-base"
 const toneClass: Record<Tone, string> = {
   neutral: "border-border bg-popover text-popover-foreground",
   // The marked rows' colors (markStyles in bricks.tsx), mixed into the page the way the browser blends them (sRGB), so the toast matches yet stays opaque.
@@ -1792,7 +1860,12 @@ export function ActionArea({
   dispatch: React.Dispatch<Action>
   textSize: TextSize
   /** The tray the buttons render into. `el` is null while it's closed: the buttons hide, Enter still works. */
-  tray?: { el: HTMLDivElement | null; id: string }
+  /** The tray's slots: the buttons go in `el`, and on phones the feedback goes in `feedbackEl`. */
+  tray?: {
+    el: HTMLDivElement | null
+    id: string
+    feedbackEl?: HTMLDivElement | null
+  }
   /** Whether the ninja is in the card's corner, so the feedback toast leaves him room. */
   ninja?: boolean
   /** The ninja's character, which picks the voice of the feedback lines. */
@@ -1846,7 +1919,7 @@ export function ActionArea({
     <Button
       variant="outline"
       size={tray ? "lg" : "sm"}
-      className={cn(tray && TRAY_BUTTON)}
+      className={cn(tray && [TRAY_BUTTON, PHONE_BAR])}
       onPress={onPress}
     >
       {label}
@@ -1975,16 +2048,19 @@ export function ActionArea({
         primaryRef.current?.focus()
       })
   }
-  if (why)
-    secondary = (
+  // On phones the feedback is a card in the tray, and Why? sits in it so Continue keeps the width.
+  const phoneCard = Boolean(tray?.feedbackEl && (title || message))
+  const whyButton = (inCard: boolean) =>
+    why ? (
       <Button
-        variant="outline"
-        size={tray ? "lg" : "sm"}
+        variant={inCard ? "ghost" : "outline"}
+        size={tray && !inCard ? "lg" : "sm"}
         aria-expanded={why.open}
         className={cn(
-          tray && TRAY_BUTTON,
+          tray && !inCard && [TRAY_BUTTON, phoneCard && "max-sm:hidden"],
+          inCard && "-my-1 -me-2 shrink-0 hover:bg-foreground/5",
           // Open: a shade off the grey tray, as the tray's ghost buttons are when open.
-          "aria-expanded:bg-input dark:aria-expanded:bg-input/50"
+          !inCard && "aria-expanded:bg-input dark:aria-expanded:bg-input/50"
         )}
         onPress={() => {
           why.onToggle()
@@ -1996,7 +2072,8 @@ export function ActionArea({
           ? t.everyPath
           : t.why}
       </Button>
-    )
+    ) : null
+  if (why) secondary = whyButton(false)
   const explanationOpen =
     item.kind === "question" &&
     state.question !== null &&
@@ -2062,7 +2139,7 @@ export function ActionArea({
       <Button
         ref={primaryRef}
         size={tray ? "lg" : "sm"}
-        className={cn(tray && TRAY_BUTTON)}
+        className={cn(tray && [TRAY_BUTTON, PHONE_BAR])}
         variant={primary.variant ?? "default"}
         onPress={primary.onPress}
         isDisabled={primary.isDisabled}
@@ -2070,6 +2147,34 @@ export function ActionArea({
         {primary.label}
       </Button>
       {secondary}
+    </>
+  )
+
+  const feedback = (
+    <>
+      {title ? (
+        <p className="text-sm font-semibold">
+          <RichText text={title} />
+        </p>
+      ) : null}
+      {message ? (
+        // Keyed by the text, so a line added later (Why?) fades up into the bubble.
+        <div
+          key={message}
+          className="motion-safe:animate-in motion-safe:duration-300 motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1"
+        >
+          {message
+            .split("\n")
+            .filter((line) => line.trim())
+            .map((line, i) => (
+              <RichText
+                key={i}
+                text={line}
+                className={cn("block text-sm", (title || i > 0) && "mt-1")}
+              />
+            ))}
+        </div>
+      ) : null}
     </>
   )
 
@@ -2099,6 +2204,8 @@ export function ActionArea({
           className={cn(
             TOAST,
             "absolute end-4 z-10 rounded-es-[2px] motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2 sm:end-auto sm:w-fit sm:max-w-80",
+            // On phones it's a card in the tray instead (below).
+            tray?.feedbackEl && "max-sm:hidden",
             // Rewinding: what he said runs back out.
             rewinding &&
               "motion-safe:animate-out motion-safe:fade-out-0 motion-safe:fill-mode-forwards motion-safe:slide-out-to-bottom-2",
@@ -2110,47 +2217,51 @@ export function ActionArea({
             toneClass[tone]
           )}
         >
-          {title ? (
-            <p className="text-sm font-semibold">
-              <RichText text={title} />
-            </p>
-          ) : null}
-          {message ? (
-            // Keyed by the text, so a line added later (Why?) fades up into the bubble.
-            <div
-              key={message}
-              className="motion-safe:animate-in motion-safe:duration-300 motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1"
-            >
-              {message
-                .split("\n")
-                .filter((line) => line.trim())
-                .map((line, i) => (
-                  <RichText
-                    key={i}
-                    text={line}
-                    className={cn("block text-sm", (title || i > 0) && "mt-1")}
-                  />
-                ))}
-            </div>
-          ) : null}
+          {feedback}
         </div>
       ) : null}
+      {phoneCard && tray?.feedbackEl
+        ? createPortal(
+            <div
+              key={`${state.index}-${state.question?.attempts ?? 0}-${tone}`}
+              aria-hidden="true"
+              data-text-size={textSize}
+              className={cn(
+                TOAST,
+                "flex items-start gap-3 shadow-none motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2",
+                rewinding &&
+                  "motion-safe:animate-out motion-safe:fade-out-0 motion-safe:fill-mode-forwards",
+                toneClass[tone]
+              )}
+            >
+              <div className="min-w-0 flex-1">{feedback}</div>
+              {whyButton(true)}
+            </div>,
+            tray.feedbackEl
+          )
+        : null}
     </>
   )
 }
 
-/** True on touch screens (no hover, no keyboard to speak of). False until mounted. */
-function useCoarsePointer(): boolean {
-  const [coarse, setCoarse] = React.useState(false)
+/** Whether a media query matches, following changes. False until mounted. */
+function useMedia(query: string): boolean {
+  const [matches, setMatches] = React.useState(false)
   React.useEffect(() => {
-    const query = matchMedia("(pointer: coarse)")
-    const update = () => setCoarse(query.matches)
+    const list = matchMedia(query)
+    const update = () => setMatches(list.matches)
     update()
-    query.addEventListener("change", update)
-    return () => query.removeEventListener("change", update)
-  }, [])
-  return coarse
+    list.addEventListener("change", update)
+    return () => list.removeEventListener("change", update)
+  }, [query])
+  return matches
 }
+
+/**
+ * True where the tray stays open, with no notch to close it: on touch screens (no keys to fall back
+ * on) and phone widths (it holds the main action).
+ */
+const useFixedTray = () => useMedia("(pointer: coarse), (width < 40rem)")
 
 /** A short bar floating on the content's bottom edge: click, press, or drag it to close or open the tray. */
 function TrayNotch({

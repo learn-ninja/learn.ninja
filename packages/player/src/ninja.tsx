@@ -833,7 +833,10 @@ export function NinjaStage({
       className={cn(
         "pointer-events-none absolute z-10",
         !placed && "invisible",
-        !slot && "start-4 bottom-4 size-10 sm:start-6 sm:bottom-6",
+        // Phones have no room for him beside the content, so there he only shows in a screen's slot
+        // (the intro, a scenario's brief, the wrap-up).
+        !slot &&
+          "start-4 bottom-4 size-10 max-sm:hidden sm:start-6 sm:bottom-6",
         vanishing && "ninja-vanish",
         appearing && "ninja-appear"
       )}

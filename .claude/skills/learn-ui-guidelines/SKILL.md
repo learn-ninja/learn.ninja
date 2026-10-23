@@ -35,7 +35,7 @@ Every screen has visible layers in both themes. Windows are outlined, not filled
 
 - Radius: `rounded-lg` for buttons, inputs, menus, alerts and inner panels (Nova's control shape), `rounded-md` for other controls (options, chips), `rounded-xl` for cards, `rounded-4xl` for the player's window, `rounded-full` only for pills, badges, progress, and avatars. No arbitrary radii.
 - Borders are 1px. No `border-[1.5px]` or 3D bottom shadows.
-- Button sizes: `sm` (28px, 14px text; `icon-sm` for icon-only) everywhere in the app frame, header and footer alike; `lg` (36px) only in the tray under the lesson, where every button (the screen's actions and the player settings) is also a pill: `TRAY_BUTTON` from `packages/player/src/shell.tsx` adds `rounded-full px-4`. The screen's main action lives in that tray; Enter runs it, listed in the footer's shortcuts dialog rather than as a `Kbd` on the button.
+- Button sizes: `sm` (28px, 14px text; `icon-sm` for icon-only) everywhere in the app frame, header and footer alike (on phones the header's menu button is `icon`, 32px); `lg` (36px) only in the tray under the lesson (48px and full width on phones, below), where every button (the screen's actions and the player settings) is also a pill: `TRAY_BUTTON` from `packages/player/src/shell.tsx` adds `rounded-full px-4`. The screen's main action lives in that tray; Enter runs it, listed in the footer's shortcuts dialog rather than as a `Kbd` on the button.
 - One primary (filled) button per area. Everything else is `outline` or `ghost`.
 
 ### Control sizes
@@ -64,6 +64,17 @@ The control recipe lives in one place, `packages/player/src/controls.ts`; bricks
 
 - Use logical utilities only (`ms-*`, `pe-*`, `start-*`, `end-*`, `text-start`). Directional icons get `rtl:-scale-x-100` or `rtl:rotate-180`.
 - Content columns max out around `max-w-2xl`. Phones (375px) get edge-to-edge cards, icon-only secondary buttons, and no horizontal scroll. Grids that hold long content use `grid-cols-[minmax(0,1fr)]`.
+
+### The player on phones (below `sm`)
+
+Phones get a focused player, not the desktop frame squeezed down. Everything is `max-sm:`, so tablets and desktops keep the layout above.
+
+- **Header:** the logo, the progress bar across the rest, and one menu (`PhoneMenu` in `shell.tsx`). The title shows only on the intro. The menu holds what the chevron menu, the gear, Share, the tray's settings (`PlayerSettingsItems`), and the footer's links hold on wider screens, with roomier rows. Frame buttons keep their look and grow their tap target to 44px with `PHONE_HIT`.
+- **No footer** while playing; its links are in the menu.
+- **Action bar:** the tray is the card's color (no grey, no notch, never closed), and its buttons share its width at 48px (`PHONE_BAR` in `lesson-player.tsx`), so the main action is always in the same place under the thumb. The tray clears the home indicator with `env(safe-area-inset-bottom)`.
+- **Feedback** is a card in the tray above the buttons (the toast's recipe, no shadow), not a bubble over the answers. Why? sits inside that card so Continue keeps the full width. After checking, the last marked answer scrolls back into view if the taller tray covered it.
+- **Lesson screens start at the top** (concepts and questions), so nothing moves when the tray grows; the intro and wrap-up stay centered.
+- **The ninja** shows only in a screen's slot (the intro, a scenario's brief, the wrap-up): there's no room for him in the corner beside a brick, so his corner spot is hidden.
 - Wrap user handles and code in `<bdi dir="ltr">` so they stay readable in Arabic.
 
 ## States and interaction

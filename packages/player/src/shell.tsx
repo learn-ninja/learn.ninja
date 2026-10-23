@@ -6,6 +6,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   ClockIcon,
+  EllipsisIcon,
   GlobeIcon,
   KeyboardIcon,
   MonitorIcon,
@@ -205,6 +206,7 @@ export function LessonHeader({
   shareUrl,
   settings,
   menuItems,
+  phoneMenu,
   onRestart,
   onRename,
   t,
@@ -225,6 +227,11 @@ export function LessonHeader({
   settings?: React.ReactNode
   /** The app's own entries for the lesson menu, after Restart. */
   menuItems?: React.ReactNode
+  /**
+   * Sections for the end of the phone menu: on phones one menu holds what the gear, the tray's
+   * settings, and the footer hold on wider screens.
+   */
+  phoneMenu?: React.ReactNode
   onRestart: () => void
   /** Called with the new title when the learner renames the lesson in the header. */
   onRename?: (title: string) => void
@@ -233,26 +240,51 @@ export function LessonHeader({
   const left = useTimeLeft(expiresAt)
   const [confirmRestart, setConfirmRestart] = React.useState(false)
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 px-4 sm:h-16 sm:px-8">
-      <div className="flex min-w-0 flex-1 items-center">
+    // On phones the header is the logo, the progress bar, and one menu: the title shows only on the
+    // intro (the screen itself names the lesson after that), and the gear, Share, and the footer's
+    // links move into the menu.
+    <header className="flex h-14 shrink-0 items-center gap-2 px-4 max-sm:gap-3 sm:h-16 sm:px-8">
+      <div
+        className={cn(
+          "flex min-w-0 items-center sm:flex-1",
+          !showProgress && "flex-1"
+        )}
+      >
         <LinkButton
           href={homeHref}
           variant="ghost"
           size="icon-sm"
           aria-label={t.home}
+          className={PHONE_HIT}
         >
           <LearnLogo className="size-5.5" />
         </LinkButton>
         {/* The mark sits 3px inside its box and the title text 10px in (a 4px margin plus the button's
             6px padding), so the slash's margins are uneven on purpose: the visible gaps come out the
             same on both sides. */}
-        <span aria-hidden="true" className="ms-2 text-xs text-muted-foreground">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "ms-2 text-xs text-muted-foreground",
+            showProgress && "max-sm:hidden"
+          )}
+        >
           /
         </span>
-        <div className="flex min-w-0 items-center">
+        <div
+          className={cn(
+            "flex min-w-0 items-center",
+            showProgress && "max-sm:hidden"
+          )}
+        >
           <LessonTitle title={title} onRename={onRename} t={t} />
           <DropdownMenuTrigger>
-            <Button variant="ghost" size="icon-sm" aria-label={t.lessonMenu}>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t.lessonMenu}
+              className="max-sm:hidden"
+            >
               <ChevronDownIcon />
             </Button>
             <DropdownMenu className="w-auto">
@@ -300,13 +332,94 @@ export function LessonHeader({
         />
       ) : (
         // Holds the middle of the header so the buttons don't shift when the bar appears.
-        <div aria-hidden="true" className="min-w-0 sm:flex-1" />
+        <div aria-hidden="true" className="min-w-0 max-sm:hidden sm:flex-1" />
       )}
-      <div className="flex items-center justify-end gap-2 sm:flex-1">
+      <div className="flex items-center justify-end gap-2 max-sm:hidden sm:flex-1">
         {settings}
         <ShareButton title={title} url={shareUrl} t={t} />
       </div>
+      <PhoneMenu
+        title={title}
+        expires={left ? t.expires[left.unit](left.count) : null}
+        shareUrl={shareUrl}
+        onRestart={() => setConfirmRestart(true)}
+        menuItems={menuItems}
+        phoneMenu={phoneMenu}
+        t={t}
+      />
     </header>
+  )
+}
+
+/**
+ * The frame's buttons are 28–32px, under the 44px a thumb needs. On phones this grows the tap
+ * target with an invisible margin around the button, without changing how it looks.
+ */
+export const PHONE_HIT =
+  "max-sm:relative max-sm:after:absolute max-sm:after:-inset-1.5"
+
+/** Everything the header's chevron menu, gear, and Share hold on wider screens, in one menu for phones. */
+function PhoneMenu({
+  title,
+  expires,
+  shareUrl,
+  onRestart,
+  menuItems,
+  phoneMenu,
+  t,
+}: {
+  title: string
+  expires: string | null
+  shareUrl?: string
+  onRestart: () => void
+  menuItems?: React.ReactNode
+  phoneMenu?: React.ReactNode
+  t: Strings
+}) {
+  const { share } = useShare(title, shareUrl)
+  return (
+    <DropdownMenuTrigger>
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label={t.lessonMenu}
+        className={cn("sm:hidden", PHONE_HIT)}
+      >
+        <EllipsisIcon />
+      </Button>
+      <DropdownMenu
+        placement="bottom end"
+        // Rows a thumb can hit.
+        className="w-auto max-w-72 min-w-56 **:data-[slot=dropdown-menu-item]:py-2 **:data-[slot=dropdown-menu-sub-trigger]:py-2"
+      >
+        <DropdownMenuGroup aria-label={title}>
+          <DropdownMenuLabel className="flex flex-col gap-0.5">
+            <span className="truncate text-sm text-foreground">{title}</span>
+            {expires ? (
+              <span className="flex items-center gap-1.5">
+                <ClockIcon className="size-3.5" aria-hidden="true" />
+                {expires}
+              </span>
+            ) : null}
+          </DropdownMenuLabel>
+          <DropdownMenuItem onAction={() => void share()}>
+            <ShareIcon />
+            {t.share}
+          </DropdownMenuItem>
+          <DropdownMenuItem onAction={onRestart}>
+            <RotateCcwIcon />
+            {t.restart}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        {menuItems ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>{menuItems}</DropdownMenuGroup>
+          </>
+        ) : null}
+        {phoneMenu}
+      </DropdownMenu>
+    </DropdownMenuTrigger>
   )
 }
 
@@ -393,7 +506,7 @@ function LessonProgress({
   React.useEffect(() => () => window.clearTimeout(hover.current), [])
   const counter = count.total > 0 ? `${count.current} / ${count.total}` : null
   return (
-    <div className="flex min-w-0 justify-center motion-safe:animate-in motion-safe:duration-500 motion-safe:fade-in-0 sm:flex-1">
+    <div className="flex min-w-0 flex-1 justify-center motion-safe:animate-in motion-safe:duration-500 motion-safe:fade-in-0">
       <TooltipTrigger
         isOpen={open}
         onOpenChange={setOpen}
@@ -416,7 +529,7 @@ function LessonProgress({
             // Touch has no hover, so a tap opens and closes the details.
             if (e.pointerType === "touch") setOpen((o) => !o)
           }}
-          className="h-7 w-28 cursor-help px-0 hover:bg-transparent active:translate-y-0 sm:w-full sm:max-w-[400px] dark:hover:bg-transparent"
+          className="h-7 w-full cursor-help px-0 hover:bg-transparent active:translate-y-0 sm:max-w-[400px] dark:hover:bg-transparent"
         >
           <Progress
             value={value}
@@ -553,7 +666,8 @@ export function LessonFooter({
     [termsHref, t.terms],
   ].filter((l): l is [string, string] => Boolean(l[0]))
   return (
-    <footer className="flex h-12 shrink-0 items-center gap-2 px-4 pb-[env(safe-area-inset-bottom,0px)] sm:px-8">
+    // Phones have no room for it during a lesson: its links are in the header's menu there.
+    <footer className="flex h-12 shrink-0 items-center gap-2 px-4 pb-[env(safe-area-inset-bottom,0px)] max-sm:hidden sm:px-8">
       <div className="flex min-w-0 flex-1 items-center gap-1.5 ps-2 text-xs font-medium text-muted-foreground">
         <a
           href={homeHref}
@@ -596,84 +710,97 @@ export function LessonFooter({
   )
 }
 
-/** The app's settings behind a gear in the header: theme and language as submenus. */
-export function AppSettings({
-  theme,
-  onThemeChange,
-  uiLanguage,
-  onPrefs,
-  t,
-}: {
+type AppSettingsProps = {
   theme?: Theme
   onThemeChange?: (theme: Theme) => void
   uiLanguage: string
   onPrefs: (patch: Partial<Preferences>) => void
   t: Strings
-}) {
-  const language = uiLanguageFor(uiLanguage) ?? UI_LANGUAGES[0]
-  const ThemeIcon =
-    theme === "dark" ? MoonIcon : theme === "light" ? SunIcon : MonitorIcon
-  const single = (onPick: (key: string) => void) => ({
-    selectionMode: "single" as const,
-    disallowEmptySelection: true,
-    onSelectionChange: (keys: "all" | Iterable<unknown>) => {
-      if (keys === "all") return
-      const [key] = keys
-      if (key !== undefined) onPick(String(key))
-    },
-  })
+}
+
+/** Props for a submenu that picks one of its items. */
+const single = (onPick: (key: string) => void) => ({
+  selectionMode: "single" as const,
+  disallowEmptySelection: true,
+  onSelectionChange: (keys: "all" | Iterable<unknown>) => {
+    if (keys === "all") return
+    const [key] = keys
+    if (key !== undefined) onPick(String(key))
+  },
+})
+
+/** The app's settings behind a gear in the header: theme and language as submenus. */
+export function AppSettings(props: AppSettingsProps) {
   return (
     <DropdownMenuTrigger>
-      <Button variant="outline" size="icon-sm" aria-label={t.settings}>
+      <Button variant="outline" size="icon-sm" aria-label={props.t.settings}>
         <SettingsIcon />
       </Button>
       <DropdownMenu placement="bottom end" className="w-auto min-w-44">
-        <DropdownMenuGroup aria-label={t.settings}>
-          {onThemeChange ? (
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger textValue={t.theme}>
-                <ThemeIcon />
-                {t.theme}
-                <span className="text-muted-foreground">
-                  {t.themes[theme ?? "system"]}
-                </span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent
-                aria-label={t.theme}
-                selectedKeys={[theme ?? "system"]}
-                {...single((key) => onThemeChange(key as Theme))}
-              >
-                {(["system", "light", "dark"] as const).map((id) => (
-                  <DropdownMenuItem key={id} id={id} textValue={t.themes[id]}>
-                    {t.themes[id]}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          ) : null}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger textValue={t.language}>
-              <GlobeIcon />
-              {t.language}
-              <span className="text-muted-foreground">{language.label}</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent
-              aria-label={t.language}
-              // About nine rows; the rest scrolls.
-              maxHeight={320}
-              selectedKeys={[language.code]}
-              {...single((code) => onPrefs({ uiLanguage: code }))}
-            >
-              {UI_LANGUAGES.map((l) => (
-                <DropdownMenuItem key={l.code} id={l.code} textValue={l.label}>
-                  <span lang={l.code}>{l.label}</span>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+        <DropdownMenuGroup aria-label={props.t.settings}>
+          <AppSettingsItems {...props} />
         </DropdownMenuGroup>
       </DropdownMenu>
     </DropdownMenuTrigger>
+  )
+}
+
+/** Theme and language as submenus, for the gear's menu and the phone menu. */
+export function AppSettingsItems({
+  theme,
+  onThemeChange,
+  uiLanguage,
+  onPrefs,
+  t,
+}: AppSettingsProps) {
+  const language = uiLanguageFor(uiLanguage) ?? UI_LANGUAGES[0]
+  const ThemeIcon =
+    theme === "dark" ? MoonIcon : theme === "light" ? SunIcon : MonitorIcon
+  return (
+    <>
+      {onThemeChange ? (
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger textValue={t.theme}>
+            <ThemeIcon />
+            {t.theme}
+            <span className="text-muted-foreground">
+              {t.themes[theme ?? "system"]}
+            </span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent
+            aria-label={t.theme}
+            selectedKeys={[theme ?? "system"]}
+            {...single((key) => onThemeChange(key as Theme))}
+          >
+            {(["system", "light", "dark"] as const).map((id) => (
+              <DropdownMenuItem key={id} id={id} textValue={t.themes[id]}>
+                {t.themes[id]}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      ) : null}
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger textValue={t.language}>
+          <GlobeIcon />
+          {t.language}
+          <span className="text-muted-foreground">{language.label}</span>
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent
+          aria-label={t.language}
+          // About nine rows; the rest scrolls.
+          maxHeight={320}
+          selectedKeys={[language.code]}
+          {...single((code) => onPrefs({ uiLanguage: code }))}
+        >
+          {UI_LANGUAGES.map((l) => (
+            <DropdownMenuItem key={l.code} id={l.code} textValue={l.label}>
+              <span lang={l.code}>{l.label}</span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
+    </>
   )
 }
 
@@ -808,6 +935,70 @@ export function PlayerSettings({
           </span>
         </Button>
       ) : null}
+    </>
+  )
+}
+
+/** The tray's settings (the ninja and text size) as submenus, for the phone menu. */
+export function PlayerSettingsItems({
+  prefs,
+  onPrefs,
+  t,
+}: {
+  prefs: Preferences
+  onPrefs: (patch: Partial<Preferences>) => void
+  t: Strings
+}) {
+  const ninja = prefs.ninja ?? "sensei"
+  return (
+    <>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger textValue={t.ninja}>
+          <Ninja
+            mood={ninja === "off" ? "closed" : "idle"}
+            className="size-4"
+          />
+          {t.ninja}
+          <span className="text-muted-foreground">{t.ninjaLevels[ninja]}</span>
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent
+          aria-label={t.ninja}
+          className="max-w-64"
+          selectedKeys={[ninja]}
+          {...single((key) => onPrefs({ ninja: key as NinjaLevel }))}
+        >
+          {NINJA_LEVELS.map((id) => (
+            <DropdownMenuItem key={id} id={id} textValue={t.ninjaLevels[id]}>
+              <span className="flex flex-col">
+                {t.ninjaLevels[id]}
+                <span className="text-xs text-muted-foreground">
+                  {t.ninjaHints[id]}
+                </span>
+              </span>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger textValue={t.textSize}>
+          <TypeIcon />
+          {t.textSize}
+          <span className="text-muted-foreground">
+            {t.sizesShort[prefs.textSize]}
+          </span>
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent
+          aria-label={t.textSize}
+          selectedKeys={[prefs.textSize]}
+          {...single((key) => onPrefs({ textSize: key as TextSize }))}
+        >
+          {(["sm", "md", "lg"] as const).map((id) => (
+            <DropdownMenuItem key={id} id={id} textValue={t.sizes[id]}>
+              {t.sizes[id]}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
     </>
   )
 }
