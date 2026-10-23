@@ -29,7 +29,7 @@ export function ProfileTabs({
       <div className="rounded-xl border bg-muted">
         <section
           aria-label="Activity"
-          className="-m-px rounded-xl border bg-card p-4 sm:p-5"
+          className="-m-px rounded-xl border bg-card px-3 py-5 sm:px-4"
         >
           {activity}
         </section>
