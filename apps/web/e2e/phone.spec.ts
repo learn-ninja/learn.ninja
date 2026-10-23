@@ -30,6 +30,8 @@ const ACTIONS = [
   "Rewind",
   "Check answer",
 ]
+/** Check's name while sort items wait for a group ("2 left to sort"). */
+const CHECK = /^(Check answer|\d+ left to sort)$/
 
 for (const slug of slugs) {
   test(`${slug} plays on a phone`, async ({ page }) => {
@@ -48,7 +50,7 @@ for (const slug of slugs) {
         break
       const action = await nextAction(page)
       if (action === "Check answer") {
-        const check = page.getByRole("button", { name: "Check answer" })
+        const check = page.getByRole("button", { name: CHECK })
         if (await check.isDisabled()) await answer(page)
         // A finished match checks itself; anything else waits for Check.
         if (await check.isVisible()) {
@@ -67,12 +69,14 @@ async function nextAction(page: Page): Promise<string> {
     const button = page.getByRole("button", { name, exact: true })
     if (await button.isVisible()) return name
   }
+  if (await page.getByRole("button", { name: CHECK }).isVisible())
+    return "Check answer"
   throw new Error("No action button in the tray")
 }
 
 /** Sideways scrolling, a small or hidden main action, and the tray over the lesson all fail. */
 async function checkLayout(page: Page) {
-  const problems = await page.evaluate((actions) => {
+  const problems = await page.evaluate(([actions, check]) => {
     const out: string[] = []
     const doc = document.documentElement
     if (doc.scrollWidth > window.innerWidth + 1)
@@ -89,7 +93,13 @@ async function checkLayout(page: Page) {
       )
     }
     const buttons = [...document.querySelectorAll("button")].filter(
-      (b) => b.offsetParent && actions.includes(b.textContent?.trim() ?? "")
+      (b) => {
+        const name = b.textContent?.trim() ?? ""
+        return (
+          b.offsetParent &&
+          (actions.includes(name) || new RegExp(check).test(name))
+        )
+      }
     )
     for (const b of buttons) {
       const r = b.getBoundingClientRect()
@@ -100,17 +110,17 @@ async function checkLayout(page: Page) {
         out.push(`"${b.textContent}" overlaps the lesson`)
     }
     return out
-  }, ACTIONS)
+  }, [ACTIONS, CHECK.source] as const)
   expect(problems).toEqual([])
 }
 
 /** Makes the answer ready to check, the way a learner taps through it. */
 async function answer(page: Page) {
-  await page.evaluate(async () => {
+  await page.evaluate(async (checkName) => {
     const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
     const check = () =>
-      [...document.querySelectorAll("button")].find(
-        (b) => b.textContent?.trim() === "Check answer"
+      [...document.querySelectorAll("button")].find((b) =>
+        new RegExp(checkName).test(b.textContent?.trim() ?? "")
       )
     const ready = () => {
       const b = check()
@@ -134,8 +144,21 @@ async function answer(page: Page) {
       return
     }
 
-    // Everything else: tap the last control in the brick that isn't picked yet (the pool, the word
-    // bank, and the group buttons come after what's been placed) until Check lights up.
+    // Sort: tap the first bin until the deck is empty (a tap on a sorted chip would take it back out).
+    const bins = () =>
+      [...document.querySelectorAll<HTMLElement>("main button")].filter(
+        (b) => b.offsetParent && b.textContent?.trim() === "Put it here"
+      )
+    if (bins().length) {
+      for (let i = 0; i < 20 && bins().length; i++) {
+        bins()[0]!.click()
+        await wait(50)
+      }
+      return
+    }
+
+    // Everything else: tap the last control in the brick that isn't picked yet (the pool and the word
+    // bank come after what's been placed) until Check lights up.
     for (let i = 0; i < 20 && !ready(); i++) {
       const controls = [
         ...document.querySelectorAll<HTMLElement>(
@@ -154,5 +177,5 @@ async function answer(page: Page) {
       last.click()
       await wait(50)
     }
-  })
+  }, CHECK.source)
 }
