@@ -791,6 +791,18 @@
   animation-duration: 280ms;
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+/* An item that changes size on the way (a chip into a full-width slot) keeps its text at its own
+   size, instead of the snapshot stretching with the box. */
+::view-transition-old(.learn-item),
+::view-transition-new(.learn-item) {
+  height: 100%;
+  object-fit: none;
+}
+/* While items slide, the page under the transition already has the new layout: taps go through to
+   it, so quick taps in a row all land. */
+::view-transition {
+  pointer-events: none;
+}
 
 /* The caret: where the next word goes (a blank's waiting gap, a brief's words). The outer span
    shows or hides it on cue, the inner one blinks, and it takes no room. */

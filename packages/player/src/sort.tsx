@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
+import { Button } from "@workspace/ui/components/button"
 import { Kbd } from "@workspace/ui/components/kbd"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -11,6 +12,7 @@ import { POOL } from "./check"
 import { usePlayer } from "./context"
 import {
   controlPadding,
+  controlStyles,
   controlSurface,
   markStyles,
   slotStyles,
@@ -23,6 +25,10 @@ import { RichText } from "./rich-text"
 // and it slides into that lane. Tap a placed item to take it back out, or an empty lane to move it
 // across. Each row is a radio group, so a keyboard moves the item with the arrow keys and a screen
 // reader hears the item and its groups.
+//
+// Phones have no room for lanes side by side, so there it's one item at a time: the next unsorted item
+// shows big with a button for each group, and the items sorted so far wait as chips under their
+// group's name (tap a chip to take it back).
 
 /** Move an item to the end of a zone, taking it out of whichever zone held it. */
 export function moveItem(
@@ -216,131 +222,225 @@ export function SortBrick({
     place(id, laneOf(id) === i ? -1 : i)
   }
 
+  // Phones: placing an item swaps the card in place, so it skips the page-wide slide.
+  const placeNow = (id: string, lane: number) => {
+    setSaid(t.placedIn(textOf(id), lane < 0 ? t.pool : groups[lane]!.label))
+    buzz()
+    setAnswer({
+      kind: "zones",
+      zones: moveItem(zones, id, lane < 0 ? POOL : groups[lane]!.id),
+    })
+  }
+  const current = rows.find((id) => laneOf(id) < 0)
+  const deck = (
+    <div className="flex flex-col gap-5 sm:hidden">
+      <div className="flex flex-col gap-2.5">
+        {groups.map((g) => {
+          const placed = zones[g.id] ?? []
+          return (
+            <div key={g.id} className="flex flex-wrap items-center gap-1.5">
+              <span lang={g.lang} className="me-1 text-sm font-semibold">
+                {g.label}
+              </span>
+              {placed.length ? (
+                placed.map((id) => {
+                  const it = items[index.get(id)!]!
+                  return (
+                    <Button
+                      key={id}
+                      variant="outline"
+                      size="sm"
+                      data-status={marks[id]}
+                      isDisabled={locked}
+                      aria-label={`${textOf(id)}, ${g.label}`}
+                      onPress={() => placeNow(id, -1)}
+                      className={cn(
+                        controlStyles,
+                        markStyles,
+                        "h-auto py-1 whitespace-normal disabled:opacity-100 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95"
+                      )}
+                    >
+                      <RichText text={it.text} lang={it.lang} />
+                    </Button>
+                  )
+                })
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="text-sm text-muted-foreground"
+                >
+                  –
+                </span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {current && !locked ? (
+        <div
+          role="group"
+          aria-label={textOf(current)}
+          className="flex flex-col gap-2"
+        >
+          <div
+            key={current}
+            className={cn(
+              controlSurface,
+              "mb-1 px-4 py-6 text-center text-base font-semibold motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2"
+            )}
+          >
+            <RichText
+              text={items[index.get(current)!]!.text}
+              lang={items[index.get(current)!]!.lang}
+            />
+          </div>
+          {groups.map((g, i) => (
+            <Button
+              key={g.id}
+              variant="outline"
+              onPress={() => placeNow(current, i)}
+              className={cn(
+                controlStyles,
+                controlPadding,
+                "h-auto w-full whitespace-normal"
+              )}
+            >
+              <span lang={g.lang}>{g.label}</span>
+            </Button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+
   const Start = dir === "rtl" ? ChevronRightIcon : ChevronLeftIcon
   const End = dir === "rtl" ? ChevronLeftIcon : ChevronRightIcon
   const columns = { gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }
 
   return (
-    <div ref={root} className="flex flex-col gap-2">
-      <div className="grid gap-2" style={columns}>
-        {groups.map((g, i) => (
-          <div
-            key={g.id}
-            ref={(el) => {
-              heads.current[i] = el
-            }}
-            className={cn(
-              controlSurface,
-              controlPadding,
-              "flex items-center justify-center gap-2 font-semibold",
-              aim?.lane === i && "bg-foreground/5 dark:bg-input/50"
-            )}
-          >
-            <span lang={g.lang} className="truncate">
-              {g.label}
-            </span>
-            {locked ? null : (
-              <Kbd aria-hidden="true" className="pointer-coarse:hidden">
-                {i + 1}
-              </Kbd>
-            )}
-          </div>
-        ))}
-      </div>
-      {rows.map((id) => {
-        const it = items[index.get(id)!]!
-        const lane = laneOf(id)
-        return (
-          <div
-            key={id}
-            role="radiogroup"
-            aria-label={textOf(id)}
-            aria-disabled={locked || undefined}
-            onKeyDown={keys(id)}
-            {...swipeProps(id)}
-            className="group/row relative grid touch-pan-y gap-2"
-            style={columns}
-          >
-            {/* The tile is only a picture; the radios on top of it take every tap and key. */}
+    <div ref={root}>
+      {deck}
+      <div className="flex flex-col gap-2 max-sm:hidden">
+        <div className="grid gap-2" style={columns}>
+          {groups.map((g, i) => (
             <div
-              data-tile
-              data-vt={`learn-${uid}-i${index.get(id)}`}
-              data-status={marks[id]}
-              aria-hidden="true"
-              style={{
-                gridRow: 1,
-                gridColumn: lane < 0 ? "1 / -1" : `${lane + 1}`,
+              key={g.id}
+              ref={(el) => {
+                heads.current[i] = el
               }}
               className={cn(
                 controlSurface,
                 controlPadding,
-                markStyles,
-                "relative flex items-center justify-center text-center select-none",
-                lane < 0 && "px-9",
-                "group-has-[[role=radio]:focus-visible]/row:border-ring group-has-[[role=radio]:focus-visible]/row:ring-[3px] group-has-[[role=radio]:focus-visible]/row:ring-ring/50"
+                "flex items-center justify-center gap-2 font-semibold",
+                aim?.lane === i && "bg-foreground/5 dark:bg-input/50"
               )}
             >
-              {lane < 0 ? (
-                <Start
-                  className={cn(
-                    "absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-[color,translate]",
-                    aim?.id === id &&
-                      aim.lane === 0 &&
-                      "text-foreground ltr:-translate-x-0.5 rtl:translate-x-0.5"
-                  )}
-                />
-              ) : null}
-              <RichText text={it.text} lang={it.lang} />
-              {lane < 0 ? (
-                <End
-                  className={cn(
-                    "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-[color,translate]",
-                    aim?.id === id &&
-                      aim.lane === n - 1 &&
-                      "text-foreground ltr:translate-x-0.5 rtl:-translate-x-0.5"
-                  )}
-                />
-              ) : null}
+              <span lang={g.lang} className="truncate">
+                {g.label}
+              </span>
+              {locked ? null : (
+                <Kbd aria-hidden="true" className="pointer-coarse:hidden">
+                  {i + 1}
+                </Kbd>
+              )}
             </div>
-            {groups.map((g, i) => (
-              // Keys are handled by the row, like a native radio group.
-              // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+          ))}
+        </div>
+        {rows.map((id) => {
+          const it = items[index.get(id)!]!
+          const lane = laneOf(id)
+          return (
+            <div
+              key={id}
+              role="radiogroup"
+              aria-label={textOf(id)}
+              aria-disabled={locked || undefined}
+              onKeyDown={keys(id)}
+              {...swipeProps(id)}
+              className="group/row relative grid touch-pan-y gap-2"
+              style={columns}
+            >
+              {/* The tile is only a picture; the radios on top of it take every tap and key. */}
               <div
-                key={g.id}
-                ref={(el) => {
-                  radios.current[`${id}:${i}`] = el
+                data-tile
+                data-vt={`learn-${uid}-i${index.get(id)}`}
+                data-status={marks[id]}
+                aria-hidden="true"
+                style={{
+                  gridRow: 1,
+                  gridColumn: lane < 0 ? "1 / -1" : `${lane + 1}`,
                 }}
-                role="radio"
-                aria-checked={lane === i}
-                aria-label={g.label}
-                aria-disabled={locked || undefined}
-                data-lane={i}
-                // One Tab stop per row: the item's lane, or the first lane while it's unsorted.
-                tabIndex={(lane < 0 ? i === 0 : i === lane) ? 0 : -1}
-                onClick={() => click(id, i)}
-                onFocus={() => setAim({ id, lane: i })}
-                onBlur={() => setAim(null)}
-                onMouseEnter={() => !locked && setAim({ id, lane: i })}
-                onMouseLeave={() => setAim(null)}
-                style={{ gridRow: 1, gridColumn: i + 1 }}
                 className={cn(
-                  // As tall as the row, which the item's tile sets.
-                  "z-10 rounded-md outline-none",
-                  !locked && "cursor-pointer",
-                  lane < 0 || lane === i
-                    ? !locked && "hover:bg-foreground/5"
-                    : // An empty lane stays outlined, even after checking, so every row shows both bins.
-                      cn(
-                        slotStyles,
-                        !locked &&
-                          "hover:border-foreground/40 hover:bg-muted dark:hover:bg-input/30"
-                      )
+                  controlSurface,
+                  controlPadding,
+                  markStyles,
+                  "relative flex items-center justify-center text-center select-none",
+                  lane < 0 && "px-9",
+                  "group-has-[[role=radio]:focus-visible]/row:border-ring group-has-[[role=radio]:focus-visible]/row:ring-[3px] group-has-[[role=radio]:focus-visible]/row:ring-ring/50"
                 )}
-              />
-            ))}
-          </div>
-        )
-      })}
+              >
+                {lane < 0 ? (
+                  <Start
+                    className={cn(
+                      "absolute start-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-[color,translate]",
+                      aim?.id === id &&
+                        aim.lane === 0 &&
+                        "text-foreground ltr:-translate-x-0.5 rtl:translate-x-0.5"
+                    )}
+                  />
+                ) : null}
+                <RichText text={it.text} lang={it.lang} />
+                {lane < 0 ? (
+                  <End
+                    className={cn(
+                      "absolute end-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-[color,translate]",
+                      aim?.id === id &&
+                        aim.lane === n - 1 &&
+                        "text-foreground ltr:translate-x-0.5 rtl:-translate-x-0.5"
+                    )}
+                  />
+                ) : null}
+              </div>
+              {groups.map((g, i) => (
+                // Keys are handled by the row, like a native radio group.
+                // eslint-disable-next-line jsx-a11y/click-events-have-key-events
+                <div
+                  key={g.id}
+                  ref={(el) => {
+                    radios.current[`${id}:${i}`] = el
+                  }}
+                  role="radio"
+                  aria-checked={lane === i}
+                  aria-label={g.label}
+                  aria-disabled={locked || undefined}
+                  data-lane={i}
+                  // One Tab stop per row: the item's lane, or the first lane while it's unsorted.
+                  tabIndex={(lane < 0 ? i === 0 : i === lane) ? 0 : -1}
+                  onClick={() => click(id, i)}
+                  onFocus={() => setAim({ id, lane: i })}
+                  onBlur={() => setAim(null)}
+                  onMouseEnter={() => !locked && setAim({ id, lane: i })}
+                  onMouseLeave={() => setAim(null)}
+                  style={{ gridRow: 1, gridColumn: i + 1 }}
+                  className={cn(
+                    // As tall as the row, which the item's tile sets.
+                    "z-10 rounded-md outline-none",
+                    !locked && "cursor-pointer",
+                    lane < 0 || lane === i
+                      ? !locked && "hover:bg-foreground/5"
+                      : // An empty lane stays outlined, even after checking, so every row shows both bins.
+                        cn(
+                          slotStyles,
+                          !locked &&
+                            "hover:border-foreground/40 hover:bg-muted dark:hover:bg-input/30"
+                        )
+                  )}
+                />
+              ))}
+            </div>
+          )
+        })}
+      </div>
       <div aria-live="polite" className="sr-only">
         {said}
       </div>

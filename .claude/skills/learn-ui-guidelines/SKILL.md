@@ -43,7 +43,7 @@ Every screen has visible layers in both themes. Windows are outlined, not filled
 The control recipe lives in one place, `packages/player/src/controls.ts`; bricks import it instead of copying classes. `controlStyles` is the control on a card with its hover and selected states (`controlSurface` without them, for a picture of a control), `controlPadding` (`px-3 py-2.5 text-sm font-medium`) sizes a one-line control, `slotStyles` is the dashed empty place (an open order slot, an empty sort lane, a used word), and `markStyles` colors a checked answer.
 
 - A one-line control is its padding plus one line of `text-sm` (42px at the default text size, 47px at Large; on phones 45px and 51px), never a fixed `min-h-*`, so it grows with the learner's text size. An empty slot gets the same padding and an aria-hidden zero-width space for its line, so it's exactly as tall as a filled one.
-- Anything beside the text in a control (match's pair badge) must not make it taller than one line.
+- Anything beside the text in a control must not make it taller than one line.
 - Two deliberate exceptions: choice rows are roomier for their key hint (`min-h-12 px-4 py-3`, `rounded-lg`), and blank's word chips are the sentence's size, since they sit in its text.
 
 ## Typography
@@ -74,9 +74,15 @@ Phones get a focused player, not the desktop frame squeezed down. Everything is 
 - **Header:** the logo, the progress bar across the rest, and one menu (`PhoneMenu` in `shell.tsx`). The title shows only on the intro. The menu holds what the chevron menu, the gear, Share, the tray's settings (`PlayerSettingsItems`), and the footer's links hold on wider screens, with roomier rows. Frame buttons keep their look and grow their tap target to 44px with `PHONE_HIT`.
 - **No footer** while playing; its links are in the menu.
 - **Action bar:** the tray is the card's color (no grey, no notch, never closed), and its buttons share its width at 48px (`PHONE_BAR` in `lesson-player.tsx`), so the main action is always in the same place under the thumb. The tray clears the home indicator with `env(safe-area-inset-bottom)`.
-- **Feedback** is a card in the tray above the buttons (the toast's recipe, no shadow), not a bubble over the answers. Why? sits inside that card so Continue keeps the full width. After checking, the last marked answer scrolls back into view if the taller tray covered it.
+- **Feedback** sits in the tray above the buttons, not in a bubble over the answers, and the whole tray takes its tone (the toast's recipe spread across it, with a line of the tone's color on top). Why? sits in it so Continue keeps the full width. After checking, the last marked answer scrolls back into view if the taller tray covered it.
 - **Lesson screens start at the top** (concepts and questions), so nothing moves when the tray grows; the intro and wrap-up stay centered.
 - **The ninja** shows only in a screen's slot (the intro, a scenario's brief, the wrap-up): there's no room for him in the corner beside a brick, so his corner spot is hidden.
+- **Bricks on phones:** sort shows one item at a time with a full-width button per group, and the items sorted so far as chips under their group's name (tap one to take it back); desktop keeps the lanes. Order keeps every item's place in the pool (a placed item leaves a dashed space, so nothing reflows), and its open slots for visual items are shorter.
+
+### Brick behavior
+
+- **Match judges each pair as it's made**, on every screen: a right pair flashes green and settles as a dashed, muted tile out of play; a wrong one shakes yellow, comes apart, and costs the brick its first-try score (the `slip` action). The last pair checks the brick, so there's no Check to press.
+- Sort and order slide items with a view transition, which lets taps through (`::view-transition { pointer-events: none }`), so quick taps in a row all land.
 - Wrap user handles and code in `<bdi dir="ltr">` so they stay readable in Arabic.
 
 ## States and interaction

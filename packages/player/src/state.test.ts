@@ -109,6 +109,32 @@ describe("retry", () => {
     })
     expect(state.question?.result).toBeNull()
   })
+
+  it("scores a match with a wrong pair along the way as a second try", () => {
+    const match: Extract<QuestionBrick, { type: "match" }> = {
+      id: "m",
+      type: "match",
+      prompt: "Match them.",
+      explanation: "Each word with its meaning.",
+      pairs: [
+        { left: "Hola", right: "Hello" },
+        { left: "Adiós", right: "Goodbye" },
+      ],
+    }
+    const pairs = {
+      type: "answer",
+      answer: { kind: "pairs", links: { 0: 0, 1: 1 } },
+    } as const
+    const clean = reducer(reducer(stateFor(match), pairs), { type: "check" })
+    expect(clean.results).toEqual({ m: "first" })
+
+    let state = reducer(stateFor(match), { type: "slip" })
+    state = reducer(state, { type: "slip" })
+    expect(state.question?.attempts).toBe(1)
+    state = reducer(reducer(state, pairs), { type: "check" })
+    expect(state.question?.phase).toBe("feedback")
+    expect(state.results).toEqual({ m: "second" })
+  })
 })
 
 const lesson = JSON.parse(

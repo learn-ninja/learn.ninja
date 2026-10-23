@@ -491,6 +491,8 @@ export type Action =
   | { type: "briefed" }
   | { type: "rebrief" }
   | { type: "check" }
+  /** A wrong pair in a match: it isn't kept, but the brick no longer counts as right first time. */
+  | { type: "slip" }
   | { type: "retry" }
   | { type: "startFix" }
 
@@ -596,6 +598,11 @@ export function reducer(state: State, action: Action): State {
         },
       }
     }
+    case "slip":
+      return state.question?.phase === "answering" &&
+        state.question.attempts === 0
+        ? { ...state, question: { ...state.question, attempts: 1 } }
+        : state
     case "check": {
       if (!state.question || item?.kind !== "question") return state
       const { brick, role } = item
@@ -1163,7 +1170,10 @@ function Player({
                 id={trayId}
                 ref={setTrayEl}
                 // Phones: the feedback, then the actions across the width, clear of the home bar.
-                className="flex flex-col gap-3 p-4 max-sm:pb-[max(1rem,env(safe-area-inset-bottom))]"
+                className={cn(
+                  "flex flex-col gap-3 p-4 max-sm:pb-[max(1rem,env(safe-area-inset-bottom))]",
+                  PHONE_TRAY_TONE
+                )}
               >
                 <div ref={setFeedbackEl} className="empty:hidden sm:hidden" />
                 <div className="flex items-center gap-2">
@@ -1592,7 +1602,12 @@ function QuestionScreen({
       ) : brick.type === "order" ? (
         <OrderBrick {...props} />
       ) : brick.type === "match" ? (
-        <MatchBrick {...props} rightOrder={state.rightOrder} />
+        <MatchBrick
+          {...props}
+          rightOrder={state.rightOrder}
+          onSlip={() => dispatch({ type: "slip" })}
+          onDone={() => dispatch({ type: "check" })}
+        />
       ) : brick.type === "blank" ? (
         <BlankBrick {...props} bank={state.bank} />
       ) : null}
@@ -1824,6 +1839,16 @@ type Tone = "neutral" | "good" | "warn"
 
 /** The feedback toast's recipe for each tone. */
 const TOAST = "rounded-xl border px-4 py-3 shadow-xs"
+/**
+ * On phones the whole tray takes the feedback's tone, the toast's recipe spread across it, with a line
+ * of the tone's color along its top edge. It reads from the feedback card inside (`data-tone`).
+ */
+const PHONE_TRAY_TONE = cn(
+  "max-sm:border-t max-sm:border-transparent max-sm:transition-colors",
+  "max-sm:has-[[data-tone=good]]:border-green-600 max-sm:has-[[data-tone=good]]:bg-[color-mix(in_srgb,var(--color-green-600)_10%,var(--background))]",
+  "max-sm:has-[[data-tone=warn]]:border-yellow-500 max-sm:has-[[data-tone=warn]]:bg-[color-mix(in_srgb,var(--color-yellow-500)_10%,var(--background))]",
+  "max-sm:has-[[data-tone=neutral]]:border-border max-sm:has-[[data-tone=neutral]]:bg-popover"
+)
 /** On phones the tray's buttons share its width at a thumb-sized height. */
 const PHONE_BAR = "max-sm:h-12 max-sm:flex-1 max-sm:text-base"
 const toneClass: Record<Tone, string> = {
@@ -2226,12 +2251,12 @@ export function ActionArea({
               key={`${state.index}-${state.question?.attempts ?? 0}-${tone}`}
               aria-hidden="true"
               data-text-size={textSize}
+              // The tray takes the tone's color around it (PHONE_TRAY_TONE), so the card itself is bare.
+              data-tone={tone}
               className={cn(
-                TOAST,
-                "flex items-start gap-3 shadow-none motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2",
+                "flex items-start gap-3 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2",
                 rewinding &&
-                  "motion-safe:animate-out motion-safe:fade-out-0 motion-safe:fill-mode-forwards",
-                toneClass[tone]
+                  "motion-safe:animate-out motion-safe:fade-out-0 motion-safe:fill-mode-forwards"
               )}
             >
               <div className="min-w-0 flex-1">{feedback}</div>
