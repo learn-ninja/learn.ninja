@@ -14,7 +14,12 @@ export default defineConfig({
     command: "npm run start",
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
-    // Published lessons land in a local PGlite database, not Neon.
-    env: { LEARN_PGLITE_DIR: ".e2e-db" },
+    // Published lessons land in a local PGlite database, not Neon. The production build refuses
+    // Better Auth's default secret as soon as a request carries any cookie (the site sets a tz
+    // cookie on every page), so the test server gets a fixed one. It signs nothing real.
+    env: {
+      LEARN_PGLITE_DIR: ".e2e-db",
+      BETTER_AUTH_SECRET: "e2e-only-not-a-real-secret-0123456789abcdef",
+    },
   },
 })
