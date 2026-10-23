@@ -14,6 +14,20 @@
       "autoPort": true
     },
     {
+      "name": "web-pglite",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "DATABASE_URL=",
+        "npm",
+        "run",
+        "dev",
+        "-w",
+        "web"
+      ],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
       "name": "storybook",
       "runtimeExecutable": "npm",
       "runtimeArgs": [

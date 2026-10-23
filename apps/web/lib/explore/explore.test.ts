@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm"
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 
 import {
+  activityDay,
   connectPglite,
   lesson,
   lessonTag,
@@ -31,6 +32,7 @@ import {
 } from "./handlers"
 import { MemoryViewCounter, WriteThroughViewCounter } from "./views"
 import {
+  activityDays,
   authorOf,
   completedAt,
   lessonsLikedBy,
@@ -92,8 +94,9 @@ beforeEach(async () => {
     origin: "https://learn.test",
     now: () => now,
   }
-  // Each test starts from an empty table; users stay.
+  // Each test starts from empty tables; users stay. Days outlive lessons, so they go separately.
   await db.delete(lesson)
+  await db.delete(activityDay)
 })
 
 /** Publishes `text` for `ownerId` (anonymous when null) and returns the lesson id. */
@@ -327,6 +330,30 @@ describe("completions", () => {
       new Map([[id, first]])
     )
     expect(await completedAt(db, "ada", [id])).toEqual(new Map())
+  })
+
+  it("counts a first finish on the learner's day, once", async () => {
+    const a = await published("ada", { visibility: "public" })
+    const b = await published("ada", { visibility: "public" })
+    // 06:30 UTC on 2026-10-23 is still the 22nd in Los Angeles.
+    now = Date.UTC(2026, 9, 23, 6, 30)
+    await completeLesson({ id: a, userId: "bob", tz: "America/Los_Angeles" }, deps)
+    await completeLesson({ id: a, userId: "bob", tz: "America/Los_Angeles" }, deps)
+    await completeLesson({ id: b, userId: "bob", tz: "America/Los_Angeles" }, deps)
+    expect(await activityDays(db, "bob")).toEqual([
+      { day: "2026-10-22", lessons: 2 },
+    ])
+    // No zone (or a bad one) means UTC.
+    const c = await published("ada", { visibility: "public" })
+    await completeLesson({ id: c, userId: "bob", tz: "Mars/Olympus" }, deps)
+    expect(await activityDays(db, "bob")).toEqual([
+      { day: "2026-10-22", lessons: 2 },
+      { day: "2026-10-23", lessons: 1 },
+    ])
+    // The day outlives the lesson.
+    await deleteLesson({ id: c, userId: "ada" }, deps)
+    expect(await activityDays(db, "bob")).toHaveLength(2)
+    expect(await activityDays(db, "ada")).toEqual([])
   })
 
   it("answers 404 for a lesson that's gone", async () => {

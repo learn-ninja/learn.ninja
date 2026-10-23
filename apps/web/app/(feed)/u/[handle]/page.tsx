@@ -2,12 +2,16 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { UserAvatar } from "@/components/account/user-avatar"
+import { ActivityGrid } from "@/components/explore/activity-grid"
 import { LessonFeed } from "@/components/explore/lesson-feed"
 import { ProfileTabs } from "@/components/explore/profile-tabs"
+import { buildGrid, localDay } from "@/lib/activity/activity"
+import { viewerTimeZone } from "@/lib/activity/server"
 import { normalizeHandle } from "@/lib/auth/handle-rules"
 import { currentActor } from "@/lib/auth/session"
 import { cachedProfile } from "@/lib/explore/cache"
 import {
+  activityDays,
   completedAt,
   lessonsLikedBy,
   lessonsOwnedBy,
@@ -20,8 +24,10 @@ import { SITE } from "@/lib/site"
 // aren't here, nor is anything from an anonymous publish. On your own profile the Lessons tab
 // shows every lesson you own instead, with a Private or Hidden badge on the ones visitors don't
 // see. The Likes tab lists the listed lessons they liked, plus, on your own profile, liked lessons
-// that have since gone unlisted. The frame around the page is the (feed) layout's; loading.tsx
-// beside this file stands in until the profile arrives.
+// that have since gone unlisted. Between the header and the tabs, a year of their learning as a
+// grid of days with their streaks (lib/activity/activity.ts), ending on the viewer's today. The
+// frame around the page is the (feed) layout's; loading.tsx beside this file stands in until the
+// profile arrives.
 
 type Props = { params: Promise<{ handle: string }> }
 
@@ -41,17 +47,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProfilePage({ params }: Props) {
   const handle = normalizeHandle((await params).handle)
-  const [actor, profile] = await Promise.all([
+  const [actor, profile, tz] = await Promise.all([
     currentActor(),
     handle ? cachedProfile(handle) : null,
+    viewerTimeZone(),
   ])
   if (!profile) notFound()
   const own = actor?.userId === profile.id
   const db = await getDb()
-  const [owned, likedLessons] = await Promise.all([
+  const [owned, likedLessons, days] = await Promise.all([
     own ? lessonsOwnedBy(db, profile.id) : null,
     lessonsLikedBy(db, profile.id, { listedOnly: !own }),
+    activityDays(db, profile.id),
   ])
+  const grid = buildGrid(days, localDay(new Date(), tz))
   const lessons = owned ?? profile.lessons
   const ids = [...lessons, ...likedLessons].map((l) => l.id)
   const [liked, completed] = actor
@@ -92,6 +101,9 @@ export default async function ProfilePage({ params }: Props) {
           <p className="max-w-xl text-base text-pretty">{profile.bio}</p>
         ) : null}
       </div>
+      <section aria-label="Activity">
+        <ActivityGrid grid={grid} />
+      </section>
       <ProfileTabs
         lessons={{
           count: lessons.length,

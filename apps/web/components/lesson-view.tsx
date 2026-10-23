@@ -192,6 +192,11 @@ export function LessonView({
                 fetch(`/api/lessons/${lessonId}/complete`, {
                   method: "POST",
                   keepalive: true,
+                  headers: { "content-type": "application/json" },
+                  // The day this counts for on the profile is the learner's, not UTC's.
+                  body: JSON.stringify({
+                    tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  }),
                 }).catch(() => {})
               }
             : undefined

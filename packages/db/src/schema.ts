@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import {
   boolean,
   customType,
+  date,
   index,
   integer,
   jsonb,
@@ -491,6 +492,25 @@ export const completion = pgTable(
     completedAt: time("completed_at").notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.lessonId] })]
+)
+
+/**
+ * One row per user per calendar day on which they finished a lesson for the first time, with how
+ * many: what the profile's activity grid and streaks read. `day` is the day where the learner was
+ * (the player sends their time zone), so a late evening doesn't land on tomorrow. Nothing here
+ * points at the lesson, so the day stays when the lesson expires or is deleted.
+ */
+export const activityDay = pgTable(
+  "activity_day",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    /** A calendar day as YYYY-MM-DD. */
+    day: date("day").notNull(),
+    lessons: integer("lessons").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.day] })]
 )
 
 /** A report on a lesson, emailed to the maker when it's made. The reporter is kept only as a hash of their IP. */

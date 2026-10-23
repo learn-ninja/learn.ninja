@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm"
 
 import {
+  activityDay,
   completion,
   lesson,
   lessonTag,
@@ -277,6 +278,18 @@ export async function likedIds(
     .from(like)
     .where(and(eq(like.userId, userId), inArray(like.lessonId, ids)))
   return new Set(rows.map((r) => r.id))
+}
+
+/** Every day the user finished a lesson, oldest first, for the profile's activity grid and streaks. */
+export async function activityDays(
+  db: Db,
+  userId: string
+): Promise<{ day: string; lessons: number }[]> {
+  return db
+    .select({ day: activityDay.day, lessons: activityDay.lessons })
+    .from(activityDay)
+    .where(eq(activityDay.userId, userId))
+    .orderBy(activityDay.day)
 }
 
 /** When the user first finished each of `ids` they have finished, as lesson id → ms since epoch. */

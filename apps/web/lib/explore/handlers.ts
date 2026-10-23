@@ -1,7 +1,15 @@
 import { and, eq, gt, isNull, or, sql } from "drizzle-orm"
 
-import { completion, lesson, like, report, type Db } from "@workspace/db"
+import {
+  activityDay,
+  completion,
+  lesson,
+  like,
+  report,
+  type Db,
+} from "@workspace/db"
 
+import { isTimeZone, localDay } from "@/lib/activity/activity"
 import type { Reply } from "@/lib/publish/handlers"
 import { hashToken, lessonPath, newToken } from "@/lib/publish/ids"
 import type { RateLimiter } from "@/lib/publish/rate-limit"
@@ -122,28 +130,43 @@ export async function unlikeLesson(
 
 /**
  * POST /api/lessons/{id}/complete: the logged-in learner reached the wrap-up. Only the first time
- * is kept, so the check on Explore says when they first finished it.
+ * is kept, so the check on Explore says when they first finished it, and only the first time adds
+ * to that day's count in activity_day, the profile's grid and streaks. The day is the learner's
+ * calendar day in `tz` (the player sends the browser's), or in UTC without one.
  */
 export async function completeLesson(
-  req: { id: string; userId: string },
+  req: { id: string; userId: string; tz?: string },
   deps: ExploreDeps
 ): Promise<Reply> {
   const found = await liveLesson(deps, req.id)
   if (!found) return NOT_FOUND
-  await deps.db
+  const at = new Date(deps.now?.() ?? Date.now())
+  const inserted = await deps.db
     .insert(completion)
-    .values({
-      userId: req.userId,
-      lessonId: found.id,
-      completedAt: new Date(deps.now?.() ?? Date.now()),
-    })
+    .values({ userId: req.userId, lessonId: found.id, completedAt: at })
     .onConflictDoNothing()
-  const [row] = await deps.db
-    .select({ completedAt: completion.completedAt })
-    .from(completion)
-    .where(
-      and(eq(completion.userId, req.userId), eq(completion.lessonId, found.id))
-    )
+    .returning({ completedAt: completion.completedAt })
+  if (inserted.length) {
+    const day = localDay(at, isTimeZone(req.tz) ? req.tz : "UTC")
+    await deps.db
+      .insert(activityDay)
+      .values({ userId: req.userId, day, lessons: 1 })
+      .onConflictDoUpdate({
+        target: [activityDay.userId, activityDay.day],
+        set: { lessons: sql`${activityDay.lessons} + 1` },
+      })
+  }
+  const [row] = inserted.length
+    ? inserted
+    : await deps.db
+        .select({ completedAt: completion.completedAt })
+        .from(completion)
+        .where(
+          and(
+            eq(completion.userId, req.userId),
+            eq(completion.lessonId, found.id)
+          )
+        )
   return {
     status: 200,
     body: { ok: true, completedAt: row?.completedAt.toISOString() ?? null },

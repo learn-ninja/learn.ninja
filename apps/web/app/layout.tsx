@@ -6,6 +6,7 @@ import "@workspace/ui/globals.css"
 import "./site.css"
 import { AgentationToolbar } from "@/components/agentation-toolbar"
 import { ClientRouter } from "@/components/site/client-router"
+import { TimezoneCookie } from "@/components/site/timezone-cookie"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SITE } from "@/lib/site"
 import { cn } from "@workspace/ui/lib/utils"
@@ -53,6 +54,8 @@ export default function RootLayout({
         <ThemeProvider>
           <ClientRouter>{children}</ClientRouter>
         </ThemeProvider>
+        {/* The browser's time zone, for the profile's activity grid. */}
+        <TimezoneCookie />
         {/* Visual feedback for Claude Code; renders nothing outside development. */}
         <AgentationToolbar />
       </body>

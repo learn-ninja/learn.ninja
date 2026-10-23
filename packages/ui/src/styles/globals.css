@@ -77,6 +77,12 @@
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
+  /* The profile's activity grid, GitHub's five shades: no lessons, then light to dark green. */
+  --activity-0: #eff2f5;
+  --activity-1: #aceebb;
+  --activity-2: #4ac26b;
+  --activity-3: #2da44e;
+  --activity-4: #116329;
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -86,6 +92,16 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* The profile's activity grid (apps/web/components/explore/activity-grid.tsx): kept out of the block
+   above, which lesson visuals share through packages/player/src/visual-css.ts. */
+@theme inline {
+  --color-activity-0: var(--activity-0);
+  --color-activity-1: var(--activity-1);
+  --color-activity-2: var(--activity-2);
+  --color-activity-3: var(--activity-3);
+  --color-activity-4: var(--activity-4);
 }
 
 .dark {
@@ -113,6 +129,12 @@
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
+  /* Dark mode runs the other way: the empty cell sits on the muted layer and the greens get lighter with activity. */
+  --activity-0: oklch(0.269 0 0);
+  --activity-1: #033a16;
+  --activity-2: #196c2e;
+  --activity-3: #2ea043;
+  --activity-4: #56d364;
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
