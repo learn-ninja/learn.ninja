@@ -80,7 +80,8 @@ export default async function ProfilePage({ params }: Props) {
     year: "numeric",
   })
   return (
-    <>
+    // The handle line sits closer to the box than main's gap-8.
+    <div className="flex flex-col gap-5">
       {/* A profile goes by its handle alone: no display name, no @. */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
@@ -127,7 +128,7 @@ export default async function ProfilePage({ params }: Props) {
           ),
         }}
       />
-    </>
+    </div>
   )
 }
 
