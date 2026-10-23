@@ -9,7 +9,8 @@ import { actorFor, clientKey, depsFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 
 // PUT /api/lessons/{id}: replace a published lesson, keeping its link and expiry.
-// Needs the edit token from publishing: Authorization: Bearer <token>
+// Needs the edit token from publishing (Authorization: Bearer <token>), or the owner's session or
+// x-api-key, so a lesson in your account updates from any folder or machine.
 // PATCH /api/lessons/{id}: change who sees it, { "visibility": "public" | "unlisted" }, or rename
 // it, { "title": "..." }. Owner only.
 // DELETE /api/lessons/{id}: delete it for good. Owner only.
@@ -23,6 +24,7 @@ export async function PUT(req: Request, { params }: Params) {
       {
         id: (await params).id,
         editToken: auth?.startsWith("Bearer ") ? auth.slice(7) : null,
+        actorId: (await actorFor(req))?.userId ?? null,
         text: await req.text(),
         client: clientKey(req),
         skillVersion: req.headers.get("x-learn-skill-version"),

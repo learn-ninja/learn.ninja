@@ -42,7 +42,7 @@ Content-Type: application/json
 Authorization: Bearer <editToken>
 ```
 
-The body is the new lesson file. The link, the owner, and the expiry stay the same. Returns `200` with the same fields as publishing (including `notes` when there are any), without `editToken` or `claimToken`.
+The body is the new lesson file. The link, the owner, and the expiry stay the same. A lesson in your account needs no edit token: send your `x-api-key` header or session cookie instead, from any folder or machine. Returns `200` with the same fields as publishing (including `notes` when there are any), without `editToken` or `claimToken`; `401 unauthorized` when neither the token nor the account matches.
 
 ## Keep a lesson
 
