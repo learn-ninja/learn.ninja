@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   checkDiagram,
   compileErrors,
+  LABEL_ICON_GAP,
   renderDiagram,
   themed,
   withImageSizes,
@@ -59,13 +60,45 @@ describe("renderDiagram", () => {
     expect(svg).not.toContain("<image")
     const icons = svg.match(/<svg [^>]*role="img"[^>]*>/g) ?? []
     expect(icons).toHaveLength(2)
-    // Centered where D2 put it, at the box size, in the drawing's text color.
+    // At the box size, in the drawing's text color.
     expect(icons[0]).toMatch(/viewBox="0 0 16 16"/)
     expect(icons[0]).toMatch(/width="32" height="32"/)
     expect(icons[0]).toMatch(/color="var\(--d2-N1\)"/)
     // A shape: image box is the icon itself, 56px unless the D2 sets a size.
     expect(icons[1]).toMatch(/width="56" height="56"/)
     expect(svg).toContain(">Repo<")
+  }, 20_000)
+
+  it("stacks a box's label and icon around the box's middle", async () => {
+    const svg = await renderDiagram(
+      "repo: Repo on GitHub {icon: octicon/repo-16}\nhex: Hex {shape: hexagon; icon: lucide/server}\nbelow: Below {icon: lucide/server; label.near: bottom-center}"
+    )
+    const num = (re: RegExp) => Number(re.exec(svg)?.[1])
+    // D2 pins the label to the top and the icon to the middle; both now share the middle.
+    const box = {
+      y: num(/<rect x="[\d.]+" y="([\d.]+)" width="[\d.]+" height="92/),
+      height: 92,
+    }
+    const icon = num(/<svg [^>]*width="32" height="32"[^>]*\sy="([\d.]+)"/)
+    const baseline = num(/<text [^>]*y="([\d.]+)"[^>]*>Repo on GitHub</)
+    const labelTop = baseline - 16
+    expect(icon - (labelTop + 16 * 1.3)).toBeCloseTo(LABEL_ICON_GAP, 1)
+    expect((labelTop + icon + 32) / 2).toBeCloseTo(box.y + box.height / 2, 1)
+    // The same inside a hexagon, where D2's icon slot would overlap the label.
+    const hexBaseline = num(/<text [^>]*y="([\d.]+)"[^>]*>Hex</)
+    const hexIcons = [
+      ...svg.matchAll(/<svg [^>]*width="32" height="32"[^>]*\sy="([\d.]+)"/g),
+    ]
+    expect(Number(hexIcons[1]![1]) - (hexBaseline - 16 + 16 * 1.3)).toBeCloseTo(
+      LABEL_ICON_GAP,
+      1
+    )
+    // A label under its icon stays under it.
+    const belowBaseline = num(/<text [^>]*y="([\d.]+)"[^>]*>Below</)
+    expect(belowBaseline - 16 - Number(hexIcons[2]![1]) - 32).toBeCloseTo(
+      LABEL_ICON_GAP,
+      1
+    )
   }, 20_000)
 
   it("keeps the size the D2 gives an image shape", async () => {

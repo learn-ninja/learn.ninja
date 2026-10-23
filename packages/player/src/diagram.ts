@@ -242,8 +242,7 @@ export async function renderDiagram(source: string): Promise<string> {
   const svg = await run(async (d2) => {
     let { diagram, renderOptions } = await d2.compile(source)
     const sized = withImageSizes(source, diagram.shapes)
-    if (sized !== source)
-      ({ diagram, renderOptions } = await d2.compile(sized))
+    if (sized !== source) ({ diagram, renderOptions } = await d2.compile(sized))
     return d2.render(diagram, {
       ...renderOptions,
       // Light-mode classes only: the theme tokens below recolor them for both modes.
@@ -257,45 +256,124 @@ export async function renderDiagram(source: string): Promise<string> {
   return themed(await withIcons(svg), RTL_LETTER.test(source) ? "rtl" : "ltr")
 }
 
+/** The space between a box's label and the icon under it, once both are centered in the box. */
+export const LABEL_ICON_GAP = 6
+
 /**
- * Draws each icon in place of the <image> D2 emitted for it, centered on the same spot. An icon
- * in a labelled box is drawn at BOX_ICON_SIZE (D2 reserves about 46px, which reads heavy next to
- * 16px labels); a `shape: image` box, which D2 marks with its stroke and fill classes, is the
- * icon itself and keeps its size. One-color icons take the drawing's text color; D2's own stroke
- * and fill are dropped, since they'd outline the picture. An unknown icon is removed, leaving
- * the shape's label.
+ * Draws each icon in place of the <image> D2 emitted for it. A `shape: image` box, which D2 marks
+ * with its stroke and fill classes, is the icon itself and keeps its size. An icon in a labelled
+ * box is drawn at BOX_ICON_SIZE (D2 reserves about half the box, which reads heavy next to 16px
+ * labels), and the label and icon are then stacked together around the box's middle: D2 pins the
+ * label to the top edge and the icon's slot to the middle, so shrinking the icon alone would
+ * leave the pair sitting high. The slot's center is the box's center, whatever the shape. A label
+ * that isn't centered above or below its icon (icon.near or label.near set, Markdown labels) stays
+ * where D2 put it. One-color icons take the drawing's text color; D2's own stroke and fill are
+ * dropped, since they'd outline the picture. An unknown icon is removed, leaving the label.
  */
 export async function withIcons(svg: string): Promise<string> {
   const images = [...svg.matchAll(/<image\s([^>]*?)\/?>(?:<\/image>)?/g)]
   if (images.length === 0) return svg
-  let out = svg
+  const edits: Edit[] = []
   for (const m of images) {
-    const attrs = Object.fromEntries(
-      [...m[1]!.matchAll(/([a-zA-Z:-]+)="([^"]*)"/g)].map((a) => [a[1]!, a[2]!])
-    )
+    const attrs = attributes(m[1]!)
     const ref = attrs.href ? parseIconRef(attrs.href) : null
-    const box = {
+    const slot = {
       x: Number(attrs.x ?? 0),
       y: Number(attrs.y ?? 0),
       width: Number(attrs.width ?? 0),
       height: Number(attrs.height ?? 0),
     }
+    const start = m.index!
+    const end = start + m[0].length
     const isImageShape = attrs.class !== undefined
     const size = isImageShape
-      ? Math.min(box.width, box.height)
-      : Math.min(box.width, box.height, BOX_ICON_SIZE)
+      ? Math.min(slot.width, slot.height)
+      : Math.min(slot.width, slot.height, BOX_ICON_SIZE)
     const place = {
-      x: round(box.x + (box.width - size) / 2),
-      y: round(box.y + (box.height - size) / 2),
-      width: String(size),
-      height: String(size),
+      x: slot.x + (slot.width - size) / 2,
+      y: slot.y + (slot.height - size) / 2,
+    }
+    const label = ref && !isImageShape ? labelAfter(svg, end, slot) : null
+    if (label) {
+      const stack = label.height + LABEL_ICON_GAP + size
+      const top = slot.y + slot.height / 2 - stack / 2
+      const [labelTop, iconTop] = label.above
+        ? [top, top + label.height + LABEL_ICON_GAP]
+        : [top + size + LABEL_ICON_GAP, top]
+      place.y = iconTop
+      edits.push({ ...label.baseline, text: round(labelTop + label.fontSize) })
     }
     const drawn = ref
-      ? await iconSvg(ref, { ...place, color: "var(--d2-N1)" })
+      ? await iconSvg(ref, {
+          x: round(place.x),
+          y: round(place.y),
+          width: String(size),
+          height: String(size),
+          color: "var(--d2-N1)",
+        })
       : null
-    out = out.replace(m[0], drawn ?? "")
+    edits.push({ start, end, text: drawn ?? "" })
   }
+  return applyEdits(svg, edits)
+}
+
+interface Edit {
+  start: number
+  end: number
+  text: string
+}
+
+function applyEdits(text: string, edits: Edit[]): string {
+  let out = text
+  for (const e of [...edits].sort((a, b) => b.start - a.start))
+    out = out.slice(0, e.start) + e.text + out.slice(e.end)
   return out
+}
+
+function attributes(tag: string): Record<string, string> {
+  return Object.fromEntries(
+    [...tag.matchAll(/([a-zA-Z:-]+)="([^"]*)"/g)].map((a) => [a[1]!, a[2]!])
+  )
+}
+
+/**
+ * The plain-text label D2 wrote right after an icon's <image>, when it's centered on the icon's
+ * slot: its font size, the height of its lines, whether it sits above the slot's middle, and
+ * where its baseline (the y attribute) is in the SVG, so it can be moved. D2 draws the label as
+ * one <text>, with a <tspan> per extra line offset by dy; a Markdown label is a <foreignObject>.
+ */
+function labelAfter(
+  svg: string,
+  from: number,
+  slot: { x: number; y: number; width: number; height: number }
+): {
+  fontSize: number
+  height: number
+  above: boolean
+  baseline: { start: number; end: number }
+} | null {
+  const open = /^\s*<text\s([^>]*)>/.exec(svg.slice(from, from + 500))
+  if (!open) return null
+  const attrs = attributes(open[1]!)
+  const style = attrs.style ?? ""
+  const fontSize = Number(/font-size:(\d+(?:\.\d+)?)px/.exec(style)?.[1])
+  const y = /\sy="(\d+(?:\.\d+)?)"/.exec(open[1]!)
+  if (!/text-anchor:middle/.test(style) || !fontSize || !y) return null
+  if (Math.abs(Number(attrs.x) - (slot.x + slot.width / 2)) > 1) return null
+  const close = svg.indexOf("</text>", from)
+  const body = svg.slice(from + open[0].length, close < 0 ? from : close)
+  const extraLines = [...body.matchAll(/<tspan\s[^>]*dy="(\d+(?:\.\d+)?)"/g)]
+    .map((t) => Number(t[1]))
+    .reduce((a, b) => a + b, 0)
+  const attrsStart = from + open[0].length - 1 - open[1]!.length
+  const valueStart = attrsStart + y.index + y[0].length - 1 - y[1]!.length
+  return {
+    fontSize,
+    // D2 gives a line of text about 1.3 times its font size.
+    height: fontSize * 1.3 + extraLines,
+    above: Number(y[1]) < slot.y + slot.height / 2,
+    baseline: { start: valueStart, end: valueStart + y[1]!.length },
+  }
 }
 
 const round = (n: number) => String(Math.round(n * 100) / 100)
