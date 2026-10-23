@@ -76,6 +76,7 @@ export const vi: Strings = {
   wordBank: "Kho từ",
   emptyGap: "Chỗ trống",
   visual: "Hình minh họa",
+  expandVisual: "Phóng to",
   showActions: "Hiện các nút",
   hideActions: "Ẩn các nút",
   fixTitle: "Cùng sửa lỗi của bạn",

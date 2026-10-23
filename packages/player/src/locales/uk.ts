@@ -99,6 +99,7 @@ export const uk: Strings = {
   wordBank: "Банк слів",
   emptyGap: "Порожній пропуск",
   visual: "Ілюстрація",
+  expandVisual: "Збільшити",
   showActions: "Показати кнопки",
   hideActions: "Сховати кнопки",
   fixTitle: "Розберімо ваші помилки",

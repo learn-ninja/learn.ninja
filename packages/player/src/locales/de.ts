@@ -88,6 +88,7 @@ export const de: Strings = {
   wordBank: "Wortliste",
   emptyGap: "Leere Lücke",
   visual: "Abbildung",
+  expandVisual: "Vergrößern",
   showActions: "Schaltflächen anzeigen",
   hideActions: "Schaltflächen ausblenden",
   fixTitle: "Lass uns deine Fehler korrigieren",

@@ -71,6 +71,7 @@ export const en: Strings = {
   wordBank: "Word bank",
   emptyGap: "Empty gap",
   visual: "Visual",
+  expandVisual: "Expand",
   showActions: "Show buttons",
   hideActions: "Hide buttons",
   fixTitle: "Let's fix your mistakes",

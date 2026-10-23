@@ -82,6 +82,7 @@ export const hi: Strings = {
   wordBank: "शब्द सूची",
   emptyGap: "खाली जगह",
   visual: "चित्र",
+  expandVisual: "बड़ा करें",
   showActions: "बटन दिखाएँ",
   hideActions: "बटन छिपाएँ",
   fixTitle: "चलिए आपकी गलतियाँ सुधारें",

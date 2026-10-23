@@ -72,6 +72,7 @@ export const ko: Strings = {
   wordBank: "단어 목록",
   emptyGap: "빈칸",
   visual: "그림",
+  expandVisual: "크게 보기",
   showActions: "버튼 보기",
   hideActions: "버튼 숨기기",
   fixTitle: "틀린 문제를 다시 풀어 봐요",

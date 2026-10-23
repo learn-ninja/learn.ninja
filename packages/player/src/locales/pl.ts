@@ -93,6 +93,7 @@ export const pl: Strings = {
   wordBank: "Bank słów",
   emptyGap: "Pusta luka",
   visual: "Ilustracja",
+  expandVisual: "Powiększ",
   showActions: "Pokaż przyciski",
   hideActions: "Ukryj przyciski",
   fixTitle: "Poprawmy twoje błędy",

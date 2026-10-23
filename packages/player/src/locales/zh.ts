@@ -72,6 +72,7 @@ export const zh: Strings = {
   wordBank: "词库",
   emptyGap: "空格",
   visual: "图示",
+  expandVisual: "放大",
   showActions: "显示按钮",
   hideActions: "隐藏按钮",
   fixTitle: "来订正错题吧",

@@ -78,6 +78,7 @@ export const tr: Strings = {
   wordBank: "Kelime havuzu",
   emptyGap: "Boş alan",
   visual: "Görsel",
+  expandVisual: "Büyüt",
   showActions: "Düğmeleri göster",
   hideActions: "Düğmeleri gizle",
   fixTitle: "Hatalarını düzeltelim",

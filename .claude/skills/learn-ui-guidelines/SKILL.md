@@ -27,7 +27,7 @@ Every screen has visible layers in both themes. Windows are outlined, not filled
 | Tooltip | Short hints on hover, focus, or tap | The `Tooltip` component: no arrow, white in light mode and black in dark (`bg-popover dark:bg-black`), not shadcn's inverted default |
 
 - Never paint a card with `bg-background`; that merges it into the page in dark mode.
-- Lesson visuals are the exception: an HTML visual's frame is `rounded-xl border bg-background` (no fill, no dot grid), and an option card's visual sits on a `bg-background` panel (at least 160px tall, `min-h-40`, with the visual centered) above a muted caption footer (`bg-muted dark:bg-input/30`). The border keeps them apart from the page. Option cards mark selection and answers with the border color only, never a tint over the visual or caption.
+- Lesson visuals are the exception: an HTML visual's frame is `rounded-xl border bg-background` (no fill, no dot grid), and an option card's visual sits on a `bg-background` panel (at least 160px tall, `min-h-40`, or 112px on phones, with the visual centered) above a muted caption footer (`bg-muted dark:bg-input/30`). The border keeps them apart from the page. Option cards mark selection and answers with the border color only, never a tint over the visual or caption.
 - Selected controls use `border-primary` plus `bg-muted`, with `dark:data-selected:bg-muted` so the dark tint doesn't hide the selection.
 - Shadows stay at `shadow-xs`. Use rings and borders for separation, not heavier shadows.
 
@@ -65,6 +65,7 @@ The control recipe lives in one place, `packages/player/src/controls.ts`; bricks
 
 - Use logical utilities only (`ms-*`, `pe-*`, `start-*`, `end-*`, `text-start`). Directional icons get `rtl:-scale-x-100` or `rtl:rotate-180`.
 - Content columns max out around `max-w-2xl`. Phones (375px) get edge-to-edge cards, icon-only secondary buttons, and no horizontal scroll. Grids that hold long content use `grid-cols-[minmax(0,1fr)]`.
+- Visuals on phones: a picture, diagram, or chart (not a hotspot, code, or a card's visual) gets an expand button that opens it full screen at a desktop column's width (`w-160`) to pan and pinch; code wraps under each line's start instead of scrolling; hotspot corners stay on (no hover to hint with); and three or more picture options sit in two columns (a pair keeps one).
 
 ### The player on phones (below `sm`)
 
