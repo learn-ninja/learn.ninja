@@ -859,7 +859,7 @@ function Player({
   const leavingRef = React.useRef(false)
   const leaveConcept = React.useCallback(() => {
     if (leavingRef.current) return
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (goStraightOn()) {
       dispatch({ type: "next" })
       return
     }
@@ -876,7 +876,7 @@ function Player({
   const vanishingRef = React.useRef(false)
   const vanishIntro = React.useCallback(() => {
     if (vanishingRef.current) return
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (goStraightOn()) {
       dispatch({ type: "next" })
       return
     }
@@ -2268,6 +2268,14 @@ export function ActionArea({
     </>
   )
 }
+
+/**
+ * Whether a screen change skips its leaving animation (the intro's smoke, a concept sliding out) and
+ * moves on at once: with reduced motion, and on phones, where a learner taps through quickly and the
+ * wait reads as lag. The next screen still fades in.
+ */
+const goStraightOn = () =>
+  matchMedia("(prefers-reduced-motion: reduce), (width < 40rem)").matches
 
 /** Whether a media query matches, following changes. False until mounted. */
 function useMedia(query: string): boolean {

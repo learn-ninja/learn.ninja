@@ -1,9 +1,10 @@
 import { defineConfig } from "@playwright/test"
 
 // Browser smoke tests against a production build (`next build` first, as CI does).
-// Locally they reuse a dev server already running on port 3000.
+// Locally they reuse a dev server already running on port 3000; set E2E_PORT to run your own build
+// on another port when 3000 is taken by something else.
 
-const PORT = 3000
+const PORT = Number(process.env.E2E_PORT ?? 3000)
 
 export default defineConfig({
   testDir: "./e2e",
@@ -11,7 +12,7 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: { baseURL: `http://localhost:${PORT}` },
   webServer: {
-    command: "npm run start",
+    command: `npm run start -- -p ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     // Published lessons land in a local PGlite database, not Neon. The production build refuses

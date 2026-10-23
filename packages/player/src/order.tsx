@@ -115,7 +115,7 @@ export function OrderBrick({
         aria-hidden="true"
         className={cn(
           slotStyles,
-          visual ? "min-h-16 w-full" : cn(controlPadding, "w-auto")
+          visual ? "min-h-16 w-full" : cn(controlPadding, "w-auto max-w-full")
         )}
       >
         {visual ? null : (
@@ -154,7 +154,12 @@ export function OrderBrick({
           "h-auto whitespace-normal disabled:opacity-100",
           markStyles,
           // Placed items fill their row; waiting ones are chips, or cards when they're visuals.
-          placed ? "min-w-0 flex-1 shrink" : visual ? "w-full" : "w-auto",
+          // A long one wraps within the column rather than running off it (buttons don't shrink).
+          placed
+            ? "min-w-0 flex-1 shrink"
+            : visual
+              ? "w-full"
+              : "w-auto max-w-full",
           placed && !visual ? "justify-start text-start" : "justify-center",
           it.visual && "p-2"
         )}

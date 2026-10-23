@@ -257,7 +257,7 @@ export function SortBrick({
                       className={cn(
                         controlStyles,
                         markStyles,
-                        "h-auto py-1 whitespace-normal disabled:opacity-100 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95"
+                        "h-auto max-w-full py-1 whitespace-normal disabled:opacity-100 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95"
                       )}
                     >
                       <RichText text={it.text} lang={it.lang} />
