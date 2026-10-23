@@ -132,7 +132,9 @@ export function compileErrors(error: unknown): string[] {
  * rejects what the lesson page can't or shouldn't show: icons the kit doesn't have (an icon is
  * `set/name`, never a URL), links (they'd open other sites), tooltips (they need scripts), HTML or
  * images in Markdown labels, and colors of its own (the drawing takes the theme's, so it reads in
- * light and dark).
+ * light and dark). A diagram with nothing on its first page is rejected too: `steps`, `layers`,
+ * and `scenarios` are D2 keywords for multi-page diagrams, so a container by one of those names
+ * silently moves its boxes to a page the lesson never shows.
  */
 export async function checkDiagram(source: string): Promise<string[]> {
   let compiled: Compiled
@@ -145,6 +147,21 @@ export async function checkDiagram(source: string): Promise<string[]> {
   }
   const problems: string[] = []
   const { shapes, connections } = compiled.diagram
+  if (shapes.length === 0) {
+    const boards = compiled.diagram as {
+      steps?: unknown[] | null
+      layers?: unknown[] | null
+      scenarios?: unknown[] | null
+    }
+    const keyword = (["steps", "layers", "scenarios"] as const).find(
+      (k) => boards[k]?.length
+    )
+    return [
+      keyword
+        ? `The diagram draws nothing: \`${keyword}\` is a D2 keyword that puts its contents on another page. Name the container something else (\`stages\`, \`timeline\`, \`phases\`).`
+        : "The diagram draws nothing. Give it at least one box.",
+    ]
+  }
   const named = (list: { id: string }[]) =>
     list
       .slice(0, 3)

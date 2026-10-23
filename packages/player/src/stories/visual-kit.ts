@@ -109,3 +109,62 @@ branch: Branch {shape: image; icon: lucide/git-branch}
 pr: Pull request {icon: octicon/git-pull-request-16}
 repo -> branch: branch
 branch -> pr: open`
+
+/** A diagram sample for the Diagrams stories: one per kind of D2 drawing a lesson may use. */
+export interface DiagramSample {
+  name: string
+  alt: string
+  d2: string
+}
+
+/**
+ * The kinds of D2 drawing the teaching guide documents (its "Diagrams in D2" section), each in
+ * the shape a lesson would use it. prepare-examples.ts draws them for the stories.
+ */
+export const diagramSamples: DiagramSample[] = [
+  {
+    name: "Flow with icons",
+    alt: "A repo, a branch, and a pull request, each with its icon.",
+    d2: visualKitDiagram,
+  },
+  {
+    name: "Sequence diagram",
+    alt: "The browser asks the server for lessons, the server queries the database and answers with the page.",
+    d2: `shape: sequence_diagram
+browser: Browser
+server: Server
+db: Database
+browser -> server: GET /lessons
+server -> db: query
+db -> server: rows
+server -> browser: 200 OK
+browser.note: Renders the page`,
+  },
+  {
+    name: "Grid",
+    alt: "Three stages of the Bronze Age collapse in a row: trade thrives, the Sea Peoples attack, the palaces fall.",
+    d2: `timeline: 1200 to 1150 BC {
+  grid-rows: 1
+  grid-gap: 0
+  a: "1200 BC\\nTrade thrives"
+  b: "1180 BC\\nSea Peoples attack"
+  c: "1150 BC\\nPalaces fall"
+}`,
+  },
+  {
+    name: "Table",
+    alt: "A users table whose team_id column points at the teams table's id.",
+    d2: `users: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  email: text {constraint: unique}
+  team_id: int {constraint: foreign_key}
+}
+teams: {
+  shape: sql_table
+  id: int {constraint: primary_key}
+  name: text
+}
+users.team_id -> teams.id`,
+  },
+]

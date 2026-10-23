@@ -49,6 +49,31 @@ describe("renderDiagram", () => {
     expect(svgs[2]).toContain(">e<")
   }, 20_000)
 
+  it("draws sequence diagrams, grids, and tables in theme colors", async () => {
+    const sequence = await renderDiagram(
+      "shape: sequence_diagram\na: Alice\nb: Bob\na -> b: hello\nb -> b: thinks\na.note: Waits\nchat: Chat {\n  b -> a: hi\n}"
+    )
+    expect(sequence).toContain(">hello<")
+    expect(sequence).toContain(">Waits<")
+    expect(sequence).toContain(">Chat<")
+    const grid = await renderDiagram(
+      'stages: {\n  grid-rows: 1\n  grid-gap: 0\n  a: "1200 BC\\nTrade thrives"\n  b: Attack\n}'
+    )
+    expect(grid).toContain(">1200 BC<")
+    expect(grid).toContain(">Trade thrives<")
+    const table = await renderDiagram(
+      "users: {shape: sql_table; id: int {constraint: primary_key}; team: int {constraint: foreign_key}}\nteams: {shape: sql_table; id: int {constraint: primary_key}}\nusers.team -> teams.id"
+    )
+    expect(table).toContain(">PK<")
+    expect(table).toContain(">FK<")
+    // The table's header is drawn in the text color, with its name in the background color.
+    expect(table).toContain('class="class_header fill-N1"')
+    for (const svg of [sequence, grid, table]) {
+      expect(svg).not.toMatch(/\.(?:fill|stroke)-[A-Z]{1,2}\d\{[a-z]+:#/)
+      expect(svg).toContain("--d2-N1:var(--foreground)")
+    }
+  }, 20_000)
+
   it("throws on D2 that doesn't compile", async () => {
     await expect(renderDiagram("a -> {")).rejects.toThrow()
   }, 20_000)
@@ -124,6 +149,33 @@ describe("renderDiagram", () => {
 describe("checkDiagram", () => {
   it("accepts plain boxes and arrows", async () => {
     expect(await checkDiagram(flow)).toEqual([])
+  }, 20_000)
+
+  it("accepts sequence diagrams, grids, and tables", async () => {
+    expect(
+      await checkDiagram(
+        "shape: sequence_diagram\na: Alice\nb: Bob\na -> b: hello\na.note: Waits"
+      )
+    ).toEqual([])
+    expect(
+      await checkDiagram("stages: {grid-rows: 1; grid-gap: 0; one; two; three}")
+    ).toEqual([])
+    expect(
+      await checkDiagram(
+        "users: {shape: sql_table; id: int {constraint: primary_key}; name: text}\norders: {shape: sql_table; user_id: int {constraint: foreign_key}}\nusers.id -> orders.user_id"
+      )
+    ).toEqual([])
+  }, 20_000)
+
+  it("rejects a diagram that draws nothing, and names the keyword that hid it", async () => {
+    const [message] = await checkDiagram("steps: {grid-rows: 1; one; two}")
+    expect(message).toMatch(/draws nothing: `steps` is a D2 keyword/)
+    expect(await checkDiagram("scenarios: {x: {a -> b}}")).toEqual([
+      expect.stringMatching(/`scenarios` is a D2 keyword/),
+    ])
+    expect(await checkDiagram("vars: {x: 1}")).toEqual([
+      expect.stringMatching(/draws nothing\. Give it at least one box/),
+    ])
   }, 20_000)
 
   it("says where D2 fails to compile", async () => {

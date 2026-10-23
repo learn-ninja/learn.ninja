@@ -114,7 +114,31 @@ cloud.web -> api                      # reach inside a container with a dot
 api.style.bold: true                  # emphasis: style.bold, style.stroke-width, style.stroke-dash, style.multiple
 ```
 
-Colors and fonts are the player's: don't set `style.fill`, `style.stroke`, or `style.font-color`. Icons come from the kit (`icon: lucide/database`, `icon: octicon/repo-16`; sets `lucide`, `octicon`, `simple-icons`, `logos`, `vscode-icons`), never from a URL; `icon.near` and `label.near` place them (`top-left` … `bottom-right`); `shape: image` with an icon shows the icon as the box, 56px unless `width` and `height` say otherwise. Links and tooltips aren't allowed, and Markdown labels (`|md ... |`) can't contain HTML or images. Publishing compiles the D2 and reports the line of any error.
+Three more kinds of drawing, each documented in the teaching guide:
+
+```text
+shape: sequence_diagram               # on the first line: a sequence diagram
+alice: Alice                          # the actors, in order
+bob: Bob
+alice -> bob: hello                   # the messages, in order; alice -> alice: thinks is a self-message
+alice.note: Waits for a reply         # a note on an actor; a container around messages groups them
+```
+
+```text
+stages: Stages {                      # a grid: cells in rows and columns, not a graph
+  grid-rows: 1                        # or grid-columns; grid-gap: 0 joins the cells
+  a: "1200 BC\nTrade thrives"        # \n breaks a label into lines
+  b: "1180 BC\nSea Peoples attack"
+}
+```
+
+```text
+users: {shape: sql_table; id: int {constraint: primary_key}; team_id: int {constraint: foreign_key}}
+teams: {shape: sql_table; id: int {constraint: primary_key}; name: text}
+users.team_id -> teams.id             # a column to a column; constraints: primary_key, foreign_key, unique
+```
+
+Colors and fonts are the player's: don't set `style.fill`, `style.stroke`, or `style.font-color`. Don't name a box or container with a D2 keyword (`steps`, `layers`, `scenarios`, `vars`, `classes`, `label`, `shape`, `style`, `near`, `direction`): `steps: { … }` moves its boxes to another page and the lesson shows nothing, so publishing rejects it. Icons come from the kit (`icon: lucide/database`, `icon: octicon/repo-16`; sets `lucide`, `octicon`, `simple-icons`, `logos`, `vscode-icons`), never from a URL; `icon.near` and `label.near` place them (`top-left` … `bottom-right`); `shape: image` with an icon shows the icon as the box, 56px unless `width` and `height` say otherwise. Links and tooltips aren't allowed, and Markdown labels (`|md ... |`) can't contain HTML or images. Publishing compiles the D2 and reports the line of any error.
 
 ## Options
 
@@ -170,4 +194,4 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 - Code sits in backticks: a command like `git push`, a flag, a call, a file name, a path, or an HTML tag written as plain text in a prompt, option, pair, item, feedback, or explanation is rejected.
 - `subject` is one of the slugs above; 1–5 `tags`, each a label of 2–30 characters (letters, digits, spaces, and `- + # . & / '`, not starting with `#`), none whose key repeats the subject, a level, or a language the lesson sets, no two with the same key.
 - HTML visuals: no scripts, event handlers, iframes, forms, objects, embeds, `javascript:` links, or external URLs; each under 20 KB; the whole file under 500 KB. Every icon class (`icon-[lucide--git-branch]`) names an icon the kit has. A concept's or question's HTML visual has `alt`.
-- Diagram visuals: the D2 compiles, with no colors, links, tooltips, or HTML of its own, and every icon is `set/name` from the kit; a concept's or question's diagram has `alt`.
+- Diagram visuals: the D2 compiles and draws at least one box, with no colors, links, tooltips, or HTML of its own, and every icon is `set/name` from the kit; a concept's or question's diagram has `alt`.
