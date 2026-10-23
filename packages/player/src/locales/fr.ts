@@ -90,6 +90,7 @@ export const fr: Strings = {
   wordBank: "Banque de mots",
   emptyGap: "Trou vide",
   visual: "Illustration",
+  expandVisual: "Agrandir",
   showActions: "Afficher les boutons",
   hideActions: "Masquer les boutons",
   fixTitle: "Corrigeons tes erreurs",

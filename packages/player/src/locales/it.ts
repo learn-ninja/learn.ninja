@@ -90,6 +90,7 @@ export const it: Strings = {
   wordBank: "Elenco di parole",
   emptyGap: "Spazio vuoto",
   visual: "Illustrazione",
+  expandVisual: "Ingrandisci",
   showActions: "Mostra i pulsanti",
   hideActions: "Nascondi i pulsanti",
   fixTitle: "Correggiamo i tuoi errori",

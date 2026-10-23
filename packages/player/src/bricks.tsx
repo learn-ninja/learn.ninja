@@ -79,10 +79,10 @@ const optionCardStyles =
   "hover:border-ring data-selected:border-primary data-pressed:translate-y-px " +
   "data-[status=correct]:border-green-600! data-[status=wrong]:border-yellow-500! data-[status=partial]:border-amber-500!"
 
-// The panel is at least 160px tall, so a small visual (a row of buttons, a badge) still reads as a
+// The panel is at least 160px tall (112px on phones), so a small visual (a row of buttons, a badge) still reads as a
 // preview window; taller visuals grow it, and the visual stays centered.
 const optionPanelStyles =
-  "relative -mx-px -mt-px flex min-h-40 flex-col justify-center rounded-xl border border-inherit bg-background px-1 py-5"
+  "relative -mx-px -mt-px flex min-h-28 flex-col justify-center rounded-xl border border-inherit bg-background px-1 py-5 sm:min-h-40"
 
 // ---------- concept ----------
 
@@ -226,7 +226,12 @@ export function OptionsBrick({
     <div
       role="group"
       aria-label={brick.prompt}
-      className={cn("grid gap-3", cards && "sm:grid-cols-2")}
+      className={cn(
+        "grid gap-3",
+        // Two columns from sm up. Phones keep one column for a pair (a compare's two screens need the
+        // width), but three or more pictures sit in a grid, like a picture quiz.
+        cards && (options.length >= 3 ? "grid-cols-2" : "sm:grid-cols-2")
+      )}
     >
       {options.map((raw, i) => {
         const o = raw as {

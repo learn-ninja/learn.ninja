@@ -85,6 +85,7 @@ export const es: Strings = {
   wordBank: "Banco de palabras",
   emptyGap: "Hueco vacío",
   visual: "Ilustración",
+  expandVisual: "Ampliar",
   showActions: "Mostrar botones",
   hideActions: "Ocultar botones",
   fixTitle: "Corrijamos tus errores",

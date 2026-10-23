@@ -68,6 +68,8 @@ export type Strings = {
   emptyGap: string
   /** Name of an HTML visual with no alt text. */
   visual: string
+  /** On phones: opens a visual full screen, to pan and zoom. */
+  expandVisual: string
   /** The notch that opens and closes the tray of action buttons. */
   showActions: string
   hideActions: string

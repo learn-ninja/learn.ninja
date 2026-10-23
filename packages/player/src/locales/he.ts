@@ -96,6 +96,7 @@ export const he: Strings = {
   wordBank: "מאגר מילים",
   emptyGap: "חֶסֶר ריק",
   visual: "איור",
+  expandVisual: "הגדלה",
   showActions: "הצגת הכפתורים",
   hideActions: "הסתרת הכפתורים",
   fixTitle: "בואו נתקן את הטעויות",

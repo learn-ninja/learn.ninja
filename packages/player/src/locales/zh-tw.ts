@@ -72,6 +72,7 @@ export const zhTw: Strings = {
   wordBank: "詞庫",
   emptyGap: "空格",
   visual: "圖示",
+  expandVisual: "放大",
   showActions: "顯示按鈕",
   hideActions: "隱藏按鈕",
   fixTitle: "來訂正錯題吧",

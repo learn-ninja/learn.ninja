@@ -72,6 +72,7 @@ export const ja: Strings = {
   wordBank: "単語リスト",
   emptyGap: "空欄",
   visual: "図",
+  expandVisual: "拡大",
   showActions: "ボタンを表示",
   hideActions: "ボタンを隠す",
   fixTitle: "間違いを復習しましょう",

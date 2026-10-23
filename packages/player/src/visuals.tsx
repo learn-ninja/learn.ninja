@@ -1,12 +1,15 @@
 "use client"
 
 import * as React from "react"
+import { Maximize2Icon } from "lucide-react"
 
 import type {
   ChartVisual,
   DiagramVisual,
   Visual as VisualSpec,
 } from "@workspace/spec"
+import { Button } from "@workspace/ui/components/button"
+import { Dialog } from "@workspace/ui/components/dialog"
 import { Selectable } from "@workspace/ui/components/selectable"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -40,6 +43,65 @@ export function Visual({
   label?: string
   /** No box of its own: the visual sits on a surface that already frames it, like an option card's panel. */
   plain?: boolean
+}) {
+  const { t } = usePlayer()
+  const [open, setOpen] = React.useState(false)
+  const block = (
+    <VisualBlock
+      visual={visual}
+      hotspots={hotspots}
+      label={label}
+      plain={plain}
+    />
+  )
+  // On phones a picture, diagram, or chart can open full screen, laid out at a desktop column's
+  // width: the learner pans it and pinches to zoom, instead of squinting at it scaled down. Not for
+  // hotspots (tapping them is the answer), code (it wraps), math, or visuals inside a card.
+  const expandable =
+    !plain &&
+    !hotspots &&
+    (visual.kind === "html" ||
+      visual.kind === "diagram" ||
+      visual.kind === "chart")
+  if (!expandable) return block
+  return (
+    <div className="relative">
+      {block}
+      <Button
+        variant="outline"
+        size="icon-sm"
+        aria-label={t.expandVisual}
+        onPress={() => setOpen(true)}
+        className="absolute end-2 top-2 bg-background sm:hidden"
+      >
+        <Maximize2Icon />
+      </Button>
+      <Dialog
+        isOpen={open}
+        onOpenChange={setOpen}
+        aria-label={visual.alt ?? label ?? t.visual}
+        className="inset-0 h-full max-w-none translate-x-0 translate-y-0 content-start rounded-none p-0 ring-0 sm:max-w-none rtl:translate-x-0"
+      >
+        <div className="min-h-0 overflow-auto px-4 pt-12 pb-6">
+          <div className="w-160">
+            <VisualBlock visual={visual} label={label} plain={false} />
+          </div>
+        </div>
+      </Dialog>
+    </div>
+  )
+}
+
+function VisualBlock({
+  visual,
+  hotspots,
+  label,
+  plain,
+}: {
+  visual: VisualSpec
+  hotspots?: HotspotControl
+  label?: string
+  plain: boolean
 }) {
   if (visual.kind === "html")
     return (
@@ -399,7 +461,8 @@ function HotspotButton({
                 key={corner}
                 className={cn(
                   "absolute size-2.5 border-muted-foreground opacity-0 transition-[opacity,border-color] duration-200 motion-reduce:transition-none",
-                  "group-hover/spot:border-foreground group-data-reveal/stage:opacity-100 pointer-fine:group-hover/stage:opacity-100",
+                  // Touch screens have no hover to hint with, so there the corners stay on.
+                  "group-hover/spot:border-foreground group-data-reveal/stage:opacity-100 pointer-coarse:opacity-100 pointer-fine:group-hover/stage:opacity-100",
                   corner
                 )}
               />
@@ -449,8 +512,10 @@ function CodeBlock({
         !plain && "rounded-xl border bg-muted/40"
       )}
     >
-      {/* Phones scale lesson text up a step; code steps back down, since its lines need the width. */}
-      <pre className="m-0 flex min-w-max flex-col py-3 font-mono text-sm leading-7 max-sm:text-xs">
+      {/* Phones scale lesson text up a step; code steps back down, since its lines need the width. And
+          there a long line wraps under its own start instead of scrolling, so every line (and every
+          tappable one in a hotspot) shows whole. */}
+      <pre className="m-0 flex flex-col py-3 font-mono text-sm leading-7 max-sm:text-xs sm:min-w-max">
         {lines.map((tokens, i) => {
           const n = i + 1
           const id = hotspots ? spotByLine.get(n) : undefined
@@ -462,7 +527,7 @@ function CodeBlock({
               >
                 {n}
               </span>
-              <span className="whitespace-pre">
+              <span className="min-w-0 wrap-anywhere whitespace-pre-wrap sm:whitespace-pre">
                 {tokens.length === 0 ||
                 (tokens.length === 1 && tokens[0]!.content === "")
                   ? " "
