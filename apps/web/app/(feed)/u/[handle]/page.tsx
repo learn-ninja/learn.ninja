@@ -21,11 +21,11 @@ import { getDb } from "@/lib/publish/store"
 import { SITE } from "@/lib/site"
 
 // A person's public lessons at /u/{handle}, with views and likes. Hidden and unlisted lessons
-// aren't here, nor is anything from an anonymous publish. On your own profile the Lessons tab
-// shows every lesson you own instead, with a Private or Hidden badge on the ones visitors don't
+// aren't here, nor is anything from an anonymous publish. On your own profile the tab is My
+// lessons and shows every lesson you own instead, with a Private or Hidden badge on the ones visitors don't
 // see. The Likes tab lists the listed lessons they liked, plus, on your own profile, liked lessons
-// that have since gone unlisted. Between the header and the tabs, a year of their learning as a
-// grid of days with their streaks (lib/activity/activity.ts), ending on the viewer's today. The
+// that have since gone unlisted. Above the tabs, in one box with them, a year of their learning
+// as a grid of days with their streaks (lib/activity/activity.ts), ending on the viewer's today. The
 // frame around the page is the (feed) layout's; loading.tsx beside this file stands in until the
 // profile arrives.
 
@@ -101,11 +101,10 @@ export default async function ProfilePage({ params }: Props) {
           <p className="max-w-xl text-base text-pretty">{profile.bio}</p>
         ) : null}
       </div>
-      <section aria-label="Activity">
-        <ActivityGrid grid={grid} />
-      </section>
       <ProfileTabs
+        activity={<ActivityGrid grid={grid} />}
         lessons={{
+          label: own ? "My lessons" : "Lessons",
           count: lessons.length,
           panel: lessons.length ? (
             <LessonFeed lessons={lessons} viewer={viewer} />

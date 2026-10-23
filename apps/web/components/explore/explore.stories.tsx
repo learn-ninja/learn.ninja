@@ -7,8 +7,10 @@ import { Button } from "@workspace/ui/components/button"
 import type { ExploreApi } from "@/lib/explore/browser"
 import type { LessonSummary } from "@/lib/explore/queries"
 
+import { buildGrid } from "@/lib/activity/activity"
 import { greetingFor } from "@/lib/explore/greeting"
 
+import { ActivityGrid } from "./activity-grid"
 import { ExploreGreeting, ExploreGreetingSkeleton } from "./explore-greeting"
 import { FeedSkeleton } from "./feed-skeleton"
 import { LessonFeed } from "./lesson-feed"
@@ -461,7 +463,19 @@ export const OwnProfileTabs: Story = {
       <AppRouterContext.Provider value={stubRouter}>
         <div className="mx-auto max-w-2xl">
           <ProfileTabs
+            activity={
+              <ActivityGrid
+                grid={buildGrid(
+                  [
+                    { day: "2026-10-20", lessons: 1 },
+                    { day: "2026-10-22", lessons: 2 },
+                  ],
+                  "2026-10-23"
+                )}
+              />
+            }
             lessons={{
+              label: "My lessons",
               count: lessons.length,
               panel: <LessonFeed lessons={lessons} viewer={own} />,
             }}

@@ -2,7 +2,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton"
 
 import { FeedSkeleton } from "@/components/explore/feed-skeleton"
 
-/** A profile's shape until it arrives: the handle line, the tabs, then the rows. See explore/loading.tsx. */
+/** A profile's shape until it arrives: the handle line, the box of activity and tabs, then the rows. See explore/loading.tsx. */
 export default function ProfileLoading() {
   return (
     <>
@@ -12,8 +12,8 @@ export default function ProfileLoading() {
         <Skeleton className="size-6 shrink-0 rounded-full" />
         <Skeleton className="h-4 w-56 max-w-full" />
       </div>
-      {/* The tabs: h-8. */}
-      <Skeleton className="h-8 w-40 rounded-lg" />
+      {/* The box of activity and tabs. */}
+      <Skeleton className="h-56 rounded-2xl" />
       <FeedSkeleton />
     </>
   )
