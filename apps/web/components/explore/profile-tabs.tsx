@@ -13,7 +13,8 @@ import {
  * A profile's tabs: the lessons they made and the lessons they liked, each with a count. They sit
  * in one box with the year of activity, as Agendolo's week band sits over its chips: the activity
  * on a card at the top, the tabs in a muted strip under it, and the open tab's panel below the
- * box. The activity and panels are rendered on the server and passed in.
+ * box. The box reaches out as far as a hovered lesson row, so the grid lines up with the rows'
+ * text. The activity and panels are rendered on the server and passed in.
  */
 export function ProfileTabs({
   activity,
@@ -25,8 +26,8 @@ export function ProfileTabs({
   likes: { count: number; panel: React.ReactNode }
 }) {
   return (
-    <Tabs className="gap-8">
-      <div className="rounded-xl border bg-muted">
+    <Tabs className="gap-4">
+      <div className="-mx-3 rounded-xl border bg-muted sm:-mx-4">
         <section
           aria-label="Activity"
           className="-m-px rounded-xl border bg-card px-3 py-5 sm:px-4"

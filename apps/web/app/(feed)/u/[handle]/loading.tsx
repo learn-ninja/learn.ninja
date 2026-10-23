@@ -12,9 +12,10 @@ export default function ProfileLoading() {
         <Skeleton className="size-6 shrink-0 rounded-full" />
         <Skeleton className="h-4 w-56 max-w-full" />
       </div>
-      {/* The box of activity and tabs. */}
-      <Skeleton className="h-56 rounded-xl" />
-      <FeedSkeleton />
+      {/* The box of activity and tabs, as wide as a hovered row. */}
+      <Skeleton className="-mx-3 h-56 rounded-xl sm:-mx-4" />
+      {/* The rows sit closer to the box than main's gap: ProfileTabs' gap-4. */}
+      <FeedSkeleton className="-mt-4" />
     </>
   )
 }
