@@ -762,6 +762,19 @@
   --text-4xl: calc(2.25rem * var(--text-scale, 1));
   font-size: var(--text-base);
 }
+/* Phones are read at arm's length, so each step is bigger there: answers and body text (text-sm)
+   come out at 16, 18, and 20px instead of 14, 15.75, and 17.5px. */
+@media (width < 40rem) {
+  [data-text-size] {
+    --text-scale: calc(16 / 14);
+  }
+  [data-text-size="md"] {
+    --text-scale: calc(18 / 14);
+  }
+  [data-text-size="lg"] {
+    --text-scale: calc(20 / 14);
+  }
+}
 
 /* shadcn/typeset preset for docs-style rich content. Apply with class="typeset typeset-docs". */
 .typeset-docs {
