@@ -13,7 +13,7 @@ export default function ProfileLoading() {
         <Skeleton className="h-4 w-56 max-w-full" />
       </div>
       {/* The box of activity and tabs. */}
-      <Skeleton className="h-56 rounded-2xl" />
+      <Skeleton className="h-56 rounded-xl" />
       <FeedSkeleton />
     </>
   )

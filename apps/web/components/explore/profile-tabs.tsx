@@ -26,10 +26,10 @@ export function ProfileTabs({
 }) {
   return (
     <Tabs className="gap-8">
-      <div className="rounded-2xl border bg-muted">
+      <div className="rounded-xl border bg-muted">
         <section
           aria-label="Activity"
-          className="-m-px rounded-2xl border bg-card p-4 sm:p-5"
+          className="-m-px rounded-xl border bg-card p-4 sm:p-5"
         >
           {activity}
         </section>
