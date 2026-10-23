@@ -26,9 +26,9 @@ import { RichText } from "./rich-text"
 // across. Each row is a radio group, so a keyboard moves the item with the arrow keys and a screen
 // reader hears the item and its groups.
 //
-// Phones have no room for lanes side by side, so there it's one item at a time: the next unsorted item
-// shows big with a button for each group, and the items sorted so far wait as chips under their
-// group's name (tap a chip to take it back).
+// Phones have no room for lanes side by side, so there it's a deck: the next unsorted item sits on top
+// with a count above it, and each group is a bin below. Tap a bin and the item flies into it as a chip;
+// tap a chip to put it back on top of the deck.
 
 /** Move an item to the end of a zone, taking it out of whichever zone held it. */
 export function moveItem(
@@ -60,6 +60,9 @@ export function SortBrick({
   const uid = React.useId().replace(/[^\w-]/g, "")
   const root = React.useRef<HTMLDivElement>(null)
   const heads = React.useRef<(HTMLDivElement | null)[]>([])
+  const bins = React.useRef<(HTMLDivElement | null)[]>([])
+  // Phones: the item last taken back out of a bin, which goes on top of the deck.
+  const [back, setBack] = React.useState<string | null>(null)
   const [said, setSaid] = React.useState("")
   // The lane the learner is aiming at, by hover or mid-swipe, so its heading lights up.
   const [aim, setAim] = React.useState<{ id: string; lane: number } | null>(
@@ -106,7 +109,7 @@ export function SortBrick({
   const laneOf = (id: string) =>
     groups.findIndex((g) => zones[g.id]?.includes(id))
 
-  /** Move an item to a lane (or back out with -1); it slides there and the lane's heading bounces. */
+  /** Move an item to a lane (or back out with -1); it slides there and the lane's heading (or bin) bounces. */
   const place = (id: string, lane: number, before?: () => void) => {
     const zone = lane < 0 ? POOL : groups[lane]!.id
     setAim(null)
@@ -118,7 +121,11 @@ export function SortBrick({
         kind: "zones",
         zones: moveItem(zones, id, zone),
       })
-    }).then(() => pulse(lane < 0 ? null : heads.current[lane]))
+    }).then(() => {
+      if (lane < 0) return
+      pulse(heads.current[lane])
+      pulse(bins.current[lane])
+    })
   }
 
   /** The lane a swipe toward the start (-1) or end (+1) lands in, from where the item is now. */
@@ -222,94 +229,117 @@ export function SortBrick({
     place(id, laneOf(id) === i ? -1 : i)
   }
 
-  // Phones: placing an item swaps the card in place, so it skips the page-wide slide.
-  const placeNow = (id: string, lane: number) => {
-    setSaid(t.placedIn(textOf(id), lane < 0 ? t.pool : groups[lane]!.label))
-    buzz()
-    setAnswer({
-      kind: "zones",
-      zones: moveItem(zones, id, lane < 0 ? POOL : groups[lane]!.id),
-    })
-  }
-  const current = rows.find((id) => laneOf(id) < 0)
+  // Phones: the item on top of the deck is the last one taken back out of a bin, else the next unsorted.
+  const current =
+    back && laneOf(back) < 0 ? back : rows.find((id) => laneOf(id) < 0)
+  const sorted = rows.filter((id) => laneOf(id) >= 0).length
+  // A card the learner is meant to read, not a control: it has the card's look, not a button's.
+  const card = "rounded-xl bg-card shadow-xs ring-1 ring-foreground/10"
   const deck = (
-    <div className="flex flex-col gap-5 sm:hidden">
-      <div className="flex flex-col gap-2.5">
-        {groups.map((g) => {
+    <div className="flex flex-col gap-4 sm:hidden">
+      {current && !locked ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-center text-xs font-medium text-muted-foreground tabular-nums">
+            {t.sortCount(sorted + 1, rows.length)}
+          </p>
+          {/* While more items wait, the next card's edge shows under the top one. */}
+          <div className={cn("relative", sorted < rows.length - 1 && "pb-1.5")}>
+            {sorted < rows.length - 1 ? (
+              <div
+                aria-hidden="true"
+                className={cn(card, "absolute inset-x-3 top-3 bottom-0")}
+              />
+            ) : null}
+            <div
+              key={current}
+              data-vt={`learn-${uid}-i${index.get(current)}`}
+              className={cn(
+                card,
+                "relative px-4 py-6 text-center text-base font-semibold motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2"
+              )}
+            >
+              <RichText
+                text={items[index.get(current)!]!.text}
+                lang={items[index.get(current)!]!.lang}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+      <div
+        role={current && !locked ? "group" : undefined}
+        aria-label={current && !locked ? textOf(current) : undefined}
+        className={cn("grid gap-2", n === 2 ? "grid-cols-2" : "grid-cols-1")}
+      >
+        {groups.map((g, i) => {
           const placed = zones[g.id] ?? []
           return (
-            <div key={g.id} className="flex flex-wrap items-center gap-1.5">
-              <span lang={g.lang} className="me-1 text-sm font-semibold">
+            <div
+              key={g.id}
+              ref={(el) => {
+                bins.current[i] = el
+              }}
+              className="relative flex flex-col gap-2 rounded-xl border p-2"
+            >
+              <span
+                lang={g.lang}
+                className="px-1 text-center text-sm font-semibold"
+              >
                 {g.label}
               </span>
-              {placed.length ? (
-                placed.map((id) => {
+              {current && !locked ? (
+                // The open space takes the whole bin's taps (its ::after covers the bin), and it comes
+                // first, so it stays put as chips pile up and quick taps in one place keep landing.
+                <Button
+                  variant="ghost"
+                  aria-label={g.label}
+                  onPress={() => place(current, i)}
+                  className={cn(
+                    slotStyles,
+                    controlPadding,
+                    "h-auto w-full font-normal whitespace-normal text-muted-foreground after:absolute after:inset-0 after:rounded-xl hover:border-foreground/40 hover:bg-muted dark:hover:bg-input/30"
+                  )}
+                >
+                  {t.sortHere}
+                </Button>
+              ) : placed.length ? null : (
+                // An empty bin stays outlined, even after checking.
+                <div
+                  aria-hidden="true"
+                  className={cn(slotStyles, controlPadding)}
+                >
+                  {"\u200b"}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-1.5 empty:hidden">
+                {placed.map((id) => {
                   const it = items[index.get(id)!]!
                   return (
+                    // Above the bin's own button, so a tap on a chip takes the chip back.
                     <Button
                       key={id}
                       variant="outline"
                       size="sm"
+                      data-vt={`learn-${uid}-i${index.get(id)}`}
                       data-status={marks[id]}
                       isDisabled={locked}
                       aria-label={`${textOf(id)}, ${g.label}`}
-                      onPress={() => placeNow(id, -1)}
+                      onPress={() => place(id, -1, () => setBack(id))}
                       className={cn(
                         controlStyles,
                         markStyles,
-                        "h-auto max-w-full py-1 whitespace-normal disabled:opacity-100 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95"
+                        "relative z-10 h-auto max-w-full py-1 whitespace-normal disabled:opacity-100"
                       )}
                     >
                       <RichText text={it.text} lang={it.lang} />
                     </Button>
                   )
-                })
-              ) : (
-                <span
-                  aria-hidden="true"
-                  className="text-sm text-muted-foreground"
-                >
-                  –
-                </span>
-              )}
+                })}
+              </div>
             </div>
           )
         })}
       </div>
-      {current && !locked ? (
-        <div
-          role="group"
-          aria-label={textOf(current)}
-          className="flex flex-col gap-2"
-        >
-          <div
-            key={current}
-            className={cn(
-              controlSurface,
-              "mb-1 px-4 py-6 text-center text-base font-semibold motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-2"
-            )}
-          >
-            <RichText
-              text={items[index.get(current)!]!.text}
-              lang={items[index.get(current)!]!.lang}
-            />
-          </div>
-          {groups.map((g, i) => (
-            <Button
-              key={g.id}
-              variant="outline"
-              onPress={() => placeNow(current, i)}
-              className={cn(
-                controlStyles,
-                controlPadding,
-                "h-auto w-full whitespace-normal"
-              )}
-            >
-              <span lang={g.lang}>{g.label}</span>
-            </Button>
-          ))}
-        </div>
-      ) : null}
     </div>
   )
 

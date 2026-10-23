@@ -62,6 +62,12 @@ export type Strings = {
   pool: string
   /** Announced when a sort item moves; `group` is the pool's name when it's taken back out. */
   placedIn: (item: string, group: string) => string
+  /** On phones, over the sort item on top of the deck: "2 of 5". */
+  sortCount: (i: number, n: number) => string
+  /** On phones, in each sort group's open space: tapping it puts the top item there. */
+  sortHere: string
+  /** The Check button while sort items wait to be sorted: "2 left to sort". */
+  sortLeft: (n: number) => string
   /** Announced when an order item lands in a numbered slot. */
   placedAt: (item: string, n: number) => string
   wordBank: string

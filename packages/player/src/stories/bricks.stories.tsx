@@ -37,6 +37,8 @@ interface HarnessProps {
   brick: Brick
   /** The wrong answer to show in the "wrong" state. Concept bricks have nothing to answer. */
   wrong?: Answer
+  /** Where the "idle" state starts, for a brick shown partway through. */
+  start?: Answer
   mode: Mode
 }
 
@@ -46,13 +48,13 @@ function seeded(seed = 7) {
   return () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646
 }
 
-function Harness({ brick, wrong, mode }: HarnessProps) {
+function Harness({ brick, wrong, start, mode }: HarnessProps) {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-8">
       {brick.type === "concept" ? (
         <ConceptBrick brick={brick} />
       ) : (
-        <Question brick={brick} wrong={wrong!} mode={mode} />
+        <Question brick={brick} wrong={wrong!} start={start} mode={mode} />
       )}
     </div>
   )
@@ -61,15 +63,17 @@ function Harness({ brick, wrong, mode }: HarnessProps) {
 function Question({
   brick,
   wrong,
+  start: from,
   mode,
 }: {
   brick: QuestionBrick
   wrong: Answer
+  start?: Answer
   mode: Mode
 }) {
   const start = (): Answer =>
     mode === "idle"
-      ? initialAnswer(brick, seeded())
+      ? (from ?? initialAnswer(brick, seeded()))
       : mode === "wrong"
         ? wrong
         : solution(brick)
@@ -165,6 +169,7 @@ const meta = {
     },
     brick: { control: false },
     wrong: { control: false },
+    start: { control: false },
   },
   args: { mode: "idle" },
   render: (args, { globals }) => (
@@ -280,6 +285,27 @@ export const SortTwoGroups: Story = {
       zones: { pool: [], map: ["a", "b"], each: ["c", "d"] },
     },
   },
+}
+/**
+ * On a phone there's no room for lanes, so sort deals the items one at a time: the next item sits on
+ * a deck with a count above it, and each group is a bin to tap; sorted items wait in their bin as chips.
+ */
+export const SortPhone: Story = {
+  name: "Sort, phone, two groups",
+  args: SortTwoGroups.args,
+  globals: { viewport: { value: "mobile2", isRotated: false } },
+}
+/** Partway through, with one bin holding an item and the others still empty. */
+export const SortPhoneThree: Story = {
+  name: "Sort, phone, three groups",
+  args: {
+    ...Sort.args,
+    start: {
+      kind: "zones",
+      zones: { pool: ["b", "c", "d", "e"], pri: ["a"], sec: [], ter: [] },
+    },
+  },
+  globals: { viewport: { value: "mobile2", isRotated: false } },
 }
 export const OrderVisual: Story = {
   name: "Order, visual items",

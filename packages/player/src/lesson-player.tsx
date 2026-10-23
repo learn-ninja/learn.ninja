@@ -33,6 +33,7 @@ import {
   checkAnswer,
   initialAnswer,
   isReady,
+  POOL,
   retryAnswer,
   shuffle,
   solution,
@@ -1974,8 +1975,11 @@ export function ActionArea({
     // In the player a scenario is a story: the ninja says what each pick led to, a miss rewinds.
     const story = inBubble && brick.type === "scenario"
     if (s.phase === "answering") {
+      // Until every sort item is in a group, Check says how many are left instead.
+      const unsorted =
+        s.answer.kind === "zones" ? (s.answer.zones[POOL] ?? []).length : 0
       primary = {
-        label: t.check,
+        label: unsorted ? t.sortLeft(unsorted) : t.check,
         onPress: () => dispatch({ type: "check" }),
         isDisabled: !isReady(brick, s.answer),
       }
