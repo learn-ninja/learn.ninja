@@ -18,8 +18,9 @@ import { RichText } from "./rich-text"
 import { Visual } from "./visuals"
 
 // The order brick: numbered slots wait on top and the shuffled items below. Tap the items in order and
-// each slides into the next open slot; tap a placed item to send it back. With a keyboard, Enter or
-// Space places or returns an item, ↑ and ↓ move a placed item up or down, and focus never gets lost.
+// each slides into the next open slot, leaving a dashed space in the pool so the rest never shift; tap
+// a placed item to send it back. With a keyboard, Enter or Space places or returns an item, ↑ and ↓
+// move a placed item up or down, and focus never gets lost.
 
 export function OrderBrick({
   brick,
@@ -33,6 +34,15 @@ export function OrderBrick({
   const root = React.useRef<HTMLDivElement>(null)
   const buttons = React.useRef<Record<string, HTMLButtonElement | null>>({})
   const [said, setSaid] = React.useState("")
+  // Every item keeps its place in the pool, placed or not: a placed one leaves its space behind.
+  const [shown] = React.useState(() =>
+    answer.kind === "sequence"
+      ? [
+          ...answer.pool,
+          ...answer.slots.filter((id): id is string => id !== null),
+        ]
+      : []
+  )
 
   const wrong = Object.keys(marks)
     .filter((id) => marks[id] === "wrong")
@@ -94,6 +104,25 @@ export function OrderBrick({
     const nextSlots = [...slots]
     ;[nextSlots[from], nextSlots[to]] = [nextSlots[to]!, nextSlots[from]!]
     move(nextSlots, pool, t.placedAt(textOf(id), to + 1), id)
+  }
+
+  /** Where a placed item waited: dashed, and as big as the item, so nothing around it moves. */
+  const space = (id: string) => {
+    const it = items.get(id)!
+    return (
+      <div
+        key={id}
+        aria-hidden="true"
+        className={cn(
+          slotStyles,
+          visual ? "min-h-16 w-full" : cn(controlPadding, "w-auto")
+        )}
+      >
+        {visual ? null : (
+          <RichText text={it.text ?? ""} lang={it.lang} className="invisible" />
+        )}
+      </div>
+    )
   }
 
   const tile = (id: string, placed: boolean) => {
@@ -162,7 +191,8 @@ export function OrderBrick({
                 className={cn(
                   slotStyles,
                   "min-w-0 flex-1",
-                  visual ? "min-h-24" : controlPadding,
+                  // Visual items get a shorter open slot on phones, so the pool stays in reach.
+                  visual ? "min-h-16 sm:min-h-24" : controlPadding,
                   i === next && "border-foreground/40"
                 )}
               >
@@ -173,7 +203,7 @@ export function OrderBrick({
           </li>
         ))}
       </ol>
-      {pool.length ? (
+      {shown.length ? (
         <div
           role="group"
           aria-label={t.pool}
@@ -183,7 +213,7 @@ export function OrderBrick({
               : "flex flex-wrap justify-center gap-2"
           )}
         >
-          {pool.map((id) => tile(id, false))}
+          {shown.map((id) => (pool.includes(id) ? tile(id, false) : space(id)))}
         </div>
       ) : null}
       <div aria-live="polite" className="sr-only">

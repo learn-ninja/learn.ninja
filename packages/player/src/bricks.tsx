@@ -377,7 +377,13 @@ export function HotspotBrick({
 
 // ---------- match ----------
 
-const PAIR_COLORS = ["#3b6cf6", "#d98b06", "#d6337a", "#0f9a9a", "#8b5cf6"]
+// Tap an item, then its match in the other column (either side can go first). Each pair is judged as
+// it's made: a right pair flashes green and stays matched, greyed out, so the board empties as you go;
+// a wrong one shakes yellow, comes apart, and costs the brick its first-try score (`onSlip`). The last
+// pair checks the brick (`onDone`), so there's no Check to press.
+
+/** How long a pair shows its result before it settles (and, after the last pair, the brick checks). */
+const PAIR_FLASH = 450
 
 export function MatchBrick({
   brick,
@@ -386,113 +392,131 @@ export function MatchBrick({
   marks,
   locked,
   rightOrder,
-}: QuestionBrickProps & { rightOrder: number[] }) {
+  onSlip,
+  onDone,
+}: QuestionBrickProps & {
+  rightOrder: number[]
+  /** A wrong pair was made: the brick no longer counts as right first time. */
+  onSlip?: () => void
+  /** The last pair is matched: check the brick. */
+  onDone?: () => void
+}) {
+  const root = React.useRef<HTMLDivElement>(null)
   // The item waiting for its match: either column can go first.
   const [armed, setArmed] = React.useState<{
     side: "left" | "right"
     index: number
   } | null>(null)
+  // The pair just made, while it shows whether it was right.
+  const [flash, setFlash] = React.useState<{
+    left: number
+    right: number
+    good: boolean
+  } | null>(null)
+  React.useEffect(() => {
+    if (!flash) return
+    if (!flash.good) shake(root.current)
+    const id = window.setTimeout(() => setFlash(null), PAIR_FLASH)
+    return () => window.clearTimeout(id)
+  }, [flash])
+  const done = React.useRef(onDone)
+  done.current = onDone
+  const complete =
+    brick.type === "match" &&
+    answer.kind === "pairs" &&
+    Object.keys(answer.links).length === brick.pairs.length
+  React.useEffect(() => {
+    if (!complete || locked) return
+    const id = window.setTimeout(() => done.current?.(), PAIR_FLASH)
+    return () => window.clearTimeout(id)
+  }, [complete, locked])
+
   if (brick.type !== "match" || answer.kind !== "pairs") return null
   const links = answer.links
-  const paired = Object.keys(links)
-    .map(Number)
-    .sort((a, b) => a - b)
-  const pairNumber = (left: number) => paired.indexOf(left)
-  const ownerOf = (right: number) => paired.find((l) => links[l] === right)
-
+  const matchedRight = new Set(Object.values(links))
   const isArmed = (side: "left" | "right", index: number) =>
     armed?.side === side && armed.index === index
-  // Pressing an item clears its old pair; it then pairs with the armed item on the other side, or waits.
-  const link = (left: number, right: number) => {
-    const next = { ...links }
-    delete next[left]
-    const owner = ownerOf(right)
-    if (owner !== undefined) delete next[owner]
-    next[left] = right
-    setAnswer({ kind: "pairs", links: next })
+
+  // A pair is right when the right-hand item is the left one's own (pairs keep their index).
+  const pair = (left: number, right: number) => {
     setArmed(null)
+    buzz()
+    const good = left === right
+    setFlash({ left, right, good })
+    if (good) setAnswer({ kind: "pairs", links: { ...links, [left]: right } })
+    else onSlip?.()
   }
   const press = (side: "left" | "right", index: number) => {
-    if (armed && armed.side !== side) {
-      if (side === "left") link(index, armed.index)
-      else link(armed.index, index)
-      return
-    }
-    const next = { ...links }
-    const owner = side === "left" ? index : ownerOf(index)
-    if (owner !== undefined) delete next[owner]
-    setAnswer({ kind: "pairs", links: next })
+    if (armed && armed.side !== side)
+      return side === "left"
+        ? pair(index, armed.index)
+        : pair(armed.index, index)
     setArmed(isArmed(side, index) ? null : { side, index })
   }
 
-  const badge = (k: number) => (
-    <span
-      aria-hidden="true"
-      // It overhangs the chip's padding a little, so a chip stays one line tall like every other control.
-      className="-my-0.5 grid size-6 shrink-0 place-items-center rounded-full border border-dashed text-xs font-bold text-white"
-      style={
-        k >= 0
-          ? {
-              background: PAIR_COLORS[k % PAIR_COLORS.length],
-              borderColor: PAIR_COLORS[k % PAIR_COLORS.length],
-              borderStyle: "solid",
-            }
-          : undefined
-      }
-    >
-      {k >= 0 ? k + 1 : ""}
-    </span>
-  )
-  const chip = cn(
-    controlStyles,
-    controlPadding,
-    "flex w-full items-center gap-2.5 text-start",
-    markStyles
-  )
+  /** The tile's look: its check mark, the pair it's flashing in, matched, or waiting. */
+  const statusOf = (side: "L" | "R", index: number) =>
+    marks[`${side}${index}`] ??
+    (flash && (side === "L" ? flash.left : flash.right) === index
+      ? flash.good
+        ? "correct"
+        : "wrong"
+      : undefined)
+  const tile = (
+    side: "left" | "right",
+    index: number,
+    text: string,
+    lang: string | undefined,
+    matched: boolean
+  ) => {
+    const status = statusOf(side === "left" ? "L" : "R", index)
+    // Matched and settled: a dashed outline with muted text, out of play.
+    const settled = matched && !status
+    return (
+      <Selectable
+        key={index}
+        isSelected={isArmed(side, index)}
+        onChange={() => press(side, index)}
+        isDisabled={locked || matched}
+        data-status={status}
+        lang={lang}
+        className={cn(
+          settled
+            ? cn(slotStyles, "text-muted-foreground")
+            : cn(controlStyles, markStyles),
+          controlPadding,
+          "flex w-full items-center justify-center text-center"
+        )}
+      >
+        <RichText text={text} />
+      </Selectable>
+    )
+  }
 
-  // Both columns share the grid's rows (a subgrid), so each item is as tall as the one beside it and
-  // the pairs line up. The columns stay whole in the DOM, so keyboards and screen readers go down one
-  // column, then the other.
+  // Both columns share the grid's rows (a subgrid), so each item is as tall as the one beside it. The
+  // columns stay whole in the DOM, so keyboards and screen readers go down one column, then the other.
   const rows = { gridRow: `span ${brick.pairs.length}` }
   return (
     <div
+      ref={root}
       className="grid grid-cols-2 gap-x-3 gap-y-2"
       style={{ gridTemplateRows: `repeat(${brick.pairs.length}, auto)` }}
     >
       <div className="grid min-w-0 grid-rows-subgrid" style={rows}>
-        {brick.pairs.map((p, i) => (
-          <Selectable
-            key={i}
-            isSelected={isArmed("left", i)}
-            onChange={() => press("left", i)}
-            isDisabled={locked}
-            data-status={marks[`L${i}`]}
-            lang={brick.leftLang}
-            className={chip}
-          >
-            {badge(pairNumber(i))}
-            <RichText text={p.left} />
-          </Selectable>
-        ))}
+        {brick.pairs.map((p, i) =>
+          tile("left", i, p.left, brick.leftLang, i in links)
+        )}
       </div>
       <div className="grid min-w-0 grid-rows-subgrid" style={rows}>
-        {rightOrder.map((j) => {
-          const owner = ownerOf(j)
-          return (
-            <Selectable
-              key={j}
-              isSelected={isArmed("right", j)}
-              onChange={() => press("right", j)}
-              isDisabled={locked}
-              data-status={marks[`R${j}`]}
-              lang={brick.rightLang}
-              className={chip}
-            >
-              {badge(owner === undefined ? -1 : pairNumber(owner))}
-              <RichText text={brick.pairs[j]!.right} />
-            </Selectable>
+        {rightOrder.map((j) =>
+          tile(
+            "right",
+            j,
+            brick.pairs[j]!.right,
+            brick.rightLang,
+            matchedRight.has(j)
           )
-        })}
+        )}
       </div>
     </div>
   )
