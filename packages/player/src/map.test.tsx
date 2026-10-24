@@ -2,6 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import type { Feature, MultiPolygon, Polygon } from "geojson"
 import { feature } from "topojson-client"
 import type { GeometryCollection, Topology } from "topojson-specification"
 import {
@@ -13,9 +14,9 @@ import {
 } from "@workspace/spec"
 
 import type { Mark } from "./check"
-import WorldMap from "./map"
+import WorldMap, { nearestSmall, spotsFor } from "./map"
 import data from "./map-data.json"
-import { frameFor } from "./map-frame"
+import { measureDrawnSizes } from "./map-frame"
 
 // The map's shapes and the checker's table of countries are built together by scripts/build-map.ts;
 // they have to agree, or a code the checker accepts would shade nothing.
@@ -43,18 +44,10 @@ describe("map data", () => {
     const topology = data as unknown as Topology<{
       countries: GeometryCollection
     }>
-    const shapes = feature(topology, topology.objects.countries).features
+    const shapes = feature(topology, topology.objects.countries)
+      .features as Feature<Polygon | MultiPolygon>[]
     for (const region of MAP_REGION_NAMES) {
-      const { path } = frameFor(region)
-      const drawn: Record<string, number> = {}
-      for (const code of Object.keys(COUNTRIES)) {
-        const [[x0, y0], [x1, y1]] = path.bounds({
-          type: "FeatureCollection",
-          features: shapes.filter((f) => f.id === code),
-        })
-        const size = Math.round(Math.max(x1 - x0, y1 - y0))
-        if (Number.isFinite(size) && size >= 1) drawn[code] = size
-      }
+      const drawn = measureDrawnSizes(region, shapes)
       expect(drawn, region).toEqual(DRAWN_SIZES[region])
     }
   })
@@ -138,5 +131,37 @@ describe("WorldMap as a hotspot", () => {
     const checked = tap(["SY"], { SY: "wrong", TR: "correct" })
     expect(checked).toMatch(/stroke-yellow-500/)
     expect(checked).toMatch(/stroke-green-600/)
+  })
+
+  it("draws each country once, as the shape that's tapped", () => {
+    const html = tap([])
+    const shapes = html.match(/<path[^>]*data-shape=/g) ?? []
+    expect(shapes).toHaveLength(
+      Object.keys(DRAWN_SIZES["eastern-mediterranean"]).length
+    )
+  })
+
+  it("gives a tap near a small country's middle to it, over its larger neighbors", () => {
+    // Europe on a 343px phone: Switzerland is about 19px across, among France, Germany, Italy,
+    // and Austria.
+    const spots = spotsFor("europe")
+    const k = 480 / 343
+    const ch = spots.find((s) => s.code === "CH")!
+    expect(ch.size / k).toBeLessThan(44)
+    // 15px toward France, and toward Italy.
+    expect(nearestSmall(ch.x - 15 * k, ch.y, spots, k)).toBe("CH")
+    expect(nearestSmall(ch.x, ch.y + 15 * k, spots, k)).toBe("CH")
+    // Out of reach, Switzerland doesn't take the tap.
+    expect(nearestSmall(ch.x - 40 * k, ch.y, spots, k)).not.toBe("CH")
+    // Where small countries' circles overlap, the nearer middle wins.
+    const east = spotsFor("eastern-mediterranean")
+    const lb = east.find((s) => s.code === "LB")!
+    const ps = east.find((s) => s.code === "PS")!
+    const k2 = 480 / 343
+    expect(Math.hypot(lb.x - ps.x, lb.y - ps.y)).toBeLessThan(44 * k2)
+    const toward = (a: typeof lb, b: typeof lb, t: number) =>
+      [a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t] as const
+    expect(nearestSmall(...toward(lb, ps, 0.4), east, k2)).toBe("LB")
+    expect(nearestSmall(...toward(lb, ps, 0.6), east, k2)).toBe("PS")
   })
 })

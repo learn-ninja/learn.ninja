@@ -13,25 +13,14 @@ import type { GeometryCollection, Topology } from "topojson-specification"
 import { MAP_REGION_NAMES } from "@workspace/spec"
 
 import data from "../src/map-data.json" with { type: "json" }
-import { frameFor } from "../src/map-frame"
+import { measureDrawnSizes } from "../src/map-frame"
 
 const topology = data as unknown as Topology<{ countries: GeometryCollection }>
 const shapes = feature(topology, topology.objects.countries)
   .features as Feature<Polygon | MultiPolygon>[]
-const codes = [...new Set(shapes.flatMap((f) => (f.id ? [String(f.id)] : [])))]
-codes.sort()
-
 const sizes = MAP_REGION_NAMES.map((region) => {
-  const { path } = frameFor(region)
-  const drawn = codes.flatMap((code) => {
-    const [[x0, y0], [x1, y1]] = path.bounds({
-      type: "FeatureCollection",
-      features: shapes.filter((f) => f.id === code),
-    })
-    const size = Math.round(Math.max(x1 - x0, y1 - y0))
-    return Number.isFinite(size) && size >= 1 ? [`${code}: ${size}`] : []
-  })
-  return `  ${JSON.stringify(region)}: { ${drawn.join(", ")} },`
+  const drawn = Object.entries(measureDrawnSizes(region, shapes))
+  return `  ${JSON.stringify(region)}: { ${drawn.map(([code, size]) => `${code}: ${size}`).join(", ")} },`
 })
 
 const here = (path: string) => fileURLToPath(new URL(path, import.meta.url))

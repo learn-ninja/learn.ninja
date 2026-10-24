@@ -1,3 +1,4 @@
+import type { Feature, MultiPolygon, Polygon } from "geojson"
 import {
   geoAzimuthalEqualArea,
   geoNaturalEarth1,
@@ -59,4 +60,29 @@ export function frameFor(region: MapRegion) {
 const steps = (from: number, to: number) => {
   const n = Math.max(2, Math.ceil(to - from))
   return Array.from({ length: n + 1 }, (_, i) => from + ((to - from) * i) / n)
+}
+
+/**
+ * How large each country is drawn on a region's map, by code: the larger of its width and height
+ * in px at MAP_WIDTH, counting only the part on the map. A country the map doesn't draw is left out.
+ * The checker's table (spec's map-sizes.ts) is this, for every region.
+ */
+export function measureDrawnSizes(
+  region: MapRegion,
+  shapes: Feature<Polygon | MultiPolygon>[]
+): Record<string, number> {
+  const { path } = frameFor(region)
+  const codes = [
+    ...new Set(shapes.flatMap((f) => (f.id ? [String(f.id)] : []))),
+  ]
+  const sizes: Record<string, number> = {}
+  for (const code of codes.sort()) {
+    const [[x0, y0], [x1, y1]] = path.bounds({
+      type: "FeatureCollection",
+      features: shapes.filter((f) => f.id === code),
+    })
+    const size = Math.round(Math.max(x1 - x0, y1 - y0))
+    if (Number.isFinite(size) && size >= 1) sizes[code] = size
+  }
+  return sizes
 }
