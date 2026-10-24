@@ -104,24 +104,32 @@ export default function WorldMap({
   const groups = [
     ...new Set((map.countries ?? []).flatMap((c) => c.group ?? [])),
   ]
-  const shaded = (map.countries ?? []).map((c) => {
-    const shapes = countries.filter((f) => f.id === c.code)
-    const color = GROUPS[c.group ? groups.indexOf(c.group) : 0]!
-    const [[x0, y0], [x1, y1]] = path.bounds({
-      type: "FeatureCollection",
-      features: shapes,
-    })
-    const anchor = projection(COUNTRIES[c.code]?.at ?? [0, 0])
-    const tiny = !(x1 - x0 >= TINY * k || y1 - y0 >= TINY * k)
-    return {
-      ...c,
-      shapes,
-      color,
-      tiny,
-      anchor,
-      at: labelAt(shapes, anchor, path, height),
-    }
-  })
+  // The shaded countries' shapes don't change with a tap or a resize, so they're drawn once.
+  const drawn = React.useMemo(
+    () =>
+      (map.countries ?? []).map((c) => {
+        const all = {
+          type: "FeatureCollection" as const,
+          features: countries.filter((f) => f.id === c.code),
+        }
+        const [[x0, y0], [x1, y1]] = path.bounds(all)
+        const anchor = projection(COUNTRIES[c.code]?.at ?? [0, 0])
+        return {
+          ...c,
+          d: path(all) ?? "",
+          across: Math.max(x1 - x0, y1 - y0),
+          anchor,
+          at: labelAt(all.features, anchor, path, height),
+        }
+      }),
+    [map.countries, path, projection, height]
+  )
+  const shaded = drawn.map((c) => ({
+    ...c,
+    color: GROUPS[c.group ? groups.indexOf(c.group) : 0]!,
+    tiny: !(c.across >= TINY * k),
+  }))
+  const outlines = outlinesFor(region)
 
   const dots = (map.points ?? []).flatMap((p) => {
     const at = projection([p.lon, p.lat])
@@ -191,7 +199,7 @@ export default function WorldMap({
       {hotspots ? (
         <CountryShapes
           spots={spots}
-          unowned={path(unowned) ?? ""}
+          unowned={outlines.unowned}
           fills={Object.fromEntries(shaded.map((c) => [c.code, c.color.fill]))}
           control={hotspots}
           onTap={tap}
@@ -199,20 +207,16 @@ export default function WorldMap({
       ) : (
         <>
           <path
-            d={path(land) ?? ""}
+            d={outlines.land}
             className="fill-foreground/8 dark:fill-foreground/12"
           />
           {shaded.map((c) => (
-            <path
-              key={c.code}
-              d={path({ type: "FeatureCollection", features: c.shapes }) ?? ""}
-              className={c.color.fill}
-            />
+            <path key={c.code} d={c.d} className={c.color.fill} />
           ))}
         </>
       )}
       <path
-        d={path(borders) ?? ""}
+        d={outlines.borders}
         fill="none"
         strokeWidth={1}
         strokeLinejoin="round"
@@ -310,6 +314,27 @@ export default function WorldMap({
       )}
     </>
   )
+}
+
+/**
+ * A region's land, the borders between countries, and the land no country owns, as paths. They're
+ * the same on every map of the region, and the borders are long, so they're made once per region.
+ */
+const outlinesByRegion = new Map<
+  MapRegion,
+  { land: string; borders: string; unowned: string }
+>()
+export function outlinesFor(region: MapRegion) {
+  const known = outlinesByRegion.get(region)
+  if (known) return known
+  const { path } = frameFor(region)
+  const outlines = {
+    land: path(land) ?? "",
+    borders: path(borders) ?? "",
+    unowned: path(unowned) ?? "",
+  }
+  outlinesByRegion.set(region, outlines)
+  return outlines
 }
 
 /** A country on a hotspot map: its shape, where its name would go, its box, and its drawn size. */

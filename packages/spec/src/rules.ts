@@ -541,7 +541,9 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
       )
       continue
     }
-    const step = visual.step ?? 1
+    const given = visual.step ?? 1
+    const n = visual.fractions ? fractionStep(given) : undefined
+    const step = n ? 1 / n : given
     const ticks = Math.floor((max - min) / step + 1e-9) + 1
     if (ticks > LIMITS.numberLineTicks)
       add(
@@ -549,11 +551,11 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
         path,
         `This number line has ${ticks} ticks; keep it to ${LIMITS.numberLineTicks} with a larger "step" or a shorter range, so the numbers stay readable on a phone.`
       )
-    if (visual.fractions && !fractionStep(step))
+    if (visual.fractions && !n)
       add(
         "structure",
         `${path}.step`,
-        `Ticks numbered as fractions need a "step" of 1/2, 1/3, … up to 1/12 (0.25 for quarters); this one is ${step}.`
+        `Ticks numbered as fractions need a "step" of 1/2, 1/3, … up to 1/12, as a decimal to 3 places or more (0.25 for quarters, 0.333 for thirds); this one is ${given}.`
       )
     const off = (v: number) => v < min || v > max
     visual.points?.forEach((p, j) => {
@@ -1169,13 +1171,13 @@ function checkBrickReferences(
         // A screen reader hears the alt before the countries, each by name. Naming the answers
         // among other countries is fine (the toggles name them all anyway); naming only answers
         // gives them away.
-        const alt = brick.visual.alt ?? ""
-        const answers = brick.correct.filter((c) =>
-          namesCountry(alt, c, language)
+        const named = countriesNamed(
+          brick.visual.alt ?? "",
+          [...new Set([...brick.correct, ...Object.keys(DRAWN_SIZES[region])])],
+          language
         )
-        const others = Object.keys(DRAWN_SIZES[region]).filter(
-          (c) => !brick.correct.includes(c) && namesCountry(alt, c, language)
-        )
+        const answers = brick.correct.filter((c) => named.has(c))
+        const others = [...named].filter((c) => !brick.correct.includes(c))
         if (answers.length && !others.length)
           add(
             "teaching",
@@ -1325,26 +1327,78 @@ const COUNTRY_ALIASES: Record<string, string[]> = {
   US: ["USA"],
 }
 
-/** Whether text names a country: in English, in the lesson's language, or by a common other name. */
-function namesCountry(text: string, code: string, language: string): boolean {
-  if (!text) return false
-  const names = new Set([
-    COUNTRIES[code]?.name,
-    ...(COUNTRY_ALIASES[code] ?? []),
-    ...[language, "en"].map((l) => regionName(l, code)),
-  ])
-  return [...names].some((n) => {
-    if (!n) return false
-    const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    return new RegExp(`(?<!\\p{L})${escaped}(?!\\p{L})`, "iu").test(text)
-  })
+/**
+ * The countries a text names: in English, in the lesson's language, or by a common other name. A
+ * name inside a longer one doesn't count, so "South Sudan" names South Sudan, not Sudan too.
+ */
+function countriesNamed(
+  text: string,
+  codes: string[],
+  language: string
+): Set<string> {
+  if (!text) return new Set()
+  const found = codes.flatMap((code) =>
+    namePatterns(code, language).flatMap((re) =>
+      [...text.matchAll(re)].map((m) => ({
+        code,
+        start: m.index,
+        end: m.index + m[0].length,
+      }))
+    )
+  )
+  return new Set(
+    found
+      .filter(
+        (a) =>
+          !found.some(
+            (b) =>
+              b.code !== a.code &&
+              b.start <= a.start &&
+              b.end >= a.end &&
+              b.end - b.start > a.end - a.start
+          )
+      )
+      .map((a) => a.code)
+  )
 }
 
+/** A country's names as whole-word patterns, made once per language. */
+const patterns = new Map<string, RegExp[]>()
+function namePatterns(code: string, language: string): RegExp[] {
+  const key = `${language}:${code}`
+  const known = patterns.get(key)
+  if (known) return known
+  const names = new Set(
+    [
+      COUNTRIES[code]?.name,
+      ...(COUNTRY_ALIASES[code] ?? []),
+      ...[language, "en"].map((l) => regionName(l, code)),
+    ].filter((n): n is string => !!n && n !== code)
+  )
+  const made = [...names].map(
+    (n) =>
+      new RegExp(
+        `(?<!\\p{L})${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?!\\p{L})`,
+        "giu"
+      )
+  )
+  patterns.set(key, made)
+  return made
+}
+
+/** A country's name in a language, from the runtime's names, which are made once per language. */
+const displayNames = new Map<string, Intl.DisplayNames | null>()
 function regionName(language: string, code: string): string | undefined {
   try {
-    const name = new Intl.DisplayNames([language], { type: "region" }).of(code)
-    return name === code ? undefined : name
+    if (!displayNames.has(language))
+      displayNames.set(
+        language,
+        new Intl.DisplayNames([language], { type: "region" })
+      )
+    return displayNames.get(language)?.of(code)
   } catch {
+    // A language the runtime can't read, or a code that isn't one (answers are checked elsewhere).
+    if (!displayNames.has(language)) displayNames.set(language, null)
     return undefined
   }
 }
@@ -1367,10 +1421,14 @@ function showingIt(shows: (box: Box) => boolean): string {
     : "No region shows it."
 }
 
-/** The n of a number line step that is 1/n (2 to 12), or undefined. Shared with the player's ticks. */
+/**
+ * The n of a number line step that is 1/n (2 to 12), or undefined. JSON can't hold 1/3 exactly, so
+ * a step written to 3 places (0.333, 0.167, 0.083) counts; the ticks are then placed at exactly
+ * 1/n. Shared with the player's ticks.
+ */
 export function fractionStep(step: number): number | undefined {
   const n = Math.round(1 / step)
-  return n >= 2 && n <= 12 && Math.abs(n * step - 1) < 1e-9 ? n : undefined
+  return n >= 2 && n <= 12 && Math.abs(n * step - 1) < 6e-3 ? n : undefined
 }
 
 /** What a visual is called in messages. */

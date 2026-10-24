@@ -203,12 +203,12 @@ function Squares({
     refs.current.get(squareAt(x, y, flip))?.focus()
   }
   return (
-    // The board is always drawn left to right (its block sets dir="ltr"), so these are physical edges.
+    // The board is always drawn left to right (its block sets dir="ltr"), so its start is the left.
     <div
       onKeyDown={onKeyDown}
       className="absolute top-0 grid aspect-square grid-cols-8 grid-rows-8"
       style={{
-        left: `${(gutter / (8 + gutter)) * 100}%`,
+        insetInlineStart: `${(gutter / (8 + gutter)) * 100}%`,
         width: `${(8 / (8 + gutter)) * 100}%`,
       }}
     >

@@ -39,8 +39,9 @@ const OVERHANG = 16
 
 export function NumberLine({ line }: { line: NumberLineVisual }) {
   const { min, max } = line
-  const step = line.step ?? 1
-  const n = line.fractions ? fractionStep(step) : undefined
+  const n = line.fractions ? fractionStep(line.step ?? 1) : undefined
+  // A fraction step written as a decimal (0.333) is placed at exactly 1/n, so the ticks don't drift.
+  const step = n ? 1 / n : (line.step ?? 1)
   const tickLabel = (v: number) => (n ? fraction(v, n) : num(v))
   const at = (v: number) =>
     PAD + ((v - min) / (max - min)) * (LINE_WIDTH - 2 * PAD)

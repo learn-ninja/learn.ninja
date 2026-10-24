@@ -30,11 +30,13 @@ function parseError(error: unknown, text: string): string {
   return `${raw.charAt(0).toUpperCase()}${raw.slice(1)}${where}`
 }
 
-/** For each atom of a SMILES, in order, whether it's written in brackets ("[NH4+]") rather than bare ("C", "c", "Cl"). */
-const bracketedAtoms = (smiles: string) =>
-  [...smiles.matchAll(/\[[^\]]*\]|Cl|Br|[BCNOPSFIbcnops*]/g)].map((m) =>
-    m[0].startsWith("[")
-  )
+/**
+ * The SMILES with every atom written in brackets ("[NH4+]") given an atom map number, so it can be
+ * told from a bare one ("C", "c", "Cl") after OpenChemLib reorders the atoms (it moves hydrogens
+ * like "[H]" to the end). An atom that already has a number keeps it.
+ */
+const markBracketed = (smiles: string) =>
+  smiles.replace(/\[([^\]:]*)\]/g, "[$1:1]")
 
 /** Reads a SMILES, laid out the same way every time. */
 function readSmiles(
@@ -98,27 +100,30 @@ export function checkMolecule(
     ]
 
   const out: { field: string; message: string }[] = []
-  const inBrackets = bracketedAtoms(visual.smiles)
   molecule.ensureHelperArrays(Molecule.cHelperRings)
   for (let a = 0; a < atoms; a++) {
-    const element = molecule.getAtomLabel(a)
     if (molecule.getFreeValence(a) < 0) {
       out.push({
         field: "smiles",
-        message: `An atom of ${element} has ${molecule.getOccupiedValence(a)} bonds, more than it can make. Check the bonds around it, and give an ion its charge in brackets ("[NH4+]", "[O-]").`,
-      })
-      break
-    }
-    // An atom written without brackets takes as many hydrogens as it needs, so a free electron on
-    // one means its aromatic ring couldn't be given alternating double bonds.
-    if (molecule.getAtomRadical(a) && !inBrackets[a]) {
-      out.push({
-        field: "smiles",
-        message: `An aromatic ring (lowercase atoms) can't be drawn with alternating double bonds. Check its atoms: a ring nitrogen with a hydrogen is "[nH]", as in pyrrole, "c1cc[nH]c1".`,
+        message: `An atom of ${molecule.getAtomLabel(a)} has ${molecule.getOccupiedValence(a)} bonds, more than it can make. Check the bonds around it, and give an ion its charge in brackets ("[NH4+]", "[O-]").`,
       })
       break
     }
   }
+  // An atom written without brackets takes as many hydrogens as it needs, so a free electron on
+  // one means its aromatic ring couldn't be given alternating double bonds.
+  const marked = out.length
+    ? null
+    : readSmiles(markBracketed(visual.smiles), false)
+  if (marked && !("error" in marked))
+    for (let a = 0; a < marked.getAllAtoms(); a++)
+      if (marked.getAtomRadical(a) && !marked.getAtomMapNo(a)) {
+        out.push({
+          field: "smiles",
+          message: `An aromatic ring (lowercase atoms) can't be drawn with alternating double bonds. Check its atoms: a ring nitrogen with a hydrogen is "[nH]", as in pyrrole, "c1cc[nH]c1".`,
+        })
+        break
+      }
   visual.highlight?.forEach((pattern, i) => {
     const matched = matchPattern(pattern, molecule)
     if ("error" in matched)

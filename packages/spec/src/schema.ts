@@ -174,7 +174,7 @@ export const numberLineVisual = z
     max: z.number(),
     /** The distance between ticks; every tick is numbered. Defaults to 1. At most LIMITS.numberLineTicks ticks (rules.ts). */
     step: z.number().positive().optional(),
-    /** Number the ticks as fractions (1/4, 1/2, 3/4) instead of decimals; the step is then 1/n (rules.ts). */
+    /** Number the ticks as fractions (1/4, 1/2, 3/4) instead of decimals; the step is then 1/n, to 3 places or more (rules.ts). */
     fractions: z.boolean().optional(),
     /** Dots on the line: filled, or `open` for a value left out (as in x > 2). */
     points: z

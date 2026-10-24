@@ -57,7 +57,10 @@ describe("parseExpression", () => {
       ["{a: 1}", /formula in x/],
       ["import({})", /"import" isn't a function a chart can draw/],
       ['evaluate("1")', /"evaluate" isn't a function/],
-      ["gamma(x)", /isn't a function a chart can draw\. The functions are sin, cos/],
+      [
+        "gamma(x)",
+        /isn't a function a chart can draw\. The functions are sin, cos/,
+      ],
       ["5 cm", /"cm" isn't known in a chart expression: the variable is "x"/],
       ["y + 1", /"y" isn't known/],
       ["sin x", /"sin" is a function, so it needs parentheses: "sin\(x\)"/],
@@ -97,6 +100,12 @@ describe("sampleExpression", () => {
     const slow = sampleExpression("x", { min: 0, max: 1 }, -1)
     expect("error" in slow && slow.error).toMatch(/takes too long to compute/)
   })
+
+  it("samples a curve once for the check and every drawing of it", () => {
+    const first = sampleExpression("x^3 - x", { min: -2, max: 2 })
+    expect(sampleExpression("x^3 - x", { min: -2, max: 2 })).toBe(first)
+    expect(sampleExpression("x^3 - x", { min: -2, max: 3 })).not.toBe(first)
+  })
 })
 
 describe("checkFunctionCharts", () => {
@@ -126,5 +135,37 @@ describe("checkFunctionCharts", () => {
     expect(issues[0]!.message).toMatch(/no finite value/)
     expect(issues[1]!.message).toMatch(/formula in x/)
     expect(issues.every((i) => i.kind === "structure")).toBe(true)
+  })
+
+  it("rejects one end of the y axis that the curves never reach past", () => {
+    const result = validateLesson(buttonHierarchy)
+    if (!result.ok) throw new Error("example invalid")
+    const lesson: Lesson = structuredClone(result.lesson)
+    const brick = lesson.bricks[0]!
+    if (brick.type !== "concept") throw new Error("expected a concept")
+    const chart = (y: { min?: number; max?: number }) => ({
+      kind: "chart" as const,
+      type: "function" as const,
+      alt: "A parabola.",
+      x: { min: -1, max: 1 },
+      y,
+      series: [{ expression: "x^2" }],
+    })
+    brick.visual = chart({ min: 2 })
+    expect(checkFunctionCharts(lesson)).toEqual([
+      expect.objectContaining({
+        path: "bricks[0].visual.y.min",
+        message: expect.stringMatching(/stay at or below "y.min" \(2\)/),
+      }),
+    ])
+    brick.visual = chart({ max: -1 })
+    expect(checkFunctionCharts(lesson).map((i) => i.path)).toEqual([
+      "bricks[0].visual.y.max",
+    ])
+    // Reaching past the given end, or with both ends given, is fine.
+    brick.visual = chart({ min: 0.5 })
+    expect(checkFunctionCharts(lesson)).toEqual([])
+    brick.visual = chart({ min: 2, max: 3 })
+    expect(checkFunctionCharts(lesson)).toEqual([])
   })
 })

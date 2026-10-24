@@ -119,6 +119,13 @@ describe("checkMolecule", () => {
     expect(messages(molecule("c1cccc1"))).toEqual([
       expect.stringMatching(/\[nH\]/),
     ])
+    // Explicit hydrogens move to the end of OpenChemLib's atoms, which mustn't hide the ring.
+    expect(messages(molecule("[H]N([H])c1cccn1"))).toEqual([
+      expect.stringMatching(/\[nH\]/),
+    ])
+    // A free electron written in brackets is meant: the benzyl radical.
+    expect(messages(molecule("[H]c1ccccc1[CH2]"))).toEqual([])
+    expect(messages(molecule("[H]N([H])c1ccc[nH]1"))).toEqual([])
   })
 
   it("rejects a molecule too big to read on a phone", () => {

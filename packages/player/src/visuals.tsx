@@ -639,21 +639,12 @@ function ChessBlock({
   label?: string
   plain: boolean
 }) {
-  const { t } = usePlayer()
-  const block = (
-    // On a hotspot the squares are buttons, so the board is a group named by its alt, not an image.
-    <div
-      role={hotspots ? "group" : "img"}
-      aria-label={board.alt ?? label ?? t.visual}
-      dir="ltr"
-      className={cn(
-        "flex justify-center",
-        !plain &&
-          (hotspots
-            ? // Like an HTML hotspot's visual: on a filled stage, with no frame.
-              "rounded-2xl bg-muted px-4 py-6 dark:bg-input/30"
-            : "rounded-xl border bg-background px-4 py-6")
-      )}
+  return (
+    <TappableStage
+      alt={board.alt ?? label}
+      hotspots={hotspots}
+      plain={plain}
+      name={(square) => square}
     >
       <div
         className={cn("aspect-square w-full", plain ? "max-w-40" : "max-w-sm")}
@@ -664,18 +655,58 @@ function ChessBlock({
           <ChessBoard board={board} plain={plain} hotspots={hotspots} />
         </React.Suspense>
       </div>
+    </TappableStage>
+  )
+}
+
+/**
+ * A drawing whose every part can be tapped on a hotspot (a board's squares, a map's countries).
+ * There it's a group named by its alt on a filled stage, like an HTML hotspot's visual, with the
+ * parts picked named under it: that confirms the tap, and screen readers hear it. Elsewhere it's an
+ * image in a framed box.
+ */
+function TappableStage({
+  alt,
+  hotspots,
+  plain,
+  name,
+  children,
+}: {
+  alt?: string
+  hotspots?: HotspotControl
+  plain: boolean
+  /** A picked part's name, from its id. */
+  name: (id: string) => string
+  children: React.ReactNode
+}) {
+  const { t } = usePlayer()
+  const block = (
+    <div
+      role={hotspots ? "group" : "img"}
+      aria-label={alt ?? t.visual}
+      dir="ltr"
+      className={cn(
+        "flex justify-center",
+        !plain &&
+          (hotspots
+            ? "rounded-2xl bg-muted px-4 py-6 dark:bg-input/30"
+            : "rounded-xl border bg-background px-4 py-6")
+      )}
+    >
+      {children}
     </div>
   )
   if (!hotspots) return block
   return (
     <div className="flex flex-col gap-3">
       {block}
-      {/* The squares picked, by name: confirms the tap, and screen readers hear it. */}
       <p
         aria-live="polite"
         className="min-h-5 truncate text-sm text-muted-foreground"
       >
-        {hotspots.selected.length ? t.picked(hotspots.selected.join(", ")) : ""}
+        {hotspots.selected.length
+          ? t.picked(hotspots.selected.map(name).join(", "))
+          : ""}
       </p>
     </div>
   )
@@ -750,21 +781,13 @@ function MapBlock({
   label?: string
   plain: boolean
 }) {
-  const { t, lang } = usePlayer()
-  const block = (
-    // On a hotspot the countries are buttons, so the map is a group named by its alt, not an image.
-    <div
-      role={hotspots ? "group" : "img"}
-      aria-label={map.alt ?? label ?? t.visual}
-      dir="ltr"
-      className={cn(
-        "flex justify-center",
-        !plain &&
-          (hotspots
-            ? // Like an HTML hotspot's visual: on a filled stage, with no frame.
-              "rounded-2xl bg-muted px-4 py-6 dark:bg-input/30"
-            : "rounded-xl border bg-background px-4 py-6")
-      )}
+  const { lang } = usePlayer()
+  return (
+    <TappableStage
+      alt={map.alt ?? label}
+      hotspots={hotspots}
+      plain={plain}
+      name={(code) => countryName(code, lang)}
     >
       <div className={cn("w-full", plain && "max-w-xs")}>
         <React.Suspense
@@ -773,24 +796,7 @@ function MapBlock({
           <WorldMap map={map} plain={plain} hotspots={hotspots} />
         </React.Suspense>
       </div>
-    </div>
-  )
-  if (!hotspots) return block
-  return (
-    <div className="flex flex-col gap-3">
-      {block}
-      {/* The countries picked, by name: confirms the tap, and screen readers hear it. */}
-      <p
-        aria-live="polite"
-        className="min-h-5 truncate text-sm text-muted-foreground"
-      >
-        {hotspots.selected.length
-          ? t.picked(
-              hotspots.selected.map((c) => countryName(c, lang)).join(", ")
-            )
-          : ""}
-      </p>
-    </div>
+    </TappableStage>
   )
 }
 

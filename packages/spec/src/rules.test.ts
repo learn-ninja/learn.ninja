@@ -572,6 +572,29 @@ describe("number lines", () => {
       }),
       { path: "bricks[0].visual.step", message: /a "step" of 1\/2, 1\/3/ }
     )
+    // JSON can't hold 1/3, so thirds, sixths, and twelfths written to 3 places count.
+    for (const step of [0.333, 0.3333, 0.167, 0.083, 1 / 7])
+      expect(
+        validateLesson(
+          withLine({
+            max: 1,
+            step,
+            fractions: true,
+            jumps: undefined,
+            points: undefined,
+          })
+        ).ok
+      ).toBe(true)
+    expectIssue(
+      withLine({
+        max: 1,
+        step: 0.33,
+        fractions: true,
+        jumps: undefined,
+        points: undefined,
+      }),
+      { path: "bricks[0].visual.step", message: /0\.333 for thirds/ }
+    )
   })
 
   it("keeps points, ranges, and jumps on the line", () => {
@@ -1016,6 +1039,32 @@ describe("map visuals", () => {
         }),
         { message: /names Tunisia and Spain, answers/ }
       )
+      // A country named inside another's name ("Sudan" in "South Sudan") isn't another candidate.
+      expectIssue(
+        alt("South Sudan, where the White Nile crosses the Sudd.", {
+          visual: {
+            kind: "map",
+            region: "africa",
+            alt: "",
+            countries: ["SD", "SS", "ET", "CF"].map((code) => ({ code })),
+          },
+          correct: ["SS"],
+        }),
+        { message: /The alt names South Sudan, an answer, and no other/ }
+      )
+      expect(
+        validateLesson(
+          alt("Sudan and South Sudan, on the Nile.", {
+            visual: {
+              kind: "map",
+              region: "africa",
+              alt: "",
+              countries: ["SD", "SS", "ET", "CF"].map((code) => ({ code })),
+            },
+            correct: ["SS"],
+          })
+        ).ok
+      ).toBe(true)
       // In the lesson's language too.
       const arabic = alt("شرق البحر المتوسط وفي وسطه تركيا.")
       arabic.language = "ar"

@@ -42,6 +42,10 @@ describe("NumberLine", () => {
     expect(
       labels(line({ min: 0, max: 1.5, step: 0.25, fractions: true }))
     ).toEqual(["0", "1/4", "1/2", "3/4", "1", "5/4", "3/2"])
+    // A third written as 0.334 still reaches 2 in exact thirds.
+    expect(
+      labels(line({ min: 0, max: 2, step: 0.334, fractions: true }))
+    ).toEqual(["0", "1/3", "2/3", "1", "4/3", "5/3", "2"])
   })
 
   it("draws a jump's label and a point's label", () => {

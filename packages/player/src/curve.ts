@@ -150,6 +150,29 @@ export function sampleExpression(
   x: { min: number; max: number },
   budgetMs = BUDGET_MS
 ): Sampled {
+  // Publishing samples each curve to check it and again for each size it's drawn at.
+  if (budgetMs !== BUDGET_MS) return sample(expression, x, budgetMs)
+  const key = `${x.min}\0${x.max}\0${expression}`
+  const known = sampled.get(key)
+  if (known) return known
+  const result = sample(expression, x, budgetMs)
+  // Only drawings are kept: a curve that ran out of time on a busy server gets another try.
+  if ("points" in result) {
+    if (sampled.size >= SAMPLED_MAX) sampled.clear()
+    sampled.set(key, result)
+  }
+  return result
+}
+
+/** Curves sampled recently, by x range and expression. */
+const sampled = new Map<string, { points: Point[] }>()
+const SAMPLED_MAX = 500
+
+function sample(
+  expression: string,
+  x: { min: number; max: number },
+  budgetMs: number
+): Sampled {
   const parsed = parseExpression(expression)
   if ("error" in parsed) return parsed
   const points: Point[] = []
@@ -186,6 +209,7 @@ export function checkFunctionCharts(lesson: Lesson): Issue[] {
   const issues: Issue[] = []
   for (const { visual, path } of everyVisual(lesson)) {
     if (visual.kind !== "chart" || visual.type !== "function") continue
+    const ys: number[] = []
     ;(visual.series ?? []).forEach((s, i) => {
       const sampled = sampleExpression(s.expression, visual.x)
       if ("error" in sampled)
@@ -194,7 +218,23 @@ export function checkFunctionCharts(lesson: Lesson): Issue[] {
           path: `${path}.series[${i}].expression`,
           message: sampled.error,
         })
+      else ys.push(...sampled.points.map((p) => p.y).filter(Number.isFinite))
     })
+    // With one end of the y axis given, the other fits the curves, so they must reach past it.
+    const { min, max } = visual.y ?? {}
+    if (!ys.length || (min !== undefined) === (max !== undefined)) continue
+    if (min !== undefined && Math.max(...ys) <= min)
+      issues.push({
+        kind: "structure",
+        path: `${path}.y.min`,
+        message: `The curves stay at or below "y.min" (${min}) from x = ${visual.x.min} to ${visual.x.max}, so none would show. Lower "y.min", or give "y.max" too.`,
+      })
+    if (max !== undefined && Math.min(...ys) >= max)
+      issues.push({
+        kind: "structure",
+        path: `${path}.y.max`,
+        message: `The curves stay at or above "y.max" (${max}) from x = ${visual.x.min} to ${visual.x.max}, so none would show. Raise "y.max", or give "y.min" too.`,
+      })
   }
   return issues
 }

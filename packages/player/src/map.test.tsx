@@ -14,7 +14,7 @@ import {
 } from "@workspace/spec"
 
 import type { Mark } from "./check"
-import WorldMap, { nearestSmall, spotsFor } from "./map"
+import WorldMap, { nearestSmall, outlinesFor, spotsFor } from "./map"
 import data from "./map-data.json"
 import { measureDrawnSizes } from "./map-frame"
 
@@ -59,6 +59,15 @@ describe("WorldMap", () => {
       const svg = draw({ region, alt: region, countries: [{ code: "FR" }] })
       expect(svg).toMatch(/viewBox="0 0 480 \d+"/)
     }
+  })
+
+  it("makes a region's land and borders once, for every map of it", () => {
+    const outlines = outlinesFor("europe")
+    expect(outlinesFor("europe")).toBe(outlines)
+    expect(outlines.borders.length).toBeGreaterThan(1000)
+    const svg = draw({ region: "europe", countries: [{ code: "FR" }] })
+    expect(svg).toContain(`d="${outlines.land}"`)
+    expect(svg).toContain(`d="${outlines.borders}"`)
   })
 
   it("shades each country and names it", () => {

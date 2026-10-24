@@ -62,9 +62,55 @@ describe("centeredViewBox", () => {
     expect(
       centeredViewBox(view, { x: 100, y: 70, width: 200, height: 160 })
     ).toBeNull()
-    expect(centeredViewBox(view, { x: 0, y: 0, width: 0, height: 0 })).toBeNull()
+    expect(
+      centeredViewBox(view, { x: 0, y: 0, width: 0, height: 0 })
+    ).toBeNull()
     expect(
       centeredViewBox(view, { x: -20, y: 0, width: 440, height: 100 })
     ).toBeNull()
+  })
+})
+
+describe("chess and map visuals", () => {
+  const hotspots = (selected: string[]) => ({
+    selected,
+    marks: {},
+    onToggle: () => {},
+    disabled: false,
+  })
+  const render = (
+    visual: Parameters<typeof Visual>[0]["visual"],
+    selected?: string[]
+  ) =>
+    renderToStaticMarkup(
+      createElement(Visual, {
+        visual,
+        hotspots: selected ? hotspots(selected) : undefined,
+      })
+    )
+  const board = {
+    kind: "chess" as const,
+    fen: "8/8/8/8/4P3/8/8/8",
+    alt: "A pawn on e4.",
+  }
+  const map = {
+    kind: "map" as const,
+    region: "europe" as const,
+    alt: "Western Europe.",
+    countries: [{ code: "FR" }],
+  }
+
+  it("read as an image named by the alt, or on a hotspot as a group", () => {
+    for (const visual of [board, map]) {
+      expect(render(visual)).toContain('role="img"')
+      expect(render(visual)).toContain(`aria-label="${visual.alt}"`)
+      expect(render(visual, [])).toContain('role="group"')
+      expect(render(visual, [])).toContain('aria-live="polite"')
+    }
+  })
+
+  it("name what's picked on a hotspot: squares as they are, countries by name", () => {
+    expect(render(board, ["e4", "d5"])).toContain("Picked: e4, d5")
+    expect(render(map, ["FR", "DE"])).toContain("Picked: France, Germany")
   })
 })

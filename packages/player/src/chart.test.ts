@@ -118,6 +118,66 @@ describe("renderChart (function)", () => {
     expect(curve.match(/M/g)).toHaveLength(3)
   })
 
+  it("breaks at asymptotes and fits the curve's bulk when no y range is given", () => {
+    const pieces = (svg: string) =>
+      (svg.match(/<path d="(M[^"]{200,})"/)?.[1] ?? "").match(/M/g)?.length
+    const reciprocal = renderChart({
+      kind: "chart",
+      type: "function",
+      alt: "One over x.",
+      x: { min: -5, max: 5 },
+      series: [{ expression: "1/x" }],
+    })
+    expect(pieces(reciprocal)).toBe(2)
+    // The spikes beside x = 0 (about ±40) don't set the axis.
+    expect(reciprocal).not.toContain(">40<")
+    const tangent = renderChart({
+      kind: "chart",
+      type: "function",
+      alt: "The tangent function.",
+      x: { min: -2 * Math.PI, max: 2 * Math.PI },
+      series: [{ expression: "tan(x)" }],
+    })
+    expect(pieces(tangent)).toBe(5)
+    expect(tangent).not.toMatch(/>[1-9]\d{2,}</)
+  })
+
+  it("leaves steep curves whole", () => {
+    for (const expression of ["tanh(50x)", "exp(x)", "100x", "1/x + 100"]) {
+      const svg = renderChart({
+        kind: "chart",
+        type: "function",
+        alt: "A steep curve.",
+        x: { min: expression === "1/x + 100" ? 1 : -5, max: 5 },
+        series: [{ expression }],
+      })
+      expect(
+        (svg.match(/<path d="(M[^"]{200,})"/)?.[1] ?? "").match(/M/g)
+      ).toHaveLength(1)
+    }
+  })
+
+  it("keeps the y axis the right way up when one end is given past the curves", () => {
+    const svg = renderChart({
+      kind: "chart",
+      type: "function",
+      alt: "A parabola.",
+      x: { min: -1, max: 1 },
+      y: { min: 2 },
+      series: [{ expression: "x^2" }],
+    })
+    // The axis runs up from 2: its tick sits lower on the page than the one for 3.
+    const tickY = (label: string) =>
+      Number(
+        svg.match(
+          new RegExp(
+            `transform="translate\\([\\d.]+,([\\d.]+)\\)"[^>]*>${label}<`
+          )
+        )?.[1] ?? NaN
+      )
+    expect(tickY("2.0")).toBeGreaterThan(tickY("3.0"))
+  })
+
   it("draws what it can when an expression doesn't read, rather than failing the page", () => {
     const svg = renderChart({
       kind: "chart",
