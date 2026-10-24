@@ -117,7 +117,7 @@ cloud.web -> api                      # reach inside a container with a dot
 api.style.bold: true                  # emphasis: style.bold, style.stroke-width, style.stroke-dash, style.multiple
 ```
 
-Three more kinds of drawing, each documented in the teaching guide:
+Four more kinds of drawing, each documented in the teaching guide:
 
 ```text
 shape: sequence_diagram               # on the first line: a sequence diagram
@@ -139,6 +139,14 @@ stages: Stages {                      # a grid: cells in rows and columns, not a
 users: {shape: sql_table; id: int {constraint: primary_key}; team_id: int {constraint: foreign_key}}
 teams: {shape: sql_table; id: int {constraint: primary_key}; name: text}
 users.team_id -> teams.id             # a column to a column; constraints: primary_key, foreign_key, unique
+```
+
+```text
+Animal: {shape: class; +name: string; -age: int; +speak(): string}   # + public, - private; quote protected: "#id": int
+Dog: {shape: class; +fetch(): void}
+Dog -> Animal: extends {target-arrowhead.shape: triangle; target-arrowhead.style.filled: false}
+Owner: {shape: class; +pets: "Animal[]"}                             # quote a type with brackets
+Owner <-> Animal: has {source-arrowhead.shape: diamond; target-arrowhead.shape: arrow}
 ```
 
 Colors and fonts are the player's: don't set `style.fill`, `style.stroke`, or `style.font-color`. Don't name a box or container with a D2 keyword (`steps`, `layers`, `scenarios`, `vars`, `classes`, `label`, `shape`, `style`, `near`, `direction`): `steps: { … }` moves its boxes to another page and the lesson shows nothing, so publishing rejects it. Icons come from the kit (`icon: lucide/database`, `icon: octicon/repo-16`; sets `lucide`, `octicon`, `simple-icons`, `logos`, `vscode-icons`), never from a URL; `icon.near` and `label.near` place them (`top-left` … `bottom-right`); `shape: image` with an icon shows the icon as the box, 56px unless `width` and `height` say otherwise. Links and tooltips aren't allowed, and Markdown labels (`|md ... |`) can't contain HTML or images. Publishing compiles the D2 and reports the line of any error.

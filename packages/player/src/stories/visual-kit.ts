@@ -167,4 +167,25 @@ teams: {
 }
 users.team_id -> teams.id`,
   },
+  {
+    name: "Class diagram",
+    alt: "A Dog class extends the Animal class, and an Owner has Animals.",
+    d2: `Animal: {
+  shape: class
+  +name: string
+  -age: int
+  +speak(): string
+}
+Dog: {
+  shape: class
+  +breed: string
+  +fetch(): void
+}
+Owner: {
+  shape: class
+  +pets: "Animal[]"
+}
+Dog -> Animal: extends {target-arrowhead.shape: triangle; target-arrowhead.style.filled: false}
+Owner <-> Animal: has {source-arrowhead.shape: diamond; target-arrowhead.shape: arrow}`,
+  },
 ]
