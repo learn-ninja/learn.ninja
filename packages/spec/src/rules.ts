@@ -356,6 +356,31 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
   // Charts: the data has to fit the chart type, or it can't be drawn as meant.
   for (const { visual, path } of everyVisual(lesson)) {
     if (visual.kind !== "chart") continue
+    if (visual.type === "function") {
+      // The expressions themselves are read at publish time (the player's checkFunctionCharts).
+      const { x, y } = visual
+      if (!(x.min < x.max))
+        add(
+          "structure",
+          path,
+          `A function chart's "x.min" (${x.min}) must be less than its "x.max" (${x.max}).`
+        )
+      if (y?.min !== undefined && y?.max !== undefined && !(y.min < y.max))
+        add(
+          "structure",
+          path,
+          `A function chart's "y.min" (${y.min}) must be less than its "y.max" (${y.max}).`
+        )
+      const labels = visual.series.map((s) => s.label ?? s.expression)
+      const twice = duplicates(labels)
+      if (twice.length)
+        add(
+          "structure",
+          path,
+          `Each curve of a function chart needs its own label; "${twice[0]}" is used twice.`
+        )
+      continue
+    }
     const { type, data } = visual
     const numeric = data.filter((d) => typeof d.x === "number").length
     if (type === "scatter" && numeric < data.length)

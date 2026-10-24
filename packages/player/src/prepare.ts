@@ -15,6 +15,7 @@ import {
 } from "@workspace/spec"
 
 import { renderChart } from "./chart"
+import { checkFunctionCharts } from "./curve"
 import { checkDiagram, renderDiagram } from "./diagram"
 import { iconExists, parseIconClass, suggestIcons } from "./icons"
 import {
@@ -196,9 +197,13 @@ export async function checkIcons(lesson: Lesson): Promise<Issue[]> {
   return issues
 }
 
-/** Every publish-time check that needs the server: diagrams and icons. */
+/** Every publish-time check that needs the server: function charts, diagrams, and icons. */
 export async function checkVisuals(lesson: Lesson): Promise<Issue[]> {
-  return [...(await checkDiagrams(lesson)), ...(await checkIcons(lesson))]
+  return [
+    ...checkFunctionCharts(lesson),
+    ...(await checkDiagrams(lesson)),
+    ...(await checkIcons(lesson)),
+  ]
 }
 
 /** The lesson's chart visuals: a brick's own at full size, an option's or item's compact. */

@@ -339,6 +339,16 @@
       "additionalProperties": false
     },
     "ChartVisual": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/DataChartVisual"
+        },
+        {
+          "$ref": "#/$defs/FunctionChartVisual"
+        }
+      ]
+    },
+    "DataChartVisual": {
       "type": "object",
       "properties": {
         "kind": {
@@ -428,6 +438,93 @@
         "kind",
         "type",
         "data"
+      ],
+      "additionalProperties": false
+    },
+    "FunctionChartVisual": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "chart"
+        },
+        "type": {
+          "type": "string",
+          "const": "function"
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "x": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "min",
+            "max"
+          ],
+          "additionalProperties": false
+        },
+        "y": {
+          "type": "object",
+          "properties": {
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          },
+          "additionalProperties": false
+        },
+        "series": {
+          "minItems": 1,
+          "maxItems": 3,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "expression": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24
+              }
+            },
+            "required": [
+              "expression"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "type",
+        "x",
+        "series"
       ],
       "additionalProperties": false
     },

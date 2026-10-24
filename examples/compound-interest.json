@@ -28,9 +28,7 @@
         "feedback": "That would take 100% a year, not 10%."
       }
     ],
-    "correct": [
-      "b"
-    ],
+    "correct": ["b"],
     "multiple": false,
     "explanation": "Each year's interest joins the balance, so the next year earns interest on a bigger amount: about $1,949 after 7 years."
   },
@@ -70,9 +68,7 @@
           "feedback": "That's 0.5% a year. 5% is 0.05, so multiply by 1.05."
         }
       ],
-      "correct": [
-        "a"
-      ],
+      "correct": ["a"],
       "multiple": false,
       "hint": "Work out year 1 first, then use that as the new starting amount.",
       "explanation": "Each year's interest joins the balance, so year 2 earns interest on $1,050.\nYear 1: $1,000 × 1.05 = $1,050\nYear 2: $1,050 × 1.05 = $1,102.50"
@@ -86,14 +82,8 @@
       "blanks": [
         {
           "id": "g",
-          "accept": [
-            "1.05"
-          ],
-          "choices": [
-            "1.05",
-            "0.05",
-            "1.5"
-          ],
+          "accept": ["1.05"],
+          "choices": ["1.05", "0.05", "1.5"],
           "mistakes": [
             {
               "answer": "0.05",
@@ -140,9 +130,7 @@
           "feedback": "72 is the rule's constant. Divide it by the rate, 6."
         }
       ],
-      "correct": [
-        "a"
-      ],
+      "correct": ["a"],
       "multiple": false,
       "explanation": "72 ÷ 6 = 12 years."
     },
@@ -169,9 +157,28 @@
       "type": "choice",
       "prompt": "Both accounts start with $1,000 and earn 7% a year. Which line is the one that compounds?",
       "visual": {
-        "kind": "html",
-        "html": "<svg viewBox='0 0 300 150' direction='ltr' class='w-full max-w-sm' font-size='10'><line x1='36' y1='132' x2='284' y2='132' class='stroke-border' /><line x1='36' y1='16' x2='36' y2='132' class='stroke-border' /><text x='30' y='19.0' text-anchor='end' class='fill-muted-foreground'>$8k</text><text x='30' y='77.0' text-anchor='end' class='fill-muted-foreground'>$4k</text><text x='30' y='135' text-anchor='end' class='fill-muted-foreground'>$0</text><text x='36' y='146' text-anchor='middle' class='fill-muted-foreground'>0</text><text x='280.0' y='146' text-anchor='middle' class='fill-muted-foreground'>30 yrs</text><polyline points='36.0,117.5 280.0,87.0' fill='none' stroke-width='2.5' class='stroke-muted-foreground' /><polyline points='36.0,117.5 52.3,115.4 68.5,113.0 84.8,110.2 101.1,107.1 117.3,103.5 133.6,99.3 149.9,94.6 166.1,89.2 182.4,83.0 198.7,75.9 214.9,67.8 231.2,58.5 247.5,47.8 263.7,35.6 280.0,21.6' fill='none' stroke-width='2.5' stroke-linejoin='round' class='stroke-primary' /><text x='286' y='25' font-weight='600' class='fill-foreground'>A</text><text x='286' y='90' font-weight='600' class='fill-foreground'>B</text></svg>",
-        "alt": "A chart from 0 to 30 years with two lines from the same start: a straight line and a curve that bends up and ends far higher."
+        "kind": "chart",
+        "type": "function",
+        "alt": "Two lines of balance over 30 years, both starting at $1,000: line A curves up and ends far higher, line B rises straight.",
+        "x": {
+          "label": "Years",
+          "min": 0,
+          "max": 30
+        },
+        "y": {
+          "label": "Balance ($)",
+          "min": 0
+        },
+        "series": [
+          {
+            "expression": "1000 * 1.07^x",
+            "label": "A"
+          },
+          {
+            "expression": "1000 + 70x",
+            "label": "B"
+          }
+        ]
       },
       "options": [
         {
@@ -189,9 +196,7 @@
           "feedback": "It starts in year one; it's just small at first. By year 10, A is already ahead, $1,967 to $1,700."
         }
       ],
-      "correct": [
-        "a"
-      ],
+      "correct": ["a"],
       "multiple": false,
       "explanation": "Compound interest earns interest on past interest, so it adds more each year and the line curves up. Simple interest adds the same $70 every year: a straight line."
     }
@@ -221,9 +226,7 @@
         "feedback": "That's 20% growth. Three years of 8% compounds to about 26%."
       }
     ],
-    "correct": [
-      "a"
-    ],
+    "correct": ["a"],
     "multiple": false,
     "hint": "Multiply by the growth factor once for each year.",
     "explanation": "\\( 5000 \\times 1.08^3 \\approx 6298.56 \\), so the balance is about $6,298.56."
