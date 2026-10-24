@@ -5,6 +5,7 @@ import { Maximize2Icon } from "lucide-react"
 
 import type {
   ChartVisual,
+  ChessVisual,
   DiagramVisual,
   Visual as VisualSpec,
 } from "@workspace/spec"
@@ -130,6 +131,8 @@ function VisualBlock({
     return <MathBlock tex={visual.tex} plain={plain} />
   if (visual.kind === "diagram")
     return <DiagramBlock diagram={visual} label={label} plain={plain} />
+  if (visual.kind === "chess")
+    return <ChessBlock board={visual} label={label} plain={plain} />
   return <ChartBlock chart={visual} label={label} plain={plain} />
 }
 
@@ -655,6 +658,44 @@ function DiagramBlock({
       <p className="px-4 py-6 text-center text-sm text-muted-foreground">
         {diagram.alt ?? label ?? t.visual}
       </p>
+    </div>
+  )
+}
+
+// ---------- Chess: a position drawn from its FEN ----------
+
+// The pieces are most of the board's code, so a lesson without a board never loads them.
+const ChessBoard = React.lazy(() => import("./chess"))
+
+function ChessBlock({
+  board,
+  label,
+  plain,
+}: {
+  board: ChessVisual
+  label?: string
+  plain: boolean
+}) {
+  const { t } = usePlayer()
+  return (
+    <div
+      role="img"
+      aria-label={board.alt ?? label ?? t.visual}
+      dir="ltr"
+      className={cn(
+        "flex justify-center",
+        !plain && "rounded-xl border bg-background px-4 py-6"
+      )}
+    >
+      <div
+        className={cn("aspect-square w-full", plain ? "max-w-40" : "max-w-sm")}
+      >
+        <React.Suspense
+          fallback={<div className="size-full rounded-md bg-muted" />}
+        >
+          <ChessBoard board={board} plain={plain} />
+        </React.Suspense>
+      </div>
     </div>
   )
 }
