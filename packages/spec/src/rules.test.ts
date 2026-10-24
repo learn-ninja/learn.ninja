@@ -771,6 +771,21 @@ describe("chess visuals", () => {
         message: /An arrow ends on e5/,
       })
     })
+
+    it("doesn't let the alt name an empty answer square", () => {
+      const told = chessHotspot()
+      told.bricks[2].correct = ["d4"]
+      told.bricks[2].visual.alt = "After 2. Nf3, White can strike with d4."
+      expectIssue(told, {
+        path: "bricks[2].visual.alt",
+        message: /The alt names d4, an answer/,
+      })
+      // e5 holds Black's pawn, so the alt has to name it to describe the position.
+      const described = chessHotspot()
+      described.bricks[2].visual.alt =
+        "After 1. e4 e5 2. Nf3: Black's pawn on e5 and White's knight on f3."
+      expect(validateLesson(described).ok).toBe(true)
+    })
   })
 })
 
@@ -973,6 +988,44 @@ describe("map visuals", () => {
       const other = mapHotspot()
       other.bricks[2].visual.countries[4].label = "Egypt"
       expect(validateLesson(other).ok).toBe(true)
+    })
+
+    it("doesn't let the alt name only the answers", () => {
+      const alt = (text: string, over: Record<string, unknown> = {}) => {
+        const l = mapHotspot(over)
+        l.bricks[2].visual.alt = text
+        return l
+      }
+      expectIssue(
+        alt("The eastern Mediterranean, with central Turkey marked."),
+        {
+          path: "bricks[2].visual.alt",
+          message: /The alt names Türkiye, an answer, and no other country/,
+        }
+      )
+      expectIssue(
+        alt("Tunisia and Spain, at either end of the sea.", {
+          visual: {
+            kind: "map",
+            region: "mediterranean",
+            alt: "",
+            points: [{ lat: 33.27, lon: 35.2, label: "Tyre" }],
+          },
+          correct: ["TN", "ES"],
+          multiple: true,
+        }),
+        { message: /names Tunisia and Spain, answers/ }
+      )
+      // In the lesson's language too.
+      const arabic = alt("شرق البحر المتوسط وفي وسطه تركيا.")
+      arabic.language = "ar"
+      expectIssue(arabic, { message: /The alt names Türkiye/ })
+      // Among other candidates, or not at all, is fine.
+      expect(validateLesson(mapHotspot()).ok).toBe(true)
+      expect(
+        validateLesson(alt("The eastern Mediterranean, from Greece to Iraq."))
+          .ok
+      ).toBe(true)
     })
 
     it("rejects an answer too small to tap, suggesting a tighter region", () => {

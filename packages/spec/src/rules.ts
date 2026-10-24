@@ -240,7 +240,7 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
   }
 
   for (const { brick, path } of questions)
-    checkBrickReferences(brick, path, add)
+    checkBrickReferences(brick, path, add, lesson.language)
 
   // ---------- tags ----------
 
@@ -919,7 +919,8 @@ function checkRhythm(
 function checkBrickReferences(
   brick: QuestionBrick,
   path: string,
-  add: (k: IssueKind, p: string, m: string) => void
+  add: (k: IssueKind, p: string, m: string) => void,
+  language: string
 ) {
   switch (brick.type) {
     case "choice": {
@@ -1122,6 +1123,21 @@ function checkBrickReferences(
               `An arrow ends on ${c}, an answer, which gives it away. Show moves that lead up to the question, not its answer.`
             )
         }
+        // The alt names the squares pieces stand on; an empty answer square named there is the
+        // answer, read out before the learner taps (often as a move, like "Nc7+").
+        const read = readFen(brick.visual.fen)
+        const named = altSquares(brick.visual.alt ?? "")
+        const told =
+          "placement" in read &&
+          brick.correct.find(
+            (c) => named.includes(c) && !pieceOn(read.placement, c)
+          )
+        if (told)
+          add(
+            "teaching",
+            `${path}.visual.alt`,
+            `The alt names ${told}, an answer, which gives it away to a screen reader. Describe the position (where the pieces stand), not the square to find.`
+          )
       }
       if (brick.visual.kind === "map") {
         const region = brick.visual.region ?? "world"
@@ -1143,13 +1159,29 @@ function checkBrickReferences(
               `${path}.visual.countries[${j}]`,
               `${country.name} ("${c}") is an answer and the only country shaded, which gives it away. Shade it among a few others to choose from, or shade none.`
             )
-          if (DRAWN_SIZES[region][c]! < MAP_MIN_TAP)
+          if ((DRAWN_SIZES[region][c] ?? 0) < MAP_MIN_TAP)
             add(
               "teaching",
               `${path}.visual.region`,
               `${country.name} ("${c}") is too small to find and tap on the "${region}" map. ${largeEnough(c, "Pick a tighter region")}`
             )
         }
+        // A screen reader hears the alt before the countries, each by name. Naming the answers
+        // among other countries is fine (the toggles name them all anyway); naming only answers
+        // gives them away.
+        const alt = brick.visual.alt ?? ""
+        const answers = brick.correct.filter((c) =>
+          namesCountry(alt, c, language)
+        )
+        const others = Object.keys(DRAWN_SIZES[region]).filter(
+          (c) => !brick.correct.includes(c) && namesCountry(alt, c, language)
+        )
+        if (answers.length && !others.length)
+          add(
+            "teaching",
+            `${path}.visual.alt`,
+            `The alt names ${answers.map((c) => COUNTRIES[c]!.name).join(" and ")}, ${answers.length > 1 ? "answers" : "an answer"}, and no other country, which gives it away to a screen reader. Describe the region and what's marked on it, or name the answer among the other candidates.`
+          )
       }
       break
     }
@@ -1272,6 +1304,49 @@ function notOnHotspotMap(code: string, region: MapRegion): string {
   // A three-letter code, a lowercase one, or "UK": unknownCountry names the code to use.
   if (/^[a-z]{2,3}$/i.test(code)) return unknownCountry(code)
   return `"${code}" isn't a country code. On a map, "correct" lists countries by ISO 3166-1 alpha-2 code: two capital letters, like "FR" for France.`
+}
+
+/** Squares an alt names, alone or in a move ("e4", "Nc7+"), but not inside a word. */
+const altSquares = (alt: string) =>
+  [...alt.matchAll(/(?<![a-z0-9])([a-h][1-8])(?![0-9])/g)].map((m) => m[1]!)
+
+/** Former or common English names the ISO names leave out, which an alt might still use. */
+const COUNTRY_ALIASES: Record<string, string[]> = {
+  CD: ["Congo-Kinshasa", "Zaire"],
+  CI: ["Ivory Coast"],
+  CV: ["Cape Verde"],
+  CZ: ["Czech Republic"],
+  GB: ["Britain", "Great Britain", "UK"],
+  MK: ["Macedonia"],
+  MM: ["Burma"],
+  NL: ["Holland"],
+  SZ: ["Swaziland"],
+  TR: ["Turkey"],
+  US: ["USA"],
+}
+
+/** Whether text names a country: in English, in the lesson's language, or by a common other name. */
+function namesCountry(text: string, code: string, language: string): boolean {
+  if (!text) return false
+  const names = new Set([
+    COUNTRIES[code]?.name,
+    ...(COUNTRY_ALIASES[code] ?? []),
+    ...[language, "en"].map((l) => regionName(l, code)),
+  ])
+  return [...names].some((n) => {
+    if (!n) return false
+    const escaped = n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    return new RegExp(`(?<!\\p{L})${escaped}(?!\\p{L})`, "iu").test(text)
+  })
+}
+
+function regionName(language: string, code: string): string | undefined {
+  try {
+    const name = new Intl.DisplayNames([language], { type: "region" }).of(code)
+    return name === code ? undefined : name
+  } catch {
+    return undefined
+  }
 }
 
 /** "Pick a tighter region: …", naming the regions that draw a country large enough to tap. */
