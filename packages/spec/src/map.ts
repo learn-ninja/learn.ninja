@@ -54,3 +54,9 @@ export function describeBox([w, s, e, n]: Box): string {
   const lon = (v: number) => `${Math.abs(v)}°${v < 0 ? "W" : "E"}`
   return `${lat(s)} to ${lat(n)}, ${lon(w)} to ${lon(e)}`
 }
+
+/** The width every map is drawn at; the player scales the drawing to fit the screen. */
+export const MAP_WIDTH = 480
+
+/** On a hotspot map, an answer country drawn smaller than this across (at MAP_WIDTH) is too small to find and tap. */
+export const MAP_MIN_TAP = 24

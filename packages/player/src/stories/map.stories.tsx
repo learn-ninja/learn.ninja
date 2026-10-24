@@ -227,6 +227,22 @@ const mapLesson: Lesson = {
       explanation:
         "France, West Germany, Italy, Belgium, the Netherlands, and Luxembourg signed the Treaty of Paris.",
     },
+    {
+      id: "p2",
+      type: "hotspot",
+      prompt:
+        "Sailing west from Tyre, the Phoenicians founded Carthage and Gades. Tap the two countries they're in today.",
+      visual: {
+        kind: "map",
+        region: "mediterranean",
+        alt: "The Mediterranean, with Tyre marked on its eastern shore.",
+        points: [{ lat: 33.27, lon: 35.2, label: "Tyre" }],
+      },
+      correct: ["TN", "ES"],
+      multiple: true,
+      explanation:
+        "Carthage stood by today's Tunis, in Tunisia, and Gades is Cádiz, in southern Spain: the two ends of the Phoenicians' western trade.",
+    },
     ...lessons.buttons.bricks.slice(2),
   ],
 } as Lesson
@@ -242,5 +258,13 @@ export const AsOptions: Story = {
   args: { visual: founders },
   render: () => (
     <BrickDemo lesson={mapLesson} brickId="p1" prepared={prepared} />
+  ),
+}
+
+/** Every country drawn is tappable, with nothing outlined until it's picked; two answers here. */
+export const AsAHotspot: Story = {
+  args: { visual: founders },
+  render: () => (
+    <BrickDemo lesson={mapLesson} brickId="p2" prepared={prepared} />
   ),
 }

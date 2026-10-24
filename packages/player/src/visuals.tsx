@@ -16,6 +16,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { Mark } from "./check"
 import { useIsDark, usePlayer } from "./context"
 import { markStyles } from "./controls"
+import { countryName } from "./country-names"
 import { Clock, Fractions, NumberLine } from "./figures"
 import {
   chartKey,
@@ -89,7 +90,9 @@ export function Visual({
       />
     )
   if (visual.kind === "map")
-    return <MapBlock map={visual} label={label} plain={plain} />
+    return (
+      <MapBlock map={visual} hotspots={hotspots} label={label} plain={plain} />
+    )
   if (visual.kind === "molecule")
     return <MoleculeBlock molecule={visual} label={label} plain={plain} />
   return <ChartBlock chart={visual} label={label} plain={plain} />
@@ -738,31 +741,55 @@ const WorldMap = React.lazy(() => import("./map"))
 
 function MapBlock({
   map,
+  hotspots,
   label,
   plain,
 }: {
   map: MapVisual
+  hotspots?: HotspotControl
   label?: string
   plain: boolean
 }) {
-  const { t } = usePlayer()
-  return (
+  const { t, lang } = usePlayer()
+  const block = (
+    // On a hotspot the countries are buttons, so the map is a group named by its alt, not an image.
     <div
-      role="img"
+      role={hotspots ? "group" : "img"}
       aria-label={map.alt ?? label ?? t.visual}
       dir="ltr"
       className={cn(
         "flex justify-center",
-        !plain && "rounded-xl border bg-background px-4 py-6"
+        !plain &&
+          (hotspots
+            ? // Like an HTML hotspot's visual: on a filled stage, with no frame.
+              "rounded-2xl bg-muted px-4 py-6 dark:bg-input/30"
+            : "rounded-xl border bg-background px-4 py-6")
       )}
     >
       <div className={cn("w-full", plain && "max-w-xs")}>
         <React.Suspense
           fallback={<div className="aspect-[2/1] w-full rounded-md bg-muted" />}
         >
-          <WorldMap map={map} plain={plain} />
+          <WorldMap map={map} plain={plain} hotspots={hotspots} />
         </React.Suspense>
       </div>
+    </div>
+  )
+  if (!hotspots) return block
+  return (
+    <div className="flex flex-col gap-3">
+      {block}
+      {/* The countries picked, by name: confirms the tap, and screen readers hear it. */}
+      <p
+        aria-live="polite"
+        className="min-h-5 truncate text-sm text-muted-foreground"
+      >
+        {hotspots.selected.length
+          ? t.picked(
+              hotspots.selected.map((c) => countryName(c, lang)).join(", ")
+            )
+          : ""}
+      </p>
     </div>
   )
 }

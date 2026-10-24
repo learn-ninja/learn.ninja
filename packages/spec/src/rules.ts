@@ -2,13 +2,16 @@ import katex from "katex"
 
 import { pieceOn, readFen } from "./chess"
 import { COUNTRIES, NOT_ON_MAP } from "./countries"
+import { DRAWN_SIZES } from "./map-sizes"
 import {
   boxesOverlap,
   describeBox,
   inBox,
+  MAP_MIN_TAP,
   MAP_REGION_NAMES,
   MAP_REGIONS,
   type Box,
+  type MapRegion,
 } from "./map"
 import {
   LEVELS,
@@ -206,6 +209,7 @@ function hotspotIds(v: Visual): string[] {
     )
   if (v.kind === "code") return (v.hotspots ?? []).map((h) => h.id)
   if (v.kind === "chess") return CHESS_SQUARES
+  if (v.kind === "map") return Object.keys(DRAWN_SIZES[v.region ?? "world"])
   return []
 }
 
@@ -392,13 +396,17 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
 
   // A brick's HTML visual is a picture to a screen reader, so it needs alt text. (Hotspot visuals
   // are read through their tappable regions, item visuals through their captions, and option
-  // visuals below. A chess hotspot's squares are only names, so its alt describes the position.)
+  // visuals below. A chess or map hotspot's regions are only names, so its alt describes the
+  // picture.)
   const withVisuals = [
     ...lesson.bricks.flatMap((b, i) =>
       b.type === "concept" ? [{ brick: b, path: `bricks[${i}]` }] : []
     ),
     ...questions.filter(
-      (q) => q.brick.type !== "hotspot" || q.brick.visual.kind === "chess"
+      (q) =>
+        q.brick.type !== "hotspot" ||
+        q.brick.visual.kind === "chess" ||
+        q.brick.visual.kind === "map"
     ),
   ]
   for (const { brick, path } of withVisuals) {
@@ -1076,7 +1084,9 @@ function checkBrickReferences(
             `${path}.correct`,
             brick.visual.kind === "chess"
               ? `"${c}" isn't a square. On a chess board, "correct" lists squares: a file a–h then a rank 1–8, like "e4".`
-              : `"${c}" isn't one of this visual's hotspot ids (${ids.join(", ") || "none"}).`
+              : brick.visual.kind === "map"
+                ? notOnHotspotMap(c, brick.visual.region ?? "world")
+                : `"${c}" isn't one of this visual's hotspot ids (${ids.join(", ") || "none"}).`
           )
       if (!brick.multiple && brick.correct.length !== 1)
         add(
@@ -1110,6 +1120,34 @@ function checkBrickReferences(
               "teaching",
               `${path}.visual.arrows`,
               `An arrow ends on ${c}, an answer, which gives it away. Show moves that lead up to the question, not its answer.`
+            )
+        }
+      }
+      if (brick.visual.kind === "map") {
+        const region = brick.visual.region ?? "world"
+        const shaded = brick.visual.countries ?? []
+        for (const c of brick.correct) {
+          const country = COUNTRIES[c]
+          if (!country || !ids.includes(c)) continue
+          // A name on the map, or the only shaded country, points the learner straight at it.
+          const j = shaded.findIndex((s) => s.code === c)
+          if (shaded[j]?.label)
+            add(
+              "teaching",
+              `${path}.visual.countries[${j}].label`,
+              `${country.name} ("${c}") is an answer and it's labeled, which gives it away. Leave its name off the map.`
+            )
+          else if (j >= 0 && shaded.length === 1)
+            add(
+              "teaching",
+              `${path}.visual.countries[${j}]`,
+              `${country.name} ("${c}") is an answer and the only country shaded, which gives it away. Shade it among a few others to choose from, or shade none.`
+            )
+          if (DRAWN_SIZES[region][c]! < MAP_MIN_TAP)
+            add(
+              "teaching",
+              `${path}.visual.region`,
+              `${country.name} ("${c}") is too small to find and tap on the "${region}" map. ${largeEnough(c, "Pick a tighter region")}`
             )
         }
       }
@@ -1221,6 +1259,29 @@ function unknownCountry(code: string): string {
   if (missing)
     return `${missing.name} ("${upper}") is too small for the map. Mark it with a point instead.`
   return `"${code}" isn't a country code the map knows. Use ISO 3166-1 alpha-2 codes, like "FR" for France or "JP" for Japan.`
+}
+
+/** Why an answer on a map hotspot isn't a country the map draws, and what to do instead. */
+function notOnHotspotMap(code: string, region: MapRegion): string {
+  const country = COUNTRIES[code]
+  if (country)
+    return `${country.name} ("${code}") isn't on the "${region}" map, so it can't be tapped. ${largeEnough(code, "Pick a region that shows it")}`
+  const missing = NOT_ON_MAP[code]
+  if (missing)
+    return `${missing.name} ("${code}") isn't drawn on the map${missing.partOf ? ` (it's part of ${COUNTRIES[missing.partOf]!.name}, "${missing.partOf}")` : ", it's too small"}, so it can't be tapped. Ask about a country the map draws.`
+  // A three-letter code, a lowercase one, or "UK": unknownCountry names the code to use.
+  if (/^[a-z]{2,3}$/i.test(code)) return unknownCountry(code)
+  return `"${code}" isn't a country code. On a map, "correct" lists countries by ISO 3166-1 alpha-2 code: two capital letters, like "FR" for France.`
+}
+
+/** "Pick a tighter region: …", naming the regions that draw a country large enough to tap. */
+function largeEnough(code: string, pick: string): string {
+  const regions = MAP_REGION_NAMES.filter(
+    (r) => (DRAWN_SIZES[r][code] ?? 0) >= MAP_MIN_TAP
+  )
+  return regions.length
+    ? `${pick}: ${regions.map((r) => `"${r}"`).join(", ")}.`
+    : "No region draws it large enough to tap; ask about a larger country, or make this a choice with the names as options."
 }
 
 /** "Pick a region that shows it: …", naming the regions whose box passes the test. */

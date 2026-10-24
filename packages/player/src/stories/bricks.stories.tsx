@@ -307,6 +307,26 @@ export const HotspotChess: Story = {
     wrong: { kind: "select", ids: ["f6"] },
   },
 }
+export const HotspotMap: Story = {
+  name: "Hotspot, map",
+  args: {
+    brick: {
+      id: "hittites",
+      type: "hotspot",
+      prompt: "Tap the country where the Hittite capital, Hattusa, stood.",
+      visual: {
+        kind: "map",
+        region: "eastern-mediterranean",
+        alt: "A map of the eastern Mediterranean, from Greece to the Euphrates and the Nile delta.",
+      },
+      correct: ["TR"],
+      multiple: false,
+      explanation:
+        "Hattusa stood in central Anatolia, today's Türkiye, east of Ankara. From there the Hittites ruled down into Syria.",
+    },
+    wrong: { kind: "select", ids: ["SY"] },
+  },
+}
 export const Sort: Story = {
   name: "Sort, three groups",
   args: {

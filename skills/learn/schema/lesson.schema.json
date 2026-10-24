@@ -1535,6 +1535,9 @@
             },
             {
               "$ref": "#/$defs/ChessVisual"
+            },
+            {
+              "$ref": "#/$defs/MapVisual"
             }
           ]
         },

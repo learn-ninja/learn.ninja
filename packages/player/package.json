@@ -14,7 +14,7 @@
     "test": "vitest run",
     "stories:prepare": "tsx --conditions=react-server scripts/prepare-examples.ts",
     "pretypecheck": "npm run stories:prepare",
-    "map": "tsx scripts/build-map.ts && prettier --write ../spec/src/countries.ts"
+    "map": "tsx scripts/build-map.ts && tsx scripts/build-map-sizes.ts && prettier --write ../spec/src/countries.ts ../spec/src/map-sizes.ts"
   },
   "dependencies": {
     "@iconify-json/logos": "^1.2.17",

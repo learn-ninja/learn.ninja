@@ -53,6 +53,7 @@ export function PlayerFrame({
         value={{
           prepared,
           t: stringsFor(ui),
+          lang: ui,
           dir,
           visualsCss: "/lesson-visuals.css",
         }}

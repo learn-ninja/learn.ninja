@@ -22,11 +22,14 @@ export {
   type Placement,
 } from "./chess"
 export { COUNTRIES, NOT_ON_MAP, type Country } from "./countries"
+export { DRAWN_SIZES } from "./map-sizes"
 export {
   boxesOverlap,
   inBox,
+  MAP_MIN_TAP,
   MAP_REGION_NAMES,
   MAP_REGIONS,
+  MAP_WIDTH,
   type Box,
   type MapRegion,
 } from "./map"
