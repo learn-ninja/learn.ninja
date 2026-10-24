@@ -25,6 +25,7 @@ hook → bricks: concept → questions → concept → questions … (1–4 conc
   - **Say why, briefly.** One sentence on why it works beats a rule to memorise.
   - **Say when it applies:** the conditions, context, or setting where it holds, and where it doesn't.
   - **Keep it easy to follow in the player.** There's no calculator, notepad, or audio: pick friendly numbers (10%, 200, ¼) and nothing that needs to be heard.
+  - **Never restate the visual.** The learner sees the visual first, so the body says what to notice in it and why it matters: the pattern across a table's rows, not the rows again; what the arrows in a diagram mean, not a list of its boxes. If a sentence can be read straight off the visual, cut it.
 - **Practice:** 2–4 question bricks right after each concept brick, 3–12 in total across the lesson (`reference/planning.md` has the shape for each size). Take support away as you go: **recognise** it (what does this mean, which is right), then **recall with support** (fill the missing step, word, or term from chips), then **do it** (solve, build, or decide the whole thing), then **vary it** (new context, new numbers, or run backwards).
 - **Challenge:** one harder, applied question brick that combines the concepts, in whatever form the knowledge is really used: a decision, a flaw to find, a set of things to classify.
 - **Wrap-up:** 2–4 takeaways, each one sentence the learner could act on.

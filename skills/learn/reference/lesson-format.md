@@ -71,7 +71,7 @@ Brick ids are unique across the whole lesson, including the hook and the challen
 
 `{ "id", "type": "concept", "title" (≤60 chars), "body" (rich text, ≤80 words), "visual"? }`
 
-With a visual, the player shows the title, then the visual, then the body, so the body explains what the learner has just seen. The body is rich text with paragraphs and lists: each line is a paragraph, two or more lines in a row starting with `- ` make a bulleted list, and lines numbered `1. `, `2. `… make a numbered one (in JSON, each line break is `\n`). One marker line on its own stays text, so `1. e4 e5` reads as written. Lists don't nest.
+With a visual, the player shows the title, then the visual, then the body, so the body explains what the learner has just seen rather than repeating it. The body is rich text with paragraphs and lists: each line is a paragraph, two or more lines in a row starting with `- ` make a bulleted list, and lines numbered `1. `, `2. `… make a numbered one (in JSON, each line break is `\n`). One marker line on its own stays text, so `1. e4 e5` reads as written. Lists don't nest.
 
 ```json
 {
