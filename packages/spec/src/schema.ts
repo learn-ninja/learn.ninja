@@ -255,6 +255,32 @@ export const clockVisual = z
   })
   .meta({ id: "ClockVisual" })
 
+/** A square on a chess board, file then rank: "e4". */
+const chessSquare = z.string().regex(/^[a-h][1-8]$/, {
+  error: 'A square is a file a–h then a rank 1–8, like "e4".',
+})
+
+/** A chess position drawn on a board, with squares to mark and arrows for moves (rules.ts reads the FEN). */
+export const chessVisual = z
+  .strictObject({
+    kind: z.literal("chess"),
+    /** The position in FEN: the piece placement field ("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR"), optionally the full FEN. */
+    fen: z.string().min(1).max(100),
+    /** One sentence saying what the position shows, for screen readers. Required (rules.ts). */
+    alt: z.string().min(1).max(200).optional(),
+    /** Squares to mark: the piece a question is about, the squares it attacks. */
+    highlight: z.array(chessSquare).min(1).max(8).optional(),
+    /** Moves to show, as arrows from one square to another. */
+    arrows: z
+      .array(z.strictObject({ from: chessSquare, to: chessSquare }))
+      .min(1)
+      .max(4)
+      .optional(),
+    /** Black's side at the bottom, for a position seen from Black. */
+    flip: z.boolean().optional(),
+  })
+  .meta({ id: "ChessVisual" })
+
 export const visual = z
   .discriminatedUnion("kind", [
     htmlVisual,
@@ -265,6 +291,7 @@ export const visual = z
     numberLineVisual,
     fractionVisual,
     clockVisual,
+    chessVisual,
   ])
   .meta({ id: "Visual" })
 
@@ -533,3 +560,4 @@ export type DiagramVisual = z.infer<typeof diagramVisual>
 export type NumberLineVisual = z.infer<typeof numberLineVisual>
 export type FractionVisual = z.infer<typeof fractionVisual>
 export type ClockVisual = z.infer<typeof clockVisual>
+export type ChessVisual = z.infer<typeof chessVisual>

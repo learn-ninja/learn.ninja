@@ -15,6 +15,12 @@ export {
   type ValidationResult,
 } from "./validate"
 export { lessonJsonSchema } from "./json-schema"
+export {
+  pieceOn,
+  readFen,
+  type FenPiece,
+  type Placement,
+} from "./chess"
 export { canUpgrade, subjectForTopic, upgradeLesson } from "./upgrade"
 export {
   isSubject,

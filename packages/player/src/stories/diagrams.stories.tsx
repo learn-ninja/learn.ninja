@@ -52,3 +52,9 @@ export const Table: Story = {
     <Sample sample={byName("Table")} ui={globals.ui} />
   ),
 }
+export const Class: Story = {
+  name: "Class diagram",
+  render: (_, { globals }) => (
+    <Sample sample={byName("Class diagram")} ui={globals.ui} />
+  ),
+}

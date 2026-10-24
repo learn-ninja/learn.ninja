@@ -99,6 +99,7 @@ Brick ids are unique across the whole lesson, including the hook and the challen
 { "kind": "numberline", "alt": "x is greater than −2.", "min": -5, "max": 5, "ranges": [{ "from": -2, "fromOpen": true }] }
 { "kind": "fraction", "alt": "One half is the same length as two quarters.", "fractions": [{ "parts": 2, "shaded": 1 }, { "parts": 4, "shaded": 2 }] }
 { "kind": "clock", "alt": "A clock showing a quarter to four.", "time": "3:45" }
+{ "kind": "chess", "alt": "The white knight jumps to c7, attacking the king on e8 and the rook on a8.", "fen": "r3k3/8/8/3N4/8/8/8/4K3 w - - 0 1", "highlight": ["e8", "a8"], "arrows": [{ "from": "d5", "to": "c7" }] }
 ```
 
 `alt` is one sentence saying what the visual shows, for screen readers, at most 200 characters; it's required on every concept's or question's visual but code and math, and on an option's visual (other than code or math) that has no caption (hotspot visuals are read through their regions, item visuals through their captions). `height` is optional (the player sizes HTML visuals to their content). `hotspots` on code are only for `hotspot` bricks.
@@ -112,6 +113,8 @@ A `numberline` runs from `min` to `max` (`min` less than `max`) with a numbered 
 A `fraction` draws `fractions` (1 to 4), each `parts` (1 to 24) with `shaded` of them (0 to `parts`) and an optional `label` (at most 16 characters; the default is shaded over parts). `shape` is `bar` (the default: bars of one length, stacked) or `circle` (pies in a row).
 
 A `clock` shows `time` as `H:MM` in 12- or 24-hour form (`"3:45"`, `"15:45"`). `numbers: false` hides the numbers 1 to 12.
+
+A chess visual is drawn from its `fen`: the piece placement field (`rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR`), ranks 8 to 1 separated by `/`, each rank's files a to h as pieces (`KQRBNP` for White, `kqrbnp` for Black) and counts of empty squares (`1`–`8`) that add up to 8. The full FEN works too; the player reads only its first field. `highlight` lists 1 to 8 squares (`"e4"`) to mark, each once. `arrows` lists 1 to 4 moves, each `from` a square holding a piece (or one an earlier arrow moved a piece to) `to` another. `flip: true` shows the board from Black's side. The board, pieces, and colors are the player's.
 
 A diagram is laid out and drawn from its `d2` source, in [D2](https://d2lang.com) (at most 4,000 characters; in JSON, each line break is `\n`). The parts you need:
 
@@ -128,7 +131,7 @@ cloud.web -> api                      # reach inside a container with a dot
 api.style.bold: true                  # emphasis: style.bold, style.stroke-width, style.stroke-dash, style.multiple
 ```
 
-Three more kinds of drawing, each documented in the teaching guide:
+Four more kinds of drawing, each documented in the teaching guide:
 
 ```text
 shape: sequence_diagram               # on the first line: a sequence diagram
@@ -150,6 +153,14 @@ stages: Stages {                      # a grid: cells in rows and columns, not a
 users: {shape: sql_table; id: int {constraint: primary_key}; team_id: int {constraint: foreign_key}}
 teams: {shape: sql_table; id: int {constraint: primary_key}; name: text}
 users.team_id -> teams.id             # a column to a column; constraints: primary_key, foreign_key, unique
+```
+
+```text
+Animal: {shape: class; +name: string; -age: int; +speak(): string}   # + public, - private; quote protected: "#id": int
+Dog: {shape: class; +fetch(): void}
+Dog -> Animal: extends {target-arrowhead.shape: triangle; target-arrowhead.style.filled: false}
+Owner: {shape: class; +pets: "Animal[]"}                             # quote a type with brackets
+Owner <-> Animal: has {source-arrowhead.shape: diamond; target-arrowhead.shape: arrow}
 ```
 
 Colors and fonts are the player's: don't set `style.fill`, `style.stroke`, or `style.font-color`. Don't name a box or container with a D2 keyword (`steps`, `layers`, `scenarios`, `vars`, `classes`, `label`, `shape`, `style`, `near`, `direction`): `steps: { … }` moves its boxes to another page and the lesson shows nothing, so publishing rejects it. Icons come from the kit (`icon: lucide/database`, `icon: octicon/repo-16`; sets `lucide`, `octicon`, `simple-icons`, `logos`, `vscode-icons`), never from a URL; `icon.near` and `label.near` place them (`top-left` … `bottom-right`); `shape: image` with an icon shows the icon as the box, 56px unless `width` and `height` say otherwise. Links and tooltips aren't allowed, and Markdown labels (`|md ... |`) can't contain HTML or images. Publishing compiles the D2 and reports the line of any error.
@@ -210,4 +221,5 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 - HTML visuals: no scripts, event handlers, iframes, forms, objects, embeds, `javascript:` links, or external URLs; each under 20 KB; the whole file under 500 KB. Every icon class (`icon-[lucide--git-branch]`) names an icon the kit has. A concept's or question's HTML visual has `alt`.
 - Function charts: curves, points, or both; every point inside the chart's range.
 - Number lines: `min` below `max`, at most 21 ticks, a step of 1/n for fraction ticks, and every point, range end, and jump on the line; a range has `from` below `to`, and a jump moves. Fractions: no more `shaded` than `parts`. Clocks: `time` is `H:MM`.
+- Chess visuals: the FEN has 8 ranks of 8 squares, only the letters `KQRBNPkqrbnp` and the counts `1`–`8`, and at most one king a side; highlights are listed once; each arrow starts on a piece (or where an earlier arrow ended) and ends on another square; a concept's or question's chess visual has `alt`.
 - Diagram visuals: the D2 compiles and draws at least one box, with no colors, links, tooltips, or HTML of its own, and every icon is `set/name` from the kit; a concept's or question's diagram has `alt`.

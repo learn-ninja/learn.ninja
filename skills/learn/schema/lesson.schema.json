@@ -241,6 +241,9 @@
         },
         {
           "$ref": "#/$defs/ClockVisual"
+        },
+        {
+          "$ref": "#/$defs/ChessVisual"
         }
       ]
     },
@@ -772,6 +775,65 @@
       "required": [
         "kind",
         "time"
+      ],
+      "additionalProperties": false
+    },
+    "ChessVisual": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "chess"
+        },
+        "fen": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "highlight": {
+          "minItems": 1,
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-h][1-8]$"
+          }
+        },
+        "arrows": {
+          "minItems": 1,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "pattern": "^[a-h][1-8]$"
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^[a-h][1-8]$"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "flip": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "fen"
       ],
       "additionalProperties": false
     },

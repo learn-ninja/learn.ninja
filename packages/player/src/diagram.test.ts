@@ -68,7 +68,12 @@ describe("renderDiagram", () => {
     expect(table).toContain(">FK<")
     // The table's header is drawn in the text color, with its name in the background color.
     expect(table).toContain('class="class_header fill-N1"')
-    for (const svg of [sequence, grid, table]) {
+    const classes = await renderDiagram(
+      'Animal: {shape: class; +name: string; -age: int; +speak(): string}\nDog: {shape: class; +fetch(): void}\nDog -> Animal: extends {target-arrowhead.shape: triangle; target-arrowhead.style.filled: false}\nOwner: {shape: class; +pets: "Animal[]"}\nOwner <-> Animal: has {source-arrowhead.shape: diamond; target-arrowhead.shape: arrow}'
+    )
+    expect(classes).toContain(">speak()<")
+    expect(classes).toContain(">Animal[]<")
+    for (const svg of [sequence, grid, table, classes]) {
       expect(svg).not.toMatch(/\.(?:fill|stroke)-[A-Z]{1,2}\d\{[a-z]+:#/)
       expect(svg).toContain("--d2-N1:var(--foreground)")
     }
@@ -149,6 +154,14 @@ describe("renderDiagram", () => {
 describe("checkDiagram", () => {
   it("accepts plain boxes and arrows", async () => {
     expect(await checkDiagram(flow)).toEqual([])
+  }, 20_000)
+
+  it("accepts class diagrams with UML arrowheads", async () => {
+    expect(
+      await checkDiagram(
+        'Animal: {shape: class; +name: string; +speak(): string}\nDog: {shape: class; +fetch(): void}\nDog -> Animal: extends {target-arrowhead.shape: triangle; target-arrowhead.style.filled: false}\nOwner: {shape: class; +pets: "Animal[]"}\nOwner <-> Animal: has {source-arrowhead.shape: diamond; source-arrowhead.style.filled: true; target-arrowhead.shape: arrow}'
+      )
+    ).toEqual([])
   }, 20_000)
 
   it("accepts sequence diagrams, grids, and tables", async () => {

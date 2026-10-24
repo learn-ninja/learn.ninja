@@ -1,5 +1,6 @@
 import katex from "katex"
 
+import { pieceOn, readFen } from "./chess"
 import {
   LEVELS,
   type Brick,
@@ -534,6 +535,43 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
     })
   }
 
+  // Chess positions: a FEN the board can draw, and arrows that move a piece that's there.
+  for (const { visual, path } of everyVisual(lesson)) {
+    if (visual.kind !== "chess") continue
+    const read = readFen(visual.fen)
+    if ("error" in read) {
+      add("structure", `${path}.fen`, read.error)
+      continue
+    }
+    const twice = duplicates(visual.highlight ?? [])
+    if (twice.length)
+      add(
+        "structure",
+        `${path}.highlight`,
+        `Each square is highlighted once; "${twice[0]}" is listed twice.`
+      )
+    const arrows = visual.arrows ?? []
+    arrows.forEach((a, j) => {
+      if (a.from === a.to)
+        add(
+          "structure",
+          `${path}.arrows[${j}]`,
+          `An arrow goes from one square to another; this one starts and ends on ${a.from}.`
+        )
+      // An arrow shows a piece moving, so its square holds one, unless an earlier arrow brought it
+      // there (a route). An empty one usually means the FEN put the piece somewhere else.
+      else if (
+        !pieceOn(read.placement, a.from) &&
+        !arrows.some((b) => b.to === a.from)
+      )
+        add(
+          "structure",
+          `${path}.arrows[${j}]`,
+          `The arrow starts on ${a.from}, which is empty in this FEN. Check the FEN puts the piece there (count the rank's squares again), or start the arrow where the piece is.`
+        )
+    })
+  }
+
   lesson.bricks.forEach((brick, i) => {
     if (brick.type !== "concept") return
     const words = countWords(brick.body)
@@ -1013,6 +1051,7 @@ const VISUAL_NAMES: Partial<Record<Visual["kind"], string>> = {
   html: "HTML visual",
   numberline: "number line",
   fraction: "fraction picture",
+  chess: "chess position",
 }
 const visualName = (v: Visual) => VISUAL_NAMES[v.kind] ?? v.kind
 

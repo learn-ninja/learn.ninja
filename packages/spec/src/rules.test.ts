@@ -641,6 +641,87 @@ describe("fractions and clocks", () => {
   })
 })
 
+describe("chess visuals", () => {
+  // After 1. e4 e5 2. Nf3: the knight attacks the pawn on e5.
+  const AFTER_NF3 =
+    "rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2"
+  function withChess(over: Record<string, unknown> = {}) {
+    const l = buttons()
+    l.bricks[0].visual = {
+      kind: "chess",
+      fen: AFTER_NF3,
+      alt: "After 1. e4 e5 2. Nf3, the white knight attacks the pawn on e5.",
+      highlight: ["e5"],
+      arrows: [{ from: "f3", to: "e5" }],
+      ...over,
+    }
+    return l
+  }
+
+  it("accepts a position, with or without the FEN's other fields", () => {
+    expect(validateLesson(withChess()).ok).toBe(true)
+    expect(
+      validateLesson(withChess({ fen: AFTER_NF3.split(" ")[0], flip: true })).ok
+    ).toBe(true)
+  })
+
+  it("wants alt text", () => {
+    const l = withChess()
+    delete l.bricks[0].visual.alt
+    expectIssue(l, {
+      path: "bricks[0].visual",
+      message: /chess position has no "alt"/,
+    })
+  })
+
+  it("names the rank that doesn't add up to 8 squares", () => {
+    expectIssue(
+      withChess({ fen: "rnbqkbnr/pppp1ppp/8/4p3/4P4/5N2/PPPP1PPP/RNBQKB1R" }),
+      { path: "bricks[0].visual.fen", message: /Rank 4 \("4P4"\) covers 9/ }
+    )
+    expectIssue(withChess({ fen: "8/8/8/8/8/8/8" }), {
+      path: "bricks[0].visual.fen",
+      message: /has 7/,
+    })
+    expectIssue(withChess({ fen: "8/8/8/8/8/8/8/4X3" }), {
+      path: "bricks[0].visual.fen",
+      message: /"X", which isn't a piece/,
+    })
+    expectIssue(withChess({ fen: "8/8/8/8/8/8/8/K6K" }), {
+      path: "bricks[0].visual.fen",
+      message: /at most one king/,
+    })
+  })
+
+  it("rejects an arrow from an empty square, unless an arrow brought a piece there", () => {
+    expectIssue(withChess({ arrows: [{ from: "g5", to: "e6" }] }), {
+      path: "bricks[0].visual.arrows[0]",
+      message: /starts on g5, which is empty/,
+    })
+    expect(
+      validateLesson(
+        withChess({
+          arrows: [
+            { from: "f3", to: "g5" },
+            { from: "g5", to: "e6" },
+          ],
+        })
+      ).ok
+    ).toBe(true)
+    expectIssue(withChess({ arrows: [{ from: "f3", to: "f3" }] }), {
+      message: /starts and ends on f3/,
+    })
+  })
+
+  it("checks squares and highlights", () => {
+    expectIssue(withChess({ highlight: ["e9"] }), { message: /like "e4"/ })
+    expectIssue(withChess({ highlight: ["e5", "e5"] }), {
+      path: "bricks[0].visual.highlight",
+      message: /"e5" is listed twice/,
+    })
+  })
+})
+
 describe("structure rules", () => {
   it("starts the bricks with a concept brick", () => {
     const l = buttons()
