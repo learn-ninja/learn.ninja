@@ -232,6 +232,15 @@
         },
         {
           "$ref": "#/$defs/DiagramVisual"
+        },
+        {
+          "$ref": "#/$defs/NumberLineVisual"
+        },
+        {
+          "$ref": "#/$defs/FractionVisual"
+        },
+        {
+          "$ref": "#/$defs/ClockVisual"
         }
       ]
     },
@@ -518,13 +527,38 @@
             ],
             "additionalProperties": false
           }
+        },
+        "points": {
+          "minItems": 1,
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "additionalProperties": false
+          }
         }
       },
       "required": [
         "kind",
         "type",
-        "x",
-        "series"
+        "x"
       ],
       "additionalProperties": false
     },
@@ -549,6 +583,195 @@
       "required": [
         "kind",
         "d2"
+      ],
+      "additionalProperties": false
+    },
+    "NumberLineVisual": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "numberline"
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "step": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fractions": {
+          "type": "boolean"
+        },
+        "points": {
+          "minItems": 1,
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 12
+              },
+              "open": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "ranges": {
+          "minItems": 1,
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "number"
+              },
+              "to": {
+                "type": "number"
+              },
+              "fromOpen": {
+                "type": "boolean"
+              },
+              "toOpen": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "jumps": {
+          "minItems": 1,
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "number"
+              },
+              "to": {
+                "type": "number"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 12
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "min",
+        "max"
+      ],
+      "additionalProperties": false
+    },
+    "FractionVisual": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "fraction"
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "shape": {
+          "type": "string",
+          "enum": [
+            "bar",
+            "circle"
+          ]
+        },
+        "fractions": {
+          "minItems": 1,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "parts": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 24
+              },
+              "shaded": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16
+              }
+            },
+            "required": [
+              "parts",
+              "shaded"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "fractions"
+      ],
+      "additionalProperties": false
+    },
+    "ClockVisual": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "clock"
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "time": {
+          "type": "string",
+          "pattern": "^([01]?\\d|2[0-3]):[0-5]\\d$"
+        },
+        "numbers": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "time"
       ],
       "additionalProperties": false
     },

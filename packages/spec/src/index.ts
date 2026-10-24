@@ -2,6 +2,7 @@
 export * from "./schema"
 export {
   everyVisual,
+  fractionStep,
   LIMITS,
   redundantTag,
   type Issue,

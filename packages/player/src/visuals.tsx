@@ -16,6 +16,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import type { Mark } from "./check"
 import { useIsDark, usePlayer } from "./context"
 import { markStyles } from "./controls"
+import { Clock, Fractions, NumberLine } from "./figures"
 import {
   chartKey,
   codeKey,
@@ -130,6 +131,12 @@ function VisualBlock({
     return <MathBlock tex={visual.tex} plain={plain} />
   if (visual.kind === "diagram")
     return <DiagramBlock diagram={visual} label={label} plain={plain} />
+  if (
+    visual.kind === "numberline" ||
+    visual.kind === "fraction" ||
+    visual.kind === "clock"
+  )
+    return <FigureBlock figure={visual} label={label} plain={plain} />
   return <ChartBlock chart={visual} label={label} plain={plain} />
 }
 
@@ -655,6 +662,59 @@ function DiagramBlock({
       <p className="px-4 py-6 text-center text-sm text-muted-foreground">
         {diagram.alt ?? label ?? t.visual}
       </p>
+    </div>
+  )
+}
+
+// ---------- Figures: number lines, fractions, and clocks ----------
+
+type Figure = Extract<VisualSpec, { kind: "numberline" | "fraction" | "clock" }>
+
+/** A small math figure, drawn here from its numbers (figures.tsx), in the box charts use. */
+function FigureBlock({
+  figure,
+  label,
+  plain,
+}: {
+  figure: Figure
+  label?: string
+  plain: boolean
+}) {
+  const { t } = usePlayer()
+  // A clock and a row of circles are narrower than a line or a wall of bars.
+  const width =
+    figure.kind === "clock"
+      ? plain
+        ? "max-w-32"
+        : "max-w-60"
+      : figure.kind === "fraction" && figure.shape === "circle"
+        ? plain
+          ? "max-w-xs"
+          : ["max-w-40", "max-w-80", "max-w-md", "max-w-xl"][
+              figure.fractions.length - 1
+            ]
+        : plain
+          ? "max-w-xs"
+          : "max-w-[480px]"
+  return (
+    <div
+      role="img"
+      aria-label={figure.alt ?? label ?? t.visual}
+      dir="ltr"
+      className={cn(
+        "flex justify-center",
+        !plain && "rounded-xl border bg-background px-4 py-6"
+      )}
+    >
+      <div className={cn("w-full", width)}>
+        {figure.kind === "numberline" ? (
+          <NumberLine line={figure} />
+        ) : figure.kind === "fraction" ? (
+          <Fractions figure={figure} />
+        ) : (
+          <Clock clock={figure} />
+        )}
+      </div>
     </div>
   )
 }

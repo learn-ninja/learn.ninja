@@ -2,6 +2,8 @@
 // (no scripts, frame sized to its content). The teaching guide's "built-in UI kit" table documents the
 // same markup for the skill; keep the two in step when adding a component.
 
+import type { ChartVisual } from "@workspace/spec"
+
 export interface KitSample {
   name: string
   html: string
@@ -166,5 +168,42 @@ teams: {
   name: text
 }
 users.team_id -> teams.id`,
+  },
+]
+
+/**
+ * Function charts with marked points, which the example lessons don't have: a curve's roots, and
+ * a coordinate plane with points only. prepare-examples.ts draws them for the stories.
+ */
+export const chartSamples: { name: string; chart: ChartVisual }[] = [
+  {
+    name: "Roots",
+    chart: {
+      kind: "chart",
+      type: "function",
+      alt: "The parabola y = x² − 4 crosses the x axis at −2 and 2.",
+      x: { min: -4, max: 4 },
+      y: { min: -5, max: 8 },
+      series: [{ expression: "x^2 - 4" }],
+      points: [
+        { x: -2, y: 0, label: "−2" },
+        { x: 2, y: 0, label: "2" },
+        { x: 0, y: -4, label: "vertex" },
+      ],
+    },
+  },
+  {
+    name: "Coordinate plane",
+    chart: {
+      kind: "chart",
+      type: "function",
+      alt: "Points A (2, 3), B (−3, 1), and C (1, −2) on a coordinate plane.",
+      x: { min: -5, max: 5 },
+      points: [
+        { x: 2, y: 3, label: "A" },
+        { x: -3, y: 1, label: "B" },
+        { x: 1, y: -2, label: "C" },
+      ],
+    },
   },
 ]

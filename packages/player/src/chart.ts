@@ -138,7 +138,9 @@ export function renderChart(chart: ChartVisual, compact = false): string {
 /**
  * A function chart: each expression sampled across the x range (curve.ts) and drawn as a line,
  * broken where it has no finite value, clipped to the y range when the lesson gives one, with the
- * axes through the origin when it's in view. Curves are named at their ends, like a line chart's.
+ * axes through the origin when it's in view. Curves are named at their ends, like a line chart's,
+ * and marked points carry their labels. Points with no curves make a coordinate plane, drawn with
+ * equal units on both axes so a square on it looks square.
  */
 function renderFunctionChart(
   chart: FunctionChartVisual,
@@ -149,18 +151,36 @@ function renderFunctionChart(
     y: number
     series: string
   }
-  const names = chart.series.map((s) => s.label ?? s.expression)
+  const series = chart.series ?? []
+  const points = chart.points ?? []
+  const names = series.map((s) => s.label ?? s.expression)
   const byseries = names.length > 1
-  const curves = chart.series.map((s) => {
+  const curves = series.map((s) => {
     const sampled = sampleExpression(s.expression, chart.x)
     // checkFunctionCharts() rejects these at publish time; a stored lesson draws what it can.
     return "error" in sampled ? [] : sampled.points
   })
-  const ys = curves.flat().map((p) => p.y).filter(Number.isFinite)
+  const plane = series.length === 0
+  const ys = [...curves.flat(), ...points]
+    .map((p) => p.y)
+    .filter(Number.isFinite)
   const given = { min: chart.y?.min, max: chart.y?.max }
-  const yMin = given.min ?? (ys.length ? Math.min(...ys) : -1)
-  const yMax = given.max ?? (ys.length ? Math.max(...ys) : 1)
-  const ranged = given.min !== undefined || given.max !== undefined
+  // A plane fits its points with a unit to spare, and keeps the origin in view.
+  const yMin =
+    given.min ??
+    (plane
+      ? Math.min(0, Math.floor(Math.min(...ys)) - 1)
+      : ys.length
+        ? Math.min(...ys)
+        : -1)
+  const yMax =
+    given.max ??
+    (plane
+      ? Math.max(0, Math.ceil(Math.max(...ys)) + 1)
+      : ys.length
+        ? Math.max(...ys)
+        : 1)
+  const ranged = plane || given.min !== undefined || given.max !== undefined
   const data: Sample[] = curves.flatMap((points, i) =>
     breakAsymptotes(points, yMax - yMin).map((p) => ({
       ...p,
@@ -177,6 +197,20 @@ function renderFunctionChart(
     grid: true,
     ...(ranged ? { domain: [yMin, yMax] } : { nice: true }),
   }
+  if (plane) {
+    // A plane is read square by square: a grid line at every whole unit, while there are few enough.
+    const units = (lo: number, hi: number) =>
+      hi - lo <= 16
+        ? Array.from(
+            { length: Math.floor(hi) - Math.ceil(lo) + 1 },
+            (_, i) => Math.ceil(lo) + i
+          )
+        : undefined
+    x.ticks = units(chart.x.min, chart.x.max)
+    y.ticks = units(yMin, yMax)
+    if (x.ticks) x.tickFormat = "d"
+    if (y.ticks) y.tickFormat = "d"
+  }
   const stroke = byseries ? "series" : SERIES_COLORS[0]
   const marks: Plot.Markish[] = []
   if (chart.x.min <= 0 && chart.x.max >= 0) marks.push(Plot.ruleX([0]))
@@ -191,6 +225,32 @@ function renderFunctionChart(
       clip: true,
     })
   )
+  if (points.length) {
+    // Each point is ringed in the background color, so it stands out on a curve of any color.
+    marks.push(
+      Plot.dot(points, {
+        x: "x",
+        y: "y",
+        r: compact ? 3.5 : 4.5,
+        fill: "var(--foreground)",
+        stroke: "var(--background)",
+        strokeWidth: 1.5,
+      })
+    )
+    if (points.some((p) => p.label))
+      marks.push(
+        Plot.text(points, {
+          x: "x",
+          y: "y",
+          text: "label",
+          dy: compact ? -10 : -12,
+          fill: "var(--foreground)",
+          stroke: "var(--background)",
+          strokeWidth: 3,
+          paintOrder: "stroke",
+        })
+      )
+  }
   if (byseries) {
     // Each curve is named where it ends: its last point that's finite and inside the y range.
     const inRange = (d: Sample) =>
@@ -217,6 +277,7 @@ function renderFunctionChart(
     y,
     color: { domain: names, range: SERIES_COLORS.slice(0, names.length) },
     marks,
+    unitRatio: plane ? (yMax - yMin) / (chart.x.max - chart.x.min) : undefined,
   })
 }
 
@@ -250,6 +311,7 @@ function plot({
   y,
   color,
   marks,
+  unitRatio,
 }: {
   compact: boolean
   /** Room on the end side for the names of lines labelled at their ends. */
@@ -258,15 +320,41 @@ function plot({
   y: Plot.ScaleOptions
   color: Plot.ScaleOptions
   marks: Plot.Markish[]
+  /** The y range over the x range, for a chart whose units must match on both axes (a plane). */
+  unitRatio?: number
 }): string {
+  const width = compact ? 320 : 480
+  const marginLeft = compact ? 40 : 48
+  const marginBottom = compact ? 36 : 44
+  const marginRight = labelsAtEnd ? (compact ? 64 : 80) : compact ? 16 : 20
+  const marginTop = 20
+  // Equal units: the plot area is as much taller than wide as the y range is longer than the x
+  // range, within a height a phone can show (beyond it, the units stretch).
+  const height =
+    unitRatio === undefined
+      ? compact
+        ? 220
+        : 300
+      : Math.round(
+          Math.min(
+            Math.max(
+              (width - marginLeft - marginRight) * unitRatio +
+                marginTop +
+                marginBottom,
+              compact ? 180 : 220
+            ),
+            compact ? 320 : 480
+          )
+        )
   const svg = Plot.plot({
     document: documentFor(),
     className: "chart",
-    width: compact ? 320 : 480,
-    height: compact ? 220 : 300,
-    marginLeft: compact ? 40 : 48,
-    marginBottom: compact ? 36 : 44,
-    marginRight: labelsAtEnd ? (compact ? 64 : 80) : compact ? 16 : 20,
+    width,
+    height,
+    marginTop,
+    marginLeft,
+    marginBottom,
+    marginRight,
     style: {
       background: "transparent",
       color: "var(--muted-foreground)",

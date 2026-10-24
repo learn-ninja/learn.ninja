@@ -140,6 +140,44 @@ describe("renderChart (function)", () => {
   })
 })
 
+describe("renderChart (points and planes)", () => {
+  it("marks points on a curve with their labels", () => {
+    const svg = renderChart({
+      kind: "chart",
+      type: "function",
+      alt: "A parabola with its roots marked.",
+      x: { min: -4, max: 4 },
+      series: [{ expression: "x^2 - 4" }],
+      points: [
+        { x: -2, y: 0, label: "root" },
+        { x: 0, y: -4 },
+      ],
+    })
+    expect(svg).toContain(">root<")
+    expect(svg.match(/<circle/g)).toHaveLength(2)
+    expect(svg).toContain('height="300"')
+  })
+
+  it("draws points alone as a plane: equal units, the origin in view, a line at every unit", () => {
+    const svg = renderChart({
+      kind: "chart",
+      type: "function",
+      alt: "Three points on a plane.",
+      x: { min: -5, max: 5 },
+      points: [
+        { x: 2, y: 3, label: "A" },
+        { x: 1, y: -2, label: "C" },
+      ],
+    })
+    // y runs from −3 to 4 (the points with a unit to spare): 7 units against x's 10, so the plot
+    // area is 0.7 times as tall as it is wide: 412 × 0.7 plus the margins.
+    expect(svg).toContain('height="352"')
+    for (const tick of ["−5", "−1", "1", "5", "−3", "4"])
+      expect(svg).toContain(`>${tick}<`)
+    expect(svg).not.toContain(">4.0<")
+  })
+})
+
 describe("chartKey", () => {
   it("ignores key order, since Postgres jsonb reorders a stored lesson's keys", () => {
     const reordered = JSON.parse(

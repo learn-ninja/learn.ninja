@@ -128,7 +128,24 @@ const functionChartVisual = z
         })
       )
       .min(1)
-      .max(3),
+      .max(3)
+      .optional(),
+    /**
+     * Points to mark, each with an optional label ("A", "root", "(2, 4)"): where curves cross, a
+     * root, a vertex. With no curves, the chart is a coordinate plane with equal units on both axes.
+     * A chart needs curves, points, or both (rules.ts).
+     */
+    points: z
+      .array(
+        z.strictObject({
+          x: z.number(),
+          y: z.number(),
+          label: z.string().min(1).max(24).optional(),
+        })
+      )
+      .min(1)
+      .max(8)
+      .optional(),
   })
   .meta({ id: "FunctionChartVisual" })
 
@@ -146,6 +163,98 @@ export const diagramVisual = z
   })
   .meta({ id: "DiagramVisual" })
 
+/** A number line from `min` to `max`, with marked points, shaded ranges, and jumps (rules.ts checks they fit). */
+export const numberLineVisual = z
+  .strictObject({
+    kind: z.literal("numberline"),
+    /** One sentence saying what the line shows, for screen readers. Required (rules.ts). */
+    alt: z.string().min(1).max(200).optional(),
+    min: z.number(),
+    max: z.number(),
+    /** The distance between ticks; every tick is numbered. Defaults to 1. At most LIMITS.numberLineTicks ticks (rules.ts). */
+    step: z.number().positive().optional(),
+    /** Number the ticks as fractions (1/4, 1/2, 3/4) instead of decimals; the step is then 1/n (rules.ts). */
+    fractions: z.boolean().optional(),
+    /** Dots on the line: filled, or `open` for a value left out (as in x > 2). */
+    points: z
+      .array(
+        z.strictObject({
+          value: z.number(),
+          label: z.string().min(1).max(12).optional(),
+          open: z.boolean().optional(),
+        })
+      )
+      .min(1)
+      .max(6)
+      .optional(),
+    /** Shaded stretches of the line: a range of values, or with `from` or `to` left out, a ray to that end. */
+    ranges: z
+      .array(
+        z.strictObject({
+          from: z.number().optional(),
+          to: z.number().optional(),
+          /** Leave out the end value itself: an open dot instead of a filled one. */
+          fromOpen: z.boolean().optional(),
+          toOpen: z.boolean().optional(),
+        })
+      )
+      .min(1)
+      .max(2)
+      .optional(),
+    /** Hops along the line, drawn as arcs over it: counting on, adding, subtracting. */
+    jumps: z
+      .array(
+        z.strictObject({
+          from: z.number(),
+          to: z.number(),
+          label: z.string().min(1).max(12).optional(),
+        })
+      )
+      .min(1)
+      .max(6)
+      .optional(),
+  })
+  .meta({ id: "NumberLineVisual" })
+
+/** One to four fractions drawn as shaded parts of a whole: bars stacked like a fraction wall, or circles side by side. */
+export const fractionVisual = z
+  .strictObject({
+    kind: z.literal("fraction"),
+    /** One sentence saying what the fractions show, for screen readers. Required (rules.ts). */
+    alt: z.string().min(1).max(200).optional(),
+    /** Bars (the default) are the same length, so they compare; circles read as slices of a pie. */
+    shape: z.enum(["bar", "circle"]).optional(),
+    fractions: z
+      .array(
+        z.strictObject({
+          /** The equal parts the whole is cut into: the denominator. */
+          parts: z.int().min(1).max(24),
+          /** How many of them are shaded, from the start: the numerator (rules.ts: at most `parts`). */
+          shaded: z.int().min(0),
+          /** Shown beside the bar or under the circle; defaults to shaded/parts ("3/4"). */
+          label: z.string().min(1).max(16).optional(),
+        })
+      )
+      .min(1)
+      .max(4),
+  })
+  .meta({ id: "FractionVisual" })
+
+/** An analog clock showing a time. */
+export const clockVisual = z
+  .strictObject({
+    kind: z.literal("clock"),
+    /** One sentence saying what the clock shows, for screen readers. Required (rules.ts). */
+    alt: z.string().min(1).max(200).optional(),
+    /** The time as hours and minutes, 12- or 24-hour: "3:45" or "15:45". */
+    time: z.string().regex(/^([01]?\d|2[0-3]):[0-5]\d$/, {
+      error: 'A clock\'s "time" is hours and minutes, like "3:45" or "15:45".',
+    }),
+    /** Numbers 1 to 12 around the face. Defaults to true; false leaves only the ticks. */
+    numbers: z.boolean().optional(),
+  })
+  .meta({ id: "ClockVisual" })
+
 export const visual = z
   .discriminatedUnion("kind", [
     htmlVisual,
@@ -153,6 +262,9 @@ export const visual = z
     mathVisual,
     chartVisual,
     diagramVisual,
+    numberLineVisual,
+    fractionVisual,
+    clockVisual,
   ])
   .meta({ id: "Visual" })
 
@@ -418,3 +530,6 @@ export type ChartVisual = z.infer<typeof chartVisual>
 export type DataChartVisual = z.infer<typeof dataChartVisual>
 export type FunctionChartVisual = z.infer<typeof functionChartVisual>
 export type DiagramVisual = z.infer<typeof diagramVisual>
+export type NumberLineVisual = z.infer<typeof numberLineVisual>
+export type FractionVisual = z.infer<typeof fractionVisual>
+export type ClockVisual = z.infer<typeof clockVisual>

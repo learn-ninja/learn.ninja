@@ -186,7 +186,8 @@ describe("tags", () => {
     l.tags = ["JavaScript", "JS"]
     expectIssue(l, {
       path: "tags",
-      message: /The tags "JavaScript" and "JS" are the same tag \("javascript"\)/,
+      message:
+        /The tags "JavaScript" and "JS" are the same tag \("javascript"\)/,
     })
     l.tags = ["Forms", "forms"]
     expectIssue(l, {
@@ -395,7 +396,10 @@ describe("function charts", () => {
   it("wants a label of its own for each curve", () => {
     expectIssue(
       withCurve({
-        series: [{ expression: "x", label: "f" }, { expression: "2x", label: "f" }],
+        series: [
+          { expression: "x", label: "f" },
+          { expression: "2x", label: "f" },
+        ],
       }),
       { path: "bricks[0].visual", message: /"f" is used twice/ }
     )
@@ -449,6 +453,191 @@ describe("diagram visuals", () => {
     expect(validateLesson(withDiagram({ d2: "a -> b\n".repeat(600) })).ok).toBe(
       false
     )
+  })
+})
+
+describe("function chart points", () => {
+  function withChart(over: Record<string, unknown> = {}) {
+    const l = buttons()
+    l.bricks[0].visual = {
+      kind: "chart",
+      type: "function",
+      alt: "Three points on a plane.",
+      x: { min: -5, max: 5 },
+      points: [{ x: 2, y: 3, label: "A" }],
+      ...over,
+    }
+    return l
+  }
+
+  it("accepts points with or without curves", () => {
+    expect(validateLesson(withChart()).ok).toBe(true)
+    expect(
+      validateLesson(withChart({ series: [{ expression: "x^2 - 4" }] })).ok
+    ).toBe(true)
+  })
+
+  it("needs curves or points", () => {
+    expectIssue(withChart({ points: undefined }), {
+      path: "bricks[0].visual",
+      message: /needs curves in "series", points in "points", or both/,
+    })
+  })
+
+  it("rejects a point outside the axes", () => {
+    expectIssue(withChart({ points: [{ x: 6, y: 0 }] }), {
+      path: "bricks[0].visual.points[0]",
+      message: /\(6, 0\) is outside/,
+    })
+    expectIssue(withChart({ y: { max: 2 } }), {
+      path: "bricks[0].visual.points[0]",
+      message: /\(2, 3\) is outside/,
+    })
+  })
+})
+
+describe("number lines", () => {
+  function withLine(over: Record<string, unknown> = {}) {
+    const l = buttons()
+    l.bricks[0].visual = {
+      kind: "numberline",
+      alt: "A hop of 4 from 3 lands on 7.",
+      min: 0,
+      max: 10,
+      jumps: [{ from: 3, to: 7, label: "+4" }],
+      points: [{ value: 7 }],
+      ...over,
+    }
+    return l
+  }
+
+  it("accepts points, ranges, rays, and jumps on the line", () => {
+    expect(validateLesson(withLine()).ok).toBe(true)
+    expect(
+      validateLesson(
+        withLine({
+          min: -5,
+          max: 5,
+          ranges: [{ from: -2, fromOpen: true }, { to: -4 }],
+          jumps: undefined,
+          points: undefined,
+        })
+      ).ok
+    ).toBe(true)
+    expect(
+      validateLesson(withLine({ max: 2, step: 0.25, fractions: true })).ok
+    ).toBe(false) // the jump to 7 is off this shorter line
+  })
+
+  it("wants alt text, named as a number line", () => {
+    const l = withLine()
+    delete l.bricks[0].visual.alt
+    expectIssue(l, { message: /This number line has no "alt"/ })
+  })
+
+  it("keeps the ticks few enough to read", () => {
+    expectIssue(withLine({ max: 100, jumps: undefined, points: undefined }), {
+      path: "bricks[0].visual",
+      message: /101 ticks; keep it to 21/,
+    })
+    expect(
+      validateLesson(
+        withLine({ max: 100, step: 10, jumps: undefined, points: undefined })
+      ).ok
+    ).toBe(true)
+    expectIssue(withLine({ min: 3, max: 3 }), {
+      message: /"min" \(3\) must be less/,
+    })
+  })
+
+  it("needs a 1/n step for fraction ticks", () => {
+    expect(
+      validateLesson(
+        withLine({
+          max: 2,
+          step: 0.25,
+          fractions: true,
+          jumps: undefined,
+          points: undefined,
+        })
+      ).ok
+    ).toBe(true)
+    expectIssue(
+      withLine({
+        max: 2,
+        step: 0.4,
+        fractions: true,
+        jumps: undefined,
+        points: undefined,
+      }),
+      { path: "bricks[0].visual.step", message: /a "step" of 1\/2, 1\/3/ }
+    )
+  })
+
+  it("keeps points, ranges, and jumps on the line", () => {
+    expectIssue(withLine({ points: [{ value: 11 }] }), {
+      path: "bricks[0].visual.points[0]",
+      message: /11 is off the line/,
+    })
+    expectIssue(withLine({ ranges: [{}] }), {
+      path: "bricks[0].visual.ranges[0]",
+      message: /needs "from", "to", or both/,
+    })
+    expectIssue(withLine({ ranges: [{ from: 5, to: 2 }] }), {
+      message: /"from" \(5\) must be less than its "to" \(2\)/,
+    })
+    expectIssue(withLine({ ranges: [{ from: -1 }] }), {
+      message: /ends must be on the line/,
+    })
+    expectIssue(withLine({ jumps: [{ from: 3, to: 3 }] }), {
+      message: /starts and lands on 3/,
+    })
+    expectIssue(withLine({ jumps: [{ from: 8, to: 12 }] }), {
+      path: "bricks[0].visual.jumps[0]",
+      message: /start and land on the line/,
+    })
+  })
+})
+
+describe("fractions and clocks", () => {
+  function withVisual(visual: Record<string, unknown>) {
+    const l = buttons()
+    l.bricks[0].visual = visual
+    return l
+  }
+  const wall = {
+    kind: "fraction",
+    alt: "One half is two quarters.",
+    fractions: [
+      { parts: 2, shaded: 1 },
+      { parts: 4, shaded: 2 },
+    ],
+  }
+
+  it("accepts fractions as bars or circles", () => {
+    expect(validateLesson(withVisual(wall)).ok).toBe(true)
+    expect(validateLesson(withVisual({ ...wall, shape: "circle" })).ok).toBe(
+      true
+    )
+  })
+
+  it("shades no more parts than the whole has", () => {
+    expectIssue(withVisual({ ...wall, fractions: [{ parts: 4, shaded: 5 }] }), {
+      path: "bricks[0].visual.fractions[0]",
+      message: /5 shaded parts is more than the 4/,
+    })
+  })
+
+  it("reads a clock's time in 12- or 24-hour form", () => {
+    const clock = { kind: "clock", alt: "A quarter to four.", time: "3:45" }
+    expect(validateLesson(withVisual(clock)).ok).toBe(true)
+    expect(validateLesson(withVisual({ ...clock, time: "15:45" })).ok).toBe(
+      true
+    )
+    for (const time of ["3.45", "25:00", "3:5", "quarter to four"])
+      expectIssue(withVisual({ ...clock, time }), {
+        message: /hours and minutes, like "3:45"/,
+      })
   })
 })
 

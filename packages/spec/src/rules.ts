@@ -23,6 +23,8 @@ export interface Issue {
 export const LIMITS = {
   /** Series a chart visual can show (lines on a line chart, colors on a scatter). */
   chartSeries: 3,
+  /** Numbered ticks on a number line, so the numbers stay readable on a phone. */
+  numberLineTicks: 21,
   concepts: { min: 1, max: 4 },
   /** Question bricks after each concept brick. */
   practicePerConcept: { min: 2, max: 4 },
@@ -371,7 +373,14 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
           path,
           `A function chart's "y.min" (${y.min}) must be less than its "y.max" (${y.max}).`
         )
-      const labels = visual.series.map((s) => s.label ?? s.expression)
+      const curves = visual.series ?? []
+      if (curves.length === 0 && !visual.points)
+        add(
+          "structure",
+          path,
+          `A function chart needs curves in "series", points in "points", or both.`
+        )
+      const labels = curves.map((s) => s.label ?? s.expression)
       const twice = duplicates(labels)
       if (twice.length)
         add(
@@ -379,6 +388,20 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
           path,
           `Each curve of a function chart needs its own label; "${twice[0]}" is used twice.`
         )
+      // A point outside the axes isn't drawn, which a question about it can't survive.
+      visual.points?.forEach((p, j) => {
+        const outside =
+          p.x < x.min ||
+          p.x > x.max ||
+          (y?.min !== undefined && p.y < y.min) ||
+          (y?.max !== undefined && p.y > y.max)
+        if (outside)
+          add(
+            "structure",
+            `${path}.points[${j}]`,
+            `The point (${p.x}, ${p.y}) is outside the chart's range; widen "x" or "y", or move the point.`
+          )
+      })
       continue
     }
     const { type, data } = visual
@@ -425,6 +448,90 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
             `${type === "bar" ? "A bar" : "A line"} chart has one point per "x"${name ? ` in series "${name}"` : ""}; "${twice[0]}" appears more than once.`
           )
       }
+  }
+
+  // Number lines: ticks that fit, and everything marked on them inside the line.
+  for (const { visual, path } of everyVisual(lesson)) {
+    if (visual.kind !== "numberline") continue
+    const { min, max } = visual
+    if (!(min < max)) {
+      add(
+        "structure",
+        path,
+        `A number line's "min" (${min}) must be less than its "max" (${max}).`
+      )
+      continue
+    }
+    const step = visual.step ?? 1
+    const ticks = Math.floor((max - min) / step + 1e-9) + 1
+    if (ticks > LIMITS.numberLineTicks)
+      add(
+        "structure",
+        path,
+        `This number line has ${ticks} ticks; keep it to ${LIMITS.numberLineTicks} with a larger "step" or a shorter range, so the numbers stay readable on a phone.`
+      )
+    if (visual.fractions && !fractionStep(step))
+      add(
+        "structure",
+        `${path}.step`,
+        `Ticks numbered as fractions need a "step" of 1/2, 1/3, … up to 1/12 (0.25 for quarters); this one is ${step}.`
+      )
+    const off = (v: number) => v < min || v > max
+    visual.points?.forEach((p, j) => {
+      if (off(p.value))
+        add(
+          "structure",
+          `${path}.points[${j}]`,
+          `The point ${p.value} is off the line (${min} to ${max}).`
+        )
+    })
+    visual.ranges?.forEach((r, j) => {
+      if (r.from === undefined && r.to === undefined)
+        add(
+          "structure",
+          `${path}.ranges[${j}]`,
+          `A range needs "from", "to", or both (leave one out for a ray to that end of the line).`
+        )
+      else if ([r.from, r.to].some((v) => v !== undefined && off(v)))
+        add(
+          "structure",
+          `${path}.ranges[${j}]`,
+          `A range's ends must be on the line (${min} to ${max}).`
+        )
+      else if (r.from !== undefined && r.to !== undefined && !(r.from < r.to))
+        add(
+          "structure",
+          `${path}.ranges[${j}]`,
+          `A range's "from" (${r.from}) must be less than its "to" (${r.to}).`
+        )
+    })
+    visual.jumps?.forEach((jump, j) => {
+      if (off(jump.from) || off(jump.to))
+        add(
+          "structure",
+          `${path}.jumps[${j}]`,
+          `A jump must start and land on the line (${min} to ${max}).`
+        )
+      else if (jump.from === jump.to)
+        add(
+          "structure",
+          `${path}.jumps[${j}]`,
+          `A jump goes from one value to another; this one starts and lands on ${jump.from}.`
+        )
+    })
+  }
+
+  // Fractions: no more shaded parts than the whole has.
+  for (const { visual, path } of everyVisual(lesson)) {
+    if (visual.kind !== "fraction") continue
+    visual.fractions.forEach((f, j) => {
+      if (f.shaded > f.parts)
+        add(
+          "structure",
+          `${path}.fractions[${j}]`,
+          `${f.shaded} shaded parts is more than the ${f.parts} the whole is cut into. For a fraction over 1, draw each whole as its own fraction.`
+        )
+    })
   }
 
   lesson.bricks.forEach((brick, i) => {
@@ -895,9 +1002,19 @@ function walkVisuals(lesson: Lesson, visit: (v: Visual, path: string) => void) {
   })
 }
 
+/** The n of a number line step that is 1/n (2 to 12), or undefined. Shared with the player's ticks. */
+export function fractionStep(step: number): number | undefined {
+  const n = Math.round(1 / step)
+  return n >= 2 && n <= 12 && Math.abs(n * step - 1) < 1e-9 ? n : undefined
+}
+
 /** What a visual is called in messages. */
-const visualName = (v: Visual) =>
-  v.kind === "html" ? "HTML visual" : v.kind === "chart" ? "chart" : v.kind
+const VISUAL_NAMES: Partial<Record<Visual["kind"], string>> = {
+  html: "HTML visual",
+  numberline: "number line",
+  fraction: "fraction picture",
+}
+const visualName = (v: Visual) => VISUAL_NAMES[v.kind] ?? v.kind
 
 /** Every visual in the lesson with its path: on bricks, on options, and on items. */
 export function everyVisual(

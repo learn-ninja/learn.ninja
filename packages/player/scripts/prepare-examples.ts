@@ -1,17 +1,23 @@
 // Prepares the example lessons for Storybook (KaTeX formulas, Shiki highlighting, charts, D2
 // diagrams), the same way the web app does on the server, plus the Tailwind classes of the visual
-// kit story and the diagram samples, and writes src/stories/prepared.generated.json.
+// kit story and the drawings of the chart and diagram samples, and writes
+// src/stories/prepared.generated.json.
 // Run: npm run stories:prepare -w @workspace/player
 import { readdirSync, readFileSync, writeFileSync } from "node:fs"
 
 import { validateLesson } from "@workspace/spec"
 
+import { renderChart } from "../src/chart"
 import { renderDiagram } from "../src/diagram"
 import { prepareLesson } from "../src/prepare"
-import { diagramKey } from "../src/prepared"
+import { chartKey, diagramKey } from "../src/prepared"
 import { visualClasses, visualsCssFor } from "../src/visual-css"
 import type { Prepared } from "../src/prepared"
-import { diagramSamples, visualKit } from "../src/stories/visual-kit"
+import {
+  chartSamples,
+  diagramSamples,
+  visualKit,
+} from "../src/stories/visual-kit"
 
 const dir = new URL("../../../examples/", import.meta.url)
 const merged: Prepared = {
@@ -34,6 +40,8 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
   for (const c of visualClasses(result.lesson)) classes.add(c)
 }
 for (const c of visualClasses(visualKit)) classes.add(c)
+for (const { chart } of chartSamples)
+  merged.charts![chartKey(chart, false)] = renderChart(chart, false)
 for (const sample of diagramSamples)
   merged.diagrams![diagramKey(sample.d2)] = await renderDiagram(sample.d2)
 merged.visualsCss = await visualsCssFor([...classes])

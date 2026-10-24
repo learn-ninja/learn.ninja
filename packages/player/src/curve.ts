@@ -186,7 +186,7 @@ export function checkFunctionCharts(lesson: Lesson): Issue[] {
   const issues: Issue[] = []
   for (const { visual, path } of everyVisual(lesson)) {
     if (visual.kind !== "chart" || visual.type !== "function") continue
-    visual.series.forEach((s, i) => {
+    ;(visual.series ?? []).forEach((s, i) => {
       const sampled = sampleExpression(s.expression, visual.x)
       if ("error" in sampled)
         issues.push({
