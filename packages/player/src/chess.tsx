@@ -8,10 +8,11 @@ import { PIECES, type PieceCode } from "./chess-pieces"
 // chessnut pieces. visuals.tsx loads this module only for a lesson that has a board, since the
 // pieces are most of its size.
 
-/** The board keeps one look in both themes, as a real board would; the marks take the accent. */
-const LIGHT = "oklch(0.93 0 0)"
-const DARK = "oklch(0.66 0 0)"
+// The board is drawn in theme tokens, so it sits lightly on the page in both themes: light squares
+// are clear, dark squares a faint wash of the text color, and the marks take the accent.
 const MARK = "var(--chart-2)"
+/** Room beside and under the board for the ranks and files, in squares. */
+const GUTTER = 0.4
 
 const FILES = "abcdefgh"
 
@@ -23,7 +24,7 @@ export default function ChessBoard({
   plain,
 }: {
   board: ChessVisual
-  /** On an option or item card: smaller, so the coordinates are left off. */
+  /** On an option or item card: smaller, so the coordinates and their gutter are left off. */
   plain: boolean
 }) {
   // React's ids carry characters a fragment link might not survive.
@@ -44,14 +45,18 @@ export default function ChessBoard({
     )
   )
   const used = [...new Set(pieces.map((p) => p.code))]
+  const gutter = plain ? 0 : GUTTER
 
   return (
     <svg
-      viewBox="0 0 8 8"
-      className="block h-auto w-full overflow-hidden rounded-md"
+      viewBox={`${-gutter} 0 ${8 + gutter} ${8 + gutter}`}
+      className="block h-auto w-full"
       aria-hidden
     >
       <defs>
+        <clipPath id={`${id}-board`}>
+          <rect width={8} height={8} rx={0.08} />
+        </clipPath>
         {used.map((c) => (
           <symbol
             key={c}
@@ -61,50 +66,72 @@ export default function ChessBoard({
           />
         ))}
       </defs>
-      {Array.from({ length: 64 }, (_, i) => {
-        const x = i % 8
-        const y = Math.floor(i / 8)
-        // a1 is dark: a square is dark when its file and rank numbers add up to an even number.
-        const file = flip ? 7 - x : x
-        const rank = flip ? y + 1 : 8 - y
-        const dark = (file + rank) % 2 === 1
-        return (
-          <rect
-            key={i}
-            x={x}
-            y={y}
-            width={1}
-            height={1}
-            fill={dark ? DARK : LIGHT}
-          />
-        )
-      })}
-      {(board.highlight ?? []).map((square) => {
-        const { x, y } = at(square)
-        return (
-          <rect
-            key={square}
-            x={x}
-            y={y}
-            width={1}
-            height={1}
-            fill={MARK}
-            opacity={0.4}
-          />
-        )
-      })}
+      <g clipPath={`url(#${id}-board)`}>
+        {Array.from({ length: 64 }, (_, i) => {
+          const x = i % 8
+          const y = Math.floor(i / 8)
+          // a1 is dark: a square is dark when its file and rank numbers add up to an even number.
+          const file = flip ? 7 - x : x
+          const rank = flip ? y + 1 : 8 - y
+          if ((file + rank) % 2 === 0) return null
+          return (
+            <rect
+              key={i}
+              x={x}
+              y={y}
+              width={1}
+              height={1}
+              className="fill-foreground/8 dark:fill-foreground/12"
+            />
+          )
+        })}
+        {(board.highlight ?? []).map((square) => {
+          const { x, y } = at(square)
+          return (
+            <rect
+              key={square}
+              x={x}
+              y={y}
+              width={1}
+              height={1}
+              className="fill-chart-2/25 dark:fill-chart-2/35"
+            />
+          )
+        })}
+      </g>
+      <rect
+        width={8}
+        height={8}
+        rx={0.08}
+        fill="none"
+        strokeWidth={1}
+        vectorEffect="non-scaling-stroke"
+        className="stroke-foreground/15"
+      />
       {!plain && <Coordinates flip={flip} />}
       {pieces.map(({ code, square }) => {
         const { x, y } = at(square)
+        const place = {
+          href: `#${id}-${code}`,
+          x: x + 0.04,
+          y: y + 0.04,
+          width: 0.92,
+          height: 0.92,
+        }
         return (
-          <use
-            key={square}
-            href={`#${id}-${code}`}
-            x={x + 0.04}
-            y={y + 0.04}
-            width={0.92}
-            height={0.92}
-          />
+          <React.Fragment key={square}>
+            {/* On a dark page a black piece would melt into it, so in dark mode a copy stroked
+                in a light color sits behind it: only the stroke's outer half shows, as an edge. */}
+            {code.startsWith("b") && (
+              <use
+                {...place}
+                strokeWidth={36}
+                strokeLinejoin="round"
+                className="hidden fill-foreground/40 stroke-foreground/40 dark:inline"
+              />
+            )}
+            <use {...place} />
+          </React.Fragment>
         )
       })}
       {(board.arrows ?? []).map((a, i) => (
@@ -114,45 +141,25 @@ export default function ChessBoard({
   )
 }
 
-/** The files along the bottom edge and the ranks along the start edge, in the other square's color. */
+/** The files under the board and the ranks beside it, in muted text outside the squares. */
 function Coordinates({ flip }: { flip: boolean }) {
   const text = {
-    fontSize: 0.22,
-    fontWeight: 600,
+    fontSize: 0.24,
+    className: "fill-muted-foreground",
     style: { fontFamily: "inherit" },
   } as const
   return (
     <g>
-      {Array.from({ length: 8 }, (_, i) => {
-        const file = flip ? 7 - i : i
-        const rank = flip ? i + 1 : 8 - i
-        // The bottom row's square i is dark when i plus the bottom rank is even (see the board).
-        const bottomRank = flip ? 8 : 1
-        const fileOnDark = (file + bottomRank) % 2 === 1
-        const rankFile = flip ? 7 : 0
-        const rankOnDark = (rankFile + rank) % 2 === 1
-        return (
-          <React.Fragment key={i}>
-            <text
-              {...text}
-              x={i + 0.94}
-              y={7.94}
-              textAnchor="end"
-              fill={fileOnDark ? LIGHT : DARK}
-            >
-              {FILES[file]}
-            </text>
-            <text
-              {...text}
-              x={0.06}
-              y={i + 0.24}
-              fill={rankOnDark ? LIGHT : DARK}
-            >
-              {rank}
-            </text>
-          </React.Fragment>
-        )
-      })}
+      {Array.from({ length: 8 }, (_, i) => (
+        <React.Fragment key={i}>
+          <text {...text} x={i + 0.5} y={8 + GUTTER - 0.08} textAnchor="middle">
+            {FILES[flip ? 7 - i : i]}
+          </text>
+          <text {...text} x={-GUTTER / 2} y={i + 0.58} textAnchor="middle">
+            {flip ? i + 1 : 8 - i}
+          </text>
+        </React.Fragment>
+      ))}
     </g>
   )
 }
