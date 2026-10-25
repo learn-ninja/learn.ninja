@@ -12,27 +12,7 @@
 // language's own, never a rendering of the English.
 
 import { shuffle } from "./check"
-import { ar } from "./locales/voices/ar"
-import { de } from "./locales/voices/de"
-import { en } from "./locales/voices/en"
-import { es } from "./locales/voices/es"
-import { fr } from "./locales/voices/fr"
-import { he } from "./locales/voices/he"
-import { hi } from "./locales/voices/hi"
-import { id } from "./locales/voices/id"
-import { it } from "./locales/voices/it"
-import { ja } from "./locales/voices/ja"
-import { ko } from "./locales/voices/ko"
-import { nl } from "./locales/voices/nl"
-import { pl } from "./locales/voices/pl"
-import { pt } from "./locales/voices/pt"
-import { ru } from "./locales/voices/ru"
-import { th } from "./locales/voices/th"
-import { tr } from "./locales/voices/tr"
-import { uk } from "./locales/voices/uk"
-import { vi } from "./locales/voices/vi"
-import { zh } from "./locales/voices/zh"
-import { zhTw } from "./locales/voices/zh-tw"
+import { packFor } from "./language"
 import { seeded } from "./random"
 import { uiLanguageFor, type NinjaLevel, type UiLanguage } from "./strings"
 import voiceClips from "./voice-clips.json"
@@ -67,43 +47,18 @@ export const CADENCE: Record<Character, readonly Slot[]> = {
   unhinged: ["flavor", "flavor", "plain"],
 }
 
-const VOICES: Record<UiLanguage, Voices> = {
-  en,
-  es,
-  pt,
-  fr,
-  de,
-  it,
-  nl,
-  pl,
-  ru,
-  uk,
-  tr,
-  ar,
-  he,
-  hi,
-  id,
-  vi,
-  th,
-  ja,
-  ko,
-  zh,
-  "zh-tw": zhTw,
-}
-
 /** The character a setting plays: Off shows nobody, but his lines are the Casual ones. */
 export function characterFor(level: NinjaLevel): Character {
   return level === "off" ? "casual" : level
 }
 
-/** The character's lines for a moment, in the player's language (English for one it doesn't have). */
+/** The character's lines for a moment, in the player's language (English for one it doesn't have, or hasn't loaded). */
 export function voiceLines(
   lang: string,
   level: NinjaLevel,
   moment: Moment
 ): Lines {
-  const voices = VOICES[uiLanguageFor(lang)?.code ?? "en"]
-  return voices[characterFor(level)][moment]
+  return packFor(lang).voices[characterFor(level)][moment]
 }
 
 /**

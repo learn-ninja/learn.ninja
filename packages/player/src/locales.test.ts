@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest"
 
-import { STRINGS } from "./locales"
 import { en } from "./locales/en"
 import {
   ariaLocaleFor,
+  loadLanguage,
   stringsFor,
   UI_LANGUAGES,
   uiLanguageFor,
@@ -22,9 +22,11 @@ function leaves(value: unknown, path = ""): [string, unknown][] {
 }
 
 describe("locales", () => {
-  it.each(codes)("%s has every string, none empty", (code) => {
+  it.each(codes)("%s has every string, none empty", async (code) => {
     const expected = leaves(en).map(([k]) => k)
-    const actual = Object.fromEntries(leaves(STRINGS[code]))
+    const actual = Object.fromEntries(
+      leaves((await loadLanguage(code)).strings)
+    )
     expect(Object.keys(actual).sort()).toEqual([...expected].sort())
     for (const [key, value] of Object.entries(actual)) {
       if (typeof value === "function") {
@@ -40,6 +42,14 @@ describe("locales", () => {
           expect(text, `${code} ${key}`).toMatch(/\S/)
       }
     }
+  })
+
+  it("loads each language once, as its own pack", async () => {
+    const pack = await loadLanguage("de-AT")
+    expect(await loadLanguage("de")).toBe(pack)
+    expect(pack.strings.start).toBe("Lektion starten")
+    expect(stringsFor("de")).toBe(pack.strings)
+    expect((await loadLanguage("en")).strings).toBe(en)
   })
 
   it("resolves regional and script variants", () => {

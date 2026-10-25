@@ -113,7 +113,7 @@ import {
 } from "./shell"
 import {
   ariaLocaleFor,
-  stringsFor,
+  useStrings,
   type NinjaLevel,
   type Strings,
   type TextSize,
@@ -181,7 +181,19 @@ export interface LessonPlayerProps {
   creator?: LessonCreator
 }
 
-export function LessonPlayer({
+/**
+ * A whole lesson. It suspends until its language has loaded (useStrings): while the page hydrates,
+ * React keeps the server's HTML in place meanwhile, so nothing flashes.
+ */
+export function LessonPlayer(props: LessonPlayerProps) {
+  return (
+    <React.Suspense>
+      <LessonInLanguage {...props} />
+    </React.Suspense>
+  )
+}
+
+function LessonInLanguage({
   lesson,
   prepared = emptyPrepared,
   uiLanguage,
@@ -217,7 +229,8 @@ export function LessonPlayer({
   // A choice made in the footer wins over the page's default for this session.
   const [chosen, setChosen] = React.useState<string>()
   const ui = chosen ?? uiLanguage ?? prefs.uiLanguage ?? lesson.language
-  const t = stringsFor(ui)
+  // Suspends until the language's chunk is in; a change of language waits in a transition.
+  const t = useStrings(ui)
   const locale = ariaLocaleFor(ui)
   const dir = /^(ar|he|fa|ur)\b/i.test(ui) ? "rtl" : "ltr"
   const appSettings = {
@@ -225,8 +238,11 @@ export function LessonPlayer({
     onThemeChange,
     uiLanguage: ui,
     onPrefs: (patch: Partial<Preferences>) => {
-      if (patch.uiLanguage) setChosen(patch.uiLanguage)
-      setPrefs(patch)
+      // In a transition: the current language stays up until the new one has loaded.
+      React.startTransition(() => {
+        if (patch.uiLanguage) setChosen(patch.uiLanguage)
+        setPrefs(patch)
+      })
     },
     t,
   }

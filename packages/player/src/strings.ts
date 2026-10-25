@@ -3,7 +3,7 @@
 
 import type { Level, Subject } from "@workspace/spec"
 
-import { STRINGS } from "./locales"
+import { packFor } from "./language"
 
 export type Strings = {
   start: string
@@ -243,10 +243,15 @@ export function uiLanguageFor(lang: string) {
   return UI_LANGUAGES.find((l) => l.code === code)
 }
 
-/** The player's text for a language code, falling back to English. */
+/**
+ * The player's text for a language code, falling back to English: for a language other than
+ * English, once it's loaded (loadLanguage, or useStrings in a component).
+ */
 export function stringsFor(lang: string): Strings {
-  return STRINGS[normalize(lang) ?? "en"]
+  return packFor(lang).strings
 }
+
+export { loadLanguage, useStrings } from "./language"
 
 /** React Aria's locale for a UI language (its strings are keyed by full locale, Arabic as ar-AE). */
 export function ariaLocaleFor(lang: string): string {

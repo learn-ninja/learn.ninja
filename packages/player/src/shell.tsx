@@ -123,7 +123,10 @@ export function usePreferences() {
       }
       if (saved.ninja && saved.ninja in renamed)
         saved.ninja = renamed[saved.ninja]
-      setPrefs((p) => ({ ...p, ...(saved as Partial<Preferences>) }))
+      // In a transition: a saved language keeps the current one up until it has loaded.
+      React.startTransition(() =>
+        setPrefs((p) => ({ ...p, ...(saved as Partial<Preferences>) }))
+      )
     } catch {
       // Storage can be blocked or empty; the defaults are fine.
     }
