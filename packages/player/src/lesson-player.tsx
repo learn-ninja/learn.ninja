@@ -60,6 +60,7 @@ import {
   explanationAnchor,
   OptionsBrick,
 } from "./bricks"
+import { BRAND } from "./logo"
 import { OrderBrick } from "./order"
 import { SortBrick } from "./sort"
 import {
@@ -96,7 +97,6 @@ import { plainText, RichText } from "./rich-text"
 import {
   AppSettings,
   AppSettingsItems,
-  BRAND,
   LessonFooter,
   LessonHeader,
   PanelRightFilledIcon,

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs"
 
 import { describe, expect, it } from "vitest"
 
-import { LEVELS } from "./schema"
+import { LEVELS } from "./basics"
 import { isSubject, SUBJECT_INFO, SUBJECTS } from "./subjects"
 import {
   isTagLabel,

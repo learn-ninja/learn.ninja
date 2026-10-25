@@ -2,7 +2,8 @@
 
 import * as React from "react"
 
-import { savedProgress, stringsFor } from "@workspace/player"
+import { savedProgress } from "@workspace/player/progress"
+import { stringsFor } from "@workspace/player/strings"
 import { Tooltip, TooltipTrigger } from "@workspace/ui/components/tooltip"
 import { cn } from "@workspace/ui/lib/utils"
 

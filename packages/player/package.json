@@ -5,7 +5,12 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./prepare": "./src/prepare.ts"
+    "./prepare": "./src/prepare.ts",
+    "./strings": "./src/strings.ts",
+    "./plain-text": "./src/plain-text.ts",
+    "./logo": "./src/logo.tsx",
+    "./time": "./src/time.tsx",
+    "./progress": "./src/progress.ts"
   },
   "scripts": {
     "lint": "eslint",

@@ -3,11 +3,11 @@ export * from "./schema"
 export {
   everyVisual,
   fractionStep,
+  LEVELS,
   LIMITS,
-  redundantTag,
-  type Issue,
-  type IssueKind,
-} from "./rules"
+  type Level,
+} from "./basics"
+export { redundantTag, type Issue, type IssueKind } from "./rules"
 export {
   formatIssues,
   validateLesson,
@@ -15,12 +15,7 @@ export {
   type ValidationResult,
 } from "./validate"
 export { lessonJsonSchema } from "./json-schema"
-export {
-  pieceOn,
-  readFen,
-  type FenPiece,
-  type Placement,
-} from "./chess"
+export { pieceOn, readFen, type FenPiece, type Placement } from "./chess"
 export { COUNTRIES, NOT_ON_MAP, type Country } from "./countries"
 export { DRAWN_SIZES } from "./map-sizes"
 export {

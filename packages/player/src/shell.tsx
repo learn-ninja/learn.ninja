@@ -51,8 +51,10 @@ import { Tooltip, TooltipTrigger } from "@workspace/ui/components/tooltip"
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { QuestionCount } from "./flow"
+import { BRAND, LearnLogo } from "./logo"
 import { Ninja, type NinjaMood } from "./ninja"
 import { RichBlocks } from "./rich-text"
+import { timeLeft, type TimeLeft } from "./time"
 import {
   UI_LANGUAGES,
   uiLanguageFor,
@@ -70,33 +72,6 @@ import {
 // share, restart) plus a gear menu for the app (theme, language); the tray is about how you play
 // (the screen's actions in the middle, the ninja at the start where he lives, text size at the end);
 // the footer holds the credit, the legal and docs links, and the keyboard shortcuts.
-
-export const BRAND = {
-  name: "learn.ninja",
-  maker: "@cmicpace",
-  makerUrl: "https://x.com/cmicpace",
-}
-
-/** The working Learn logo: an outlined face with a cap, a smile, and tall oval eyes. */
-export function LearnLogo({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 64 64"
-      fill="none"
-      aria-hidden="true"
-      className={className}
-    >
-      <g stroke="currentColor" strokeWidth="5" strokeLinejoin="round">
-        <path d="M7.01 24.83A26 26 0 0 1 56.99 24.83Q32 15.17 7.01 24.83Z" />
-        <path d="M56.99 39.17Q32 48.83 7.01 39.17A26 26 0 0 0 56.99 39.17Z" />
-      </g>
-      <g fill="currentColor">
-        <ellipse cx="25" cy="32" rx="2.9" ry="4.6" />
-        <ellipse cx="39" cy="32" rx="2.9" ry="4.6" />
-      </g>
-    </svg>
-  )
-}
 
 /** Lucide's PanelRight with the panel filled in, for showing the Theory panel is open. */
 export const PanelRightFilledIcon = createLucideIcon("panel-right-filled", [
@@ -163,20 +138,6 @@ export function usePreferences() {
     })
   }, [])
   return [prefs, update] as const
-}
-
-/** Time left on a published link. */
-export type TimeLeft = { unit: "days" | "hours"; count: number }
-
-/**
- * Time until the link expires: whole days (rounded) from 24 hours up, hours (rounded down, at
- * least 1) below.
- */
-export function timeLeft(ms: number): TimeLeft {
-  const hours = ms / 3.6e6
-  return hours >= 24
-    ? { unit: "days", count: Math.round(hours / 24) }
-    : { unit: "hours", count: Math.max(1, Math.floor(hours)) }
 }
 
 /** Time until the link expires, updated every minute. Null until mounted. */
