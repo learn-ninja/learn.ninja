@@ -1,4 +1,5 @@
 import { revalidateTag, unstable_cache } from "next/cache"
+import { after } from "next/server"
 
 import {
   getDb,
@@ -35,9 +36,14 @@ const REVALIDATE_SECONDS = 60
 /** How many cards one Explore tab shows. */
 export const EXPLORE_PAGE_SIZE = 30
 
-/** Marks every cached list stale, so the next request reads fresh. Call from route handlers and server actions only. */
-export function revalidateExplore() {
-  revalidateTag(EXPLORE_TAG, { expire: 0 })
+/**
+ * Marks every cached list stale. "now": the next request waits for fresh lists (a lesson hidden,
+ * renamed, or deleted must not show again). "soon": the next request is served the stale lists
+ * while fresh ones load, so a like or a new avatar never makes a visitor wait. Call from route
+ * handlers and server actions only.
+ */
+export function revalidateExplore(when: "now" | "soon" = "now") {
+  revalidateTag(EXPLORE_TAG, when === "now" ? { expire: 0 } : "max")
 }
 
 const shared = globalThis as { learnViews?: ViewCounter }
@@ -53,24 +59,44 @@ export async function getViewCounter(): Promise<ViewCounter> {
   return shared.learnViews
 }
 
-/** The Explore list for one tab, narrowed to a subject and tag when given. Pending views are added to the table first, so the counts are current. */
+/**
+ * The Explore list for one tab, narrowed to a subject and tag when given. Its view counts are
+ * the table's; pages add the pending ones per request (liveViewCounts) and flush them after the
+ * response (flushViewsLater), so a refill never waits on writes.
+ */
 export function cachedLessons(
   sort: ExploreSort,
   limit = EXPLORE_PAGE_SIZE,
   { subject, tag }: Pick<ExploreFilter, "subject" | "tag"> = {}
 ): Promise<LessonSummary[]> {
   return unstable_cache(
-    async () => {
-      const db = await getDb()
-      await flushPendingViews({ db, views: await getViewCounter() })
-      return listLessons(db, sort, limit, { subject, tag })
-    },
+    async () => listLessons(await getDb(), sort, limit, { subject, tag }),
     ["explore", sort, subject ?? "all", tag ?? "", String(limit)],
     {
       tags: [EXPLORE_TAG, ...(subject ? [subjectTag(subject)] : [])],
       revalidate: REVALIDATE_SECONDS,
     }
   )()
+}
+
+/** How often, at most, a page flushes pending views into the table. */
+const FLUSH_EVERY_SECONDS = 60
+
+/**
+ * Adds pending views to the table after the response is sent, at most once a minute across
+ * servers, so the stored counts (and Top and Trending) stay close to live between daily crons.
+ */
+export function flushViewsLater() {
+  after(async () => {
+    try {
+      await flushPendingViews(
+        { db: await getDb(), views: await getViewCounter() },
+        { every: FLUSH_EVERY_SECONDS }
+      )
+    } catch (e) {
+      console.error("Flushing views failed:", e)
+    }
+  })
 }
 
 /** The newest listed lessons for the home page, or none when there's no database to read (a build without one). */

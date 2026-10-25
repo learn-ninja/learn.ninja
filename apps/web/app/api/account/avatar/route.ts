@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       actor,
       form?.get("file")
     )
-    if (reply.status === 200) revalidateExplore()
+    if (reply.status === 200) revalidateExplore("soon")
     return reply
   })
 }
@@ -65,7 +65,7 @@ export async function DELETE(req: Request) {
       req.headers,
       actor
     )
-    revalidateExplore()
+    revalidateExplore("soon")
     return reply
   })
 }

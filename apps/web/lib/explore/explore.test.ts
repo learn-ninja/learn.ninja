@@ -557,6 +557,27 @@ describe("views", () => {
     expect(rows.find((l) => l.id === b)?.views).toBe(1)
   })
 
+  it("skips ids that aren't lessons, and keeps the views when the write fails", async () => {
+    const a = await published("ada", { visibility: "public" })
+    const counter = new MemoryViewCounter()
+    const batched = { ...deps, views: counter }
+    await recordView(a, batched)
+    await recordView("nope1234", batched)
+    const failing = {
+      ...batched,
+      db: {
+        update: () => {
+          throw new Error("database down")
+        },
+      } as unknown as typeof db,
+    }
+    await expect(flushPendingViews(failing)).rejects.toThrow("database down")
+    expect(Object.fromEntries(await counter.pending([a]))).toEqual({ [a]: 1 })
+    // One view written; the made-up id is dropped.
+    expect(await flushPendingViews(batched)).toBe(1)
+    expect((await listLessons(db, "new", 1, { now }))[0]?.views).toBe(1)
+  })
+
   it("counts pending views in the live counts before they're flushed", async () => {
     const a = await published("ada", { visibility: "public", views: 5 })
     const b = await published("bob", { visibility: "public" })

@@ -5,7 +5,11 @@ import { ExploreGreeting } from "@/components/explore/explore-greeting"
 import { LessonFeed } from "@/components/explore/lesson-feed"
 import { RefreshAfterView } from "@/components/explore/refresh-after-view"
 import { currentActor } from "@/lib/auth/session"
-import { cachedLessons, getViewCounter } from "@/lib/explore/cache"
+import {
+  cachedLessons,
+  flushViewsLater,
+  getViewCounter,
+} from "@/lib/explore/cache"
 import { greetingFor, localHour } from "@/lib/explore/greeting"
 import { liveViewCounts } from "@/lib/explore/handlers"
 import { completedAt, likedIds } from "@/lib/explore/queries"
@@ -36,6 +40,7 @@ export default async function ExplorePage() {
   const greeting = greetingFor(
     localHour(new Date(), h.get("x-vercel-ip-timezone"))
   )
+  flushViewsLater()
   const ids = lessons.map((l) => l.id)
   const db = await getDb()
   const [views, liked, completed] = await Promise.all([

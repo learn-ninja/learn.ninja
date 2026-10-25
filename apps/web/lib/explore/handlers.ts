@@ -33,7 +33,11 @@ export interface ExploreDeps {
   /** Origin for the links in emails, e.g. https://learn.ninja */
   origin: string
   /** Called after a change that Explore and profiles show (a like, a visibility switch). */
-  onChange?: () => void
+  /**
+   * Called after a change the Explore lists show: "now" when the lists must not show the old state
+   * again (visibility, a rename, a delete), "soon" when a moment of the old one is fine (a like).
+   */
+  onChange?: (when: "now" | "soon") => void
   now?: () => number
 }
 
@@ -99,7 +103,7 @@ export async function likeLesson(
       .where(eq(lesson.id, found.id))
       .returning({ likes: lesson.likes })
     likes = row?.likes ?? likes + 1
-    deps.onChange?.()
+    deps.onChange?.("soon")
   }
   return { status: 200, body: { ok: true, liked: true, likes } }
 }
@@ -123,7 +127,7 @@ export async function unlikeLesson(
       .where(eq(lesson.id, found.id))
       .returning({ likes: lesson.likes })
     likes = row?.likes ?? Math.max(0, likes - 1)
-    deps.onChange?.()
+    deps.onChange?.("soon")
   }
   return { status: 200, body: { ok: true, liked: false, likes } }
 }
@@ -203,7 +207,7 @@ export async function setVisibility(
       .update(lesson)
       .set({ visibility, updatedAt: new Date(deps.now?.() ?? Date.now()) })
       .where(eq(lesson.id, found.id))
-    deps.onChange?.()
+    deps.onChange?.("now")
   }
   return {
     status: 200,
@@ -247,7 +251,7 @@ export async function renameLesson(
         updatedAt: new Date(deps.now?.() ?? Date.now()),
       })
       .where(eq(lesson.id, found.id))
-    deps.onChange?.()
+    deps.onChange?.("now")
   }
   return {
     status: 200,
@@ -272,7 +276,7 @@ export async function deleteLesson(
   if (!found) return NOT_FOUND
   if (found.ownerId !== req.userId) return notOwner("delete it")
   await deps.db.delete(lesson).where(eq(lesson.id, found.id))
-  deps.onChange?.()
+  deps.onChange?.("now")
   return { status: 200, body: { ok: true, id: found.id, deleted: true } }
 }
 
@@ -350,9 +354,10 @@ export async function recordView(
 
 /** Adds pending views to lesson.views (the daily cron, and the Explore lists when they refresh). */
 export async function flushPendingViews(
-  deps: Pick<ExploreDeps, "db" | "views">
+  deps: Pick<ExploreDeps, "db" | "views">,
+  options?: { every?: number }
 ): Promise<number> {
-  return flushViews(deps.db, deps.views)
+  return flushViews(deps.db, deps.views, options)
 }
 
 /**
