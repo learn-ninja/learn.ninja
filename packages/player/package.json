@@ -5,7 +5,8 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./prepare": "./src/prepare.ts"
+    "./prepare": "./src/prepare.ts",
+    "./charts": "./src/charts.ts"
   },
   "scripts": {
     "lint": "eslint",

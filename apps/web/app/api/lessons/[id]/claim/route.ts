@@ -1,4 +1,4 @@
-import { claimLesson } from "@/lib/publish/handlers"
+import { claimLesson } from "@/lib/publish/claims"
 import { actorFor, depsFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 

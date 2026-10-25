@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { currentActor } from "@/lib/auth/session"
-import { claimLesson } from "@/lib/publish/handlers"
+import { claimLesson } from "@/lib/publish/claims"
 import { depsFor } from "@/lib/publish/request"
 
 // GET /keep/{token}/claim: where the keep link goes once the visitor is logged in. Keeps the lesson

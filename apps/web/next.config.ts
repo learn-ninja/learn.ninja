@@ -103,6 +103,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // PGlite (21 MB) is the database only when DATABASE_URL is unset, which a deployment never is: its
+  // file system is read-only, so Neon is the only database there. Kept out of every function.
+  outputFileTracingExcludes: {
+    "*": ["../../node_modules/@electric-sql/pglite/**"],
+  },
   // prepareLesson() reads Tailwind's own stylesheets at runtime to compile each lesson's visuals CSS,
   // and D2.js loads its WASM build and worker by path, so they must ship with the server functions
   // that check, publish, and render lessons.

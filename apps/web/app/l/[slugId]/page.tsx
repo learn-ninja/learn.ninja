@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { withCharts } from "@workspace/player/prepare"
+import { withCharts } from "@workspace/player/charts"
 
 import { ViewBeacon } from "@/components/explore/view-beacon"
 import { LessonView } from "@/components/lesson-view"

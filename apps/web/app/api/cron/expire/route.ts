@@ -1,7 +1,7 @@
 import { getViewCounter } from "@/lib/explore/cache"
 import { PostgresDraftStore } from "@/lib/mcp/drafts"
 import { flushPendingViews } from "@/lib/explore/handlers"
-import { expireLessons, isCronRequest } from "@/lib/publish/handlers"
+import { expireLessons, isCronRequest } from "@/lib/publish/claims"
 import { respond } from "@/lib/publish/respond"
 import { getDb, getLessonStore } from "@/lib/publish/store"
 

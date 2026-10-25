@@ -7,14 +7,10 @@ import {
   type Highlighter,
 } from "shiki"
 
-import {
-  everyVisual,
-  type ChartVisual,
-  type Issue,
-  type Lesson,
-} from "@workspace/spec"
+import { everyVisual, type Issue, type Lesson } from "@workspace/spec"
 
 import { renderChart } from "./chart"
+import { chartsIn } from "./charts"
 import { checkFunctionCharts } from "./curve"
 import { checkDiagram, renderDiagram } from "./diagram"
 import { iconExists, parseIconClass, suggestIcons } from "./icons"
@@ -153,22 +149,6 @@ function diagramsIn(lesson: Lesson): string[] {
  * The publish-time checks for diagram visuals, which need D2 itself and so can't live in the
  * spec's rules: D2 that doesn't compile, and what the lesson page can't show (see checkDiagram).
  */
-/**
- * Draws any chart the prepared data is missing. Lessons published before chart keys ignored key
- * order were prepared under keys that no longer match once Postgres reordered them; this redraws
- * those on read, which is cheap (no Shiki or Tailwind).
- */
-export function withCharts(lesson: Lesson, prepared: Prepared): Prepared {
-  const missing = chartsIn(lesson).filter(
-    ({ chart, compact }) => !prepared.charts?.[chartKey(chart, compact)]
-  )
-  if (missing.length === 0) return prepared
-  const charts = { ...prepared.charts }
-  for (const { chart, compact } of missing)
-    charts[chartKey(chart, compact)] = renderChart(chart, compact)
-  return { ...prepared, charts }
-}
-
 export async function checkDiagrams(lesson: Lesson): Promise<Issue[]> {
   const issues: Issue[] = []
   for (const { visual, path } of everyVisual(lesson)) {
@@ -235,23 +215,6 @@ export async function checkVisuals(lesson: Lesson): Promise<Issue[]> {
     ...checkMolecules(lesson),
     ...(await checkIcons(lesson)),
   ]
-}
-
-/** The lesson's chart visuals: a brick's own at full size, an option's or item's compact. */
-function chartsIn(lesson: Lesson): { chart: ChartVisual; compact: boolean }[] {
-  const out: { chart: ChartVisual; compact: boolean }[] = []
-  for (const brick of [lesson.hook, ...lesson.bricks, lesson.challenge]) {
-    if ("visual" in brick && brick.visual?.kind === "chart")
-      out.push({ chart: brick.visual, compact: false })
-    const cards = [
-      ...("options" in brick ? brick.options : []),
-      ...("items" in brick ? brick.items : []),
-    ]
-    for (const card of cards)
-      if ("visual" in card && card.visual?.kind === "chart")
-        out.push({ chart: card.visual, compact: true })
-  }
-  return out
 }
 
 function walk(
