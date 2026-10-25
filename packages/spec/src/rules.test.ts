@@ -1362,10 +1362,36 @@ describe("safety rules", () => {
     ["<iframe></iframe>", /iframes/],
     ["<img src='https://evil.example/x.png'>", /external URLs/],
     ["<a href='javascript:alert(1)'>x</a>", /javascript: URLs/],
+    ["<a href='&#106;avascript:alert(1)'>x</a>", /javascript: URLs/],
+    ['<meta http-equiv="refresh" content="0;url=/settings">', /meta, link/],
+    ["<video poster='/x.png'></video>", /meta, link/],
+    ["<svg><image href='//evil.example/x.png'/></svg>", /external URLs/],
+    ["<div poster='https://evil.example/x.png'></div>", /external URLs/],
+    ["<img src='&#104;ttps://evil.example/x.png'>", /external URLs/],
+    ["<img src='https&colon;//evil.example/x.png'>", /external URLs/],
+    [
+      "<div style='background:url(https\\3a \\2f\\2f evil.example/x.png)'></div>",
+      /external URLs/,
+    ],
+    [
+      "<div style='background:url(https:\\/\\/evil.example)'></div>",
+      /external URLs/,
+    ],
+    ['<style>@import "https://evil.example/x.css";</style>', /external URLs/],
   ])("rejects %s in a visual", (html, message) => {
     const l = buttons()
     l.bricks[0].visual.html = html
     expectIssue(l, { kind: "safety", message })
+  })
+
+  it("lets a visual show a URL or a CSS rule as text", () => {
+    const l = buttons()
+    l.bricks[0].visual.html =
+      "<p>Fonts load with <code>@import</code> from https://fonts.example.</p>" +
+      "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'></svg>"
+    expect(validateLesson(l).issues.filter((i) => i.kind === "safety")).toEqual(
+      []
+    )
   })
 
   it("limits each HTML visual to 20 KB", () => {

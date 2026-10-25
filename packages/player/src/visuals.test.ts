@@ -2,7 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
-import { centeredViewBox, Visual, VISUAL_SANDBOX } from "./visuals"
+import { centeredViewBox, Visual, VISUAL_CSP, VISUAL_SANDBOX } from "./visuals"
 
 // The HTML visual's frame is the only place lesson content touches the page, so its shape is pinned here.
 
@@ -29,6 +29,16 @@ describe("HTML visual frame", () => {
     expect(VISUAL_SANDBOX).toBe("allow-same-origin")
     expect(markup).toContain(`sandbox="${VISUAL_SANDBOX}"`)
     expect(markup).not.toContain("allow-scripts")
+  })
+
+  it("carries its own policy that loads nothing off-site, before anything else in it", () => {
+    const { srcdoc } = frameFor({ html: "<b>Hi</b>" })
+    expect(VISUAL_CSP).toMatch(/^default-src 'none';/)
+    expect(VISUAL_CSP).not.toMatch(/https?:|\*/)
+    const head = srcdoc!.slice(0, srcdoc!.indexOf("<link"))
+    expect(head).toContain(
+      `<meta http-equiv="Content-Security-Policy" content="${VISUAL_CSP}">`
+    )
   })
 
   it("reads as an image named by its alt text", () => {

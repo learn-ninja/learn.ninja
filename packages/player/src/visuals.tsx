@@ -106,6 +106,14 @@ export function Visual({
  */
 export const VISUAL_SANDBOX = "allow-same-origin"
 
+/**
+ * The frame's own Content-Security-Policy, first in its head. The lesson page's header policy only
+ * covers a page loaded from a lesson URL, not one reached by an in-app link, so the frame carries
+ * one too: same-origin styles, images, and fonts, and nothing else.
+ */
+export const VISUAL_CSP =
+  "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
+
 /** Keeps CSS inside its <style>: "</" would otherwise end the tag and inject markup. A CSS "\/" still means "/". */
 const inStyle = (css: string) => css.replace(/<\//g, "<\\/")
 
@@ -138,7 +146,7 @@ function HtmlFrame({
   const srcDoc = React.useMemo(
     () =>
       // Without an explicit height the body keeps its natural size, so the player can measure it.
-      `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${visualsCss}"><style>${inStyle(prepared.visualsCss)}</style><style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box${height ? ";min-height:100vh" : ""}}${inStyle(css ?? "")}</style></head><body>${html}</body></html>`,
+      `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${VISUAL_CSP}"><link rel="stylesheet" href="${visualsCss}"><style>${inStyle(prepared.visualsCss)}</style><style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box${height ? ";min-height:100vh" : ""}}${inStyle(css ?? "")}</style></head><body>${html}</body></html>`,
     [html, css, visualsCss, height, prepared.visualsCss]
   )
 

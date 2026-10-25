@@ -191,6 +191,38 @@ function unsupportedMarkdown(text: string): string | null {
   return null
 }
 
+const NAMED_REFERENCES: Record<string, string> = {
+  colon: ":",
+  sol: "/",
+  period: ".",
+  lpar: "(",
+  rpar: ")",
+  quot: '"',
+  apos: "'",
+  tab: "\t",
+  newline: "\n",
+}
+
+const codePoint = (n: number) =>
+  n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : ""
+
+/** Visual HTML or CSS with character references and CSS escapes decoded, for the safety checks. */
+function decoded(text: string): string {
+  return text
+    .replace(/&#x([0-9a-f]+);?/gi, (_, hex: string) =>
+      codePoint(parseInt(hex, 16))
+    )
+    .replace(/&#(\d+);?/g, (_, dec: string) => codePoint(Number(dec)))
+    .replace(
+      /&([a-z]+);/gi,
+      (ref: string, name: string) => NAMED_REFERENCES[name.toLowerCase()] ?? ref
+    )
+    .replace(/\\([0-9a-f]{1,6})\s?/gi, (_, hex: string) =>
+      codePoint(parseInt(hex, 16))
+    )
+    .replace(/\\([^\n])/g, "$1")
+}
+
 function duplicates(values: string[]): string[] {
   const seen = new Set<string>()
   const dupes = new Set<string>()
@@ -788,20 +820,43 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
         `${path}.html`,
         "Visuals can't contain iframes, forms, objects, or embeds."
       )
+    // <meta http-equiv="refresh"> can show any page of the site in the frame, and the rest load
+    // or point at files a visual has no use for.
+    if (/<\s*(meta|link|base|video|audio|source|track)\b/i.test(html))
+      add(
+        "safety",
+        `${path}.html`,
+        "Visuals can't contain meta, link, base, video, audio, source, or track tags."
+      )
     if (/\son[a-z]+\s*=/i.test(html))
       add(
         "safety",
         `${path}.html`,
         "Visuals can't contain event handlers (onclick and similar)."
       )
-    if (/javascript\s*:/i.test(html))
+    // Read as the browser will: a URL can hide behind character references and CSS escapes.
+    const plainHtml = decoded(html)
+    const plainCss = decoded(v.css ?? "")
+    if (/javascript\s*:/i.test(plainHtml))
       add("safety", `${path}.html`, "Visuals can't contain javascript: URLs.")
+    // Any attribute that starts with an off-site URL (src, href, poster, xlink:href…), or a CSS url().
     const external =
-      /(?:src|href|srcset|action)\s*=\s*["']?\s*(?:https?:)?\/\/|url\(\s*["']?\s*(?:https?:)?\/\//i
+      /[\w:-]+\s*=\s*["']?\s*(?:https?:)?\/\/|url\(\s*["']?\s*(?:https?:)?\/\//i
+    const styles = [
+      plainCss,
+      ...[...plainHtml.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)].map(
+        (m) => m[1]!
+      ),
+    ]
+    // SVG's namespace declarations are names, not loads.
+    const attributes = plainHtml.replace(
+      /\sxmlns(?::[\w-]+)?\s*=\s*(["'])[^"']*\1/gi,
+      ""
+    )
     if (
-      external.test(html) ||
-      (v.css && external.test(v.css)) ||
-      (v.css && /@import/i.test(v.css))
+      external.test(attributes) ||
+      external.test(plainCss) ||
+      styles.some((css) => /@import/i.test(css))
     ) {
       add(
         "safety",
