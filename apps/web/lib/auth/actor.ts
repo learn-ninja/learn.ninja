@@ -41,6 +41,9 @@ export class InvalidApiKeyError extends Error {
   }
 }
 
+/** What a banned account's API key is told. */
+const BANNED = "This account can't publish or change anything."
+
 /** What a chat app is told when the key in its URL doesn't work. */
 export const BAD_MCP_URL =
   "This MCP URL doesn't work: its key was revoked, replaced, or never existed. Make a new one at learn.ninja/settings, or use https://learn.ninja/mcp without an account."
@@ -75,6 +78,12 @@ export async function getActor(
     return null
   }
   const { user } = result
+  // A banned account can't log in, and an open session or an API key doesn't get around that (a
+  // cached session notices within the cookie cache's five minutes).
+  if (user.banned) {
+    if (viaApiKey) throw new InvalidApiKeyError(BANNED)
+    return null
+  }
   return {
     userId: user.id,
     email: user.email,
