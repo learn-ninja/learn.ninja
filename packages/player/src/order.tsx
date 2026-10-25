@@ -13,6 +13,7 @@ import {
   markStyles,
   slotStyles,
 } from "./controls"
+import { MarkText } from "./marks"
 import { buzz, fly, shake } from "./motion"
 import { RichText } from "./rich-text"
 import { Visual } from "./visuals"
@@ -169,6 +170,7 @@ export function OrderBrick({
         ) : (
           <RichText text={it.text ?? ""} lang={it.lang} />
         )}
+        <MarkText mark={placed ? marks[id] : undefined} />
       </Button>
     )
   }

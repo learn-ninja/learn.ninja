@@ -22,8 +22,9 @@ import {
   slotStyles,
 } from "./controls"
 import { shortcutBlocked } from "./keys"
+import { MarkText } from "./marks"
 import { buzz, fly, shake } from "./motion"
-import { RichBlocks, RichText } from "./rich-text"
+import { plainText, RichBlocks, RichText } from "./rich-text"
 import { Visual } from "./visuals"
 
 export interface QuestionBrickProps {
@@ -53,24 +54,27 @@ function KeyHint({
 }) {
   if (mark === "correct" || mark === "wrong" || mark === "partial")
     return (
-      <Kbd
-        aria-hidden="true"
-        className={cn(
-          className,
-          // Square like the number key it replaces (the icon plus the key's padding would be 2px wider),
-          // and filled, so it needs no outline.
-          "w-5 border-0 px-0",
-          mark === "correct"
-            ? "bg-green-500 text-green-950"
-            : "bg-yellow-500 text-yellow-950"
-        )}
-      >
-        {mark === "correct" ? (
-          <CheckIcon strokeWidth={3} />
-        ) : (
-          <XIcon strokeWidth={3} />
-        )}
-      </Kbd>
+      <>
+        <Kbd
+          aria-hidden="true"
+          className={cn(
+            className,
+            // Square like the number key it replaces (the icon plus the key's padding would be 2px wider),
+            // and filled, so it needs no outline.
+            "w-5 border-0 px-0",
+            mark === "correct"
+              ? "bg-green-500 text-green-950"
+              : "bg-yellow-500 text-yellow-950"
+          )}
+        >
+          {mark === "correct" ? (
+            <CheckIcon strokeWidth={3} />
+          ) : (
+            <XIcon strokeWidth={3} />
+          )}
+        </Kbd>
+        <MarkText mark={mark} />
+      </>
     )
   return (
     <Kbd aria-hidden="true" className={cn(className, keyHintStyles)}>
@@ -430,6 +434,9 @@ export function MatchBrick({
   onDone?: () => void
 }) {
   const root = React.useRef<HTMLDivElement>(null)
+  const { t } = usePlayer()
+  // What a screen reader hears about the last pair, as sort and order say where an item went.
+  const [said, setSaid] = React.useState("")
   // The item waiting for its match: either column can go first.
   const [armed, setArmed] = React.useState<{
     side: "left" | "right"
@@ -471,6 +478,14 @@ export function MatchBrick({
     buzz()
     const good = left === right
     setFlash({ left, right, good })
+    setSaid(
+      good
+        ? t.matched(
+            plainText(brick.pairs[left]!.left),
+            plainText(brick.pairs[right]!.right)
+          )
+        : t.notAPair
+    )
     if (good) setAnswer({ kind: "pairs", links: { ...links, [left]: right } })
     else onSlip?.()
   }
@@ -517,6 +532,7 @@ export function MatchBrick({
         )}
       >
         <RichText text={text} />
+        <MarkText mark={marks[`${side === "left" ? "L" : "R"}${index}`]} />
       </Selectable>
     )
   }
@@ -545,6 +561,9 @@ export function MatchBrick({
             matchedRight.has(j)
           )
         )}
+      </div>
+      <div aria-live="polite" className="sr-only">
+        {said}
       </div>
     </div>
   )
@@ -719,6 +738,7 @@ export function BlankBrick({
                     )}
                   >
                     {value}
+                    <MarkText mark={marks[id]} />
                   </span>
                 ) : waiting ? (
                   <span className="learn-caret">

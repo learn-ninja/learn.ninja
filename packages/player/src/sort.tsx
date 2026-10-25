@@ -18,6 +18,7 @@ import {
   markStyles,
   slotStyles,
 } from "./controls"
+import { useMarkWord } from "./marks"
 import { buzz, calm, fly, pulse, shake } from "./motion"
 import { RichText } from "./rich-text"
 
@@ -58,6 +59,7 @@ export function SortBrick({
   locked,
 }: QuestionBrickProps) {
   const { t, dir } = usePlayer()
+  const markWord = useMarkWord()
   const uid = React.useId().replace(/[^\w-]/g, "")
   const root = React.useRef<HTMLDivElement>(null)
   const heads = React.useRef<(HTMLDivElement | null)[]>([])
@@ -324,7 +326,9 @@ export function SortBrick({
                       data-vt={`learn-${uid}-i${index.get(id)}`}
                       data-status={marks[id]}
                       isDisabled={locked}
-                      aria-label={`${textOf(id)}, ${g.label}`}
+                      aria-label={[textOf(id), g.label, markWord(marks[id])]
+                        .filter(Boolean)
+                        .join(", ")}
                       onPress={() => place(id, -1, () => setBack(id))}
                       className={cn(
                         controlStyles,
@@ -442,7 +446,11 @@ export function SortBrick({
                   }}
                   role="radio"
                   aria-checked={lane === i}
-                  aria-label={g.label}
+                  aria-label={
+                    lane === i && marks[id]
+                      ? `${g.label}, ${markWord(marks[id])}`
+                      : g.label
+                  }
                   aria-disabled={locked || undefined}
                   data-lane={i}
                   // One Tab stop per row: the item's lane, or the first lane while it's unsorted.

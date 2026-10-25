@@ -70,6 +70,14 @@ export type Strings = {
   sortLeft: (n: number) => string
   /** Announced when an order item lands in a numbered slot. */
   placedAt: (item: string, n: number) => string
+  /** Announced in a match brick when a pair is made right. */
+  matched: (left: string, right: string) => string
+  /** Announced in a match brick when two items don't go together. */
+  notAPair: string
+  /** A checked answer's result as words, for screen readers. */
+  markCorrect: string
+  markWrong: string
+  markPartial: string
   wordBank: string
   emptyGap: string
   /** Name of an HTML visual with no alt text. */
