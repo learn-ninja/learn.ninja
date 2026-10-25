@@ -76,7 +76,8 @@ export function LessonView({
     setMounted(true)
     setUrl(window.location.origin + window.location.pathname)
     const params = new URLSearchParams(window.location.search)
-    setUrlLanguage(params.get("ui") ?? undefined)
+    // In a transition, like the player's own language changes: the page stays up while it loads.
+    React.startTransition(() => setUrlLanguage(params.get("ui") ?? undefined))
     // Back from logging in to like it (the wrap-up's Log in link adds ?like=1): the player
     // starts the lesson afresh, so the like they asked for is made here.
     if (params.get("like") === "1") {

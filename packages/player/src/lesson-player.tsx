@@ -222,7 +222,7 @@ function LessonInLanguage({
   const [title, setTitle] = React.useState(lesson.title)
   React.useEffect(() => setTitle(lesson.title), [lesson.title])
   const shown = React.useMemo(() => ({ ...lesson, title }), [lesson, title])
-  const [prefs, setPrefs] = usePreferences()
+  const [prefs, setPrefs, prefsLoaded] = usePreferences()
   const fixedTray = useFixedTray()
   // The keyboard shortcuts dialog lives in the footer; "?" (handled in the player) opens it too.
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false)
@@ -231,6 +231,18 @@ function LessonInLanguage({
   const ui = chosen ?? uiLanguage ?? prefs.uiLanguage ?? lesson.language
   // Suspends until the language's chunk is in; a change of language waits in a transition.
   const t = useStrings(ui)
+  // Reveal the player once what the before-paint script hid it for is in: the saved preferences,
+  // in their language (they commit together, after it loads), and ?ui='s language, which a
+  // prerendered page applies after mounting (progress is resumed earlier, before the first paint).
+  // A few seconds at most, whatever happens.
+  React.useEffect(() => {
+    const reveal = () => root.current?.removeAttribute("data-resuming")
+    const timer = window.setTimeout(reveal, 3000)
+    const wanted = new URLSearchParams(window.location.search).get("ui")
+    if (prefsLoaded && (!wanted || wanted.toLowerCase() === ui.toLowerCase()))
+      reveal()
+    return () => window.clearTimeout(timer)
+  }, [prefsLoaded, ui])
   const locale = ariaLocaleFor(ui)
   const dir = /^(ar|he|fa|ur)\b/i.test(ui) ? "rtl" : "ltr"
   const appSettings = {
@@ -727,21 +739,18 @@ function Player({
   // Saved progress comes back before the first paint after hydration, so a reload lands on the same
   // screen. The server's HTML still shows the intro until then; the inline script below (parsed
   // before the rest of the player) marks its parent, the player's root, to hide it when there's
-  // progress to resume, and the effect clears the mark once the saved screen is in. The mark is
-  // reached through the script's ref: the root's own ref isn't attached yet when this effect runs.
-  // A demo (startAt) never saves. The fingerprint, not the lesson, keys the effects: a rename
+  // progress to resume or preferences to apply, and LessonInLanguage clears the mark once they're
+  // in. A demo (startAt) never saves. The fingerprint, not the lesson, keys the effects: a rename
   // changes the lesson object but not what was saved.
   const print = React.useMemo(() => fingerprint(lesson), [lesson])
   const remember = progressKey && !startAt ? progressKey : null
   const loaded = React.useRef(false)
-  const mark = React.useRef<HTMLScriptElement>(null)
   React.useLayoutEffect(() => {
     if (!remember) return
     const storage = browserStorage()
     const saved = storage && loadProgress(storage, remember, lesson, print)
     if (saved) dispatch({ type: "resume", state: saved })
     loaded.current = true
-    mark.current?.parentElement?.removeAttribute("data-resuming")
     // The lesson is covered by its fingerprint.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remember, print])
@@ -1001,12 +1010,11 @@ function Player({
 
   return (
     <>
-      {remember ? (
+      {startAt ? null : (
         <script
-          ref={mark}
           dangerouslySetInnerHTML={{ __html: resumeScript(remember, lesson) }}
         />
-      ) : null}
+      )}
       {chrome ? (
         <LessonHeader
           title={lesson.title}

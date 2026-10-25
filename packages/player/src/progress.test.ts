@@ -270,19 +270,51 @@ describe("progress for the feed", () => {
 
 describe("resume script", () => {
   /** Runs the script as the browser would, with a stub page and storage; returns the root's mark. */
-  function run(storage: Storage, key = "l/a-1", content = lesson) {
-    const attrs = new Map<string, string>()
+  function run(
+    storage: Storage,
+    key: string | null = "l/a-1",
+    content = lesson,
+    { lang = "en", search = "" } = {}
+  ) {
+    const attrs = new Map<string, string>([["lang", lang]])
     const document = {
       currentScript: {
-        parentNode: { setAttribute: (k: string, v: string) => attrs.set(k, v) },
+        parentNode: {
+          getAttribute: (k: string) => attrs.get(k) ?? null,
+          setAttribute: (k: string, v: string) => attrs.set(k, v),
+        },
       },
     }
-    new Function("localStorage", "document", resumeScript(key, content))(
-      storage,
-      document
-    )
+    new Function(
+      "localStorage",
+      "document",
+      "location",
+      resumeScript(key, content)
+    )(storage, document, { search })
     return attrs.has("data-resuming")
   }
+
+  it("hides the player while saved preferences would change what the server drew", () => {
+    const storage = fakeStorage()
+    const prefs = (p: object) =>
+      storage.setItem("learn:preferences", JSON.stringify(p))
+    prefs({ uiLanguage: "ar" })
+    expect(run(storage, null)).toBe(true)
+    expect(run(storage, null, lesson, { lang: "ar" })).toBe(false)
+    prefs({ textSize: "lg" })
+    expect(run(storage, null)).toBe(true)
+    prefs({ tray: "closed" })
+    expect(run(storage, null)).toBe(true)
+    prefs({ uiLanguage: "en", textSize: "md", ninja: "unhinged" })
+    expect(run(storage, null)).toBe(false)
+  })
+
+  it("hides it while ?ui= asks for another language than the server drew", () => {
+    expect(run(fakeStorage(), null, lesson, { search: "?ui=es" })).toBe(true)
+    expect(
+      run(fakeStorage(), null, lesson, { lang: "es", search: "?ui=es" })
+    ).toBe(false)
+  })
 
   it("marks the player when there's progress for this lesson", () => {
     const storage = fakeStorage()

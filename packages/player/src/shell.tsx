@@ -108,8 +108,10 @@ export interface Preferences {
 
 const PREFERENCES_KEY = "learn:preferences"
 
+/** The viewer's preferences, the setter, and whether the saved ones have been read yet. */
 export function usePreferences() {
   const [prefs, setPrefs] = React.useState<Preferences>({ textSize: "md" })
+  const [loaded, setLoaded] = React.useState(false)
   React.useEffect(() => {
     try {
       const saved = JSON.parse(
@@ -123,12 +125,15 @@ export function usePreferences() {
       }
       if (saved.ninja && saved.ninja in renamed)
         saved.ninja = renamed[saved.ninja]
-      // In a transition: a saved language keeps the current one up until it has loaded.
-      React.startTransition(() =>
+      // In a transition: a saved language keeps the current one up until it has loaded, and
+      // `loaded` turns true in the same commit as the preferences it read.
+      React.startTransition(() => {
         setPrefs((p) => ({ ...p, ...(saved as Partial<Preferences>) }))
-      )
+        setLoaded(true)
+      })
     } catch {
       // Storage can be blocked or empty; the defaults are fine.
+      setLoaded(true)
     }
   }, [])
   const update = React.useCallback((patch: Partial<Preferences>) => {
@@ -142,7 +147,7 @@ export function usePreferences() {
       return next
     })
   }, [])
-  return [prefs, update] as const
+  return [prefs, update, loaded] as const
 }
 
 /** Time until the link expires, updated every minute. Null until mounted. */
