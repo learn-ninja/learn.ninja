@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
 
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 
 import { connectPglite, lesson, lessonTag, user, type Db } from "@workspace/db"
@@ -29,7 +29,7 @@ import {
   tokenMatches,
 } from "./ids"
 import { MemoryRateLimiter } from "./rate-limit"
-import { LESSON_TTL_SECONDS, PostgresLessonStore } from "./store"
+import { atomically, LESSON_TTL_SECONDS, PostgresLessonStore } from "./store"
 
 const example = (file: string) =>
   readFileSync(new URL(`../../../../examples/${file}`, import.meta.url), "utf8")
@@ -91,6 +91,25 @@ describe("links and tokens", () => {
 })
 
 describe("publishing", () => {
+  it("writes a lesson's changes as one: when a later write fails, the earlier ones are undone", async () => {
+    const { body } = await publishLesson({ text: buttons, client: "x" }, deps)
+    const id = body.id as string
+    await expect(
+      atomically(db, (q) => [
+        q.update(lesson).set({ views: 999 }).where(eq(lesson.id, id)),
+        q.delete(lessonTag).where(eq(lessonTag.lessonId, id)),
+        q.execute(sql`select 1 / 0`),
+      ])
+    ).rejects.toThrow()
+    const [row] = await db.select().from(lesson).where(eq(lesson.id, id))
+    expect(row?.views).toBe(0)
+    const tags = await db
+      .select()
+      .from(lessonTag)
+      .where(eq(lessonTag.lessonId, id))
+    expect(tags.length).toBeGreaterThan(0)
+  })
+
   it("publishes a valid lesson with a link, an edit token, and a 7-day expiry", async () => {
     const reply = await publishLesson(
       { text: buttons, client: "1.2.3.4", skillVersion: LATEST_SKILL_VERSION },

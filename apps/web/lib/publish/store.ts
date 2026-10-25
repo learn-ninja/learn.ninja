@@ -23,6 +23,41 @@ export const LESSON_TTL_SECONDS = 7 * 24 * 60 * 60
  * key (the checker refuses duplicate keys, so a second label for a key is only possible in data
  * from before the rule; the first one wins).
  */
+/**
+ * The lesson's tags as rows of lesson_tag (the key each label derives to, and the label as
+ * written), for counting and filtering. The JSON stays the truth; this is its index.
+ */
+function tagWrites(db: Db, record: StoredLesson) {
+  const rows = tagRows(record.lesson.tags ?? [])
+  return rows.length
+    ? [
+        db
+          .insert(lessonTag)
+          .values(rows.map((row) => ({ lessonId: record.id, ...row }))),
+      ]
+    : []
+}
+
+/** A query built but not yet run: Drizzle runs one when it's awaited, or in a batch. */
+type Write = PromiseLike<unknown>
+
+/**
+ * Runs `writes` as one: all of them or none. Neon over HTTP has no interactive transactions, but
+ * runs a batch in one; PGlite (development, tests) has transactions. `writes` builds the queries on
+ * whichever it's handed.
+ */
+export async function atomically(db: Db, writes: (db: Db) => Write[]) {
+  const batch = (db as Partial<{ batch(queries: Write[]): Promise<unknown> }>)
+    .batch
+  if (batch) {
+    await batch.call(db, writes(db))
+    return
+  }
+  await db.transaction(async (tx) => {
+    for (const write of writes(tx as unknown as Db)) await write
+  })
+}
+
 export function tagRows(labels: string[]): { tag: string; label: string }[] {
   const rows: { tag: string; label: string }[] = []
   for (const label of labels) {
@@ -89,25 +124,29 @@ export class PostgresLessonStore implements LessonStore {
   ) {}
 
   async create(record: StoredLesson) {
-    await this.db.insert(lesson).values({
-      id: record.id,
-      slug: record.slug,
-      spec: record.spec,
-      lesson: record.lesson,
-      prepared: record.prepared,
-      editTokenHash: record.editTokenHash,
-      claimTokenHash: record.claimTokenHash,
-      ownerId: record.ownerId,
-      visibility: record.visibility,
-      hidden: record.hidden,
-      views: record.views,
-      likes: record.likes,
-      origin: record.origin ?? null,
-      createdAt: new Date(record.createdAt),
-      updatedAt: new Date(record.updatedAt ?? record.createdAt),
-      expiresAt: record.expiresAt === null ? null : new Date(record.expiresAt),
-    })
-    await this.writeTags(record)
+    // One write with its tags: a failure leaves neither, so a retried publish makes no duplicate.
+    await atomically(this.db, (db) => [
+      db.insert(lesson).values({
+        id: record.id,
+        slug: record.slug,
+        spec: record.spec,
+        lesson: record.lesson,
+        prepared: record.prepared,
+        editTokenHash: record.editTokenHash,
+        claimTokenHash: record.claimTokenHash,
+        ownerId: record.ownerId,
+        visibility: record.visibility,
+        hidden: record.hidden,
+        views: record.views,
+        likes: record.likes,
+        origin: record.origin ?? null,
+        createdAt: new Date(record.createdAt),
+        updatedAt: new Date(record.updatedAt ?? record.createdAt),
+        expiresAt:
+          record.expiresAt === null ? null : new Date(record.expiresAt),
+      }),
+      ...tagWrites(db, record),
+    ])
   }
 
   async get(id: string) {
@@ -127,30 +166,21 @@ export class PostgresLessonStore implements LessonStore {
   }
 
   async update(record: StoredLesson) {
-    await this.db
-      .update(lesson)
-      .set({
-        slug: record.slug,
-        spec: record.spec,
-        lesson: record.lesson,
-        prepared: record.prepared,
-        updatedAt: new Date(record.updatedAt ?? this.now()),
-      })
-      .where(eq(lesson.id, record.id))
-    await this.db.delete(lessonTag).where(eq(lessonTag.lessonId, record.id))
-    await this.writeTags(record)
-  }
-
-  /**
-   * The lesson's tags as rows of lesson_tag (the key each label derives to, and the label as
-   * written), for counting and filtering. The JSON stays the truth; this is its index.
-   */
-  private async writeTags(record: StoredLesson) {
-    const rows = tagRows(record.lesson.tags ?? [])
-    if (!rows.length) return
-    await this.db
-      .insert(lessonTag)
-      .values(rows.map((row) => ({ lessonId: record.id, ...row })))
+    // One write with its tags: a failure can't leave the lesson without any.
+    await atomically(this.db, (db) => [
+      db
+        .update(lesson)
+        .set({
+          slug: record.slug,
+          spec: record.spec,
+          lesson: record.lesson,
+          prepared: record.prepared,
+          updatedAt: new Date(record.updatedAt ?? this.now()),
+        })
+        .where(eq(lesson.id, record.id)),
+      db.delete(lessonTag).where(eq(lessonTag.lessonId, record.id)),
+      ...tagWrites(db, record),
+    ])
   }
 
   async claim(id: string, ownerId: string) {
