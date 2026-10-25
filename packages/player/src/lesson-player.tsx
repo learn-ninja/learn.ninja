@@ -114,6 +114,7 @@ import {
 } from "./shell"
 import {
   ariaLocaleFor,
+  UI_TRANSLATIONS,
   useStrings,
   type NinjaLevel,
   type Strings,
@@ -229,7 +230,11 @@ function LessonInLanguage({
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false)
   // A choice made in the footer wins over the page's default for this session.
   const [chosen, setChosen] = React.useState<string>()
-  const ui = chosen ?? uiLanguage ?? prefs.uiLanguage ?? lesson.language
+  // With translations off (UI_TRANSLATIONS), only ?ui= (uiLanguage) picks another than English.
+  const ui =
+    chosen ??
+    uiLanguage ??
+    (UI_TRANSLATIONS ? (prefs.uiLanguage ?? lesson.language) : "en")
   // Suspends until the language's chunk is in; a change of language waits in a transition.
   const t = useStrings(ui)
   // Reveal the player once what the before-paint script hid it for is in: the saved preferences,

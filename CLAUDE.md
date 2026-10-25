@@ -78,4 +78,4 @@ A lesson is made of **bricks**, one per screen: `concept` bricks (theory) and qu
 
 ## v1 scope reminders
 
-No accounts (progress is kept in the browser only, per lesson page), lessons expire after 7 days, no typed answers (word chips instead), no `number` bricks (multiple choice instead), no images. Multiple languages and right-to-left matter from day one.
+No accounts (progress is kept in the browser only, per lesson page), lessons expire after 7 days, no typed answers (word chips instead), no `number` bricks (multiple choice instead), no images. Multiple languages and right-to-left matter from day one: lessons are written in any language. The player's own interface is English-only for now (`UI_TRANSLATIONS` in `packages/player/src/strings.ts`) until people can test the translations; keep them up to date, and check one with `?ui=`.

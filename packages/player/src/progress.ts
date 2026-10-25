@@ -2,6 +2,7 @@ import type { Lesson, QuestionBrick } from "@workspace/spec"
 
 import { buildSequence, type Item, type Outcome } from "./flow"
 import { freshQuestion, type QuestionState, type State } from "./lesson-player"
+import { UI_TRANSLATIONS } from "./strings"
 
 // Where a learner is in a lesson, kept in the browser so reopening the page (or reloading it)
 // carries on from the same screen instead of the intro. One entry per lesson, keyed by the page.
@@ -149,7 +150,7 @@ export function resumeScript(key: string | null, lesson: Lesson): string {
     // The preferences shell.tsx keeps (PREFERENCES_KEY); the server draws English-or-the-lesson's
     // language, medium text, and the tray open.
     'try{var p=JSON.parse(localStorage.getItem("learn:preferences")||"{}"),' +
-    'u=new URLSearchParams(location.search).get("ui")||p.uiLanguage;' +
+    `u=new URLSearchParams(location.search).get("ui")${UI_TRANSLATIONS ? "||p.uiLanguage" : ""};` +
     'if((u&&String(u).toLowerCase()!==(r.getAttribute("lang")||"").toLowerCase())||' +
     '(p.textSize&&p.textSize!=="md")||p.tray==="closed")h=1}catch(e){}' +
     'if(h)r.setAttribute("data-resuming","")})()'

@@ -7,6 +7,7 @@ import { plainText } from "@workspace/player/plain-text"
 import {
   loadLanguage,
   stringsFor,
+  UI_TRANSLATIONS,
   type Strings,
 } from "@workspace/player/strings"
 import type { Lesson } from "@workspace/spec"
@@ -626,7 +627,9 @@ export function siteImage(size: Size = OG_SIZE) {
 
 /** A lesson's card: title and summary, with its first question in the player's window. */
 export async function lessonImage(lesson: Lesson) {
-  const t = (await loadLanguage(lesson.language)).strings
+  // The card's own words (minutes, level) in the player's language: English while translations are off.
+  const t = (await loadLanguage(UI_TRANSLATIONS ? lesson.language : "en"))
+    .strings
   const dir = /^(ar|he|fa|ur)\b/i.test(lesson.language) ? "rtl" : "ltr"
   const shown = peek(lesson)
   // Length and level, as the row and the title screen show them; tags stay hidden for now.

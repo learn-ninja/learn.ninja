@@ -237,6 +237,14 @@ function normalize(lang: string): UiLanguage | undefined {
   return UI_LANGUAGES.find((l) => l.code === base)?.code
 }
 
+/**
+ * Whether the player's interface follows the learner: their saved choice, the language menu, and
+ * the lesson's language. Off for now, so it's in English until people can test the translations;
+ * they're kept up to date meanwhile, and ?ui= still shows one, for testing. Lessons themselves are
+ * written in any language either way.
+ */
+export const UI_TRANSLATIONS = false
+
 /** The menu entry for a language code, or undefined when the player has no translation for it. */
 export function uiLanguageFor(lang: string) {
   const code = normalize(lang)
