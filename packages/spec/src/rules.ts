@@ -21,7 +21,13 @@ import {
 } from "./schema"
 import { normalizeTag } from "./tags"
 import { listItem, textBlocks } from "./text"
-import { everyVisual, fractionStep, LEVELS, LIMITS } from "./basics"
+import {
+  everyVisual,
+  fractionStep,
+  LEVELS,
+  LIMITS,
+  matchesBlank,
+} from "./basics"
 
 // Rules the schema can't express: cross-references, teaching quality, v1 limits, and safety.
 // Every message says what's wrong and how to fix it, so an LLM can correct the lesson on its own.
@@ -1171,15 +1177,68 @@ function checkBrickReferences(
             `${path}.blanks`,
             `Blank "${b}" doesn't appear in the template as [[${b}]].`
           )
+      // Compared the way the player compares them (matchesBlank).
+      const right = (b: (typeof brick.blanks)[number], chip: string) =>
+        b.accept.some((a) =>
+          matchesBlank(a, chip, { ...b, caseSensitive: brick.caseSensitive })
+        )
       brick.blanks.forEach((b, i) => {
-        if (b.choices && !b.accept.some((a) => b.choices!.includes(a))) {
+        const choices = b.choices ?? []
+        if (b.choices && !choices.some((c) => right(b, c))) {
           add(
             "structure",
             `${path}.blanks[${i}].choices`,
             `None of blank "${b.id}"'s accepted answers is among its choices, so it can't be answered. Add "${b.accept[0]}" to "choices".`
           )
         }
+        // More chips than one count as the same answer: the extra ones were meant as decoys. (Every
+        // matching chip listed in "accept" itself is meant to be right.)
+        const extras = b.accept.flatMap((answer) => {
+          const matching = choices.filter((c) =>
+            matchesBlank(answer, c, {
+              ...b,
+              caseSensitive: brick.caseSensitive,
+            })
+          )
+          if (matching.length < 2) return []
+          const listed = matching.filter((c) => b.accept.includes(c))
+          return listed.length
+            ? matching.filter((c) => !b.accept.includes(c))
+            : matching.slice(1)
+        })
+        for (const chip of new Set(extras))
+          add(
+            "structure",
+            `${path}.blanks[${i}].choices`,
+            `The chip "${chip}" counts as a right answer to blank "${b.id}" (${b.numeric ? "numbers compare by value" : "case is ignored"}), so it isn't a decoy. Make it a different word${b.numeric ? "" : ', or set "caseSensitive": true'}, or add it to "accept".`
+          )
+        ;(b.mistakes ?? []).forEach((m, j) => {
+          if (
+            !choices.some((c) =>
+              matchesBlank(m.answer, c, {
+                ...b,
+                caseSensitive: brick.caseSensitive,
+              })
+            )
+          )
+            add(
+              "structure",
+              `${path}.blanks[${i}].mistakes[${j}]`,
+              `"${m.answer}" isn't one of blank "${b.id}"'s chips, so its feedback can never show. Use a chip's text, or add it to "choices" as a decoy.`
+            )
+        })
       })
+      // A chip for every gap and none to spare is ordering, not a question.
+      const chips = [...new Set(brick.blanks.flatMap((b) => b.choices ?? []))]
+      if (
+        chips.length > 0 &&
+        chips.every((chip) => brick.blanks.some((b) => right(b, chip)))
+      )
+        add(
+          "teaching",
+          `${path}.blanks`,
+          `Every chip is a right answer to some gap, so there's nothing to choose between. Add 1–2 believable decoys to "choices".`
+        )
       break
     }
     case "hotspot": {

@@ -12,10 +12,11 @@ import {
   RotateCcwIcon,
 } from "lucide-react"
 
-import type {
-  ConceptBrick as ConceptBrickData,
-  Lesson,
-  QuestionBrick,
+import {
+  matchesBlank,
+  type ConceptBrick as ConceptBrickData,
+  type Lesson,
+  type QuestionBrick,
 } from "@workspace/spec"
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
@@ -403,7 +404,11 @@ export function freshQuestion(
 export function wordBank(brick: Extract<QuestionBrick, { type: "blank" }>) {
   const words = [...new Set(brick.blanks.flatMap((b) => b.choices ?? []))]
   return words.flatMap((word) => {
-    const needed = brick.blanks.filter((b) => b.accept.includes(word)).length
+    const needed = brick.blanks.filter((b) =>
+      b.accept.some((a) =>
+        matchesBlank(a, word, { ...b, caseSensitive: brick.caseSensitive })
+      )
+    ).length
     return Array<string>(Math.max(1, needed)).fill(word)
   })
 }

@@ -225,7 +225,7 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 ```
 
 - `blank` with `"format": "code"` takes a `language` and is usually `"caseSensitive": true`.
-- `blank` options: `numeric` and `tolerance` (for numbers in gaps), `strictAccents` (when accents change meaning, like _si_ and _sí_).
+- `blank` options: `numeric` and `tolerance` (number chips compare by value, so "0.5" is "0.50"), and the brick's `caseSensitive` (case is ignored otherwise). Accents always count, since the learner picks the exact chip: _si_ is a fair decoy for _sí_, and `strictAccents` changes nothing while answers are chips.
 - `number` bricks exist in the spec but aren't allowed in v1.
 
 ## Rules the checker enforces

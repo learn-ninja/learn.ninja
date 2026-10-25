@@ -61,7 +61,7 @@ Mechanics of each type:
 - **sort:** 4–8 items into 2–3 groups. Every group should get at least one item, and every group needs a name of its own. If a group would be "Not X" or "Other", ask "Which of these are X?" as a `choice` with `multiple: true` instead.
 - **order:** 3–6 items written in the correct order (the player shuffles them). Use `alsoAccept` if another order is genuinely right too.
 - **match:** 3–5 pairs.
-- **blank:** fill gaps in a sentence, formula, or code from word chips. Each gap's `choices` include the right answer plus 1–2 believable decoys. Use `numeric` for a number gap and `strictAccents` when accents change the meaning (_si_ and _sí_).
+- **blank:** fill gaps in a sentence, formula, or code from word chips. Each gap's `choices` include the right answer plus 1–2 believable decoys. Use `numeric` for a number gap. Accents always count, so a chip that differs only by its accent (_si_ for _sí_) is a fair decoy; one that differs only by case isn't, unless the brick is `caseSensitive`.
 - **scenario:** a short situation and 2–4 options, each with a `quality` (`best`, `okay`, `poor`) and an `outcome` that shows the consequence.
 
 ## 4. Feedback that teaches

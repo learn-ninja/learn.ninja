@@ -5,6 +5,8 @@ export {
   fractionStep,
   LEVELS,
   LIMITS,
+  matchesBlank,
+  type BlankComparison,
   type Level,
 } from "./basics"
 export { redundantTag, type Issue, type IssueKind } from "./rules"

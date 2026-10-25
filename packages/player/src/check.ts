@@ -1,4 +1,4 @@
-import type { QuestionBrick } from "@workspace/spec"
+import { matchesBlank, type QuestionBrick } from "@workspace/spec"
 
 // Pure answer logic for every question brick: the starting answer, whether it's ready to check,
 // checking it, the correct answer, and what to keep on a retry. No React here, so it's easy to test.
@@ -210,16 +210,13 @@ export function checkAnswer(brick: QuestionBrick, answer: Answer): CheckResult {
       let anyWrong = false
       for (const b of brick.blanks) {
         const v = values[b.id] ?? ""
-        const ok = b.accept.some((a) =>
-          brick.caseSensitive
-            ? a === v
-            : a.toLocaleLowerCase() === v.toLocaleLowerCase()
-        )
+        const how = { ...b, caseSensitive: brick.caseSensitive }
+        const ok = b.accept.some((a) => matchesBlank(a, v, how))
         marks[b.id] = ok ? "correct" : "wrong"
         if (!ok && !anyWrong) {
           anyWrong = true
-          feedback = b.mistakes?.find(
-            (m) => m.answer.toLocaleLowerCase() === v.toLocaleLowerCase()
+          feedback = b.mistakes?.find((m) =>
+            matchesBlank(m.answer, v, how)
           )?.feedback
         }
       }

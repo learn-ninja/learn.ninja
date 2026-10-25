@@ -62,3 +62,37 @@ export function everyVisual(
   }
   return out
 }
+
+/** How a blank compares a chip with an accepted answer: its own options and the brick's caseSensitive. */
+export interface BlankComparison {
+  caseSensitive?: boolean
+  numeric?: boolean
+  tolerance?: number
+}
+
+/**
+ * Whether `value`, the chip a learner put in a gap, counts as `answer`. Case is ignored unless
+ * `caseSensitive`. With `numeric`, numbers compare by value, within `tolerance` ("0.5" is "0.50").
+ * Accents always count: the learner picks the exact word, and a lesson that offers both "como" and
+ * "cómo" is asking about the accent, so `strictAccents` changes nothing while answers are chips.
+ * The checker and the player share this, so a lesson plays the way it was checked.
+ */
+export function matchesBlank(
+  answer: string,
+  value: string,
+  { caseSensitive, numeric, tolerance = 0 }: BlankComparison = {}
+): boolean {
+  if (numeric) {
+    const a = asNumber(answer)
+    const v = asNumber(value)
+    if (a !== null && v !== null) return Math.abs(a - v) <= tolerance + 1e-9
+  }
+  const fold = (text: string) =>
+    caseSensitive ? text.trim() : text.trim().toLocaleLowerCase()
+  return fold(answer) === fold(value)
+}
+
+function asNumber(text: string): number | null {
+  const n = Number(text.trim())
+  return text.trim() !== "" && Number.isFinite(n) ? n : null
+}

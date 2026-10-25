@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { loadExample } from "./test-helpers"
+import { matchesBlank } from "./basics"
 import { bareCode, positionalReference } from "./rules"
 import { SUBJECTS } from "./subjects"
 import { validateLesson } from "./validate"
@@ -1434,6 +1435,59 @@ describe("teaching rules", () => {
     const l = buttons()
     l.challenge.options[0].quality = "okay"
     expectIssue(l, { path: "challenge.options", message: /"quality": "best"/ })
+  })
+})
+
+describe("blank bricks", () => {
+  const spanish = () => loadExample("spanish-greetings.json")
+
+  it("compare chips the way the player does", () => {
+    expect(matchesBlank("cómo", "Cómo")).toBe(true)
+    expect(matchesBlank("cómo", "Cómo", { caseSensitive: true })).toBe(false)
+    expect(matchesBlank("cómo", "como")).toBe(false)
+    expect(matchesBlank("0.5", "0.50", { numeric: true })).toBe(true)
+    expect(matchesBlank("1.05", "1.06", { numeric: true })).toBe(false)
+    expect(
+      matchesBlank("1.05", "1.06", { numeric: true, tolerance: 0.01 })
+    ).toBe(true)
+    expect(matchesBlank("0.5", "0.50")).toBe(false)
+  })
+
+  it("accept an answer whose chip differs only in case, as the player does", () => {
+    const l = spanish()
+    l.bricks[4].blanks[0].accept = ["cómo"]
+    expect(validateLesson(l).ok).toBe(true)
+  })
+
+  it("reject a decoy that counts as the answer", () => {
+    const l = spanish()
+    l.bricks[4].blanks[0].choices.push("CÓMO")
+    expectIssue(l, {
+      path: "bricks[4].blanks[0].choices",
+      message: /"CÓMO" counts as a right answer/,
+    })
+  })
+
+  it("reject feedback for a mistake that isn't a chip", () => {
+    const l = spanish()
+    l.bricks[4].blanks[0].mistakes[0].answer = "Cuándo"
+    expectIssue(l, {
+      path: "bricks[4].blanks[0].mistakes[0]",
+      message: /isn't one of blank "c"'s chips/,
+    })
+  })
+
+  it("want a decoy among the chips", () => {
+    const l = spanish()
+    const [c, g] = l.bricks[4].blanks
+    c.choices = ["Cómo", "gracias"]
+    g.choices = ["gracias", "Cómo"]
+    delete c.mistakes
+    delete g.mistakes
+    expectIssue(l, {
+      kind: "teaching",
+      message: /Every chip is a right answer/,
+    })
   })
 })
 
