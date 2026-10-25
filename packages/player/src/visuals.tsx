@@ -107,6 +107,9 @@ export function Visual({
  */
 export const VISUAL_SANDBOX = "allow-same-origin"
 
+/** The tallest an HTML visual's frame grows, in pixels. */
+const MAX_VISUAL_HEIGHT = 2400
+
 /**
  * The frame's own Content-Security-Policy, first in its head. The lesson page's header policy only
  * covers a page loaded from a lesson URL, not one reached by an in-app link, so the frame carries
@@ -143,11 +146,12 @@ function HtmlFrame({
   const hotspotsRef = React.useRef(hotspots)
   hotspotsRef.current = hotspots
 
-  // The document is fixed per lesson visual; theme and direction are applied after load without reloading.
+  // The document is fixed per lesson visual; the theme is applied after load without reloading. Its
+  // direction is its own (dir="auto"), like lesson text: the interface's language doesn't mirror it.
   const srcDoc = React.useMemo(
     () =>
       // Without an explicit height the body keeps its natural size, so the player can measure it.
-      `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${VISUAL_CSP}"><link rel="stylesheet" href="${visualsCss}"><style>${inStyle(prepared.visualsCss)}</style><style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box${height ? ";min-height:100vh" : ""}}${inStyle(css ?? "")}</style></head><body>${html}</body></html>`,
+      `<!doctype html><html dir="auto"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${VISUAL_CSP}"><link rel="stylesheet" href="${visualsCss}"><style>${inStyle(prepared.visualsCss)}</style><style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box${height ? ";min-height:100vh" : ""}}${inStyle(css ?? "")}</style></head><body>${html}</body></html>`,
     [html, css, visualsCss, height, prepared.visualsCss]
   )
 
@@ -155,8 +159,14 @@ function HtmlFrame({
   React.useEffect(() => {
     const doc = ref.current?.contentDocument
     if (!doc?.body || height) return
+    // Capped, so content tied to the frame's own height (which the checker refuses) can't grow it forever.
     const measure = () =>
-      setMeasured(Math.ceil(doc.body.getBoundingClientRect().height))
+      setMeasured(
+        Math.min(
+          MAX_VISUAL_HEIGHT,
+          Math.ceil(doc.body.getBoundingClientRect().height)
+        )
+      )
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(doc.body)
@@ -182,8 +192,7 @@ function HtmlFrame({
     // Before the srcDoc loads, the frame's document can be empty; this runs again on load.
     if (!doc?.documentElement) return
     doc.documentElement.classList.toggle("dark", dark)
-    doc.documentElement.dir = dir
-  }, [loaded, dark, dir])
+  }, [loaded, dark])
 
   // Hotspots: Safari won't run event listeners inside a sandbox without allow-scripts, so the taps
   // land on buttons the player lays over each [data-hotspot] element instead. That also keeps focus

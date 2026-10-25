@@ -1478,6 +1478,27 @@ describe("safety rules", () => {
     )
   })
 
+  it.each([
+    "<div class='h-screen'>Tall</div>",
+    '<div class="flex min-h-dvh">Tall</div>',
+    "<div class='h-[60vh]'>Tall</div>",
+    "<div style='height: 100vh'>Tall</div>",
+    "<style>.box { min-height: 50svh }</style><div class='box'>Tall</div>",
+  ])("rejects a visual sized to the screen's height: %s", (html) => {
+    const l = buttons()
+    l.bricks[0].visual.html = html
+    expectIssue(l, { message: /screen's height/ })
+  })
+
+  it("lets a visual mention vh in its text", () => {
+    const l = buttons()
+    l.bricks[0].visual.html =
+      "<p>Use <code>100vh</code> or <code>h-screen</code> for a full-height hero.</p>"
+    expect(
+      validateLesson(l).issues.filter((i) => /screen's height/.test(i.message))
+    ).toEqual([])
+  })
+
   it("checks a long visual in linear time", () => {
     const l = buttons()
     l.bricks[0].visual.html = `<div>${"x".repeat(400 * 1024)}</div>`

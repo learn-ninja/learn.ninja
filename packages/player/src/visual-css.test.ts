@@ -56,12 +56,18 @@ describe("visuals CSS", () => {
       "icon-[lucide--not-an-icon]",
       "size-6",
     ])
-    expect(css.startsWith("@layer components{.icon-\\[lucide--git-branch\\]{")).toBe(
-      true
-    )
+    expect(
+      css.startsWith("@layer components{.icon-\\[lucide--git-branch\\]{")
+    ).toBe(true)
     expect(css).toContain("mask-image")
     expect(css).toMatch(/@layer utilities\s*\{[\s\S]*\.size-6/)
     expect(css).not.toContain("not-an-icon")
+  })
+
+  it("follows the player's dark class, not the OS setting", async () => {
+    const css = await visualsCssFor(["dark:bg-muted"])
+    expect(css).toContain(".dark")
+    expect(css).not.toContain("prefers-color-scheme")
   })
 
   it("returns nothing when there are no classes", async () => {

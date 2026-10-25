@@ -41,6 +41,11 @@ describe("HTML visual frame", () => {
     )
   })
 
+  it("takes its direction from its own content, not the interface", () => {
+    const { srcdoc } = frameFor({ html: "<b>Hi</b>" })
+    expect(srcdoc).toMatch(/^<!doctype html><html dir="auto">/)
+  })
+
   it("reads as an image named by its alt text", () => {
     const { markup } = frameFor({ html: "<b>Hi</b>", alt: "A bold hi." })
     expect(markup).toContain('role="img"')

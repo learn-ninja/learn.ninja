@@ -866,6 +866,26 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
         "Visuals can't load anything from external URLs. Use the built-in UI kit, inline SVG, and CSS only."
       )
     }
+    // The frame takes its height from the visual, so a height tied to the viewport makes it grow
+    // without end: the frame grows, the viewport with it, and the visual again.
+    const styling = [
+      ...styles,
+      ...[
+        ...plainHtml.matchAll(/\s(?:style|class)\s*=\s*("[^"]*"|'[^']*')/gi),
+      ].map((m) => m[1]!),
+    ]
+    if (
+      styling.some((text) =>
+        /(?:^|[^\w-])(?:min-|max-)?h-(?:screen|[dls]vh)(?![\w-])|\d[dls]?vh\b/.test(
+          text
+        )
+      )
+    )
+      add(
+        "structure",
+        path,
+        "Visuals can't size to the screen's height (vh, dvh, h-screen): the frame takes its height from the visual, so it would grow without end. Give it a fixed height like h-64, or let the content set it."
+      )
     const bytes = new TextEncoder().encode(html + (v.css ?? "")).length
     if (bytes > LIMITS.htmlVisualBytes) {
       add(

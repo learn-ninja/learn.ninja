@@ -65,7 +65,7 @@ export async function visualsCssFor(classes: string[]): Promise<string> {
   }
   // A fresh compiler each time: Tailwind's build() keeps every class it has seen.
   const compiler = await compile(
-    `@layer theme, base, components, utilities;\n@import "tailwindcss/theme" layer(theme);\n@import "tailwindcss/utilities" layer(utilities);\n${VISUAL_THEME}`,
+    `@layer theme, base, components, utilities;\n@import "tailwindcss/theme" layer(theme);\n@import "tailwindcss/utilities" layer(utilities);\n@custom-variant dark (&:is(.dark *));\n${VISUAL_THEME}`,
     {
       base: tailwindDir(),
       loadStylesheet: async (id) => tailwindStylesheet(id),
