@@ -201,6 +201,26 @@ function duplicates(values: string[]): string[] {
 const sameSet = (a: string[], b: string[]) =>
   a.length === b.length && a.every((x) => b.includes(x))
 
+/**
+ * What a learner sees of an option, item, or label. Two that look the same can't be told apart,
+ * so picking or placing the "wrong" one of them counts as a miss. Case is kept: "lunes" and
+ * "Lunes" can be the very thing a question asks about.
+ */
+const looks = (x: { text?: string; visual?: Visual }) =>
+  JSON.stringify([x.text?.trim().replace(/\s+/g, " "), x.visual ?? null])
+
+/** Indices of the entries that look like an earlier one. */
+function lookalikes<T>(entries: T[], key: (e: T) => string): number[] {
+  const seen = new Set<string>()
+  const repeats: number[] = []
+  entries.forEach((e, i) => {
+    const k = key(e)
+    if (seen.has(k)) repeats.push(i)
+    else seen.add(k)
+  })
+  return repeats
+}
+
 /** Ids of the tappable regions in a hotspot visual. */
 function hotspotIds(v: Visual): string[] {
   if (v.kind === "html")
@@ -946,8 +966,15 @@ function checkBrickReferences(
           `${path}.correct`,
           `With "multiple": false, "correct" must list exactly one option id.`
         )
+      for (const d of duplicates(brick.correct))
+        add(
+          "structure",
+          `${path}.correct`,
+          `"${d}" is listed more than once in "correct".`
+        )
       if (brick.correct.length >= ids.length)
         add("teaching", `${path}.correct`, "At least one option must be wrong.")
+      sameLooking(brick.options, `${path}.options`, "Option", add)
       break
     }
     case "compare": {
@@ -964,6 +991,7 @@ function checkBrickReferences(
           `${path}.correct`,
           `"${brick.correct}" isn't one of this brick's option ids (${ids.join(", ")}).`
         )
+      sameLooking(brick.options, `${path}.options`, "Option", add)
       break
     }
     case "scenario": {
@@ -980,6 +1008,7 @@ function checkBrickReferences(
           `${path}.options`,
           `A scenario needs at least one option with "quality": "best".`
         )
+      sameLooking(brick.options, `${path}.options`, "Option", add)
       break
     }
     case "order": {
@@ -998,6 +1027,7 @@ function checkBrickReferences(
             `Each alternative order must list every item id exactly once (${ids.join(", ")}).`
           )
       })
+      sameLooking(brick.items, `${path}.items`, "Item", add)
       break
     }
     case "sort": {
@@ -1022,6 +1052,35 @@ function checkBrickReferences(
             `"${it.group}" isn't one of this brick's group ids (${groupIds.join(", ")}).`
           )
       })
+      for (const i of lookalikes(brick.groups, (g) => looks({ text: g.label })))
+        add(
+          "structure",
+          `${path}.groups[${i}].label`,
+          `Group "${brick.groups[i]!.id}" has the same label as another group, so a learner can't tell which is which. Give each group its own label.`
+        )
+      brick.items.forEach((it, i) => {
+        const twin = brick.items.find(
+          (o, j) => j < i && o.group !== it.group && looks(o) === looks(it)
+        )
+        if (twin)
+          add(
+            "structure",
+            `${path}.items[${i}]`,
+            `Item "${it.id}" reads the same as item "${twin.id}" but belongs in another group, so there's no telling where it goes. Reword one of them.`
+          )
+      })
+      break
+    }
+    case "match": {
+      for (const side of ["left", "right"] as const)
+        for (const i of lookalikes(brick.pairs, (p) =>
+          looks({ text: p[side] })
+        ))
+          add(
+            "structure",
+            `${path}.pairs[${i}].${side}`,
+            `Pair ${i + 1}'s ${side} side is the same as another pair's, so matching it to either looks right but only one counts. Make every ${side} side different.`
+          )
       break
     }
     case "blank": {
@@ -1099,12 +1158,21 @@ function checkBrickReferences(
         )
       if (brick.visual.kind === "code") {
         const lines = brick.visual.code.split("\n").length
-        ;(brick.visual.hotspots ?? []).forEach((h, i) => {
+        const spots = brick.visual.hotspots ?? []
+        spots.forEach((h, i) => {
           if (h.line > lines)
             add(
               "structure",
               `${path}.visual.hotspots[${i}]`,
               `Line ${h.line} doesn't exist; the code has ${lines} lines.`
+            )
+          // A line is tapped as a whole, so only one hotspot per line can be picked.
+          const before = spots.find((o, j) => j < i && o.line === h.line)
+          if (before)
+            add(
+              "structure",
+              `${path}.visual.hotspots[${i}]`,
+              `Hotspots "${before.id}" and "${h.id}" are both on line ${h.line}; a learner taps a whole line, so only one of them can be picked. Give each hotspot its own line.`
             )
         })
       }
@@ -1189,6 +1257,25 @@ function checkBrickReferences(
     }
     default:
       break
+  }
+}
+
+/** Flags options or items that look like an earlier one in the same brick. */
+function sameLooking(
+  entries: { id: string; text?: string; visual?: Visual }[],
+  path: string,
+  noun: "Option" | "Item",
+  add: (k: IssueKind, p: string, m: string) => void
+) {
+  for (const i of lookalikes(entries, looks)) {
+    const twin = entries.find(
+      (e, j) => j < i && looks(e) === looks(entries[i]!)
+    )!
+    add(
+      "structure",
+      `${path}[${i}]`,
+      `${noun} "${entries[i]!.id}" looks the same as ${noun.toLowerCase()} "${twin.id}", so a learner can't tell them apart. Make each one different.`
+    )
   }
 }
 
