@@ -3,7 +3,17 @@ import path from "node:path"
 
 import { expect, test } from "@playwright/test"
 
+import { en as ninja } from "../../../packages/player/src/locales/voices/en"
+
 // The paths a visitor, a learner, and an agent take, end to end.
+
+/** Matches any of a moment's lines: which one the ninja says varies from run to run. */
+const oneOf = ({ plain, flavor }: { plain: string[]; flavor: string[] }) =>
+  new RegExp(
+    `^(${[...plain, ...flavor]
+      .map((line) => line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join("|")})$`
+  )
 
 const example = readFileSync(
   path.join(process.cwd(), "../../examples/compound-interest.json"),
@@ -32,7 +42,7 @@ test("a bundled lesson plays", async ({ page }) => {
   await page.getByText("$1,700").click()
   await page.getByRole("button", { name: "Check answer" }).click()
   await expect(
-    page.getByText("Not yet. We begin here.").first()
+    page.getByText(oneOf(ninja.sensei.hookMiss)).first()
   ).toBeVisible()
   await page.getByRole("button", { name: "Continue" }).click()
   await expect(
