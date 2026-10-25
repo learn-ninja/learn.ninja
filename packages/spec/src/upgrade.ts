@@ -27,7 +27,8 @@ interface LessonV02 {
   [key: string]: unknown
 }
 
-const OLD_SPECS = ["0.2", "0.3", "0.4", "0.5", "0.6", "0.7"]
+/** Every older spec this module upgrades, newest first. */
+export const OLD_SPECS = ["0.7", "0.6", "0.5", "0.4", "0.3", "0.2"]
 
 /** True for data that claims an older spec, or has a concept `term`, that this module can upgrade. */
 export function canUpgrade(data: unknown): boolean {

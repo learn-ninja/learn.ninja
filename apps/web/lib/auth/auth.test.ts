@@ -250,6 +250,21 @@ describe("API keys", () => {
     ).toMatchObject({ userId })
   })
 
+  it("refuses a banned account's open session and API key", async () => {
+    const cookie = await signIn("banned@example.com")
+    const created = await createKey(auth, new Headers({ cookie }), "laptop")
+    const key = created.body.key as string
+    const { userId } = (await getActor(auth, new Headers({ cookie })))!
+    await db.update(user).set({ banned: true }).where(eq(user.id, userId))
+
+    // The session token alone, as the server sees it once the five-minute cookie cache runs out.
+    const token = cookie.split("; ").find((c) => c.includes("session_token"))!
+    expect(await getActor(auth, new Headers({ cookie: token }))).toBeNull()
+    await expect(
+      getActor(auth, new Headers({ "x-api-key": key }))
+    ).rejects.toBeInstanceOf(InvalidApiKeyError)
+  })
+
   it("refuses a made-up key instead of treating the request as anonymous", async () => {
     await expect(
       getActor(auth, new Headers({ "x-api-key": "learn_" + "x".repeat(64) }))

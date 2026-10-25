@@ -17,6 +17,15 @@ interface Saved {
   state: State
 }
 
+/** The browser's localStorage, or null where it's blocked: reading the global throws then. */
+export function browserStorage(): Storage | null {
+  try {
+    return window.localStorage
+  } catch {
+    return null
+  }
+}
+
 /** A short hash (FNV-1a) of the lesson's teaching content: the title and summary may change freely. */
 export function fingerprint(lesson: Lesson): string {
   const text = JSON.stringify([lesson.hook, lesson.bricks, lesson.challenge])

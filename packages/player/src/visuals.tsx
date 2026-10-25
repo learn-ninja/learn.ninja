@@ -18,6 +18,7 @@ import { useIsDark, usePlayer } from "./context"
 import { markStyles } from "./controls"
 import { countryName } from "./country-names"
 import { Clock, Fractions, NumberLine } from "./figures"
+import { shortcutBlocked } from "./keys"
 import {
   chartKey,
   codeKey,
@@ -106,6 +107,14 @@ export function Visual({
  */
 export const VISUAL_SANDBOX = "allow-same-origin"
 
+/**
+ * The frame's own Content-Security-Policy, first in its head. The lesson page's header policy only
+ * covers a page loaded from a lesson URL, not one reached by an in-app link, so the frame carries
+ * one too: same-origin styles, images, and fonts, and nothing else.
+ */
+export const VISUAL_CSP =
+  "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
+
 /** Keeps CSS inside its <style>: "</" would otherwise end the tag and inject markup. A CSS "\/" still means "/". */
 const inStyle = (css: string) => css.replace(/<\//g, "<\\/")
 
@@ -138,7 +147,7 @@ function HtmlFrame({
   const srcDoc = React.useMemo(
     () =>
       // Without an explicit height the body keeps its natural size, so the player can measure it.
-      `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${visualsCss}"><style>${inStyle(prepared.visualsCss)}</style><style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box${height ? ";min-height:100vh" : ""}}${inStyle(css ?? "")}</style></head><body>${html}</body></html>`,
+      `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${VISUAL_CSP}"><link rel="stylesheet" href="${visualsCss}"><style>${inStyle(prepared.visualsCss)}</style><style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box${height ? ";min-height:100vh" : ""}}${inStyle(css ?? "")}</style></head><body>${html}</body></html>`,
     [html, css, visualsCss, height, prepared.visualsCss]
   )
 
@@ -222,7 +231,7 @@ function HtmlFrame({
       if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
       const el = e.target as HTMLElement | null
       if (keyScope && !keyScope.current?.contains(el)) return
-      if (el?.closest("input, textarea, select, [contenteditable=true]")) return
+      if (shortcutBlocked(e)) return
       const n = Number(e.key)
       const c = control.current
       if (!c || c.disabled || !Number.isInteger(n) || n < 1 || n > ids.length)
@@ -253,10 +262,11 @@ function HtmlFrame({
     : []
 
   const stage = (
-    // The frame is inert (nothing inside is read), so the stage itself is the image screen readers get.
+    // The frame is inert (nothing inside is read), so the stage itself is what screen readers get: an
+    // image named by the alt, or on a hotspot the group of parts to pick.
     <div
-      role={interactive ? undefined : "img"}
-      aria-label={interactive ? undefined : (alt ?? label ?? t.visual)}
+      role={interactive ? "group" : "img"}
+      aria-label={alt ?? label ?? t.visual}
       data-reveal={(interactive && reveal) || undefined}
       onPointerDown={
         interactive
@@ -278,7 +288,6 @@ function HtmlFrame({
           : // On the page's own surface, like the lesson around it, with room above and below.
             !plain && "overflow-hidden rounded-xl border bg-background py-6"
       )}
-      inert={!interactive}
     >
       <div className="relative">
         <iframe
