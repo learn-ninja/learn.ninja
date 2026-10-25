@@ -278,9 +278,11 @@ export async function updateLesson(
       body: {
         ok: false,
         error: "unauthorized",
-        message: req.editToken
-          ? "The edit token doesn't match this lesson."
-          : "This lesson isn't in your account, and no edit token was sent.",
+        message: !req.editToken
+          ? "This lesson isn't in your account, and no edit token was sent."
+          : inExploreUnderOwner(existing)
+            ? "This lesson is published in Explore under its owner's account, so only that account can change it now. Log in as its owner to edit it (`learn login` in a terminal, or log in from the chat app)."
+            : "The edit token doesn't match this lesson.",
       },
     }
   }
@@ -311,12 +313,25 @@ export async function updateLesson(
   }
 }
 
-/** Whether the edit token, or the logged-in user's ownership, allows changing `existing`. */
+/**
+ * Whether the logged-in user's ownership, or the edit token, allows changing `existing`. The edit
+ * token from an anonymous publish ends up in chats, CLI state, and CI logs, so once a kept lesson is
+ * published to Explore under its owner's name it stops working: only the owner's account can change
+ * it then. While it's private, the author can go on editing with it, logged in or not.
+ */
 export function mayEdit(
-  existing: Pick<StoredLesson, "editTokenHash" | "ownerId">,
+  existing: Pick<StoredLesson, "editTokenHash" | "ownerId" | "visibility">,
   editToken: string | null | undefined,
   actorId?: string | null
 ): boolean {
-  if (editToken && tokenMatches(editToken, existing.editTokenHash)) return true
-  return Boolean(actorId) && existing.ownerId === actorId
+  if (actorId && existing.ownerId === actorId) return true
+  return (
+    Boolean(editToken) &&
+    !inExploreUnderOwner(existing) &&
+    tokenMatches(editToken!, existing.editTokenHash)
+  )
 }
+
+const inExploreUnderOwner = (
+  lesson: Pick<StoredLesson, "ownerId" | "visibility">
+) => lesson.ownerId !== null && lesson.visibility === "public"

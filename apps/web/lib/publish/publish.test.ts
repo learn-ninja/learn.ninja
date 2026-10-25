@@ -743,6 +743,29 @@ describe("claiming", () => {
       body: { owned: true, expiresAt: null, owner: { handle: "one" } },
     })
   })
+
+  it("stops taking the anonymous edit token once a kept lesson is in Explore, but not its owner", async () => {
+    const { body } = await anonymous()
+    const id = body.id as string
+    await claimLesson(
+      { claimToken: body.claimToken as string, ownerId: "user_1" },
+      deps
+    )
+    await db
+      .update(lesson)
+      .set({ visibility: "public" })
+      .where(eq(lesson.id, id))
+    const edit = (who: { editToken?: string; actorId?: string }) =>
+      updateLesson({ id, text: buttons, client: "x", ...who }, deps)
+    expect(await edit({ editToken: body.editToken as string })).toMatchObject({
+      status: 401,
+      body: {
+        error: "unauthorized",
+        message: expect.stringContaining("owner"),
+      },
+    })
+    expect((await edit({ actorId: "user_1" })).status).toBe(200)
+  })
 })
 
 describe("the expiry sweep", () => {
