@@ -18,6 +18,7 @@ import { useIsDark, usePlayer } from "./context"
 import { markStyles } from "./controls"
 import { countryName } from "./country-names"
 import { Clock, Fractions, NumberLine } from "./figures"
+import { shortcutBlocked } from "./keys"
 import {
   chartKey,
   codeKey,
@@ -230,7 +231,7 @@ function HtmlFrame({
       if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
       const el = e.target as HTMLElement | null
       if (keyScope && !keyScope.current?.contains(el)) return
-      if (el?.closest("input, textarea, select, [contenteditable=true]")) return
+      if (shortcutBlocked(e)) return
       const n = Number(e.key)
       const c = control.current
       if (!c || c.disabled || !Number.isInteger(n) || n < 1 || n > ids.length)
@@ -261,10 +262,11 @@ function HtmlFrame({
     : []
 
   const stage = (
-    // The frame is inert (nothing inside is read), so the stage itself is the image screen readers get.
+    // The frame is inert (nothing inside is read), so the stage itself is what screen readers get: an
+    // image named by the alt, or on a hotspot the group of parts to pick.
     <div
-      role={interactive ? undefined : "img"}
-      aria-label={interactive ? undefined : (alt ?? label ?? t.visual)}
+      role={interactive ? "group" : "img"}
+      aria-label={alt ?? label ?? t.visual}
       data-reveal={(interactive && reveal) || undefined}
       onPointerDown={
         interactive
@@ -286,7 +288,6 @@ function HtmlFrame({
           : // On the page's own surface, like the lesson around it, with room above and below.
             !plain && "overflow-hidden rounded-xl border bg-background py-6"
       )}
-      inert={!interactive}
     >
       <div className="relative">
         <iframe

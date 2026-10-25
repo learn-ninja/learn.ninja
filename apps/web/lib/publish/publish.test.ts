@@ -4,10 +4,11 @@ import { eq } from "drizzle-orm"
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 
 import { connectPglite, lesson, lessonTag, user, type Db } from "@workspace/db"
-import { SUBJECTS } from "@workspace/spec"
+import { OLD_SPECS, SUBJECTS } from "@workspace/spec"
 
 import { handleOf } from "../auth/handles"
 import {
+  ACCEPTED_SPECS,
   checkLesson,
   claimLesson,
   compareVersions,
@@ -238,6 +239,18 @@ describe("publishing", () => {
       status: 422,
       body: { error: "unsupported_spec", skill: { updateAvailable: true } },
     })
+  })
+
+  it("accepts every spec the upgrader handles", async () => {
+    for (const spec of OLD_SPECS) expect(ACCEPTED_SPECS).toContain(spec)
+    const reply = await publishLesson(
+      {
+        text: JSON.stringify({ ...JSON.parse(buttons), spec: "0.7" }),
+        client: "x",
+      },
+      deps
+    )
+    expect(reply).toMatchObject({ status: 201, body: { spec: "0.8" } })
   })
 
   it("upgrades a spec 0.2 lesson from an older skill", async () => {

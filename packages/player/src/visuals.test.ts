@@ -46,6 +46,10 @@ describe("HTML visual frame", () => {
     expect(markup).toContain('role="img"')
     expect(markup).toContain('aria-label="A bold hi."')
     expect(markup).toContain('title="A bold hi."')
+    // Inert would take the image out of the accessibility tree along with the frame.
+    const stage = /<div[^>]*role="img"[^>]*>/.exec(markup)?.[0]
+    expect(stage).toBeDefined()
+    expect(stage).not.toContain("inert")
   })
 
   it("keeps the lesson's CSS inside its style tag", () => {

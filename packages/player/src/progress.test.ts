@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs"
 
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { Lesson } from "@workspace/spec"
 
 import { buildSequence } from "./flow"
 import { reducer, type State } from "./lesson-player"
 import {
+  browserStorage,
   fingerprint,
   loadProgress,
   resumeScript,
@@ -133,6 +134,25 @@ describe("saved progress", () => {
       })
     )
     expect(loadProgress(storage, "l/x", lesson)).toBeNull()
+  })
+})
+
+describe("browser storage", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("is null where reading it throws, so the lesson plays without it", () => {
+    vi.stubGlobal("window", {
+      get localStorage(): Storage {
+        throw new DOMException("blocked", "SecurityError")
+      },
+    })
+    expect(browserStorage()).toBeNull()
+  })
+
+  it("is the page's storage otherwise", () => {
+    const storage = fakeStorage()
+    vi.stubGlobal("window", { localStorage: storage })
+    expect(browserStorage()).toBe(storage)
   })
 })
 
