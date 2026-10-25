@@ -19,7 +19,12 @@ import {
 } from "./lesson-player"
 import { emptyPrepared, type Prepared } from "./prepared"
 import { seeded } from "./random"
-import { ariaLocaleFor, useStrings, type TextSize } from "./strings"
+import {
+  ariaLocaleFor,
+  UI_TRANSLATIONS,
+  useStrings,
+  type TextSize,
+} from "./strings"
 
 export interface BrickDemoProps {
   lesson: Lesson
@@ -58,7 +63,7 @@ function Demo({
   className,
 }: BrickDemoProps) {
   const brick = findBrick(lesson, brickId)
-  const ui = lesson.language
+  const ui = UI_TRANSLATIONS ? lesson.language : "en"
   const t = useStrings(ui)
   const dir = /^(ar|he|fa|ur)\b/i.test(ui) ? "rtl" : "ltr"
   const [state, dispatch] = React.useReducer(

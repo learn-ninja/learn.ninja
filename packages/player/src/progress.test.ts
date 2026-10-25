@@ -14,6 +14,7 @@ import {
   savedProgress,
   saveProgress,
 } from "./progress"
+import { UI_TRANSLATIONS } from "./strings"
 
 // Progress saved in the browser: a reload lands on the same screen, a changed lesson starts over.
 
@@ -298,8 +299,9 @@ describe("resume script", () => {
     const storage = fakeStorage()
     const prefs = (p: object) =>
       storage.setItem("learn:preferences", JSON.stringify(p))
+    // A saved language counts only while the player offers its translations.
     prefs({ uiLanguage: "ar" })
-    expect(run(storage, null)).toBe(true)
+    expect(run(storage, null)).toBe(UI_TRANSLATIONS)
     expect(run(storage, null, lesson, { lang: "ar" })).toBe(false)
     prefs({ textSize: "lg" })
     expect(run(storage, null)).toBe(true)

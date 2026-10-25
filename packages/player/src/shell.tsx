@@ -58,6 +58,7 @@ import { RichBlocks } from "./rich-text"
 import { timeLeft, type TimeLeft } from "./time"
 import {
   UI_LANGUAGES,
+  UI_TRANSLATIONS,
   uiLanguageFor,
   type NinjaLevel,
   type Strings,
@@ -751,26 +752,28 @@ export function AppSettingsItems({
           </DropdownMenuSubContent>
         </DropdownMenuSub>
       ) : null}
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger textValue={t.language}>
-          <GlobeIcon />
-          {t.language}
-          <span className="text-muted-foreground">{language.label}</span>
-        </DropdownMenuSubTrigger>
-        <DropdownMenuSubContent
-          aria-label={t.language}
-          // About nine rows; the rest scrolls.
-          maxHeight={320}
-          selectedKeys={[language.code]}
-          {...single((code) => onPrefs({ uiLanguage: code }))}
-        >
-          {UI_LANGUAGES.map((l) => (
-            <DropdownMenuItem key={l.code} id={l.code} textValue={l.label}>
-              <span lang={l.code}>{l.label}</span>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuSubContent>
-      </DropdownMenuSub>
+      {UI_TRANSLATIONS ? (
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger textValue={t.language}>
+            <GlobeIcon />
+            {t.language}
+            <span className="text-muted-foreground">{language.label}</span>
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent
+            aria-label={t.language}
+            // About nine rows; the rest scrolls.
+            maxHeight={320}
+            selectedKeys={[language.code]}
+            {...single((code) => onPrefs({ uiLanguage: code }))}
+          >
+            {UI_LANGUAGES.map((l) => (
+              <DropdownMenuItem key={l.code} id={l.code} textValue={l.label}>
+                <span lang={l.code}>{l.label}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+      ) : null}
     </>
   )
 }
