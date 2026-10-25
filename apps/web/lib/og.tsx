@@ -3,7 +3,8 @@ import { join } from "node:path"
 
 import { ImageResponse } from "next/og"
 
-import { plainText, stringsFor, type Strings } from "@workspace/player"
+import { plainText } from "@workspace/player/plain-text"
+import { stringsFor, type Strings } from "@workspace/player/strings"
 import type { Lesson } from "@workspace/spec"
 
 import { AGENTS, INSTALL_COMMAND, SITE } from "./site"

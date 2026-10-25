@@ -1193,6 +1193,88 @@ describe("structure rules", () => {
     })
   })
 
+  it("rejects options that look the same, as a learner can't tell them apart", () => {
+    const l = buttons()
+    const options = l.bricks[1].options
+    options[1].text = ` ${options[0].text}  `.replace(/ /g, "  ")
+    delete options[1].visual
+    delete options[0].visual
+    expectIssue(l, {
+      path: "bricks[1].options[1]",
+      message: /looks the same as option/,
+    })
+  })
+
+  it("keeps options that differ only in case", () => {
+    const l = loadExample("compound-interest.json")
+    const [a, b] = l.bricks[5].options
+    a.text = "Lunes"
+    b.text = "lunes"
+    delete a.visual
+    delete b.visual
+    expect(
+      validateLesson(l).issues.filter((i) => /looks the same/.test(i.message))
+    ).toEqual([])
+  })
+
+  it("rejects a correct id listed twice", () => {
+    const l = buttons()
+    l.bricks[1].multiple = true
+    l.bricks[1].correct = [l.bricks[1].correct[0], l.bricks[1].correct[0]]
+    expectIssue(l, {
+      path: "bricks[1].correct",
+      message: /listed more than once/,
+    })
+  })
+
+  it("rejects order items that look the same", () => {
+    const l = buttons()
+    const items = l.bricks[5].items
+    items[2] = { ...items[0], id: items[2].id }
+    expectIssue(l, {
+      path: "bricks[5].items[2]",
+      message: /looks the same as item/,
+    })
+  })
+
+  it("rejects sort items that read the same in different groups, and groups with one label", () => {
+    const l = buttons()
+    const sort = l.bricks[4]
+    const other = sort.items.findIndex(
+      (it: { group: string }) => it.group !== sort.items[0].group
+    )
+    sort.items[other].text = sort.items[0].text
+    expectIssue(l, {
+      path: `bricks[4].items[${other}]`,
+      message: /belongs in another group/,
+    })
+    sort.groups[1].label = sort.groups[0].label
+    expectIssue(l, {
+      path: "bricks[4].groups[1].label",
+      message: /same label as another group/,
+    })
+  })
+
+  it("rejects match pairs with the same side twice", () => {
+    const l = loadExample("spanish-greetings.json")
+    const pairs = l.bricks[1].pairs
+    pairs[2].right = pairs[0].right
+    expectIssue(l, {
+      path: "bricks[1].pairs[2].right",
+      message: /right side is the same as another pair's/,
+    })
+  })
+
+  it("rejects two code hotspots on one line", () => {
+    const l = loadExample("map-vs-foreach.json")
+    const spots = l.bricks[5].visual.hotspots
+    spots[1].line = spots[0].line
+    expectIssue(l, {
+      path: "bricks[5].visual.hotspots[1]",
+      message: /both on line/,
+    })
+  })
+
   it("rejects duplicate brick ids", () => {
     const l = buttons()
     l.bricks[2].id = "p1"
@@ -1362,10 +1444,46 @@ describe("safety rules", () => {
     ["<iframe></iframe>", /iframes/],
     ["<img src='https://evil.example/x.png'>", /external URLs/],
     ["<a href='javascript:alert(1)'>x</a>", /javascript: URLs/],
+    ["<a href='&#106;avascript:alert(1)'>x</a>", /javascript: URLs/],
+    ['<meta http-equiv="refresh" content="0;url=/settings">', /meta, link/],
+    ["<video poster='/x.png'></video>", /meta, link/],
+    ["<svg><image href='//evil.example/x.png'/></svg>", /external URLs/],
+    ["<div poster='https://evil.example/x.png'></div>", /external URLs/],
+    ["<img src='&#104;ttps://evil.example/x.png'>", /external URLs/],
+    ["<img/src='//evil.example/x.png'>", /external URLs/],
+    ["<img alt='x'src='//evil.example/x.png'>", /external URLs/],
+    ["<img src='https&colon;//evil.example/x.png'>", /external URLs/],
+    [
+      "<div style='background:url(https\\3a \\2f\\2f evil.example/x.png)'></div>",
+      /external URLs/,
+    ],
+    [
+      "<div style='background:url(https:\\/\\/evil.example)'></div>",
+      /external URLs/,
+    ],
+    ['<style>@import "https://evil.example/x.css";</style>', /external URLs/],
   ])("rejects %s in a visual", (html, message) => {
     const l = buttons()
     l.bricks[0].visual.html = html
     expectIssue(l, { kind: "safety", message })
+  })
+
+  it("lets a visual show a URL or a CSS rule as text", () => {
+    const l = buttons()
+    l.bricks[0].visual.html =
+      "<p>Fonts load with <code>@import</code> from https://fonts.example.</p>" +
+      "<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'></svg>"
+    expect(validateLesson(l).issues.filter((i) => i.kind === "safety")).toEqual(
+      []
+    )
+  })
+
+  it("checks a long visual in linear time", () => {
+    const l = buttons()
+    l.bricks[0].visual.html = `<div>${"x".repeat(400 * 1024)}</div>`
+    const started = performance.now()
+    validateLesson(l)
+    expect(performance.now() - started).toBeLessThan(1000)
   })
 
   it("limits each HTML visual to 20 KB", () => {

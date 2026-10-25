@@ -1,7 +1,7 @@
 import { UserRoundIcon } from "lucide-react"
 import { getImageProps } from "next/image"
 
-import { LearnLogo } from "@workspace/player"
+import { LearnLogo } from "@workspace/player/logo"
 import {
   Avatar,
   AvatarFallback,

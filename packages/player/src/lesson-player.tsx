@@ -60,6 +60,8 @@ import {
   explanationAnchor,
   OptionsBrick,
 } from "./bricks"
+import { shortcutBlocked } from "./keys"
+import { BRAND } from "./logo"
 import { OrderBrick } from "./order"
 import { SortBrick } from "./sort"
 import {
@@ -86,6 +88,7 @@ import {
 } from "./ninja"
 import { emptyPrepared, type Prepared } from "./prepared"
 import {
+  browserStorage,
   fingerprint,
   loadProgress,
   resumeScript,
@@ -96,7 +99,6 @@ import { plainText, RichText } from "./rich-text"
 import {
   AppSettings,
   AppSettingsItems,
-  BRAND,
   LessonFooter,
   LessonHeader,
   PanelRightFilledIcon,
@@ -718,7 +720,8 @@ function Player({
   const mark = React.useRef<HTMLScriptElement>(null)
   React.useLayoutEffect(() => {
     if (!remember) return
-    const saved = loadProgress(localStorage, remember, lesson)
+    const storage = browserStorage()
+    const saved = storage && loadProgress(storage, remember, lesson)
     if (saved) dispatch({ type: "resume", state: saved })
     loaded.current = true
     mark.current?.parentElement?.removeAttribute("data-resuming")
@@ -727,7 +730,8 @@ function Player({
   }, [remember, print])
   React.useEffect(() => {
     if (!remember || !loaded.current) return
-    saveProgress(localStorage, remember, lesson, state)
+    const storage = browserStorage()
+    if (storage) saveProgress(storage, remember, lesson, state)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remember, print, state])
   // One line picker for the whole run. It must not live in ActionArea: that remounts with every
@@ -815,8 +819,7 @@ function Player({
         return
       const target = e.target as HTMLElement | null
       if (keyScope && !keyScope.current?.contains(target)) return
-      if (target?.closest("input, textarea, select, [contenteditable=true]"))
-        return
+      if (shortcutBlocked(e)) return
       e.preventDefault()
       if (help) keys.current.onShortcuts()
       else if (tray) keys.current.onTrayToggle()

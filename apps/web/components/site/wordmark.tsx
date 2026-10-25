@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { LearnLogo } from "@workspace/player"
+import { LearnLogo } from "@workspace/player/logo"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { SITE } from "@/lib/site"

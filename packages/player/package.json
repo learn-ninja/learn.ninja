@@ -6,7 +6,12 @@
   "exports": {
     ".": "./src/index.ts",
     "./prepare": "./src/prepare.ts",
-    "./charts": "./src/charts.ts"
+    "./charts": "./src/charts.ts",
+    "./strings": "./src/strings.ts",
+    "./plain-text": "./src/plain-text.ts",
+    "./logo": "./src/logo.tsx",
+    "./time": "./src/time.tsx",
+    "./progress": "./src/progress.ts"
   },
   "scripts": {
     "lint": "eslint",

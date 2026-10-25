@@ -1,4 +1,4 @@
-import { LearnLogo } from "@workspace/player"
+import { LearnLogo } from "@workspace/player/logo"
 
 /** A thin rule with the mark in the middle, between home page sections and above the footer. */
 export function LogoDivider() {

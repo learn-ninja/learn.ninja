@@ -21,6 +21,7 @@ import {
   markStyles,
   slotStyles,
 } from "./controls"
+import { shortcutBlocked } from "./keys"
 import { buzz, fly, shake } from "./motion"
 import { RichBlocks, RichText } from "./rich-text"
 import { Visual } from "./visuals"
@@ -230,8 +231,7 @@ export function OptionsBrick({
       if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
       const target = e.target as HTMLElement | null
       if (keyScope && !keyScope.current?.contains(target)) return
-      if (target?.closest("input, textarea, select, [contenteditable=true]"))
-        return
+      if (shortcutBlocked(e)) return
       const n = Number(e.key)
       if (!Number.isInteger(n) || n < 1 || n > list.length) return
       e.preventDefault()
@@ -636,7 +636,7 @@ export function BlankBrick({
       if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
       const el = e.target as HTMLElement | null
       if (keyScope && !keyScope.current?.contains(el)) return
-      if (el?.closest("input, textarea, select, [contenteditable=true]")) return
+      if (shortcutBlocked(e)) return
       const n = Number(e.key)
       if (!Number.isInteger(n) || n < 1 || n > bank.length) return
       e.preventDefault()

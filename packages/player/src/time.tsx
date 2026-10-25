@@ -86,3 +86,17 @@ export function TimeAgo({
     </time>
   )
 }
+
+/** Time left on a published link. */
+export type TimeLeft = { unit: "days" | "hours"; count: number }
+
+/**
+ * Time until the link expires: whole days (rounded) from 24 hours up, hours (rounded down, at
+ * least 1) below.
+ */
+export function timeLeft(ms: number): TimeLeft {
+  const hours = ms / 3.6e6
+  return hours >= 24
+    ? { unit: "days", count: Math.round(hours / 24) }
+    : { unit: "hours", count: Math.max(1, Math.floor(hours)) }
+}

@@ -9,7 +9,7 @@ import {
   UploadIcon,
 } from "lucide-react"
 
-import { LearnLogo } from "@workspace/player"
+import { LearnLogo } from "@workspace/player/logo"
 import { Button } from "@workspace/ui/components/button"
 
 import { accountApi, forgetAccount, type AccountApi } from "@/lib/auth/browser"

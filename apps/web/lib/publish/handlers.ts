@@ -2,6 +2,7 @@ import { checkVisuals, prepareLesson } from "@workspace/player/prepare"
 import {
   canUpgrade,
   LIMITS,
+  OLD_SPECS,
   SPEC_VERSION,
   upgradeLesson,
   validateLesson,
@@ -29,15 +30,8 @@ import {
 
 // The publish API's logic, independent of Next.js so it can be tested directly.
 
-/** Spec versions the server accepts. Older skills keep working while they're listed here; older files are upgraded first. */
-export const ACCEPTED_SPECS: string[] = [
-  SPEC_VERSION,
-  "0.6",
-  "0.5",
-  "0.4",
-  "0.3",
-  "0.2",
-]
+/** Spec versions the server accepts: the current one and every one the upgrader handles, so older skills keep working. */
+export const ACCEPTED_SPECS: string[] = [SPEC_VERSION, ...OLD_SPECS]
 
 export {
   claimLesson,

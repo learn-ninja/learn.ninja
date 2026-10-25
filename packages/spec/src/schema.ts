@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { LEVELS } from "./basics"
 import { MAP_REGION_NAMES } from "./map"
 import { SUBJECTS } from "./subjects"
 import { TAG_LABEL_PATTERN, TAG_LIMITS } from "./tags"
@@ -9,10 +10,6 @@ import { TAG_LABEL_PATTERN, TAG_LIMITS } from "./tags"
 // teaching-quality rules live in rules.ts.
 
 export const SPEC_VERSION = "0.8" as const
-
-/** Who a lesson is for, from least to most prior knowledge. The skill's `levels/` guides say how each one teaches. */
-export const LEVELS = ["beginner", "intermediate", "advanced"] as const
-export type Level = (typeof LEVELS)[number]
 
 const id = z.string().min(1).max(64)
 /** Markdown subset: **bold**, *italic*, `code`, and inline formulas as \( ... \). A $ is always a dollar sign. */
