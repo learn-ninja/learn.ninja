@@ -755,7 +755,7 @@ describe("claiming", () => {
       .update(lesson)
       .set({ visibility: "public" })
       .where(eq(lesson.id, id))
-    const edit = (who: { editToken?: string; actorId?: string }) =>
+    const edit = (who: { editToken: string | null; actorId?: string }) =>
       updateLesson({ id, text: buttons, client: "x", ...who }, deps)
     expect(await edit({ editToken: body.editToken as string })).toMatchObject({
       status: 401,
@@ -764,7 +764,9 @@ describe("claiming", () => {
         message: expect.stringContaining("owner"),
       },
     })
-    expect((await edit({ actorId: "user_1" })).status).toBe(200)
+    expect((await edit({ editToken: null, actorId: "user_1" })).status).toBe(
+      200
+    )
   })
 })
 
