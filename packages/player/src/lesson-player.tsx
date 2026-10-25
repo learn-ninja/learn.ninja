@@ -721,7 +721,7 @@ function Player({
   React.useLayoutEffect(() => {
     if (!remember) return
     const storage = browserStorage()
-    const saved = storage && loadProgress(storage, remember, lesson)
+    const saved = storage && loadProgress(storage, remember, lesson, print)
     if (saved) dispatch({ type: "resume", state: saved })
     loaded.current = true
     mark.current?.parentElement?.removeAttribute("data-resuming")
@@ -731,7 +731,7 @@ function Player({
   React.useEffect(() => {
     if (!remember || !loaded.current) return
     const storage = browserStorage()
-    if (storage) saveProgress(storage, remember, lesson, state)
+    if (storage) saveProgress(storage, remember, lesson, state, print)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remember, print, state])
   // One line picker for the whole run. It must not live in ActionArea: that remounts with every

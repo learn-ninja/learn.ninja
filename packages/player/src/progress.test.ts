@@ -137,6 +137,79 @@ describe("saved progress", () => {
   })
 })
 
+describe("what a save keeps", () => {
+  it("names bricks by id instead of copying the lesson", () => {
+    const storage = fakeStorage()
+    saveProgress(storage, "l/x", lesson, midway())
+    const raw = storage.getItem("learn:progress:l/x")!
+    expect(raw).not.toContain(JSON.stringify(lesson.hook.prompt))
+    expect(raw).not.toContain(JSON.stringify(lesson.challenge.explanation))
+    expect(raw.length).toBeLessThan(JSON.stringify(midway()).length / 4)
+  })
+
+  it("brings the fix round back with its questions", () => {
+    let state = midway()
+    const fixAt = state.items.findIndex((i) => i.kind === "fix")
+    state = { ...state, index: fixAt, mistakes: [lesson.challenge] }
+    state = reducer(state, { type: "startFix" })
+    expect(state.items[state.index]).toMatchObject({ role: "fix" })
+    const storage = fakeStorage()
+    saveProgress(storage, "l/x", lesson, state)
+    expect(loadProgress(storage, "l/x", lesson)).toEqual(state)
+  })
+
+  it("still loads what the previous version saved: the whole state", () => {
+    const storage = fakeStorage()
+    const state = midway()
+    storage.setItem(
+      "learn:progress:l/x",
+      JSON.stringify({
+        v: 1,
+        fingerprint: fingerprint(lesson),
+        savedAt: Date.now(),
+        state,
+      })
+    )
+    expect(loadProgress(storage, "l/x", lesson)).toEqual(state)
+    expect(savedProgress(storage, "l/x")).toEqual({
+      done: 1,
+      total: lesson.bricks.length + 2,
+    })
+  })
+
+  it("fills a question's missing fields with defaults, and starts it over when it doesn't fit", () => {
+    const storage = fakeStorage()
+    // On the warm-up question.
+    const state = reducer(fresh(), { type: "next" })
+    expect(state.question).not.toBeNull()
+    saveProgress(storage, "l/x", lesson, state)
+    const saved = JSON.parse(storage.getItem("learn:progress:l/x")!)
+    const question = saved.state.question
+    delete question.tried
+    storage.setItem("learn:progress:l/x", JSON.stringify(saved))
+    expect(loadProgress(storage, "l/x", lesson)?.question).toEqual({
+      ...state.question,
+      tried: [],
+    })
+
+    question.answer = { kind: "nonsense" }
+    storage.setItem("learn:progress:l/x", JSON.stringify(saved))
+    expect(loadProgress(storage, "l/x", lesson)?.question).toMatchObject({
+      answer: state.question!.answer,
+      attempts: 0,
+    })
+  })
+
+  it("starts over when it names a question the lesson doesn't have", () => {
+    const storage = fakeStorage()
+    saveProgress(storage, "l/x", lesson, midway())
+    const saved = JSON.parse(storage.getItem("learn:progress:l/x")!)
+    saved.state.mistakes = ["gone"]
+    storage.setItem("learn:progress:l/x", JSON.stringify(saved))
+    expect(loadProgress(storage, "l/x", lesson)).toBeNull()
+  })
+})
+
 describe("browser storage", () => {
   afterEach(() => vi.unstubAllGlobals())
 
