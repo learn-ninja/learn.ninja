@@ -784,8 +784,8 @@ function Player({
     null
   )
   const trayId = React.useId()
-  // The tray's natural height, and its height while the notch is being dragged.
-  const [trayHeight, setTrayHeight] = React.useState(0)
+  // The tray's natural height (null until measured), and its height while the notch is being dragged.
+  const [trayHeight, setTrayHeight] = React.useState<number | null>(null)
   const [dragHeight, setDragHeight] = React.useState<number | null>(null)
   // The same value in a ref: a quick flick can end before the state from its last move has rendered.
   const dragRef = React.useRef<number | null>(null)
@@ -797,7 +797,9 @@ function Player({
     observer.observe(trayEl)
     return () => observer.disconnect()
   }, [trayEl])
-  const shownHeight = dragHeight ?? (trayOpen ? trayHeight : 0)
+  // Until it's measured the open tray takes its natural height, so it doesn't slide open as the page
+  // loads; it only animates for a change after that.
+  const shownHeight = dragHeight ?? (trayOpen ? (trayHeight ?? "auto") : 0)
   // "?" shows the keyboard shortcuts, as it does on most of the web. D opens and closes the tray and
   // W the theory card (Why?), matched by key position so they work on any keyboard layout; touch
   // screens have no notch to toggle.
@@ -898,17 +900,39 @@ function Player({
   // The ninja lives on the card and reacts to each check: pleased when it's right, sorry when it's not.
   const cardRef = React.useRef<HTMLDivElement>(null)
   const q = state.question
-  // On phones the tray grows to show feedback, which can push the marked answers below the fold:
-  // once it has settled, bring the last of them back into view.
+  // Feedback can land on the answers. On phones the tray grows to show it, which can push the marked
+  // answers below the fold: once it has settled, bring the last of them back into view. Wider, the
+  // toast floats in the card's corner, over the answers when they reach that far down (a tall
+  // question on a short screen): scroll them up clear of it, into the room the screen leaves below.
   React.useEffect(() => {
     if (!q?.result || q.phase === "answering") return
-    if (!matchMedia("(width < 40rem)").matches) return
     const id = window.setTimeout(() => {
-      const marked = scrollRef.current?.querySelectorAll("[data-status]")
-      marked?.[marked.length - 1]?.scrollIntoView({
-        block: "nearest",
-        behavior: reducedMotion() ? "auto" : "smooth",
-      })
+      const scroller = scrollRef.current
+      if (!scroller) return
+      const behavior = reducedMotion() ? "auto" : "smooth"
+      if (matchMedia("(width < 40rem)").matches) {
+        const marked = scroller.querySelectorAll("[data-status]")
+        marked[marked.length - 1]?.scrollIntoView({
+          block: "nearest",
+          behavior,
+        })
+        return
+      }
+      const toast = cardRef.current
+        ?.querySelector("[data-feedback-toast]")
+        ?.getBoundingClientRect()
+      if (!toast) return
+      let lowest = -Infinity
+      for (const el of scroller.querySelectorAll(
+        "[data-slot=selectable], [data-status]"
+      )) {
+        const r = el.getBoundingClientRect()
+        // Within a gap of the toast counts: a row it touches looks covered too.
+        if (r.right > toast.left - 12 && r.left < toast.right + 12)
+          lowest = Math.max(lowest, r.bottom)
+      }
+      const overlap = lowest + 12 - toast.top
+      if (overlap > 0) scroller.scrollBy({ top: overlap, behavior })
     }, 250)
     return () => window.clearTimeout(id)
   }, [q?.result, q?.phase])
@@ -1138,15 +1162,16 @@ function Player({
                   controls={trayId}
                   onToggle={onTrayToggle}
                   onDrag={(dy) => {
-                    const from = trayOpen ? trayHeight : 0
+                    const full = trayHeight ?? 0
+                    const from = trayOpen ? full : 0
                     dragRef.current =
                       dy === null
                         ? null
-                        : Math.min(trayHeight, Math.max(0, from - dy))
+                        : Math.min(full, Math.max(0, from - dy))
                     setDragHeight(dragRef.current)
                   }}
                   onDrop={() => {
-                    const open = (dragRef.current ?? 0) > trayHeight / 2
+                    const open = (dragRef.current ?? 0) > (trayHeight ?? 0) / 2
                     if (open !== trayOpen) onTrayToggle()
                     dragRef.current = null
                     setDragHeight(null)
@@ -1160,6 +1185,7 @@ function Player({
               className={cn(
                 "shrink-0 overflow-hidden",
                 dragHeight === null &&
+                  trayHeight !== null &&
                   "transition-[height] duration-200 ease-out motion-reduce:transition-none"
               )}
               style={{ height: shownHeight }}
@@ -2206,6 +2232,7 @@ export function ActionArea({
           ref={setBubbleEl}
           key={`${state.index}-${state.question?.attempts ?? 0}-${tone}`}
           aria-hidden="true"
+          data-feedback-toast
           data-text-size={textSize}
           className={cn(
             TOAST,
@@ -2309,8 +2336,10 @@ function TrayNotch({
   return (
     // Capture-phase handlers: the button's own press handling stops pointer events from bubbling.
     // It floats over the content's bottom edge (centred by the auto margins) instead of taking a row.
+    // Hidden by CSS where useFixedTray will drop it (touch screens, phones), so the server's HTML
+    // doesn't show it there until hydration.
     <div
-      className="absolute inset-x-0 bottom-0 z-10 mx-auto w-fit"
+      className="absolute inset-x-0 bottom-0 z-10 mx-auto w-fit max-sm:hidden pointer-coarse:hidden"
       style={{ touchAction: "none" }}
       onPointerDownCapture={(e) => {
         start.current = e.clientY
