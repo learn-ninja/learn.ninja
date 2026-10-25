@@ -1137,6 +1137,7 @@ function Player({
                   <div aria-hidden="true" style={{ height: bubbleRoom }} />
                 ) : null}
               </main>
+              <VisualsAhead item={state.items[state.index + 1]} />
               {ninja !== "off" ? (
                 <NinjaStage
                   area={cardRef}
@@ -1272,6 +1273,33 @@ function NinjaSlot({ show, gap }: { show: boolean; gap: string }) {
 }
 
 /** Questions and short screens read best narrow; visuals and side-by-side bricks need room. */
+/**
+ * The next screen's HTML visual, drawn out of sight in a column as wide as that screen's, so its
+ * frame has loaded and measured its height (knownHeights in visuals.tsx) before the screen arrives,
+ * and starts at that height instead of growing into it. A hotspot's stage is laid out differently
+ * and takes keys, so it isn't drawn ahead.
+ */
+function VisualsAhead({ item }: { item: Item | undefined }) {
+  const visual =
+    (item?.kind === "concept" ||
+      (item?.kind === "question" && item.brick.type !== "hotspot")) &&
+    item.brick.visual?.kind === "html"
+      ? item.brick.visual
+      : null
+  if (!visual) return null
+  return (
+    <div
+      aria-hidden="true"
+      inert
+      className="pointer-events-none invisible absolute inset-x-0 top-0 h-0 overflow-hidden"
+    >
+      <div className={cn("mx-auto w-full px-4", columnWidth(item!))}>
+        <Visual visual={visual} />
+      </div>
+    </div>
+  )
+}
+
 function columnWidth(item: Item): string {
   if (item.kind === "intro") return "max-w-md"
   if (item.kind === "concept")

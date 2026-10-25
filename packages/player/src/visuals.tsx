@@ -118,6 +118,13 @@ const MAX_VISUAL_HEIGHT = 2400
 export const VISUAL_CSP =
   "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
 
+/**
+ * The heights HTML visuals measured at, by frame width and document. A frame seen before, or drawn
+ * ahead out of sight (VisualsAhead in lesson-player.tsx), starts at its height instead of at 120px
+ * and jumping once it has loaded and been measured.
+ */
+const knownHeights = new Map<string, number>()
+
 /** Keeps CSS inside its <style>: "</" would otherwise end the tag and inject markup. A CSS "\/" still means "/". */
 const inStyle = (css: string) => css.replace(/<\//g, "<\\/")
 
@@ -155,23 +162,37 @@ function HtmlFrame({
     [html, css, visualsCss, height, prepared.visualsCss]
   )
 
+  // A height known from before, set ahead of the first paint: the frame has its width by now.
+  React.useLayoutEffect(() => {
+    const width = ref.current?.clientWidth
+    if (height || !width) return
+    const known = knownHeights.get(`${width}:${srcDoc}`)
+    if (known) setMeasured(known)
+  }, [srcDoc, height])
+
   // Size the frame to its content. allow-same-origin (without allow-scripts) lets the player measure it.
+  // Not before the visual has loaded: the blank document a frame starts with would set a wrong
+  // height, over a known one.
   React.useEffect(() => {
     const doc = ref.current?.contentDocument
-    if (!doc?.body || height) return
+    if (!loaded || !doc?.body || height) return
     // Capped, so content tied to the frame's own height (which the checker refuses) can't grow it forever.
-    const measure = () =>
-      setMeasured(
-        Math.min(
-          MAX_VISUAL_HEIGHT,
-          Math.ceil(doc.body.getBoundingClientRect().height)
-        )
+    const measure = () => {
+      const measured = Math.min(
+        MAX_VISUAL_HEIGHT,
+        Math.ceil(doc.body.getBoundingClientRect().height)
       )
+      setMeasured(measured)
+      // Remembered for the next frame that shows this visual at this width.
+      const width = ref.current?.clientWidth
+      if (width && measured > 0)
+        knownHeights.set(`${width}:${srcDoc}`, measured)
+    }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(doc.body)
     return () => observer.disconnect()
-  }, [loaded, height])
+  }, [loaded, height, srcDoc])
 
   // Drawings sit in the middle of their own canvas: a viewBox with empty space on one side would
   // push the drawing off-center however the frame lays it out. Runs before the hotspots are measured.
