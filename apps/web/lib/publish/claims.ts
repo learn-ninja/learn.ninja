@@ -42,14 +42,7 @@ export async function claimLesson(
   if (existing.ownerId) {
     return existing.ownerId === req.ownerId
       ? kept(existing, deps)
-      : {
-          status: 409,
-          body: {
-            ok: false,
-            error: "already_claimed",
-            message: "This lesson already belongs to another account.",
-          },
-        }
+      : ALREADY_CLAIMED
   }
   const byClaim =
     Boolean(req.claimToken) &&
@@ -69,7 +62,20 @@ export async function claimLesson(
     }
   }
   // Reply from the row as the store left it, not from `existing`: claiming changes more than the owner (its expiry, say).
-  return kept(await deps.store.claim(existing.id, req.ownerId), deps)
+  const claimed = await deps.store.claim(existing.id, req.ownerId)
+  if (claimed) return kept(claimed, deps)
+  // Another claim landed between the read and the update: only one of them owns it.
+  const now = await deps.store.get(existing.id)
+  return now?.ownerId === req.ownerId ? kept(now, deps) : ALREADY_CLAIMED
+}
+
+const ALREADY_CLAIMED: Reply = {
+  status: 409,
+  body: {
+    ok: false,
+    error: "already_claimed",
+    message: "This lesson already belongs to another account.",
+  },
 }
 
 async function kept(

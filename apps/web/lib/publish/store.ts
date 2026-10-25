@@ -67,8 +67,12 @@ export interface LessonStore {
   getByClaimTokenHash(hash: string): Promise<StoredLesson | null>
   /** Replaces a lesson without changing when it expires or who owns it. */
   update(record: StoredLesson): Promise<void>
-  /** Gives a lesson to `ownerId`: it stops expiring, stays private, and its claim token stops working. Returns the lesson as it now is. */
-  claim(id: string, ownerId: string): Promise<StoredLesson>
+  /**
+   * Gives an unowned lesson to `ownerId`: it stops expiring, stays private, and its claim token
+   * stops working. Returns the lesson as it now is, or null when it's owned by now (another claim
+   * got there first) or gone.
+   */
+  claim(id: string, ownerId: string): Promise<StoredLesson | null>
   /**
    * Replaces an anonymous lesson's claim token with the one that hashes to `hash`; the old one
    * stops working. False when nothing changed: the lesson is owned by now, or gone.
@@ -158,10 +162,9 @@ export class PostgresLessonStore implements LessonStore {
         expiresAt: null,
         updatedAt: this.date(),
       })
-      .where(eq(lesson.id, id))
+      .where(and(eq(lesson.id, id), isNull(lesson.ownerId)))
       .returning()
-    if (!row) throw new Error(`Lesson ${id} vanished while being claimed`)
-    return toStored(row)
+    return row ? toStored(row) : null
   }
 
   async setClaimToken(id: string, hash: string) {

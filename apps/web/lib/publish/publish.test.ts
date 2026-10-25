@@ -443,6 +443,23 @@ describe("publishing", () => {
 describe("claiming", () => {
   const anonymous = () => publishLesson({ text: buttons, client: "x" }, deps)
 
+  it("gives a lesson kept twice at once to one account, and tells the other", async () => {
+    const { body } = await anonymous()
+    const claim = (ownerId: string) =>
+      claimLesson(
+        {
+          id: body.id as string,
+          claimToken: body.claimToken as string,
+          ownerId,
+        },
+        deps
+      )
+    const replies = await Promise.all([claim("user_1"), claim("user_2")])
+    expect(replies.map((r) => r.status).sort()).toEqual([200, 409])
+    const winner = replies[0]!.status === 200 ? "user_1" : "user_2"
+    expect((await deps.store.get(body.id as string))?.ownerId).toBe(winner)
+  })
+
   it("keeps a lesson with its id and claim token: owned, still private, never expiring, token spent", async () => {
     const { body } = await anonymous()
     const reply = await claimLesson(
