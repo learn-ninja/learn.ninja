@@ -41,19 +41,31 @@ describe("voices", () => {
       }
   })
 
-  it("has every character and moment in every language, as many lines as English", () => {
+  it("has every character and moment in every language", () => {
+    // English leads; the other languages keep their own, shorter sets until they're redone.
     for (const { code } of UI_LANGUAGES)
       for (const level of ["off", ...CHARACTERS] as const)
         for (const moment of MOMENTS) {
           const { plain, flavor } = voiceLines(code, level, moment)
-          const english = voiceLines("en", level, moment)
           const at = `${code} ${level} ${moment}`
-          expect(plain.length, `${at} plain`).toBe(english.plain.length)
-          expect(flavor.length, `${at} flavor`).toBe(english.flavor.length)
+          expect(plain.length, `${at} plain`).toBeGreaterThan(0)
+          expect(flavor.length, `${at} flavor`).toBeGreaterThan(0)
           const all = [...plain, ...flavor]
           expect(new Set(all).size, `${at} has no repeats`).toBe(all.length)
           for (const line of all) expect(line, at).toMatch(/\S/)
         }
+  })
+
+  it("keeps every English line short: at most 32 characters and 6 words", () => {
+    // One line of the feedback toast at the largest text size, and about a second to say.
+    for (const level of CHARACTERS)
+      for (const moment of MOMENTS) {
+        const { plain, flavor } = voiceLines("en", level, moment)
+        for (const line of [...plain, ...flavor]) {
+          expect(line.length, line).toBeLessThanOrEqual(32)
+          expect(line.split(/\s+/).length, line).toBeLessThanOrEqual(6)
+        }
+      }
   })
 
   it("ends every line in a period, exclamation point, or question mark, in the language's own marks", () => {
@@ -75,45 +87,30 @@ describe("voices", () => {
   const lines: Lines = { plain: ["P1", "P2"], flavor: ["a", "b", "c", "d"] }
   const isPlain = (line: string) => lines.plain.includes(line)
 
-  it("rations flavor by the character's cadence", () => {
+  it("alternates flavor and plain lines for every character, flavor first", () => {
     const heard = (cadence: readonly ("plain" | "flavor")[]) => {
       const pick = createLinePicker("lesson")
       return Array.from({ length: 6 }, (_, i) =>
         isPlain(pick(`k${i}`, "praise", lines, cadence)) ? "plain" : "flavor"
       )
     }
-    expect(heard(CADENCE.casual)).toEqual([
-      "plain",
-      "plain",
-      "flavor",
-      "plain",
-      "plain",
-      "flavor",
-    ])
-    expect(heard(CADENCE.sensei)).toEqual([
-      "plain",
-      "plain",
-      "flavor",
-      "plain",
-      "plain",
-      "flavor",
-    ])
-    expect(heard(CADENCE.unhinged)).toEqual([
-      "flavor",
-      "flavor",
-      "plain",
-      "flavor",
-      "flavor",
-      "plain",
-    ])
+    for (const level of CHARACTERS)
+      expect(heard(CADENCE[level]), level).toEqual([
+        "flavor",
+        "plain",
+        "flavor",
+        "plain",
+        "flavor",
+        "plain",
+      ])
   })
 
   it("counts each moment on its own", () => {
     const pick = createLinePicker("lesson")
     pick("a", "praise", lines, CADENCE.casual)
     pick("b", "praise", lines, CADENCE.casual)
-    // The first nudge is still the plain one, however many praises came before.
-    expect(isPlain(pick("c", "nudge", lines, CADENCE.casual))).toBe(true)
+    // The first nudge is still a flavor line, however many praises came before.
+    expect(isPlain(pick("c", "nudge", lines, CADENCE.casual))).toBe(false)
   })
 
   it("plays every flavor line once before repeating, and never twice in a row", () => {

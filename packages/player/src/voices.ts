@@ -1,10 +1,11 @@
-// The ninja's feedback lines for each character. Off and Casual share the Casual lines, short and
-// plain; Sensei is a dojo teacher of few words, patient and a little firm, who would rather show than
-// explain; Unhinged is a jittery bundle of nerves, sure everything is about to go wrong and hugely
-// relieved when it doesn't. On a miss he panics at the situation, never at the learner.
+// The ninja's feedback lines for each character: one Japanese sensei in three moods. Sensei is the
+// dojo teacher of few words, patient and a little firm, who would rather show than explain; Casual
+// (whose lines Off shares) is the same teacher off duty, warm and light; Unhinged is a frantic ninja,
+// sure everything is about to go wrong and hugely relieved when it doesn't. On a miss he panics at
+// the situation, never at the learner.
 //
-// Each moment has plain lines, said most of the time, and flavor lines, rationed by CADENCE so a
-// lesson of five answers doesn't feel like a fireworks show. Nothing repeats within a run (see
+// Each moment has plain lines and flavor lines, which take turns (CADENCE), so the feedback keeps
+// varying while the plain ones keep it grounded. Nothing repeats within a run (see
 // createLinePicker). Every line ends in a period, exclamation point, or question mark.
 //
 // Each language's lines live in ./locales/voices, written in that language's own idiom for the
@@ -39,12 +40,15 @@ export type Character = Exclude<NinjaLevel, "off">
 export type Voices = Record<Character, Voice>
 
 export type Slot = keyof Lines
-/** How each character rations flavor: the slot for the nth time a moment comes up in a run. */
+/**
+ * Which slot each character draws from the nth time a moment comes up in a run. Every character
+ * alternates, flavor first, so the first thing a learner hears has some character and the lines
+ * keep changing.
+ */
 export const CADENCE: Record<Character, readonly Slot[]> = {
-  casual: ["plain", "plain", "flavor"],
-  // A sensei who says something wise every other answer stops sounding wise.
-  sensei: ["plain", "plain", "flavor"],
-  unhinged: ["flavor", "flavor", "plain"],
+  casual: ["flavor", "plain"],
+  sensei: ["flavor", "plain"],
+  unhinged: ["flavor", "plain"],
 }
 
 /** The character a setting plays: Off shows nobody, but his lines are the Casual ones. */
