@@ -2,7 +2,12 @@
 
 import { ArrowRightIcon } from "lucide-react"
 
-import { Lantern, StreakWeek, type DayStreak } from "@workspace/player"
+import {
+  Lantern,
+  RestDays,
+  StreakWeek,
+  type DayStreak,
+} from "@workspace/player"
 import { Button } from "@workspace/ui/components/button"
 import { Popover, PopoverTrigger } from "@workspace/ui/components/popover"
 
@@ -11,8 +16,8 @@ import { ButtonLink } from "@/components/site/button-link"
 /**
  * The header's streak, before the profile picture: a lantern and the days in a row. The lantern is
  * lit once today has a finished lesson and unlit until then, so the header says whether today
- * still needs one. Pressing it opens the last seven days, the best streak, and the way to the
- * profile's activity grid.
+ * still needs one. Pressing it opens the last seven days, the best streak, the rest days and how
+ * close the next one is, and the way to the profile's activity grid.
  */
 export function StreakButton({
   streak,
@@ -60,21 +65,7 @@ export function StreakButton({
           <StreakWeek days={streak.days} />
           <p className="text-muted-foreground">{hint}</p>
         </div>
-        {/* The rest days saved, and how more are earned, so the rule is never a surprise. */}
-        <div className="flex flex-col gap-1 border-t p-3">
-          <p className="flex items-center gap-1.5 font-medium">
-            <Lantern look="rest" />
-            {rest === 0
-              ? "No rest days saved"
-              : rest === 1
-                ? "1 rest day saved"
-                : `${rest} rest days saved`}
-          </p>
-          <p className="text-muted-foreground">
-            Every 3 days you learn saves a rest day, up to 2. A day without a
-            lesson uses one.
-          </p>
-        </div>
+        <RestDays streak={streak} className="border-t p-3" />
         {profileHref ? (
           <div className="border-t p-1">
             <ButtonLink

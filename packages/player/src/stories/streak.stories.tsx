@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 
-import { Lantern, StreakWeek, type LanternLook } from "../streak"
+import { Lantern, RestDays, StreakWeek, type LanternLook } from "../streak"
 import { PlayerFrame } from "./fixtures"
 
 // The streak's lantern: small in the header and the week row, big on the streak screen. Lit, a
@@ -68,6 +68,65 @@ export const Week: Story = {
         <div className="w-64 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10">
           <StreakWeek days={week} />
         </div>
+      </div>
+    </PlayerFrame>
+  ),
+}
+
+const daysOf = (letters: string) =>
+  letters.split("").map((c, i) => ({
+    day: `2026-10-${20 + i}`,
+    state: ({ l: "lit", r: "rest", m: "missed", o: "open" } as const)[
+      c as "l" | "r" | "m" | "o"
+    ],
+  }))
+
+/** Every state of the rest days, in the order a learner meets them. */
+const REST_STATES = [
+  { name: "None saved, none toward", rest: 0, toward: 0, days: "mmmmmmo" },
+  { name: "Day 1 learned", rest: 0, toward: 1, days: "mmmmmml" },
+  { name: "Day 2 learned", rest: 0, toward: 2, days: "mmmmmll" },
+  {
+    name: "Day 3: just recharged",
+    rest: 1,
+    toward: 0,
+    days: "mmmmlll",
+    recharged: true,
+  },
+  { name: "1 saved, day 1", rest: 1, toward: 1, days: "mmmllll" },
+  { name: "1 saved, day 2", rest: 1, toward: 2, days: "mmlllll" },
+  {
+    name: "Day 3: fully charged",
+    rest: 2,
+    toward: 0,
+    days: "mllllll",
+    recharged: true,
+  },
+  { name: "Fully charged", rest: 2, toward: 0, days: "lllllll" },
+  { name: "A rest day was used", rest: 1, toward: 0, days: "lllllro" },
+]
+
+/** The rest days under the week, in every state; press the info button for the rule. */
+export const RestDayStates: Story = {
+  name: "Rest days",
+  render: (_, { globals }) => (
+    <PlayerFrame ui={globals.ui}>
+      <div className="grid min-h-screen grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] content-center gap-4 p-8">
+        {REST_STATES.map((s) => (
+          <div key={s.name} className="flex flex-col gap-2">
+            <p className="text-xs text-muted-foreground">{s.name}</p>
+            <div className="rounded-xl bg-card p-3 text-sm shadow-xs ring-1 ring-foreground/10">
+              <RestDays
+                streak={{
+                  rest: s.rest,
+                  toward: s.toward,
+                  recharged: s.recharged ?? false,
+                  days: daysOf(s.days),
+                }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </PlayerFrame>
   ),

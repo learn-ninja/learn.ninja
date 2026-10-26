@@ -388,11 +388,15 @@ const streakOf = (
   current: number,
   longest: number,
   rest: number,
-  week: string
+  week: string,
+  toward = 0,
+  recharged = false
 ): DayStreak => ({
   current,
   longest,
   rest,
+  toward,
+  recharged,
   days: [...week].map((c, i) => ({
     day: `2026-10-${String(20 + i).padStart(2, "0")}`,
     state: ({ l: "lit", r: "rest", m: "missed", o: "open" } as const)[
@@ -427,9 +431,36 @@ export const HeaderStreakOpen: Story = {
   name: "Header streak, open",
   render: () => (
     // The popover: this week's lanterns, the best streak, and the way to the activity grid.
-    <div className="flex h-72 justify-end px-8 pt-4">
+    <div className="flex h-96 justify-end px-8 pt-4">
       <StreakButton
-        streak={streakOf(12, 21, 1, "lllrllo")}
+        streak={streakOf(12, 21, 1, "lllrllo", 2)}
+        profileHref="#profile"
+        defaultOpen
+      />
+    </div>
+  ),
+}
+
+export const HeaderStreakRestUsed: Story = {
+  name: "Header streak, rest day used",
+  render: () => (
+    // Yesterday spent a rest day and today has no lesson yet.
+    <div className="flex h-96 justify-end px-8 pt-4">
+      <StreakButton
+        streak={streakOf(5, 5, 0, "mllllro", 2)}
+        profileHref="#profile"
+        defaultOpen
+      />
+    </div>
+  ),
+}
+
+export const HeaderStreakFull: Story = {
+  name: "Header streak, fully charged",
+  render: () => (
+    <div className="flex h-96 justify-end px-8 pt-4">
+      <StreakButton
+        streak={streakOf(9, 21, 2, "lllllll", 0, true)}
         profileHref="#profile"
         defaultOpen
       />

@@ -1,17 +1,23 @@
 "use client"
 
 import * as React from "react"
+import { InfoIcon } from "lucide-react"
 
+import { Button } from "@workspace/ui/components/button"
+import { Popover, PopoverTrigger } from "@workspace/ui/components/popover"
+import { Progress } from "@workspace/ui/components/progress"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
 import { calm } from "./motion"
+import { LEARN_PER_REST, MAX_REST } from "./streak-rules"
 
 // The day streak, drawn as a paper lantern (chōchin): lit on a day with a finished lesson, red in
 // outline on a rest day, unlit on a missed one. The header shows it with the count (apps/web), and
 // the streak screen lights today's on the day's first lesson. Logged-in learners only, since their
 // days are kept on the server, which also keeps the rules (apps/web/lib/activity/activity.ts):
-// every third learning day saves a rest day, up to two, and a missed day spends one.
+// every third learning day saves a rest day, up to two, and a missed day spends one. While both are
+// saved, learning days don't count toward a third.
 
 /** How a day stands in the streak: learned, kept by a rest day, missed, or today and still open. */
 export type DayState = "lit" | "rest" | "missed" | "open"
@@ -30,6 +36,10 @@ export interface DayStreak {
   longest: number
   /** Rest days saved, for days without a lesson. */
   rest: number
+  /** Learning days toward the next rest day, below LEARN_PER_REST; 0 while MAX_REST are saved. */
+  toward: number
+  /** Whether today's lesson recharged a rest day. */
+  recharged: boolean
   /** The last seven days, oldest first, ending today. */
   days: StreakDay[]
 }
@@ -313,14 +323,105 @@ export function StreakWeek({
   )
 }
 
+/**
+ * The rest days: a lantern slot for each one that can be saved (red once it is), a bar of the
+ * learning days toward the next (full on the day it recharges one), and a line saying how many are
+ * left, or that today recharged one, a rest day kept the streak yesterday, or both are saved (the
+ * bar hides then, since learning days don't count). The info button explains the rule; it opens on press, so it works on phones.
+ */
+export function RestDays({
+  streak,
+  className,
+}: {
+  streak: Pick<DayStreak, "rest" | "toward" | "recharged" | "days">
+  className?: string
+}) {
+  const { t } = usePlayer()
+  const { rest, toward, recharged, days } = streak
+  const full = rest >= MAX_REST
+  const left = LEARN_PER_REST - toward
+  // The day it recharges one, the bar stays full: that's the bar that just filled.
+  const filled = recharged ? LEARN_PER_REST : toward
+  // Yesterday spent one, and today has no lesson yet.
+  const used = days.at(-2)?.state === "rest" && days.at(-1)?.state === "open"
+  const line = full
+    ? t.restFull
+    : recharged
+      ? t.restRecharged(LEARN_PER_REST)
+      : used
+        ? t.restUsed(left)
+        : toward === 0
+          ? t.restStart(LEARN_PER_REST)
+          : t.restLeft(left)
+  return (
+    <div className={cn("flex flex-col gap-2 text-start", className)}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-0.5">
+          <p className="font-medium">{t.restTitle}</p>
+          <PopoverTrigger>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t.restInfoLabel}
+              className="-my-1 text-muted-foreground"
+            >
+              <InfoIcon />
+            </Button>
+            <Popover placement="top" className="w-64 dark:bg-black">
+              <p>{t.restInfo(LEARN_PER_REST, MAX_REST)}</p>
+            </Popover>
+          </PopoverTrigger>
+        </div>
+        <span
+          role="img"
+          aria-label={t.restSaved(rest, MAX_REST)}
+          className="flex gap-1"
+        >
+          {Array.from({ length: MAX_REST }, (_, i) => (
+            <Lantern
+              key={i}
+              look={i < rest ? "rest" : "ahead"}
+              // The one today recharged swings, like the big lantern as it lights.
+              className={cn(recharged && i === rest - 1 && "lantern-sway")}
+            />
+          ))}
+        </span>
+      </div>
+      {full && !recharged ? null : (
+        <Progress
+          aria-label={t.restProgress}
+          value={filled}
+          maxValue={LEARN_PER_REST}
+          valueLabel={t.restProgressValue(filled, LEARN_PER_REST)}
+          className="**:data-[slot=progress-indicator]:bg-red-500 **:data-[slot=progress-indicator]:duration-500"
+        />
+      )}
+      <p className="text-muted-foreground">{line}</p>
+    </div>
+  )
+}
+
+/** The rest days as they stood before today's lesson, for the moment before its lantern lights. */
+function restBeforeToday(streak: DayStreak): DayStreak {
+  if (streak.recharged)
+    return {
+      ...streak,
+      rest: streak.rest - 1,
+      toward: LEARN_PER_REST - 1,
+      recharged: false,
+    }
+  if (streak.toward > 0) return { ...streak, toward: streak.toward - 1 }
+  return streak
+}
+
 /** How long the screen waits before lighting today's lantern, so the learner sees it happen. */
 const LIGHT_DELAY = 500
 
 /**
  * The screen between the lesson's last brick and the wrap-up on the day's first finished lesson,
  * laid out like Duolingo's and Brilliant's: a big lantern that lights and swings once, the count
- * ticking up under it, then the week with today's lantern lit and a line under it. Day 1 says the
- * streak starts, or starts again after one broke. Still for reduced motion: it opens lit. Continue
+ * ticking up under it, then the week with today's lantern lit and a line under it, and the rest
+ * days, whose bar fills with today. Day 1 says the streak starts, or starts again after one broke. Still for reduced motion: it opens lit. Continue
  * is in the tray (ActionArea).
  */
 export function StreakScreen({ streak }: { streak: DayStreak }) {
@@ -374,12 +475,10 @@ export function StreakScreen({ streak }: { streak: DayStreak }) {
       <div className="flex w-full max-w-xs flex-col gap-4 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10">
         <StreakWeek days={days} />
         <p className="text-sm font-medium text-muted-foreground">{line}</p>
-        {streak.rest > 0 ? (
-          <p className="flex items-center justify-center gap-1.5 border-t pt-3 text-sm font-medium">
-            <Lantern look="rest" />
-            {t.streakRest(streak.rest)}
-          </p>
-        ) : null}
+        <RestDays
+          streak={{ ...(lit ? streak : restBeforeToday(streak)), days }}
+          className="border-t pt-3 text-sm"
+        />
       </div>
     </div>
   )

@@ -7,6 +7,7 @@
 // GitHub's undisclosed outlier rule). A new record day re-shades the older ones.
 
 import type { DayState, DayStreak } from "@workspace/player"
+import { LEARN_PER_REST, MAX_REST } from "@workspace/player/streak-rules"
 
 /** A calendar day as YYYY-MM-DD. */
 export type Day = string
@@ -93,16 +94,13 @@ export function activityLevels(counts: number[]): {
   }
 }
 
-/** Learning days that earn one rest day. */
-export const LEARN_PER_REST = 3
-/** The most rest days a learner can have saved. */
-export const MAX_REST = 2
-
 /**
  * The streak rules, walked day by day from the first day with a lesson to today. Each day with a
  * finished lesson adds one to the run, and every LEARN_PER_REST of them saves a rest day (MAX_REST
- * at most). A day without one spends a saved rest day, which keeps the run without adding to it;
- * with none saved, the run ends, and so do the saved days. Today stays open until it's over.
+ * at most; while that many are saved, learning days don't count toward the next, so spending one
+ * starts its bar from empty). A day without one spends a saved rest day, which keeps the run
+ * without adding to it; with none saved, the run ends, and so do the saved days. Today stays open
+ * until it's over.
  */
 function walk(activeDays: Day[], today: Day) {
   const active = new Set(activeDays.filter((d) => d <= today))
@@ -111,14 +109,16 @@ function walk(activeDays: Day[], today: Day) {
   let longest = 0
   let rest = 0
   let toward = 0
+  let recharged = false
   const first = [...active].sort()[0]
   for (let day = first; day && day <= today; day = addDays(day, 1)) {
     if (active.has(day)) {
       run++
       longest = Math.max(longest, run)
-      if (++toward === LEARN_PER_REST) {
+      if (rest < MAX_REST && ++toward === LEARN_PER_REST) {
         toward = 0
-        rest = Math.min(MAX_REST, rest + 1)
+        rest++
+        recharged = day === today
       }
       states.set(day, "lit")
     } else if (day === today) {
@@ -133,7 +133,7 @@ function walk(activeDays: Day[], today: Day) {
       states.set(day, "missed")
     }
   }
-  return { current: run, longest, rest, states }
+  return { current: run, longest, rest, toward, recharged, states }
 }
 
 /**
@@ -149,13 +149,21 @@ export function streaks(
   return { current, longest }
 }
 
-/** The streak the header and the streak screen show: the counts, rest days saved, and the last seven days. */
+/**
+ * The streak the header and the streak screen show: the counts, the rest days saved and the
+ * learning days toward the next, and the last seven days.
+ */
 export function dayStreak(activeDays: Day[], today: Day): DayStreak {
-  const { current, longest, rest, states } = walk(activeDays, today)
+  const { current, longest, rest, toward, recharged, states } = walk(
+    activeDays,
+    today
+  )
   return {
     current,
     longest,
     rest,
+    toward,
+    recharged,
     days: Array.from({ length: 7 }, (_, i) => {
       const day = addDays(today, i - 6)
       return {

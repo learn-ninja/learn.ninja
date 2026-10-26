@@ -140,8 +140,22 @@ export type Strings = {
   streakDayUnlit: string
   /** Today before its lesson, and the days still to come. */
   streakDayOpen: string
-  /** The rest days saved, under the streak screen's week ("1 rest day saved"). */
-  streakRest: (days: number) => string
+  /** The rest days section, under the streak's week (the header's popover and the streak screen). */
+  restTitle: string
+  /** Its info button, and what it opens: how rest days recharge and get used. */
+  restInfoLabel: string
+  restInfo: (perRest: number, max: number) => string
+  /** The lantern slots, said to screen readers ("1 of 2 saved"). */
+  restSaved: (saved: number, max: number) => string
+  /** The bar toward the next rest day, and its value ("2 of 3 days"). */
+  restProgress: string
+  restProgressValue: (days: number, of: number) => string
+  /** The line under the bar: none toward the next yet, how many days are left, today's recharge, a rest day spent yesterday, or both saved. */
+  restStart: (days: number) => string
+  restLeft: (days: number) => string
+  restRecharged: (days: number) => string
+  restUsed: (days: number) => string
+  restFull: string
   /** The wrap-up's heart, before and after the learner likes the lesson. */
   like: string
   liked: string
@@ -252,7 +266,17 @@ export type Untranslated =
   | "streakDayRest"
   | "streakDayUnlit"
   | "streakDayOpen"
-  | "streakRest"
+  | "restTitle"
+  | "restInfoLabel"
+  | "restInfo"
+  | "restSaved"
+  | "restProgress"
+  | "restProgressValue"
+  | "restStart"
+  | "restLeft"
+  | "restRecharged"
+  | "restUsed"
+  | "restFull"
 /** A language's own strings: everything but the ones still waiting for translation. */
 export type Translation = Omit<Strings, Untranslated>
 

@@ -21,6 +21,7 @@ export { savedProgress } from "./progress"
 export {
   Lantern,
   LanternIcon,
+  RestDays,
   StreakScreen,
   StreakWeek,
   type DayState,

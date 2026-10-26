@@ -132,6 +132,8 @@ describe("streaks", () => {
       current: 5,
       longest: 5,
       rest: 0,
+      toward: 2,
+      recharged: false,
       days: [
         { day: "2026-10-19", state: "lit" },
         { day: "2026-10-20", state: "lit" },
@@ -148,6 +150,64 @@ describe("streaks", () => {
       state: "open",
     })
     expect(dayStreak([], "2026-10-25").days[0]!.state).toBe("missed")
+  })
+})
+
+describe("rest days", () => {
+  const rest = (days: string[], today: string) => {
+    const { rest, toward, recharged } = dayStreak(days, today)
+    return { rest, toward, recharged }
+  }
+
+  it("counts learning days toward the next rest day, and says when today recharged one", () => {
+    const days = run("2026-10-19", 3)
+    expect(rest(days.slice(0, 2), "2026-10-20")).toEqual({
+      rest: 0,
+      toward: 2,
+      recharged: false,
+    })
+    expect(rest(days, "2026-10-21")).toEqual({
+      rest: 1,
+      toward: 0,
+      recharged: true,
+    })
+    // By tomorrow, it's an ordinary saved day.
+    expect(rest(days, "2026-10-22")).toEqual({
+      rest: 1,
+      toward: 0,
+      recharged: false,
+    })
+  })
+
+  it("pauses the count while both are saved, so spending one starts from empty", () => {
+    // Six days fill both; three more count for nothing.
+    const days = run("2026-10-01", 9)
+    expect(rest(days, "2026-10-09")).toEqual({
+      rest: 2,
+      toward: 0,
+      recharged: false,
+    })
+    expect(rest(days.slice(0, 6), "2026-10-06")).toMatchObject({
+      rest: 2,
+      recharged: true,
+    })
+    // A day off spends one, and the next learning day is the first toward it.
+    expect(rest(days, "2026-10-11")).toMatchObject({ rest: 1, toward: 0 })
+    expect(rest([...days, "2026-10-11"], "2026-10-11")).toMatchObject({
+      rest: 1,
+      toward: 1,
+    })
+  })
+
+  it("keeps the count through a rest day it spends", () => {
+    // Three days save one, two more count toward the next, and a day off spends the saved one.
+    const days = run("2026-10-01", 5)
+    expect(rest(days, "2026-10-06")).toEqual({
+      rest: 1,
+      toward: 2,
+      recharged: false,
+    })
+    expect(rest(days, "2026-10-07")).toMatchObject({ rest: 0, toward: 2 })
   })
 })
 

@@ -11,7 +11,8 @@
     "./plain-text": "./src/plain-text.ts",
     "./logo": "./src/logo.tsx",
     "./time": "./src/time.tsx",
-    "./progress": "./src/progress.ts"
+    "./progress": "./src/progress.ts",
+    "./streak-rules": "./src/streak-rules.ts"
   },
   "scripts": {
     "lint": "eslint",

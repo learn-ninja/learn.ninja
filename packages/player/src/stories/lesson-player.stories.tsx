@@ -256,11 +256,15 @@ const streakOf = (
   current: number,
   longest: number,
   rest: number,
-  week: string
+  week: string,
+  toward = 0,
+  recharged = false
 ): DayStreak => ({
   current,
   longest,
   rest,
+  toward,
+  recharged,
   days: [...week].map((c, i) => ({
     day: `2026-10-${String(20 + i).padStart(2, "0")}`,
     state: ({ l: "lit", r: "rest", m: "missed", o: "open" } as const)[
@@ -278,9 +282,19 @@ export const StreakScreen: Story = {
   args: {
     lesson: lessons.buttons,
     progressKey: "story-wrap-streak",
-    streak: streakOf(12, 21, 1, "lllrlll"),
+    streak: streakOf(12, 21, 1, "lllrlll", 2),
   },
   loaders: atWrap(lessons.buttons, "story-wrap-streak", ["first", "second"]),
+}
+/** The third learning day: the bar fills and a rest day's lantern turns red and swings. */
+export const StreakScreenRecharged: Story = {
+  name: "Streak screen: rest day recharged",
+  args: {
+    lesson: lessons.buttons,
+    progressKey: "story-wrap-streak-recharged",
+    streak: streakOf(6, 21, 1, "mllllll", 0, true),
+  },
+  loaders: atWrap(lessons.buttons, "story-wrap-streak-recharged"),
 }
 /** The first lantern ever: the streak starts today. */
 export const StreakScreenStarts: Story = {
