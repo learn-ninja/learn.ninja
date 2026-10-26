@@ -116,12 +116,9 @@ export const tr: Translation = {
   challengeMessage: (first, total) =>
     `İlk denemede ${total} sorudan ${first} tanesini doğru yaptım. Beni geçebilir misin?`,
   challengeBack: "Sen de meydan oku",
-  sendTitle: "Bir arkadaşına gönder",
-  sendMessage: "Bu dersi learn.ninja'da dene.",
   messageCopied: "Meydan okuma kopyalandı",
   challengeCopiedHint:
     "Bir arkadaşına göndereceğin mesaja yapıştır. Bağlantı, geçmesi gereken puanını gösterir.",
-  sendCopiedHint: "Bir arkadaşına göndereceğin mesaja yapıştır.",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "Bir arkadaşın"} ${total} sorudan ${first} tanesini doğru yaptı. Geçebilir misin?`,
   challengeWon: (mine, theirs, by) =>

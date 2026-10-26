@@ -103,12 +103,9 @@ export const zhTw: Translation = {
   challengeMessage: (first, total) =>
     `我第一次就答對了 ${total} 題中的 ${first} 題，你能超過我嗎？`,
   challengeBack: "回敬一次挑戰",
-  sendTitle: "傳給朋友",
-  sendMessage: "來 learn.ninja 試試這堂課。",
   messageCopied: "挑戰已複製",
   challengeCopiedHint:
     "貼到傳給朋友的訊息裡。對方打開連結就會看到要超越的分數。",
-  sendCopiedHint: "貼到傳給朋友的訊息裡。",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "朋友"} 答對了 ${total} 題中的 ${first} 題，你能超過嗎？`,
   challengeWon: (mine, theirs, by) =>

@@ -1096,7 +1096,7 @@ function Player({
   )
   // He waits in his corner through the streak screen, then leaps up for the wrap-up.
   const celebrate =
-    run && !onStreak ? (run === "perfect" ? "perfect" : "done") : undefined
+    run && !onStreak ? run : undefined
   const hydrated = useHydrated()
 
   return (
@@ -1880,7 +1880,6 @@ function WrapUp({
         <WrapActions
           lesson={lesson}
           summary={s}
-          run={run}
           onRestart={onRestart}
           // The maker's own lesson has no heart; its status is on Share.
           extra={creator ? null : <LikeLesson />}

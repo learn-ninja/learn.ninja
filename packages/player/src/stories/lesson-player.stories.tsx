@@ -165,19 +165,13 @@ const atWrap = (lesson: Lesson, key: string, outcomes: Outcome[] = []) => [
   },
 ]
 
-/** The wrap-up after a perfect run: all first tries, and Share leads. */
+/** The wrap-up after a perfect run: all first tries, and Challenge a friend leads. */
 export const WrapUpPerfect: Story = {
   name: "Wrap-up: perfect run",
   args: { lesson: lessons.buttons, progressKey: "story-wrap-perfect" },
   loaders: atWrap(lessons.buttons, "story-wrap-perfect"),
 }
-/** A good run (at most one missed): Share still leads. */
-export const WrapUpGood: Story = {
-  name: "Wrap-up: good run",
-  args: { lesson: lessons.buttons, progressKey: "story-wrap-good" },
-  loaders: atWrap(lessons.buttons, "story-wrap-good", ["first", "second"]),
-}
-/** A rough run (more than one missed): Restart leads. */
+/** A rough run (more than one missed): Challenge a friend still leads. */
 export const WrapUpRough: Story = {
   name: "Wrap-up: rough run",
   args: { lesson: lessons.buttons, progressKey: "story-wrap-rough" },

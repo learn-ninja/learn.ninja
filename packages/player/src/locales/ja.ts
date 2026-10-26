@@ -104,12 +104,9 @@ export const ja: Translation = {
   challengeMessage: (first, total) =>
     `1回目で${total}問中${first}問正解しました。私に勝てますか？`,
   challengeBack: "挑戦し返す",
-  sendTitle: "友だちに送る",
-  sendMessage: "learn.ninja でこのレッスンを試してみてください。",
   messageCopied: "チャレンジをコピーしました",
   challengeCopiedHint:
     "友だちへのメッセージに貼り付けましょう。リンクを開くと、超えるべきスコアが表示されます。",
-  sendCopiedHint: "友だちへのメッセージに貼り付けましょう。",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "友だち"} は${total}問中${first}問正解しました。超えられますか？`,
   challengeWon: (mine, theirs, by) =>

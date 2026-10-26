@@ -6,7 +6,6 @@ import {
   CopyIcon,
   PencilIcon,
   RotateCcwIcon,
-  SendIcon,
   SwordsIcon,
   TrophyIcon,
 } from "lucide-react"
@@ -16,10 +15,10 @@ import { Button } from "@workspace/ui/components/button"
 import { toast } from "@workspace/ui/components/sonner"
 import { cn } from "@workspace/ui/lib/utils"
 
-import { challengeLink, challengeResult, plainLink } from "./challenge"
+import { challengeLink, challengeResult } from "./challenge"
 import { usePlayer } from "./context"
 import { useCreatorControls } from "./creator"
-import { scoredQuestions, type Outcome, type Run, type Summary } from "./flow"
+import { scoredQuestions, type Outcome, type Summary } from "./flow"
 import { RichText } from "./rich-text"
 import { NEXT_KINDS, type NextKind } from "./strings"
 
@@ -128,36 +127,29 @@ export function ChallengeVerdict({ summary }: { summary: Summary }) {
 }
 
 /**
- * The wrap-up's actions, in one row: the run's next step filled, the other outlined. After a good run Challenge a friend leads: the link carries the learner's
- * first tries (and their handle, logged in) and the message dares a friend to beat them. After a
- * rough run going again leads, and the share sends the plain link. Phones open the share sheet;
- * elsewhere the message and link are copied, and a toast says so.
+ * The wrap-up's actions, in one row: Challenge a friend filled, Restart outlined. The link carries
+ * the learner's first tries (and their handle, logged in) and the message dares a friend to beat
+ * them, whatever the score. Phones open the share sheet; elsewhere the message and link are copied,
+ * and a toast says so.
  */
 export function WrapActions({
   lesson,
   summary,
-  run,
   onRestart,
   extra,
 }: {
   lesson: Lesson
   summary: Summary
-  run: Run
   onRestart: () => void
   /** One more outlined button at the row's end (the heart, for learners). */
   extra?: React.ReactNode
 }) {
   const { t, shareUrl, challenge, challenger } = usePlayer()
-  const dare = run !== "rough"
 
   async function send() {
     const page = shareUrl ?? window.location.href
-    const url = dare
-      ? challengeLink(page, summary.first, summary.total, challenger)
-      : plainLink(page)
-    const text = dare
-      ? t.challengeMessage(summary.first, summary.total)
-      : t.sendMessage
+    const url = challengeLink(page, summary.first, summary.total, challenger)
+    const text = t.challengeMessage(summary.first, summary.total)
     if (navigator.share && matchMedia("(pointer: coarse)").matches) {
       try {
         await navigator.share({ title: lesson.title, text, url })
@@ -169,42 +161,23 @@ export function WrapActions({
     try {
       await navigator.clipboard.writeText(`${text}\n${url}`)
       // Says what to do with it next: the copy alone doesn't send anything.
-      if (dare)
-        toast.success(t.messageCopied, { description: t.challengeCopiedHint })
-      else toast.success(t.linkCopied, { description: t.sendCopiedHint })
+      toast.success(t.messageCopied, { description: t.challengeCopiedHint })
     } catch {
       toast.error(t.copyFailed)
     }
   }
 
-  const ShareIcon = dare ? SwordsIcon : SendIcon
-  const share = (
-    <Button
-      key="share"
-      size="lg"
-      variant={dare ? "default" : "outline"}
-      onPress={() => void send()}
-    >
-      <ShareIcon data-icon="inline-start" className="rtl:-scale-x-100" />
-      {dare ? (challenge ? t.challengeBack : t.challengeTitle) : t.sendTitle}
-    </Button>
-  )
-  const restart = (
-    <Button
-      key="restart"
-      size="lg"
-      variant={dare ? "outline" : "default"}
-      onPress={onRestart}
-    >
-      <RotateCcwIcon data-icon="inline-start" />
-      {t.restart}
-    </Button>
-  )
   return (
     // On phones the row stacks, each button the column's width.
     <div className="flex justify-center gap-2 max-sm:flex-col">
-      {dare ? share : restart}
-      {dare ? restart : share}
+      <Button size="lg" onPress={() => void send()}>
+        <SwordsIcon data-icon="inline-start" className="rtl:-scale-x-100" />
+        {challenge ? t.challengeBack : t.challengeTitle}
+      </Button>
+      <Button size="lg" variant="outline" onPress={onRestart}>
+        <RotateCcwIcon data-icon="inline-start" />
+        {t.restart}
+      </Button>
       {extra}
     </div>
   )

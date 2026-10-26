@@ -132,12 +132,9 @@ export const he: Translation = {
   challengeMessage: (first, total) =>
     `עניתי נכון על ${first} מתוך ${total} בניסיון הראשון. אפשר לעקוף אותי?`,
   challengeBack: "אתגרו אותו בחזרה",
-  sendTitle: "שלחו אותו לחבר",
-  sendMessage: "נסו את השיעור הזה ב־learn.ninja.",
   messageCopied: "האתגר הועתק",
   challengeCopiedHint:
     "הדביקו אותו בהודעה לחבר. בקישור שלו יופיע הציון שעליו לנצח.",
-  sendCopiedHint: "הדביקו אותו בהודעה לחבר.",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "חבר"} ענה נכון על ${first} מתוך ${total}. אפשר לעקוף?`,
   challengeWon: (mine, theirs, by) =>

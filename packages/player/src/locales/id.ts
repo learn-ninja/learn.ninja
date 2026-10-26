@@ -113,12 +113,9 @@ export const id: Translation = {
   challengeMessage: (first, total) =>
     `Aku benar ${first} dari ${total} di percobaan pertama. Bisa kamu kalahkan aku?`,
   challengeBack: "Tantang balik",
-  sendTitle: "Kirim ke temanmu",
-  sendMessage: "Coba pelajaran ini di learn.ninja.",
   messageCopied: "Tantangan disalin",
   challengeCopiedHint:
     "Tempel di pesan ke teman. Tautannya menunjukkan skormu yang harus dikalahkan.",
-  sendCopiedHint: "Tempel di pesan ke teman.",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "Seorang teman"} benar ${first} dari ${total}. Bisa kamu kalahkan?`,
   challengeWon: (mine, theirs, by) =>

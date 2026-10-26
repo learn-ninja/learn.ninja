@@ -120,12 +120,9 @@ export const hi: Translation = {
   challengeMessage: (first, total) =>
     `मेरे पहली बार में ${total} में से ${first} सही रहे। क्या आप मुझे हरा सकते हैं?`,
   challengeBack: "उन्हें वापस चुनौती दें",
-  sendTitle: "इसे किसी दोस्त को भेजें",
-  sendMessage: "learn.ninja पर यह पाठ आज़माएँ।",
   messageCopied: "चुनौती कॉपी हो गई",
   challengeCopiedHint:
     "इसे किसी दोस्त को मैसेज में पेस्ट करें। उनके लिंक में आपका स्कोर दिखेगा, जिसे उन्हें हराना है।",
-  sendCopiedHint: "इसे किसी दोस्त को मैसेज में पेस्ट करें।",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "एक दोस्त"} के ${total} में से ${first} सही रहे। क्या आप इसे हरा सकते हैं?`,
   challengeWon: (mine, theirs, by) =>

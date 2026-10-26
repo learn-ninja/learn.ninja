@@ -110,12 +110,9 @@ export const vi: Translation = {
   challengeMessage: (first, total) =>
     `Mình đúng ${first}/${total} câu ngay lần đầu. Bạn có thắng được mình không?`,
   challengeBack: "Thách lại",
-  sendTitle: "Gửi cho một người bạn",
-  sendMessage: "Thử bài học này trên learn.ninja.",
   messageCopied: "Đã sao chép lời thách đấu",
   challengeCopiedHint:
     "Dán vào tin nhắn gửi bạn bè. Liên kết sẽ cho họ thấy điểm cần vượt qua.",
-  sendCopiedHint: "Dán vào tin nhắn gửi bạn bè.",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "Một người bạn"} đúng ${first}/${total} câu. Bạn có vượt qua được không?`,
   challengeWon: (mine, theirs, by) =>

@@ -125,12 +125,9 @@ export const ar: Translation = {
   challengeMessage: (first, total) =>
     `أجبت بشكل صحيح عن ${first} من ${total} من المحاولة الأولى. هل تستطيع التفوق عليّ؟`,
   challengeBack: "تحدَّه بالمقابل",
-  sendTitle: "أرسله إلى صديق",
-  sendMessage: "جرّب هذا الدرس على learn.ninja.",
   messageCopied: "تم نسخ التحدي",
   challengeCopiedHint:
     "الصقه في رسالة إلى صديق. سيعرض له الرابط نتيجتك ليتفوق عليها.",
-  sendCopiedHint: "الصقه في رسالة إلى صديق.",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "صديق"} أجاب بشكل صحيح عن ${first} من ${total}. هل تستطيع التفوق عليه؟`,
   challengeWon: (mine, theirs, by) =>

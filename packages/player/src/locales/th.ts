@@ -110,12 +110,9 @@ export const th: Translation = {
   challengeMessage: (first, total) =>
     `ฉันตอบถูก ${first} จาก ${total} ข้อตั้งแต่ครั้งแรก เอาชนะฉันได้ไหม`,
   challengeBack: "ท้ากลับ",
-  sendTitle: "ส่งให้เพื่อน",
-  sendMessage: "ลองบทเรียนนี้บน learn.ninja",
   messageCopied: "คัดลอกคำท้าแล้ว",
   challengeCopiedHint:
     "วางลงในข้อความถึงเพื่อน ลิงก์จะแสดงคะแนนที่เขาต้องเอาชนะ",
-  sendCopiedHint: "วางลงในข้อความถึงเพื่อน",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "เพื่อน"} ตอบถูก ${first} จาก ${total} ข้อ คุณชนะได้ไหม`,
   challengeWon: (mine, theirs, by) =>

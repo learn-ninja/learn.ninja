@@ -136,12 +136,9 @@ export const uk: Translation = {
   challengeMessage: (first, total) =>
     `У мене ${first} із ${total} з першої спроби. Зможеш мене обійти?`,
   challengeBack: "Кинути виклик у відповідь",
-  sendTitle: "Надішліть другові",
-  sendMessage: "Спробуй цей урок на learn.ninja.",
   messageCopied: "Виклик скопійовано",
   challengeCopiedHint:
     "Вставте його в повідомлення другові. За посиланням він побачить ваш результат, який треба побити.",
-  sendCopiedHint: "Вставте його в повідомлення другові.",
   challengeFrom: (first, total, by) =>
     `У ${by ? `@${by}` : "друга"} ${first} із ${total}. Зможете побити цей результат?`,
   challengeWon: (mine, theirs, by) =>

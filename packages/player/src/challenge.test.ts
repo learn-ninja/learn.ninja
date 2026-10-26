@@ -5,7 +5,6 @@ import {
   challengeLink,
   challengeResult,
   parseChallenge,
-  plainLink,
 } from "./challenge"
 
 const URL_ = "https://learn.ninja/l/how-a-website-keeps-you-logged-in-ab12cd34"
@@ -16,7 +15,6 @@ describe("challenge links", () => {
       `${URL_}?c=4-5&by=colin`
     )
     expect(challengeLink(URL_, 5, 5)).toBe(`${URL_}?c=5-5`)
-    expect(plainLink(`${URL_}?c=4-5&by=colin`)).toBe(URL_)
   })
 
   it("reads back what it wrote", () => {

@@ -105,12 +105,9 @@ export const en: Strings = {
   challengeMessage: (first, total) =>
     `I got ${first} of ${total} on the first try. Can you beat me?`,
   challengeBack: "Challenge them back",
-  sendTitle: "Send it to a friend",
-  sendMessage: "Try this lesson on learn.ninja.",
   messageCopied: "Challenge copied",
   challengeCopiedHint:
     "Paste it in a message to a friend. Their link shows your score to beat.",
-  sendCopiedHint: "Paste it in a message to a friend.",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "A friend"} got ${first} of ${total}. Can you beat it?`,
   challengeWon: (mine, theirs, by) =>

@@ -123,12 +123,9 @@ export const nl: Translation = {
   challengeMessage: (first, total) =>
     `Ik had er ${first} van ${total} goed in één keer. Kun jij me verslaan?`,
   challengeBack: "Daag terug uit",
-  sendTitle: "Stuur de les naar een vriend",
-  sendMessage: "Probeer deze les op learn.ninja.",
   messageCopied: "Uitdaging gekopieerd",
   challengeCopiedHint:
     "Plak hem in een bericht aan een vriend. Zijn link laat de score zien die hij moet verslaan.",
-  sendCopiedHint: "Plak hem in een bericht aan een vriend.",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "Een vriend"} had er ${first} van ${total} goed. Kun jij dat verslaan?`,
   challengeWon: (mine, theirs, by) =>

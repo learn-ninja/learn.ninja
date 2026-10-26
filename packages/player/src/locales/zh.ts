@@ -103,12 +103,9 @@ export const zh: Translation = {
   challengeMessage: (first, total) =>
     `我第一次就答对了 ${total} 题中的 ${first} 题，你能超过我吗？`,
   challengeBack: "回敬一次挑战",
-  sendTitle: "把它发给朋友",
-  sendMessage: "来 learn.ninja 试试这节课。",
   messageCopied: "挑战已复制",
   challengeCopiedHint:
     "粘贴到发给朋友的消息里。对方打开链接就能看到要超越的分数。",
-  sendCopiedHint: "粘贴到发给朋友的消息里。",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "朋友"} 答对了 ${total} 题中的 ${first} 题，你能超过吗？`,
   challengeWon: (mine, theirs, by) =>

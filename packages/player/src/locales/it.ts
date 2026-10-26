@@ -128,12 +128,9 @@ export const it: Translation = {
   challengeMessage: (first, total) =>
     `Ho fatto ${first} su ${total} al primo tentativo. Riesci a battermi?`,
   challengeBack: "Rilancia la sfida",
-  sendTitle: "Mandala a un amico",
-  sendMessage: "Prova questa lezione su learn.ninja.",
   messageCopied: "Sfida copiata",
   challengeCopiedHint:
     "Incollala in un messaggio a un amico. Il suo link mostra il punteggio da battere.",
-  sendCopiedHint: "Incollalo in un messaggio a un amico.",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "Un amico"} ha fatto ${first} su ${total}. Riesci a batterlo?`,
   challengeWon: (mine, theirs, by) =>

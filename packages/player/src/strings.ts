@@ -102,20 +102,15 @@ export type Strings = {
   nextHint: string
   copyPrompt: string
   promptCopied: string
-  /** The wrap-up's main button after a good run: the score, sent as a challenge. */
+  /** The wrap-up's main button: the score, sent as a challenge. */
   challengeTitle: string
   /** The message sent with the challenge link. */
   challengeMessage: (first: number, total: number) => string
   /** That button for someone who was challenged themselves. */
   challengeBack: string
-  /** The share button after a rough run: the lesson without the score. */
-  sendTitle: string
-  sendMessage: string
   /** The toast after the challenge was copied (desktop; phones open the share sheet), and what to do next. */
   messageCopied: string
   challengeCopiedHint: string
-  /** What to do next with the plain link after a rough run (the toast's title is linkCopied). */
-  sendCopiedHint: string
   /** On the title screen of a challenge link: the sender's score, `by` their handle when they were logged in. */
   challengeFrom: (first: number, total: number, by?: string) => string
   /** On the challenged learner's wrap-up: their first tries (`mine`) against the sender's. */

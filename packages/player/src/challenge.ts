@@ -50,14 +50,6 @@ export function challengeLink(
   return link.toString()
 }
 
-/** The lesson's plain link, for sharing without a score. */
-export function plainLink(url: string): string {
-  const link = new URL(url)
-  link.search = ""
-  link.hash = ""
-  return link.toString()
-}
-
 /** How the friend's first tries compare with the score they were sent. */
 export function challengeResult(
   first: number,

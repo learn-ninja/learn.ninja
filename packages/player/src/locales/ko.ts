@@ -106,12 +106,9 @@ export const ko: Translation = {
   challengeMessage: (first, total) =>
     `첫 시도에 ${total}문제 중 ${first}문제를 맞혔어요. 저를 이길 수 있나요?`,
   challengeBack: "다시 도전장 보내기",
-  sendTitle: "친구에게 보내기",
-  sendMessage: "learn.ninja에서 이 레슨을 해 보세요.",
   messageCopied: "도전장을 복사했어요",
   challengeCopiedHint:
     "친구에게 보낼 메시지에 붙여넣으세요. 링크에 넘어야 할 점수가 표시돼요.",
-  sendCopiedHint: "친구에게 보낼 메시지에 붙여넣으세요.",
   challengeFrom: (first, total, by) =>
     `${by ? `@${by}` : "친구"}의 점수는 ${total}문제 중 ${first}문제예요. 넘을 수 있나요?`,
   challengeWon: (mine, theirs, by) =>
