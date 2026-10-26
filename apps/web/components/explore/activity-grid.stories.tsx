@@ -68,7 +68,7 @@ export const DailyHabit: Story = {
   },
 }
 
-/** One ten-lesson day: the cap jumps, and the usual two-lesson days drop to the lightest green. */
+/** One ten-lesson day: the cap jumps, and the usual two-lesson days drop to the faintest flame. */
 export const RecordDay: Story = {
   args: {
     rows: [

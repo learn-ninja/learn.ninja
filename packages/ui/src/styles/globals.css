@@ -77,12 +77,13 @@
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  /* The profile's activity grid, GitHub's five shades: no lessons, then light to dark green. */
+  /* The profile's activity grid in the streak lantern's flame colors (amber and orange): no lessons,
+     then pale candlelight to deep ember. */
   --activity-0: #eff2f5;
-  --activity-1: #aceebb;
-  --activity-2: #4ac26b;
-  --activity-3: #2da44e;
-  --activity-4: #116329;
+  --activity-1: #fde68a;
+  --activity-2: #fb923c;
+  --activity-3: #ea580c;
+  --activity-4: #9a3412;
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -129,12 +130,13 @@
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  /* Dark mode runs the other way: the empty cell sits on the muted layer and the greens get lighter with activity. */
+  /* Dark mode runs the other way: the empty cell sits on the muted layer and the flame burns from
+     ember to the lantern's bright amber with activity. */
   --activity-0: oklch(0.269 0 0);
-  --activity-1: #033a16;
-  --activity-2: #196c2e;
-  --activity-3: #2ea043;
-  --activity-4: #56d364;
+  --activity-1: #7c2d12;
+  --activity-2: #c2410c;
+  --activity-3: #f97316;
+  --activity-4: #fcd34d;
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
