@@ -3,8 +3,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Lantern, StreakWeek, type LanternLook } from "../streak"
 import { PlayerFrame } from "./fixtures"
 
-// The streak's lantern: small in the header and the week row, big on the streak screen. Lit, its
-// paper fills with candlelight; the big one keeps its stripes and throws a halo.
+// The streak's lantern: small in the header and the week row, big on the streak screen. Lit, a
+// small one turns yellow; the big one fills with candlelight and throws a halo.
 
 const LOOKS: LanternLook[] = ["lit", "rest", "unlit", "ahead"]
 

@@ -38,7 +38,8 @@ export interface DayStreak {
 export type LanternLook = "lit" | "rest" | "unlit" | "ahead"
 
 const LOOKS: Record<LanternLook, string> = {
-  lit: "text-foreground",
+  // A small lit lantern is a yellow outline; a big one is in the foreground color, lit from inside.
+  lit: "text-amber-600 dark:text-amber-400",
   rest: "text-red-500",
   unlit: "text-muted-foreground",
   // Faded as a whole, not through a see-through color, so lines that cross don't show darker.
@@ -87,17 +88,17 @@ const HALO_STOPS = Array.from({ length: 10 }, (_, k) => {
 
 /**
  * A paper lantern (chōchin): 24px grid, 2px round strokes, outline only, in `currentColor`, so it
- * sits with the app's other icons. `lit` fills the paper with candlelight, and a small lantern's
- * stripes go so it reads as one light. A `big` one keeps its stripes over the light, and the light
- * spills past its outline as a halo (drawn outside the 24px box, so nothing around it needs room
- * for it). The light is the same in both themes, as light is; on a light page the halo is fainter,
- * since a lamp in a bright room barely shows past itself.
+ * sits with the app's other icons. A small one stays an outline, lit or not (its color says which).
+ * `lit` fills a `big` one's paper with candlelight under its stripes, and the light spills past
+ * its outline as a halo (drawn outside the 24px box, so nothing around it needs room for it). The
+ * light is the same in both themes, as light is; on a light page the halo is fainter, since a lamp
+ * in a bright room barely shows past itself.
  */
 export const LanternIcon = React.forwardRef<
   SVGSVGElement,
   React.SVGProps<SVGSVGElement> & {
     lit?: boolean
-    /** A big lantern: lit, it keeps its stripes and throws a halo. A small one is clearer without either. */
+    /** A big lantern: lit, it fills with candlelight and throws a halo. A small one is clearer without either. */
     big?: boolean
     strokeWidth?: number
   }
@@ -162,36 +163,28 @@ export const LanternIcon = React.forwardRef<
           ))}
         </radialGradient>
       </defs>
-      {/* The halo: the light a big lantern throws on what's around it. */}
+      {/* A big lantern's light: the halo it throws on what's around it, and the lit paper. */}
       {big ? (
-        <g className={lightOn}>
-          <circle
-            cx="12"
-            cy="12.4"
-            r={REACH}
-            fill={`url(#${ids.halo})`}
+        <>
+          <g className={lightOn}>
+            <circle
+              cx="12"
+              cy="12.4"
+              r={REACH}
+              fill={`url(#${ids.halo})`}
+              stroke="none"
+              className="opacity-35 dark:opacity-60"
+            />
+          </g>
+          <path
+            d={PAPER}
+            fill={`url(#${ids.paper})`}
             stroke="none"
-            className="opacity-35 dark:opacity-60"
+            className={lightOn}
           />
-        </g>
+        </>
       ) : null}
-      {/* The lit paper. */}
-      <path
-        d={PAPER}
-        fill={`url(#${ids.paper})`}
-        stroke="none"
-        className={lightOn}
-      />
-      {/* The stripes: in the outline's color (white on a dark page, black on a light one), and gone
-          from a small lit lantern so its light reads as one. */}
-      <path
-        d={STRIPES}
-        clipPath={`url(#${ids.clip})`}
-        className={cn(
-          "transition-opacity duration-700",
-          lit && !big && "opacity-0"
-        )}
-      />
+      <path d={STRIPES} clipPath={`url(#${ids.clip})`} />
       <path d={PAPER} />
       <path d={CAPS} />
     </svg>
@@ -199,9 +192,10 @@ export const LanternIcon = React.forwardRef<
 })
 
 /**
- * The streak's lantern. Lit, it's the icon in the foreground color with candlelight in its paper
- * (and a halo around it, when `big`); a rest day is a red outline, unlit the muted color, and a day ahead fainter
- * still. Its colors fade, so lighting it needs only `look` to change.
+ * The streak's lantern. Lit, a small one is a yellow outline, and a `big` one is in the foreground
+ * color with candlelight in its paper and a halo around it; a rest day is a red outline, unlit the
+ * muted color, and a day ahead fainter still. Its colors fade, so lighting it needs only `look` to
+ * change.
  */
 export function Lantern({
   look,
@@ -224,7 +218,7 @@ export function Lantern({
       strokeWidth={strokeWidth}
       className={cn(
         "size-4 shrink-0 transition-colors duration-500",
-        LOOKS[look],
+        big && look === "lit" ? "text-foreground" : LOOKS[look],
         className
       )}
     />
