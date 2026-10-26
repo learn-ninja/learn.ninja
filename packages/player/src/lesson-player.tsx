@@ -142,6 +142,7 @@ import {
   characterFor,
   clipFor,
   createLinePicker,
+  hasVoice,
   voiceLines,
   type LinePicker,
   type Moment,
@@ -990,6 +991,13 @@ function Player({
   // "Start lesson" makes the intro vanish in a puff of smoke before the first brick arrives.
   const [vanishing, setVanishing] = React.useState(false)
   const vanishingRef = React.useRef(false)
+  // A whoosh of wind as he goes, loaded ahead so it starts with the press. It follows the Sound
+  // setting, which shows only in a language he speaks.
+  const whoosh = React.useRef<HTMLAudioElement | null>(null)
+  const whooshOn = prefs.sound !== "off" && hasVoice(lang)
+  React.useEffect(() => {
+    if (whooshOn) whoosh.current ??= new Audio(VANISH_SOUND)
+  }, [whooshOn])
   const vanishIntro = React.useCallback(() => {
     if (vanishingRef.current) return
     if (goStraightOn()) {
@@ -998,12 +1006,13 @@ function Player({
     }
     vanishingRef.current = true
     setVanishing(true)
+    if (whooshOn) whoosh.current?.play().catch(() => {})
     window.setTimeout(() => {
       vanishingRef.current = false
       setVanishing(false)
       dispatch({ type: "next" })
     }, 650)
-  }, [])
+  }, [whooshOn])
   const seenConcepts = state.items
     .slice(0, state.index + 1)
     .flatMap((i) => (i.kind === "concept" ? [i.brick] : []))
@@ -2463,6 +2472,9 @@ export function ActionArea({
  */
 const goStraightOn = () =>
   matchMedia("(prefers-reduced-motion: reduce), (width < 40rem)").matches
+
+/** The wind as the intro vanishes (ElevenLabs Sound Effects, "an extended whoosh of wind sweeping past"). */
+const VANISH_SOUND = "/sfx/vanish.mp3"
 
 /** Whether a media query matches, following changes. False until mounted. */
 function useMedia(query: string): boolean {
