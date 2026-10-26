@@ -7,7 +7,11 @@
 // GitHub's undisclosed outlier rule). A new record day re-shades the older ones.
 
 import type { DayState, DayStreak } from "@workspace/player"
-import { LEARN_PER_REST, MAX_REST } from "@workspace/player/streak-rules"
+import {
+  LEARN_PER_REST,
+  MAX_REST,
+  START_REST,
+} from "@workspace/player/streak-rules"
 
 /** A calendar day as YYYY-MM-DD. */
 export type Day = string
@@ -95,8 +99,9 @@ export function activityLevels(counts: number[]): {
 }
 
 /**
- * The streak rules, walked day by day from the first day with a lesson to today. Each day with a
- * finished lesson adds one to the run, and every LEARN_PER_REST of them saves a rest day (MAX_REST
+ * The streak rules, walked day by day from the first day with a lesson to today. A run starts with
+ * START_REST rest days saved. Each day with a finished lesson adds one to the run, and every
+ * LEARN_PER_REST of them saves a rest day (MAX_REST
  * at most; while that many are saved, learning days don't count toward the next, so spending one
  * starts its bar from empty). A day without one spends a saved rest day, which keeps the run
  * without adding to it; with none saved, the run ends, and so do the saved days. Today stays open
@@ -113,6 +118,7 @@ function walk(activeDays: Day[], today: Day) {
   const first = [...active].sort()[0]
   for (let day = first; day && day <= today; day = addDays(day, 1)) {
     if (active.has(day)) {
+      if (run === 0) rest = START_REST
       run++
       longest = Math.max(longest, run)
       if (rest < MAX_REST && ++toward === LEARN_PER_REST) {

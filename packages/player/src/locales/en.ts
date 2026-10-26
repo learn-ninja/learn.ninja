@@ -140,33 +140,12 @@ export const en: Strings = {
   restTitle: "Rest days",
   restInfoLabel: "How rest days work",
   restInfo: (perRest, max) =>
-    `${p(perRest, { one: "Learn on # day", other: "Learn on # days" })} to recharge a rest day. You can save ${max}. A day without a lesson uses one, so your streak keeps going.`,
+    `${p(perRest, { one: "Every day you learn recharges a rest day", other: "Every # days you learn recharge a rest day" })}, and a new streak starts with one. You can save ${max}. A day without a lesson uses one, so your streak keeps going.`,
   restSaved: (saved, max) => `${saved} of ${max} saved`,
   restProgress: "Toward the next rest day",
   restProgressValue: (days, of) =>
     p(of, { one: `${days} of # day`, other: `${days} of # days` }),
-  restStart: (days) =>
-    p(days, {
-      one: "# day of learning recharges a rest day.",
-      other: "# days of learning recharge a rest day.",
-    }),
-  restLeft: (days) =>
-    p(days, {
-      one: "# more day of learning recharges one.",
-      other: "# more days of learning recharge one.",
-    }),
-  restRecharged: (days) =>
-    p(days, {
-      one: "Rest day recharged. # more day for the next.",
-      other: "Rest day recharged. # more days for the next.",
-    }),
-  restUsed: (days) =>
-    p(days, {
-      one: "A rest day kept your streak. # more day of learning recharges it.",
-      other:
-        "A rest day kept your streak. # more days of learning recharge it.",
-    }),
-  restFull: "Fully charged. A day off uses one.",
+  restFull: "Full",
   like: "Like",
   liked: "Liked",
   likeLogIn: "Log in to save this lesson to your likes.",

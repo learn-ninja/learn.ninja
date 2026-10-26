@@ -73,37 +73,14 @@ export const Week: Story = {
   ),
 }
 
-const daysOf = (letters: string) =>
-  letters.split("").map((c, i) => ({
-    day: `2026-10-${20 + i}`,
-    state: ({ l: "lit", r: "rest", m: "missed", o: "open" } as const)[
-      c as "l" | "r" | "m" | "o"
-    ],
-  }))
-
 /** Every state of the rest days, in the order a learner meets them. */
 const REST_STATES = [
-  { name: "None saved, none toward", rest: 0, toward: 0, days: "mmmmmmo" },
-  { name: "Day 1 learned", rest: 0, toward: 1, days: "mmmmmml" },
-  { name: "Day 2 learned", rest: 0, toward: 2, days: "mmmmmll" },
-  {
-    name: "Day 3: just recharged",
-    rest: 1,
-    toward: 0,
-    days: "mmmmlll",
-    recharged: true,
-  },
-  { name: "1 saved, day 1", rest: 1, toward: 1, days: "mmmllll" },
-  { name: "1 saved, day 2", rest: 1, toward: 2, days: "mmlllll" },
-  {
-    name: "Day 3: fully charged",
-    rest: 2,
-    toward: 0,
-    days: "mllllll",
-    recharged: true,
-  },
-  { name: "Fully charged", rest: 2, toward: 0, days: "lllllll" },
-  { name: "A rest day was used", rest: 1, toward: 0, days: "lllllro" },
+  { name: "No streak", rest: 0, toward: 0 },
+  { name: "Day 1: starts with one", rest: 1, toward: 1 },
+  { name: "Day 2: both saved", rest: 2, toward: 0, recharged: true },
+  { name: "One spent", rest: 1, toward: 0 },
+  { name: "One spent, day 1 back", rest: 1, toward: 1 },
+  { name: "Both spent, day 1 back", rest: 0, toward: 1 },
 ]
 
 /** The rest days under the week, in every state; press the info button for the rule. */
@@ -121,7 +98,6 @@ export const RestDayStates: Story = {
                   rest: s.rest,
                   toward: s.toward,
                   recharged: s.recharged ?? false,
-                  days: daysOf(s.days),
                 }}
               />
             </div>

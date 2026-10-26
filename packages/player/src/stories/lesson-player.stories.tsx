@@ -282,11 +282,11 @@ export const StreakScreen: Story = {
   args: {
     lesson: lessons.buttons,
     progressKey: "story-wrap-streak",
-    streak: streakOf(12, 21, 1, "lllrlll", 2),
+    streak: streakOf(12, 21, 1, "lllrlll", 1),
   },
   loaders: atWrap(lessons.buttons, "story-wrap-streak", ["first", "second"]),
 }
-/** The third learning day: the bar fills and a rest day's lantern turns red and swings. */
+/** A second learning day: the bar fills, a rest day's lantern turns blue and swings, and the bar empties for the next. */
 export const StreakScreenRecharged: Story = {
   name: "Streak screen: rest day recharged",
   args: {
@@ -302,7 +302,7 @@ export const StreakScreenStarts: Story = {
   args: {
     lesson: lessons.buttons,
     progressKey: "story-wrap-streak-starts",
-    streak: streakOf(1, 1, 0, "mmmmmml"),
+    streak: streakOf(1, 1, 1, "mmmmmml", 1),
   },
   loaders: atWrap(lessons.buttons, "story-wrap-streak-starts"),
 }
@@ -312,7 +312,7 @@ export const StreakScreenAgain: Story = {
   args: {
     lesson: lessons.buttons,
     progressKey: "story-wrap-streak-again",
-    streak: streakOf(1, 21, 0, "lllmmml"),
+    streak: streakOf(1, 21, 1, "lllmmml", 1),
   },
   loaders: atWrap(lessons.buttons, "story-wrap-streak-again"),
 }

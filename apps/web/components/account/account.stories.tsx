@@ -433,7 +433,7 @@ export const HeaderStreakOpen: Story = {
     // The popover: this week's lanterns, the best streak, and the way to the activity grid.
     <div className="flex h-96 justify-end px-8 pt-4">
       <StreakButton
-        streak={streakOf(12, 21, 1, "lllrllo", 2)}
+        streak={streakOf(12, 21, 1, "lllrllo", 1)}
         profileHref="#profile"
         defaultOpen
       />
@@ -447,7 +447,7 @@ export const HeaderStreakRestUsed: Story = {
     // Yesterday spent a rest day and today has no lesson yet.
     <div className="flex h-96 justify-end px-8 pt-4">
       <StreakButton
-        streak={streakOf(5, 5, 0, "mllllro", 2)}
+        streak={streakOf(5, 5, 0, "mllllro", 1)}
         profileHref="#profile"
         defaultOpen
       />

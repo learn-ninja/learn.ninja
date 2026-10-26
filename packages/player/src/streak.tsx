@@ -5,19 +5,19 @@ import { InfoIcon } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { Popover, PopoverTrigger } from "@workspace/ui/components/popover"
-import { Progress } from "@workspace/ui/components/progress"
+import { Progress, ProgressValue } from "@workspace/ui/components/progress"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
 import { calm } from "./motion"
 import { LEARN_PER_REST, MAX_REST } from "./streak-rules"
 
-// The day streak, drawn as a paper lantern (chōchin): lit on a day with a finished lesson, red in
+// The day streak, drawn as a paper lantern (chōchin): lit on a day with a finished lesson, blue in
 // outline on a rest day, unlit on a missed one. The header shows it with the count (apps/web), and
 // the streak screen lights today's on the day's first lesson. Logged-in learners only, since their
 // days are kept on the server, which also keeps the rules (apps/web/lib/activity/activity.ts):
-// every third learning day saves a rest day, up to two, and a missed day spends one. While both are
-// saved, learning days don't count toward a third.
+// a new streak starts with one rest day, every second learning day saves another, up to two, and a
+// missed day spends one. While both are saved, learning days don't count toward a third.
 
 /** How a day stands in the streak: learned, kept by a rest day, missed, or today and still open. */
 export type DayState = "lit" | "rest" | "missed" | "open"
@@ -44,13 +44,13 @@ export interface DayStreak {
   days: StreakDay[]
 }
 
-/** How a lantern is drawn: lit, a rest day's red outline, unlit, or a day still to come. */
+/** How a lantern is drawn: lit, a rest day's blue outline, unlit, or a day still to come. */
 export type LanternLook = "lit" | "rest" | "unlit" | "ahead"
 
 const LOOKS: Record<LanternLook, string> = {
   // A small lit lantern is a yellow outline; a big one is in the foreground color, lit from inside.
   lit: "text-amber-600 dark:text-amber-400",
-  rest: "text-red-500",
+  rest: "text-blue-500",
   unlit: "text-muted-foreground",
   // Faded as a whole, not through a see-through color, so lines that cross don't show darker.
   ahead: "text-muted-foreground opacity-40",
@@ -203,7 +203,7 @@ export const LanternIcon = React.forwardRef<
 
 /**
  * The streak's lantern. Lit, a small one is a yellow outline, and a `big` one is in the foreground
- * color with candlelight in its paper and a halo around it; a rest day is a red outline, unlit the
+ * color with candlelight in its paper and a halo around it; a rest day is a blue outline, unlit the
  * muted color, and a day ahead fainter still. Its colors fade, so lighting it needs only `look` to
  * change.
  */
@@ -324,35 +324,25 @@ export function StreakWeek({
 }
 
 /**
- * The rest days: a lantern slot for each one that can be saved (red once it is), a bar of the
- * learning days toward the next (full on the day it recharges one), and a line saying how many are
- * left, or that today recharged one, a rest day kept the streak yesterday, or both are saved (the
- * bar hides then, since learning days don't count). The info button explains the rule; it opens on press, so it works on phones.
+ * The rest days: a lantern slot for each one that can be saved (blue once it is), and a bar of
+ * the learning days toward the next with the count beside it ("1 of 3 days"), back at 0 once it
+ * recharges one, or full and "Full" while both are saved, since learning days don't count then.
+ * The info button explains the rule; it opens on press, so it works on phones. `justFilled` holds
+ * the bar full for the streak screen's moment the recharge happens, before it empties for the next.
  */
 export function RestDays({
   streak,
+  justFilled = false,
   className,
 }: {
-  streak: Pick<DayStreak, "rest" | "toward" | "recharged" | "days">
+  streak: Pick<DayStreak, "rest" | "toward" | "recharged">
+  justFilled?: boolean
   className?: string
 }) {
   const { t } = usePlayer()
-  const { rest, toward, recharged, days } = streak
+  const { rest, toward, recharged } = streak
   const full = rest >= MAX_REST
-  const left = LEARN_PER_REST - toward
-  // The day it recharges one, the bar stays full: that's the bar that just filled.
-  const filled = recharged ? LEARN_PER_REST : toward
-  // Yesterday spent one, and today has no lesson yet.
-  const used = days.at(-2)?.state === "rest" && days.at(-1)?.state === "open"
-  const line = full
-    ? t.restFull
-    : recharged
-      ? t.restRecharged(LEARN_PER_REST)
-      : used
-        ? t.restUsed(left)
-        : toward === 0
-          ? t.restStart(LEARN_PER_REST)
-          : t.restLeft(left)
+  const filled = full || justFilled ? LEARN_PER_REST : toward
   return (
     <div className={cn("flex flex-col gap-2 text-start", className)}>
       <div className="flex items-center justify-between gap-3">
@@ -387,22 +377,30 @@ export function RestDays({
           ))}
         </span>
       </div>
-      {full && !recharged ? null : (
-        <Progress
-          aria-label={t.restProgress}
-          value={filled}
-          maxValue={LEARN_PER_REST}
-          valueLabel={t.restProgressValue(filled, LEARN_PER_REST)}
-          className="**:data-[slot=progress-indicator]:bg-red-500 **:data-[slot=progress-indicator]:duration-500"
+      <Progress
+        aria-label={t.restProgress}
+        value={filled}
+        maxValue={LEARN_PER_REST}
+        valueLabel={
+          full ? t.restFull : t.restProgressValue(filled, LEARN_PER_REST)
+        }
+        className="flex-nowrap items-center **:data-[slot=progress-indicator]:bg-blue-500 **:data-[slot=progress-indicator]:duration-500 **:data-[slot=progress-track]:flex-1"
+      >
+        {/* After the track, and hidden from screen readers: the bar already says it. */}
+        <ProgressValue
+          aria-hidden
+          className="order-last ms-0 text-xs whitespace-nowrap"
         />
-      )}
-      <p className="text-muted-foreground">{line}</p>
+      </Progress>
     </div>
   )
 }
 
 /** The rest days as they stood before today's lesson, for the moment before its lantern lights. */
 function restBeforeToday(streak: DayStreak): DayStreak {
+  // Today started the streak: there were none until its lesson.
+  if (streak.current === 1)
+    return { ...streak, rest: 0, toward: 0, recharged: false }
   if (streak.recharged)
     return {
       ...streak,
@@ -416,24 +414,31 @@ function restBeforeToday(streak: DayStreak): DayStreak {
 
 /** How long the screen waits before lighting today's lantern, so the learner sees it happen. */
 const LIGHT_DELAY = 500
+/** How long a bar that just recharged a rest day stays full before it empties for the next. */
+const EMPTY_DELAY = 1200
 
 /**
  * The screen between the lesson's last brick and the wrap-up on the day's first finished lesson,
  * laid out like Duolingo's and Brilliant's: a big lantern that lights and swings once, the count
  * ticking up under it, then the week with today's lantern lit and a line under it, and the rest
- * days, whose bar fills with today. Day 1 says the streak starts, or starts again after one broke. Still for reduced motion: it opens lit. Continue
+ * days, whose bar fills with today (and, when that recharges one, empties again for the next). Day 1 says the streak starts, or starts again after one broke. Still for reduced motion: it opens lit. Continue
  * is in the tray (ActionArea).
  */
 export function StreakScreen({ streak }: { streak: DayStreak }) {
   const { t } = usePlayer()
   const [lit, setLit] = React.useState(false)
+  const [emptied, setEmptied] = React.useState(false)
   React.useEffect(() => {
     if (calm()) {
       setLit(true)
+      setEmptied(true)
       return
     }
-    const id = setTimeout(() => setLit(true), LIGHT_DELAY)
-    return () => clearTimeout(id)
+    const ids = [
+      setTimeout(() => setLit(true), LIGHT_DELAY),
+      setTimeout(() => setEmptied(true), LIGHT_DELAY + EMPTY_DELAY),
+    ]
+    return () => ids.forEach(clearTimeout)
   }, [])
 
   const { current, longest } = streak
@@ -476,7 +481,8 @@ export function StreakScreen({ streak }: { streak: DayStreak }) {
         <StreakWeek days={days} />
         <p className="text-sm font-medium text-muted-foreground">{line}</p>
         <RestDays
-          streak={{ ...(lit ? streak : restBeforeToday(streak)), days }}
+          streak={lit ? streak : restBeforeToday(streak)}
+          justFilled={lit && !emptied && streak.recharged}
           className="border-t pt-3 text-sm"
         />
       </div>
