@@ -84,6 +84,8 @@
   --activity-2: #fb923c;
   --activity-3: #ea580c;
   --activity-4: #9a3412;
+  /* A rest day that kept the streak: the lantern's blue (blue-500), the same in both themes. */
+  --activity-rest: #3b82f6;
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -103,6 +105,7 @@
   --color-activity-2: var(--activity-2);
   --color-activity-3: var(--activity-3);
   --color-activity-4: var(--activity-4);
+  --color-activity-rest: var(--activity-rest);
 }
 
 .dark {
@@ -137,6 +140,7 @@
   --activity-2: #c2410c;
   --activity-3: #f97316;
   --activity-4: #fcd34d;
+  --activity-rest: #3b82f6;
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);

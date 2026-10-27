@@ -271,6 +271,7 @@ describe("grid", () => {
       day: "2026-10-21",
       lessons: 4,
       level: 4,
+      rest: false,
     })
     expect(grid.columns.at(-1)![4]!.level).toBe(1)
     expect(grid.streak).toEqual({ current: 3, longest: 3 })
@@ -285,6 +286,33 @@ describe("grid", () => {
     ).toEqual({ current: 0, longest: 2 })
   })
 
+  it("marks the days a saved rest day kept in the streak, and no others", () => {
+    // Wednesday had no lesson: the rest day the streak started with covered it.
+    const g = buildGrid(
+      [
+        { day: "2026-10-20", lessons: 1 },
+        { day: "2026-10-22", lessons: 1 },
+      ],
+      today
+    )
+    const last = g.columns.at(-1)!
+    expect(last[3]).toEqual({
+      day: "2026-10-21",
+      lessons: 0,
+      level: 0,
+      rest: true,
+    })
+    expect(last[2]!.rest).toBe(false) // the day before the first lesson
+    expect(last[4]!.rest).toBe(false) // a learning day
+    expect(last[5]!.rest).toBe(false) // today, still open
+    expect(g.streak).toEqual({ current: 2, longest: 2 })
+    // One day's rest covers the next day; the day after ends the streak, and nothing after that
+    // is a rest day.
+    const broken = buildGrid([{ day: "2026-10-01", lessons: 1 }], today)
+    const rests = broken.columns.flat().filter((c) => c?.rest)
+    expect(rests.map((c) => c!.day)).toEqual(["2026-10-02"])
+  })
+
   it("labels the first column of each month, dropping a first label that has no room", () => {
     // The window opens on 2025-10-19: November starts two columns in, too close for "Oct".
     expect(grid.months[0]).toEqual({ label: "Nov", column: 2 })
@@ -297,17 +325,22 @@ describe("grid", () => {
   })
 
   it("describes a day for the tooltip", () => {
-    expect(describeDay({ day: "2026-10-21", lessons: 2, level: 1 })).toBe(
-      "2 lessons on October 21st"
-    )
-    expect(describeDay({ day: "2026-10-01", lessons: 1, level: 1 })).toBe(
-      "1 lesson on October 1st"
-    )
-    expect(describeDay({ day: "2026-11-12", lessons: 0, level: 0 })).toBe(
+    const cell = (day: string, lessons: number, rest = false) => ({
+      day,
+      lessons,
+      level: (lessons ? 1 : 0) as 0 | 1,
+      rest,
+    })
+    expect(describeDay(cell("2026-10-21", 2))).toBe("2 lessons on October 21st")
+    expect(describeDay(cell("2026-10-01", 1))).toBe("1 lesson on October 1st")
+    expect(describeDay(cell("2026-11-12", 0))).toBe(
       "No lessons on November 12th"
     )
-    expect(describeDay({ day: "2026-11-23", lessons: 3, level: 1 })).toBe(
+    expect(describeDay(cell("2026-11-23", 3))).toBe(
       "3 lessons on November 23rd"
+    )
+    expect(describeDay(cell("2026-10-25", 0, true))).toBe(
+      "Rest day on October 25th"
     )
   })
 })

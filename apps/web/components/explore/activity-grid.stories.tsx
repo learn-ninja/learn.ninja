@@ -78,6 +78,13 @@ export const RecordDay: Story = {
   },
 }
 
+/** Six learning days over eight, with two days off that saved rest days covered: both in the lantern's blue, and the legend says so. */
+export const RestDays: Story = {
+  args: {
+    rows: days(8, (i) => (i === 6 || i === 2 ? 0 : 1)),
+  },
+}
+
 /** A streak that ended yesterday still counts as current; one that ended earlier doesn't. */
 export const StreakAtRisk: Story = {
   args: {
