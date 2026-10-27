@@ -198,19 +198,7 @@ export function CreatorShare({
         <div className="flex flex-col gap-2 border-t p-3">
           {/* One switch, always there, its label and body the same either way so it says what turning it on does: on is published, off is private; a hidden lesson can't be published. */}
           <div className="flex items-center justify-between gap-3">
-            <p
-              id={`${id}-explore`}
-              className="flex items-center gap-1.5 font-medium"
-            >
-              <GlobeIcon
-                aria-hidden="true"
-                className={cn(
-                  "size-4",
-                  controls.status === "published"
-                    ? STATUS_COLOR.published
-                    : "text-muted-foreground"
-                )}
-              />
+            <p id={`${id}-explore`} className="font-medium">
               {t.showInExplore}
             </p>
             <Switch
@@ -224,9 +212,8 @@ export function CreatorShare({
                   ? controls.unpublish
                   : controls.publish)
               }
-              // The toast confirms it (with Undo), so the popover gets out of its way.
+              // The popover stays open so the switch shows where the lesson now stands; the toast confirms it, with Undo.
               onChange={(on) => {
-                setOpen(false)
                 const move = on ? controls.publish : controls.unpublish
                 move?.()
               }}
