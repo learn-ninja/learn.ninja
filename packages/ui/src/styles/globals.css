@@ -285,11 +285,13 @@
   .ninja.is-breathing {
     animation: ninja-breathing 5s ease-in-out infinite;
   }
-  /* The intro's entrance: two bounces with a small squash on each landing, or the sensei's settle. Before the moods, so a mood's own move wins. */
-  .ninja.is-enter {
+  /* The intro's entrance: two bounces with a small squash on each landing, or the sensei's settle.
+     On the stage's .ninja-entrance wrapper (the mark itself in a story), since Safari replays an
+     animation on the mark when its mood classes change. Before the moods, so a mood's own move wins. */
+  :is(.ninja, .ninja-entrance).is-enter {
     animation: ninja-enter 1.25s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
-  .ninja.is-settle {
+  :is(.ninja, .ninja-entrance).is-settle {
     animation: ninja-settle 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
   /* Unhinged gets the shakes for a few seconds at a time; whole-body moves below take over from it. */

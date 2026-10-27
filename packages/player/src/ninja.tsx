@@ -682,6 +682,8 @@ export function NinjaStage({
 }) {
   const float = React.useRef<HTMLDivElement>(null)
   const svg = React.useRef<SVGSVGElement>(null)
+  // What the entrance animates: a wrapper the moods never touch (see enter).
+  const entrance = React.useRef<HTMLDivElement>(null)
   const life = useNinjaLife(svg, area, level)
   const [placed, setPlaced] = React.useState(false)
   // Where he is: in the slot (measured) or in the corner (classes).
@@ -728,7 +730,8 @@ export function NinjaStage({
   React.useLayoutEffect(() => {
     const el = float.current
     const mark = svg.current
-    if (!el || !mark) return
+    const box = entrance.current
+    if (!el || !mark || !box) return
     const first = el.getBoundingClientRect()
     const next = measure()
     const brisk = slotKind.current === "brief" || next?.kind === "brief"
@@ -744,7 +747,7 @@ export function NinjaStage({
     if (firstTime || again) {
       // The intro's entrance, in character. Demos that open mid-lesson just appear.
       if (next && screen === 0 && !reducedMotion())
-        return enter(mark, life, level)
+        return enter(mark, life, level, box)
       return
     }
     if (reducedMotion()) return
@@ -881,33 +884,38 @@ export function NinjaStage({
         } as React.CSSProperties
       }
     >
-      <Ninja
-        ref={svg}
-        bleed
-        className="absolute -start-1/4 -top-1/4 size-[150%] max-w-none"
-      />
+      <div ref={entrance} className="ninja-entrance absolute inset-0">
+        <Ninja
+          ref={svg}
+          bleed
+          className="absolute -start-1/4 -top-1/4 size-[150%] max-w-none"
+        />
+      </div>
     </div>
   )
 }
 
 /**
- * Plays the character's entrance on the mark and returns a function that cuts it short and puts
- * him back to idle (also what a finished entrance does).
+ * Plays the character's entrance and returns a function that cuts it short and puts him back to
+ * idle (also what a finished entrance does). The moods go on the mark; the entrance's own animation
+ * goes on `box`, a wrapper the stage gives it: Safari restarts a CSS animation on the mark when its
+ * mood and idle classes change partway through, so the entrance faded in twice there.
  */
 export function enter(
   mark: SVGSVGElement,
   life: NinjaLife,
-  level: NinjaEnergy
+  level: NinjaEnergy,
+  box: Element = mark
 ): () => void {
   const { className, beats, ends } = ENTRANCE[level]
   life.hold(true)
-  mark.classList.add(className)
+  box.classList.add(className)
   const timers = beats.map(([at, mood]) =>
     setTimeout(() => setMood(mark, mood), at)
   )
   const done = () => {
     setMood(mark, "idle")
-    mark.classList.remove(className)
+    box.classList.remove(className)
     life.hold(false)
   }
   timers.push(setTimeout(done, ends))

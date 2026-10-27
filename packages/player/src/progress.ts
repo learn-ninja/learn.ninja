@@ -136,7 +136,8 @@ export function saveProgress(
  * so it stays hidden (`data-resuming:invisible`) until the player has made the change and clears
  * the mark. That's when the browser holds progress for this lesson (with `key`), or the learner's
  * saved preferences differ from the server's defaults: another language (or ?ui= asks for one),
- * another text size, or the tray closed. A fresh visit with no preferences, or blocked storage,
+ * another text size, the tray closed, or another ninja (Sensei, once called Caffeinated, is the
+ * server's; another would start Sensei's entrance and then cut to his own). A fresh visit with no preferences, or blocked storage,
  * leaves the root alone.
  */
 export function resumeScript(key: string | null, lesson: Lesson): string {
@@ -148,11 +149,12 @@ export function resumeScript(key: string | null, lesson: Lesson): string {
     "(function(){var r=document.currentScript.parentNode,h=0;" +
     `try{${progress}}catch(e){}` +
     // The preferences shell.tsx keeps (PREFERENCES_KEY); the server draws English-or-the-lesson's
-    // language, medium text, and the tray open.
+    // language, medium text, the tray open, and the Sensei.
     'try{var p=JSON.parse(localStorage.getItem("learn:preferences")||"{}"),' +
     `u=new URLSearchParams(location.search).get("ui")${UI_TRANSLATIONS ? "||p.uiLanguage" : ""};` +
     'if((u&&String(u).toLowerCase()!==(r.getAttribute("lang")||"").toLowerCase())||' +
-    '(p.textSize&&p.textSize!=="md")||p.tray==="closed")h=1}catch(e){}' +
+    '(p.textSize&&p.textSize!=="md")||p.tray==="closed"||' +
+    '(p.ninja&&p.ninja!=="sensei"&&p.ninja!=="caffeinated"))h=1}catch(e){}' +
     'if(h)r.setAttribute("data-resuming","")})()'
   return script.replace(/</g, "\\u003c")
 }

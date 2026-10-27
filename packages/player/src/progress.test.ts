@@ -307,7 +307,14 @@ describe("resume script", () => {
     expect(run(storage, null)).toBe(true)
     prefs({ tray: "closed" })
     expect(run(storage, null)).toBe(true)
-    prefs({ uiLanguage: "en", textSize: "md", ninja: "unhinged" })
+    prefs({ ninja: "unhinged" })
+    expect(run(storage, null)).toBe(true)
+    prefs({ ninja: "off" })
+    expect(run(storage, null)).toBe(true)
+    prefs({ uiLanguage: "en", textSize: "md", ninja: "sensei" })
+    expect(run(storage, null)).toBe(false)
+    // The Sensei's old name.
+    prefs({ ninja: "caffeinated" })
     expect(run(storage, null)).toBe(false)
   })
 
