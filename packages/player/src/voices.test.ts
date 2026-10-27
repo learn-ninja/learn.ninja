@@ -153,6 +153,18 @@ describe("voices", () => {
     expect(new Set(openers).size).toBeGreaterThan(1)
   })
 
+  it("knows each moment's next line ahead, without changing what's said", () => {
+    const pick = createLinePicker("lesson")
+    const untouched = createLinePicker("lesson")
+    for (let i = 0; i < 12; i++) {
+      const moment = i % 3 ? "praise" : "nudge"
+      const next = pick.peek(moment, lines, CADENCE.sensei)
+      expect(pick.peek(moment, lines, CADENCE.sensei)).toBe(next)
+      expect(pick(`k${i}`, moment, lines, CADENCE.sensei)).toBe(next)
+      expect(untouched(`k${i}`, moment, lines, CADENCE.sensei)).toBe(next)
+    }
+  })
+
   it("keeps the same line for the same feedback", () => {
     const pick = createLinePicker("lesson")
     const first = pick("q1", "praise", lines, CADENCE.casual)

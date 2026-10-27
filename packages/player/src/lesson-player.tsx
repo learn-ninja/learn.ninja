@@ -118,6 +118,7 @@ import {
   useShare,
   type Preferences,
 } from "./shell"
+import { playSound, preloadSounds } from "./sound"
 import { StreakScreen, type DayStreak } from "./streak"
 import {
   ariaLocaleFor,
@@ -143,6 +144,7 @@ import {
   clipFor,
   createLinePicker,
   hasVoice,
+  nextClips,
   voiceLines,
   type LinePicker,
   type Moment,
@@ -339,6 +341,7 @@ function LessonInLanguage({
               }}
               prefs={prefs}
               onPrefs={setPrefs}
+              soundOn={prefsLoaded && prefs.sound !== "off"}
               onShortcuts={() => setShortcutsOpen((open) => !open)}
               headerSettings={<AppSettings {...appSettings} />}
               phoneMenu={
@@ -761,6 +764,7 @@ function Player({
   lesson,
   prefs,
   onPrefs,
+  soundOn,
   onShortcuts,
   headerSettings,
   phoneMenu,
@@ -779,6 +783,8 @@ function Player({
   lesson: Lesson
   prefs: Preferences
   onPrefs: (patch: Partial<Preferences>) => void
+  /** Sound is on, by the saved setting: off until it has loaded, so nothing is fetched for a muted player. */
+  soundOn: boolean
   /** "?" was pressed: show (or hide) the keyboard shortcuts. */
   onShortcuts: () => void
   /** The app's settings, shown in the header. */
@@ -993,10 +999,9 @@ function Player({
   const vanishingRef = React.useRef(false)
   // A whoosh of wind as he goes, loaded ahead so it starts with the press. It follows the Sound
   // setting, which shows only in a language he speaks.
-  const whoosh = React.useRef<HTMLAudioElement | null>(null)
-  const whooshOn = prefs.sound !== "off" && hasVoice(lang)
+  const whooshOn = soundOn && hasVoice(lang)
   React.useEffect(() => {
-    if (whooshOn) whoosh.current ??= new Audio(VANISH_SOUND)
+    if (whooshOn) preloadSounds([VANISH_SOUND])
   }, [whooshOn])
   const vanishIntro = React.useCallback(() => {
     if (vanishingRef.current) return
@@ -1006,7 +1011,7 @@ function Player({
     }
     vanishingRef.current = true
     setVanishing(true)
-    if (whooshOn) whoosh.current?.play().catch(() => {})
+    if (whooshOn) playSound(VANISH_SOUND)
     window.setTimeout(() => {
       vanishingRef.current = false
       setVanishing(false)
@@ -1242,7 +1247,7 @@ function Player({
                     pickLine={pickLine}
                     speak={
                       ninja !== "off" &&
-                      prefs.sound !== "off" &&
+                      soundOn &&
                       !(resumed && sameFeedback(state, resumed))
                     }
                     onConceptDone={leaveConcept}
@@ -1982,16 +1987,9 @@ type Tone = "neutral" | "good" | "warn"
  * the screen stops the one playing.
  */
 function useSpokenLine(src: string | null, key: string | undefined) {
-  const audio = React.useRef<HTMLAudioElement | null>(null)
-  React.useEffect(() => {
-    if (!src) return
-    const el = (audio.current ??= new Audio())
-    el.src = src
-    // The browser may refuse before the learner has pressed anything, or the clip may not load:
-    // then he just doesn't speak.
-    el.play().catch(() => {})
-    return () => el.pause()
-  }, [src, key])
+  // The browser may refuse before the learner has pressed anything, or the clip may not load: then
+  // he just doesn't speak.
+  React.useEffect(() => (src ? playSound(src) : undefined), [src, key])
 }
 
 /**
@@ -2244,6 +2242,11 @@ export function ActionArea({
     speak && said.line && title === said.line ? clipFor(lang, said.line) : null,
     said.key
   )
+  // Whatever he says next is loaded while the learner answers, so it comes with the feedback.
+  const upcoming = speak ? nextClips(lang, level, pickLine).join(" ") : ""
+  React.useEffect(() => {
+    if (upcoming) preloadSounds(upcoming.split(" "))
+  }, [upcoming])
 
   // On phones the feedback is a card in the tray, and Why? sits in it so Continue keeps the width.
   const phoneCard = Boolean(tray?.feedbackEl && (title || message))

@@ -89,6 +89,20 @@ export function clipFor(lang: string, line: string): string | null {
   return clip ? `/voice/${code}/${clip}.mp3` : null
 }
 
+/** The clips of the lines he'd say next, one per moment, to load before the learner answers. */
+export function nextClips(
+  lang: string,
+  level: NinjaLevel,
+  pick: LinePicker
+): string[] {
+  const voice = packFor(lang).voices[characterFor(level)]
+  const cadence = CADENCE[characterFor(level)]
+  return (Object.keys(voice) as Moment[]).flatMap((moment) => {
+    const clip = clipFor(lang, pick.peek(moment, voice[moment], cadence))
+    return clip ? [clip] : []
+  })
+}
+
 /**
  * Picks a line for one piece of feedback. The nth time a moment comes up in the run, the cadence
  * says whether it gets a plain or a flavor line; within each, a shuffle bag plays every line once
@@ -96,30 +110,42 @@ export function clipFor(lang: string, line: string): string | null {
  * so a server render and the browser agree. `key` names one piece of feedback; asking again with
  * the same key returns the same line.
  */
-export type LinePicker = (
-  key: string,
-  moment: Moment,
-  lines: Lines,
-  cadence: readonly Slot[]
-) => string
+export type LinePicker = {
+  (key: string, moment: Moment, lines: Lines, cadence: readonly Slot[]): string
+  /** The line a moment's next piece of feedback will get, without using it up. */
+  peek(moment: Moment, lines: Lines, cadence: readonly Slot[]): string
+}
 
 export function createLinePicker(seed: string): LinePicker {
   const bags = new Map<string, { order: number[]; at: number; round: number }>()
   const picked = new Map<string, string>()
   const said = new Map<Moment, number>()
-  return (key, moment, lines, cadence) => {
+  // The lines a moment draws from the next time it comes up.
+  const poolFor = (moment: Moment, lines: Lines, cadence: readonly Slot[]) => {
+    const slot = cadence[(said.get(moment) ?? 0) % cadence.length] ?? "plain"
+    const other: Slot = slot === "plain" ? "flavor" : "plain"
+    return lines[slot].length ? lines[slot] : lines[other]
+  }
+  const pick = (
+    key: string,
+    moment: Moment,
+    lines: Lines,
+    cadence: readonly Slot[]
+  ) => {
     const known = picked.get(key)
     if (known !== undefined) return known
-    const n = said.get(moment) ?? 0
-    said.set(moment, n + 1)
-    const slot = cadence[n % cadence.length] ?? "plain"
-    const other: Slot = slot === "plain" ? "flavor" : "plain"
-    const line = draw(lines[slot].length ? lines[slot] : lines[other])
+    const line = draw(poolFor(moment, lines, cadence), true)
+    said.set(moment, (said.get(moment) ?? 0) + 1)
     picked.set(key, line)
     return line
   }
+  const peek = (moment: Moment, lines: Lines, cadence: readonly Slot[]) =>
+    draw(poolFor(moment, lines, cadence), false)
+  return Object.assign(pick, { peek })
 
-  function draw(lines: string[]): string {
+  // The next line in the pool's shuffle bag; `take` moves past it. A new round's order depends only
+  // on the seed and the last round, so peeking may deal it early.
+  function draw(lines: string[], take: boolean): string {
     if (lines.length < 2) return lines[0] ?? ""
     const id = lines.join("\n")
     let bag = bags.get(id)
@@ -134,6 +160,6 @@ export function createLinePicker(seed: string): LinePicker {
       bag = { order, at: 0, round }
       bags.set(id, bag)
     }
-    return lines[bag.order[bag.at++]!]!
+    return lines[bag.order[take ? bag.at++ : bag.at]!]!
   }
 }
