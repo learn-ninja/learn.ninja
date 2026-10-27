@@ -135,9 +135,8 @@ export const en: Strings = {
   streakDayUnlit: "no lesson",
   streakDayOpen: "not yet",
   restTitle: "Rest days",
-  restInfoLabel: "How rest days work",
   restInfo: (perRest, max) =>
-    `${p(perRest, { one: "Every day you learn recharges a rest day", other: "Every # days you learn recharge a rest day" })}, and a new streak starts with one. You can save ${max}. A day without a lesson uses one, so your streak keeps going.`,
+    `A rest day keeps your streak on a day without a lesson. ${p(perRest, { one: "Every day you learn saves one", other: "Every # days you learn save one" })}, up to ${max}.`,
   restSaved: (saved, max) => `${saved} of ${max} saved`,
   restProgress: "Toward the next rest day",
   restProgressValue: (days, of) =>

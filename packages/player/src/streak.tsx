@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { InfoIcon } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { Popover, PopoverTrigger } from "@workspace/ui/components/popover"
@@ -327,7 +326,7 @@ export function StreakWeek({
  * The rest days: a lantern slot for each one that can be saved (blue once it is), and a bar of
  * the learning days toward the next with the count beside it ("1 of 3 days"), back at 0 once it
  * recharges one. While both are saved, learning days don't count, so a line says so in the bar's
- * place. The info button explains the rule; it opens on press, so it works on phones. `justFilled`
+ * place. The title, underlined, explains the rule; it opens on press, so it works on phones. `justFilled`
  * holds the bar full for the streak screen's moment the recharge happens, before it empties for
  * the next (or gives way to that line, when it saved the last one).
  */
@@ -347,22 +346,17 @@ export function RestDays({
   return (
     <div className={cn("flex flex-col gap-2 text-start", className)}>
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-0.5">
-          <p className="font-medium">{t.restTitle}</p>
-          <PopoverTrigger>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={t.restInfoLabel}
-              className="-my-1 text-muted-foreground"
-            >
-              <InfoIcon />
-            </Button>
-            <Popover placement="top" className="w-64 dark:bg-black">
-              <p>{t.restInfo(LEARN_PER_REST, MAX_REST)}</p>
-            </Popover>
-          </PopoverTrigger>
-        </div>
+        <PopoverTrigger>
+          <Button
+            variant="link"
+            className="h-auto rounded-xs border-0 p-0 text-[length:inherit] text-foreground underline decoration-dotted underline-offset-3 hover:underline"
+          >
+            {t.restTitle}
+          </Button>
+          <Popover placement="top" className="w-64 dark:bg-black">
+            <p>{t.restInfo(LEARN_PER_REST, MAX_REST)}</p>
+          </Popover>
+        </PopoverTrigger>
         <span
           role="img"
           aria-label={t.restSaved(rest, MAX_REST)}

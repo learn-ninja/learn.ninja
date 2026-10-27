@@ -138,7 +138,6 @@ export type Strings = {
   /** The rest days section, under the streak's week (the header's popover and the streak screen). */
   restTitle: string
   /** Its info button, and what it opens: how rest days recharge and get used. */
-  restInfoLabel: string
   restInfo: (perRest: number, max: number) => string
   /** The lantern slots, said to screen readers ("1 of 2 saved"). */
   restSaved: (saved: number, max: number) => string
@@ -258,7 +257,6 @@ export type Untranslated =
   | "streakDayUnlit"
   | "streakDayOpen"
   | "restTitle"
-  | "restInfoLabel"
   | "restInfo"
   | "restSaved"
   | "restProgress"
