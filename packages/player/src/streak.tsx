@@ -326,9 +326,10 @@ export function StreakWeek({
 /**
  * The rest days: a lantern slot for each one that can be saved (blue once it is), and a bar of
  * the learning days toward the next with the count beside it ("1 of 3 days"), back at 0 once it
- * recharges one, or full and "Full" while both are saved, since learning days don't count then.
- * The info button explains the rule; it opens on press, so it works on phones. `justFilled` holds
- * the bar full for the streak screen's moment the recharge happens, before it empties for the next.
+ * recharges one. While both are saved, learning days don't count, so a line says so in the bar's
+ * place. The info button explains the rule; it opens on press, so it works on phones. `justFilled`
+ * holds the bar full for the streak screen's moment the recharge happens, before it empties for
+ * the next (or gives way to that line, when it saved the last one).
  */
 export function RestDays({
   streak,
@@ -377,21 +378,23 @@ export function RestDays({
           ))}
         </span>
       </div>
-      <Progress
-        aria-label={t.restProgress}
-        value={filled}
-        maxValue={LEARN_PER_REST}
-        valueLabel={
-          full ? t.restFull : t.restProgressValue(filled, LEARN_PER_REST)
-        }
-        className="flex-nowrap items-center **:data-[slot=progress-indicator]:bg-blue-500 **:data-[slot=progress-indicator]:duration-500 **:data-[slot=progress-track]:flex-1"
-      >
-        {/* After the track, and hidden from screen readers: the bar already says it. */}
-        <ProgressValue
-          aria-hidden
-          className="order-last ms-0 text-xs whitespace-nowrap"
-        />
-      </Progress>
+      {full && !justFilled ? (
+        <p className="text-sm text-muted-foreground">{t.restFull}</p>
+      ) : (
+        <Progress
+          aria-label={t.restProgress}
+          value={filled}
+          maxValue={LEARN_PER_REST}
+          valueLabel={t.restProgressValue(filled, LEARN_PER_REST)}
+          className="flex-nowrap items-center **:data-[slot=progress-indicator]:bg-blue-500 **:data-[slot=progress-indicator]:duration-500 **:data-[slot=progress-track]:flex-1"
+        >
+          {/* After the track, and hidden from screen readers: the bar already says it. */}
+          <ProgressValue
+            aria-hidden
+            className="order-last ms-0 text-xs whitespace-nowrap"
+          />
+        </Progress>
+      )}
     </div>
   )
 }

@@ -145,7 +145,7 @@ export type Strings = {
   /** The bar toward the next rest day, and its value ("2 of 3 days"). */
   restProgress: string
   restProgressValue: (days: number, of: number) => string
-  /** The bar's value while both are saved. */
+  /** Shown in the bar's place while all are saved, since learning days don't count then. */
   restFull: string
   /** The wrap-up's heart, before and after the learner likes the lesson. */
   like: string

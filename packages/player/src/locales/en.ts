@@ -142,7 +142,7 @@ export const en: Strings = {
   restProgress: "Toward the next rest day",
   restProgressValue: (days, of) =>
     p(of, { one: `${days} of # day`, other: `${days} of # days` }),
-  restFull: "Full",
+  restFull: "All saved. Use one, and learning days recharge it.",
   like: "Like",
   liked: "Liked",
   likeLogIn: "Log in to save this lesson to your likes.",
