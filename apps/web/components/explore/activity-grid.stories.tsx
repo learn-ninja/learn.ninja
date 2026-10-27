@@ -78,7 +78,7 @@ export const RecordDay: Story = {
   },
 }
 
-/** Six learning days over eight, with two days off that saved rest days covered: both in the lantern's blue, and the legend says so. */
+/** Six learning days over eight, with two days off that saved rest days covered: both in the lantern's blue, named on hover. */
 export const RestDays: Story = {
   args: {
     rows: days(8, (i) => (i === 6 || i === 2 ? 0 : 1)),

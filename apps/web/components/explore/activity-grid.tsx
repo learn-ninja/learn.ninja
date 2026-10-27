@@ -16,8 +16,8 @@ import {
 /**
  * A year of learning as GitHub draws a year of commits: 53 week columns, Sunday at the top, a
  * shade per day, month labels above, the year's total (streaks on hover) and the Less/More legend
- * below, and a tooltip per day. A rest day that kept the streak is the lantern's blue, with its
- * own legend entry while the year has one. The shades
+ * below, and a tooltip per day. A rest day that kept the streak is the lantern's blue, named by
+ * its tooltip. The shades
  * are relative to the person (lib/activity/activity.ts). The data is built on the server, so the
  * grid ends on the viewer's today and the markup never disagrees with it. Cells scale to the
  * column; on phones the grid scrolls sideways, starting at the newest weeks.
@@ -171,13 +171,11 @@ function DayCell({
 
 /**
  * The row under the grid: the year's total at the start, underlined because hovering or focusing
- * it shows the streaks, and the legend at the end: the rest day's blue while the year has one,
- * then Less/More.
+ * it shows the streaks, and the Less/More legend at the end.
  */
 function Footer({ grid }: { grid: ActivityGridData }) {
   const { total, streak } = grid
   const days = (n: number) => `${n} ${n === 1 ? "day" : "days"}`
-  const rested = grid.columns.some((week) => week.some((cell) => cell?.rest))
   return (
     <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground">
       <TooltipTrigger delay={0}>
@@ -194,12 +192,6 @@ function Footer({ grid }: { grid: ActivityGridData }) {
         </Tooltip>
       </TooltipTrigger>
       <div className="flex items-center gap-[3px]" aria-hidden="true">
-        {rested && (
-          <>
-            <span className="size-2.5 rounded-xs bg-activity-rest ring-1 ring-inset ring-foreground/5" />
-            <span className="ms-1 me-3">Rest day</span>
-          </>
-        )}
         <span className="me-1">Less</span>
         {([0, 1, 2, 3, 4] as Level[]).map((level) => (
           <span
