@@ -12,11 +12,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog"
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@workspace/ui/components/item"
 
 import type { ConnectedApp } from "@/lib/auth/account"
 import { accountApi, type AccountApi } from "@/lib/auth/browser"
+import { relative } from "@/lib/relative-time"
 
 import { FormError } from "./form-error"
+import { SettingsList } from "./settings-section"
 
 /**
  * "Connected apps": the chat apps that logged in to the account over OAuth (Claude.ai, ChatGPT,
@@ -48,53 +57,43 @@ export function ConnectedApps({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-muted-foreground">
-        Chat apps that logged in to your account. Each one publishes lessons as
-        you, and keeps the ones you ask it to. Disconnect any you don&apos;t
-        recognize.
-      </p>
-
+    <>
       {apps.length ? (
-        <ul className="flex flex-col divide-y rounded-xl border">
+        <SettingsList>
           {apps.map((app) => (
-            <li
-              key={app.id}
-              className="flex items-center justify-between gap-4 px-4 py-3"
-            >
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="truncate text-sm font-medium">
+            <Item key={app.id} role="listitem">
+              <ItemContent className="min-w-0 gap-0.5">
+                <ItemTitle>
                   <bdi dir="ltr">{app.name}</bdi>
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  allowed {relative(app.allowedAt)}
+                </ItemTitle>
+                <ItemDescription>
+                  Allowed {relative(app.allowedAt)}
                   {app.lastUsedAt
                     ? ` · last used ${relative(app.lastUsedAt)}`
                     : " · never used"}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                isDisabled={busy}
-                onPress={() => setDisconnecting(app)}
-              >
-                Disconnect
-              </Button>
-            </li>
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  isDisabled={busy}
+                  onPress={() => setDisconnecting(app)}
+                >
+                  Disconnect
+                </Button>
+              </ItemActions>
+            </Item>
           ))}
-        </ul>
+        </SettingsList>
       ) : (
         <p className="text-sm text-muted-foreground">
-          No apps yet. Claude, ChatGPT, and Claude Code log in on their own the
-          first time you keep a lesson from them (
           <Link
             href="/docs#connect-with-your-account"
             className="underline underline-offset-3 hover:text-foreground"
           >
-            how to add them
+            How to connect a chat app
           </Link>
-          ).
         </p>
       )}
       <FormError>{error}</FormError>
@@ -128,15 +127,7 @@ export function ConnectedApps({
           </Button>
         </DialogFooter>
       </Dialog>
-    </div>
+    </>
   )
 }
 
-/** "today", "3 days ago", "on 2 Oct 2026". */
-function relative(iso: string): string {
-  const days = Math.floor((Date.now() - Date.parse(iso)) / 864e5)
-  if (days <= 0) return "today"
-  if (days === 1) return "yesterday"
-  if (days < 30) return `${days} days ago`
-  return `on ${new Date(iso).toLocaleDateString("en", { dateStyle: "medium" })}`
-}

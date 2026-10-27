@@ -11,7 +11,7 @@ A lesson is published anonymously and lasts 7 days. **Keeping** it saves it to a
 2. In a chat app connected over [MCP](/docs/reference/mcp) (Claude.ai, ChatGPT…), the app shows a log-in prompt in the conversation. It opens learn.ninja: log in with GitHub or an email code, allow the app to publish lessons to your account, and you're back in the chat. The app stays logged in, so this happens once.
 3. The agent tells you where the lesson stands: saved to @handle, and private until you publish it. Every lesson that app publishes from now on is saved as it's published.
 
-In a terminal, the agent logs you in with an email code instead: it asks for your address, sends a six-digit code, and you give it the code. Use the same email every time, so everything lands in one account. If you log in on learn.ninja with GitHub, that's the email on your GitHub account.
+In a terminal, the agent logs you in with an email code instead: it asks for your address, sends a six-digit code, and you give it the code. Use the same email every time, so everything lands in one account. If you log in on learn.ninja with GitHub, that's the email on your GitHub account. Change your email, or connect GitHub to an account you made with a code, in [learn.ninja/settings](https://learn.ninja/settings).
 
 ## What the agent runs
 

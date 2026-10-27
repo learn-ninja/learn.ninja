@@ -14,16 +14,19 @@ import { SiteHeader } from "@/components/site/site-header"
 import { AccountMenu } from "./account-menu"
 import { ApiKeys } from "./api-keys"
 import { AvatarForm } from "./avatar-form"
-import { ConnectChat, ConnectChatFallback } from "./connect-chat"
+import { ConnectChat } from "./connect-chat"
 import { ConnectedApps } from "./connected-apps"
 import { AuthHeading, AuthPanel, LegalConsent } from "./auth-panel"
 import { ConsentForm } from "./consent-form"
 import { HandleForm } from "./handle-form"
+import { LogInMethods } from "./log-in-methods"
 import { LoginForm } from "./login-form"
+import { SettingsView } from "./settings-view"
 import { StreakButton } from "./streak-button"
 
 // The account screens with a fake server: any code "123456" works, the handle "taken" is taken,
-// and a picture named "big" is refused by the server (the browser refuses real oversized files first).
+// a picture named "big" is refused by the server (the browser refuses real oversized files first),
+// and changing the email to an address starting "stale" asks you to log in again.
 
 const wait = (ms = 400) => new Promise((r) => setTimeout(r, ms))
 
@@ -105,6 +108,26 @@ const fakeApi = (over: Partial<AccountApi> = {}): AccountApi => ({
     await wait()
     return {}
   },
+  async requestEmailChange(newEmail) {
+    await wait()
+    return newEmail.startsWith("stale")
+      ? { error: "Log in again to change your email." }
+      : {}
+  },
+  async changeEmail(_newEmail, code) {
+    await wait()
+    return code === "123456"
+      ? {}
+      : { error: "That code isn't right. 2 tries left." }
+  },
+  async connectGitHub() {
+    await wait()
+    return { error: "GitHub isn't wired up in Storybook." }
+  },
+  async disconnectGitHub() {
+    await wait()
+    return {}
+  },
   async consent(accept) {
     await wait()
     return {
@@ -168,8 +191,15 @@ const meta = {
   title: "Site/Account",
   parameters: { layout: "padded" },
   decorators: [
-    (Story) => (
-      <div className="mx-auto max-w-md py-10">
+    // A whole page (`page: true`) gets the settings page's width instead of the form column.
+    (Story, { parameters }) => (
+      <div
+        className={
+          parameters.page
+            ? "mx-auto max-w-3xl px-4 py-12 sm:px-6"
+            : "mx-auto max-w-md py-10"
+        }
+      >
         <Story />
       </div>
     ),
@@ -180,6 +210,39 @@ export default meta
 type Story = StoryObj
 
 const navigate = (to: string) => alert(`→ ${to}`)
+
+export const Settings: Story = {
+  parameters: { layout: "fullscreen", page: true },
+  render: () => (
+    <SettingsView
+      email="ada@example.com"
+      github={{ linkedAt: new Date(Date.now() - 30 * 864e5).toISOString() }}
+      image={PICTURE}
+      handle="ada"
+      apps={APPS}
+      connection={CONNECTION}
+      keys={KEYS}
+      api={fakeApi()}
+    />
+  ),
+}
+
+export const SettingsNew: Story = {
+  name: "Settings, new account",
+  parameters: { layout: "fullscreen", page: true },
+  render: () => (
+    <SettingsView
+      email="ada@example.com"
+      github={{ linkedAt: null }}
+      image={null}
+      handle={null}
+      apps={[]}
+      connection={null}
+      keys={[]}
+      api={fakeApi()}
+    />
+  ),
+}
 
 export const Login: Story = {
   render: () => (
@@ -240,6 +303,25 @@ export const LoginWithHandle: Story = {
         navigate={navigate}
       />
     </AuthPanel>
+  ),
+}
+
+export const LogIn: Story = {
+  name: "Log-in methods, GitHub refused",
+  render: () => (
+    <LogInMethods
+      email="ada@example.com"
+      github={{ linkedAt: null }}
+      error="account_already_linked_to_different_user"
+      api={fakeApi()}
+    />
+  ),
+}
+
+export const LogInNoGitHub: Story = {
+  name: "Log-in methods, no GitHub app",
+  render: () => (
+    <LogInMethods email="ada@example.com" github={null} api={fakeApi()} />
   ),
 }
 
@@ -309,17 +391,6 @@ export const ConnectedAppsFails: Story = {
         },
       })}
     />
-  ),
-}
-
-export const AppsWithoutLogin: Story = {
-  name: "Apps that can't log in",
-  render: () => (
-    // The fallback under Connected apps: open when the account has a URL, collapsed otherwise.
-    <div className="flex flex-col gap-6">
-      <ConnectChatFallback initial={CONNECTION} api={fakeApi()} />
-      <ConnectChatFallback initial={null} api={fakeApi()} />
-    </div>
   ),
 }
 

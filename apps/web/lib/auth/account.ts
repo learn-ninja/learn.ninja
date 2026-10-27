@@ -2,6 +2,7 @@ import { APIError } from "better-auth/api"
 import { and, desc, eq, isNull, max } from "drizzle-orm"
 
 import {
+  account,
   oauthAccessToken,
   oauthClient,
   oauthConsent,
@@ -344,4 +345,20 @@ export async function deleteKey(
 ): Promise<Reply> {
   await auth.api.deleteApiKey({ headers, body: { keyId } })
   return { status: 200, body: { ok: true } }
+}
+
+// ---------- how the account logs in ----------
+// Every account logs in with a code to its email (no account row). GitHub, when linked, is an
+// `account` row with provider "github"; Better Auth's own routes link, unlink, and change the email.
+
+/** When GitHub was linked to the account, or null when it isn't. */
+export async function githubLinkedAt(
+  db: Db,
+  userId: string
+): Promise<string | null> {
+  const [row] = await db
+    .select({ createdAt: account.createdAt })
+    .from(account)
+    .where(and(eq(account.userId, userId), eq(account.providerId, "github")))
+  return row ? row.createdAt.toISOString() : null
 }

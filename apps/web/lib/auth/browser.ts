@@ -51,6 +51,14 @@ export interface AccountApi {
   listApps(): Promise<ConnectedApp[]>
   /** Disconnects one of them: its tokens stop working at once. */
   disconnectApp(id: string): Promise<Outcome>
+  /** Emails a code to `newEmail`, to make it the account's address. */
+  requestEmailChange(newEmail: string): Promise<Outcome>
+  /** Makes `newEmail` the account's address with the code sent to it. */
+  changeEmail(newEmail: string, code: string): Promise<Outcome>
+  /** Sends the browser to GitHub to link it, and back to the settings page. */
+  connectGitHub(): Promise<Outcome>
+  /** Unlinks GitHub; the email code still logs in. */
+  disconnectGitHub(): Promise<Outcome>
   /**
    * Answers the consent page for the OAuth request in the page's query (a chat app logging in);
    * `url` is where to send the browser next: back to the app, with a code or a refusal.
@@ -170,6 +178,35 @@ export const accountApi: AccountApi = {
       method: "DELETE",
     })
     return reply.ok ? {} : { error: reply.message }
+  },
+  async requestEmailChange(newEmail) {
+    const { error } = await authClient.emailOtp.requestEmailChange({ newEmail })
+    return error ? { error: error.message ?? FAILED } : {}
+  },
+  async changeEmail(newEmail, otp) {
+    const { error } = await authClient.emailOtp.changeEmail({ newEmail, otp })
+    return error ? { error: error.message ?? FAILED } : {}
+  },
+  async connectGitHub() {
+    // A refused link comes back as /settings?error=…, which the page explains.
+    const { error } = await authClient.linkSocial({
+      provider: "github",
+      callbackURL: "/settings#log-in",
+      errorCallbackURL: "/settings",
+    })
+    return error ? { error: error.message ?? FAILED } : {}
+  },
+  async disconnectGitHub() {
+    const { data, error: listError } = await authClient.listAccounts()
+    if (listError) return { error: listError.message ?? FAILED }
+    const github = data?.find((a) => a.providerId === "github")
+    if (!github) return {}
+    const { error } = await authClient.unlinkAccount({
+      accountId: github.id,
+    })
+    if (error?.code === "SESSION_NOT_FRESH")
+      return { error: "Log in again to disconnect GitHub." }
+    return error ? { error: error.message ?? FAILED } : {}
   },
   async consent(accept) {
     const { data, error } = await authClient.oauth2.consent({ accept })

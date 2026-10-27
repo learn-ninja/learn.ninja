@@ -62,62 +62,69 @@ export function HandleForm({
     onSaved?.(result.handle)
   }
 
+  // In settings the rules show once you start changing the handle; the log-in panel always shows them.
+  const showRules = stretch || !unchanged || error !== null
+  const input = (
+    <InputGroup className={stretch ? undefined : "max-w-64"}>
+      <InputGroupAddon>
+        <InputGroupText>@</InputGroupText>
+      </InputGroupAddon>
+      <InputGroupInput
+        id="handle"
+        name="handle"
+        dir="ltr"
+        autoComplete="username"
+        autoCapitalize="none"
+        spellCheck={false}
+        placeholder="your-name"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        disabled={busy}
+        aria-describedby={showRules ? "handle-rules" : undefined}
+      />
+    </InputGroup>
+  )
+  const submitButton = (
+    <Button
+      type="submit"
+      variant={submitVariant}
+      className={stretch ? "w-full" : undefined}
+      isDisabled={busy || unchanged || !normalized}
+    >
+      {submitLabel}
+    </Button>
+  )
+
   return (
     <form className="flex flex-col gap-4" onSubmit={(e) => void submit(e)}>
       <div className="flex flex-col gap-2">
         <Label htmlFor="handle">Handle</Label>
-        <InputGroup className={stretch ? undefined : "max-w-xs"}>
-          <InputGroupAddon>
-            <InputGroupText>@</InputGroupText>
-          </InputGroupAddon>
-          <InputGroupInput
-            id="handle"
-            name="handle"
-            dir="ltr"
-            autoComplete="username"
-            autoCapitalize="none"
-            spellCheck={false}
-            placeholder="your-name"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            disabled={busy}
-            aria-describedby="handle-rules"
-          />
-        </InputGroup>
-        <p id="handle-rules" className="text-sm text-muted-foreground">
-          {HANDLE_RULES}
-          {normalized && normalized !== value.trim() ? (
-            <>
-              {" "}
-              Saved as <bdi dir="ltr">@{normalized}</bdi>.
-            </>
-          ) : null}
-        </p>
+        {stretch ? (
+          input
+        ) : (
+          // In settings the button sits beside the input, as on the other forms there.
+          <div className="flex items-center gap-2">
+            {input}
+            {submitButton}
+            <span aria-live="polite" className="text-sm text-muted-foreground">
+              {done && unchanged ? "Saved" : ""}
+            </span>
+          </div>
+        )}
+        {showRules ? (
+          <p id="handle-rules" className="text-sm text-muted-foreground">
+            {HANDLE_RULES}
+            {normalized && normalized !== value.trim() ? (
+              <>
+                {" "}
+                Saved as <bdi dir="ltr">@{normalized}</bdi>.
+              </>
+            ) : null}
+          </p>
+        ) : null}
       </div>
       <FormError>{error}</FormError>
-      {stretch ? (
-        <Button
-          type="submit"
-          variant={submitVariant}
-          className="w-full"
-          isDisabled={busy || unchanged || !normalized}
-        >
-          {submitLabel}
-        </Button>
-      ) : (
-        <div className="flex items-center gap-3">
-          <Button
-            type="submit"
-            variant={submitVariant}
-            isDisabled={busy || unchanged || !normalized}
-          >
-            {submitLabel}
-          </Button>
-          <span aria-live="polite" className="text-sm text-muted-foreground">
-            {done && unchanged ? "Saved" : ""}
-          </span>
-        </div>
-      )}
+      {stretch ? submitButton : null}
     </form>
   )
 }

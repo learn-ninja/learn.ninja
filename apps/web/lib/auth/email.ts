@@ -7,7 +7,14 @@ import { SITE } from "@/lib/site"
 
 export const DEFAULT_FROM = `${SITE.name} <sensei@learn.ninja>`
 
-export type CodeSender = (email: string, code: string) => Promise<void>
+/** What a code is for: logging in, or confirming a new address from the settings page. */
+export type CodePurpose = "log-in" | "change-email"
+
+export type CodeSender = (
+  email: string,
+  code: string,
+  purpose?: CodePurpose
+) => Promise<void>
 
 export function codeSenderFromEnv(env = process.env): CodeSender {
   const key = env.RESEND_API_KEY
@@ -17,12 +24,12 @@ export function codeSenderFromEnv(env = process.env): CodeSender {
         throw new Error("RESEND_API_KEY isn't set, so log-in codes can't be sent.")
       }
     }
-    return async (email, code) => {
-      console.log(`[${SITE.name}] Log-in code for ${email}: ${code}`)
+    return async (email, code, purpose = "log-in") => {
+      console.log(`[${SITE.name}] ${purpose === "log-in" ? "Log-in" : "Email change"} code for ${email}: ${code}`)
     }
   }
   const from = env.EMAIL_FROM ?? DEFAULT_FROM
-  return async (email, code) => {
+  return async (email, code, purpose = "log-in") => {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -33,8 +40,8 @@ export function codeSenderFromEnv(env = process.env): CodeSender {
         from,
         to: [email],
         subject: `${code} is your ${SITE.name} code`,
-        text: codeText(code),
-        html: codeHtml(code),
+        text: codeText(code, purpose),
+        html: codeHtml(code, purpose),
       }),
     })
     if (!res.ok) {
@@ -43,12 +50,27 @@ export function codeSenderFromEnv(env = process.env): CodeSender {
   }
 }
 
-export function codeText(code: string): string {
-  return `Your ${SITE.name} log-in code is ${code}.\n\nEnter it on ${SITE.url}, or in the terminal where your agent asked for it. It works for 5 minutes. Nobody from ${SITE.name} will ever ask you for it; if you didn't ask for it, ignore this email.`
+/** The opening line and where to enter the code, for each purpose. */
+function codeWords(purpose: CodePurpose) {
+  return purpose === "change-email"
+    ? {
+        intro: `Your code to make this your ${SITE.name} email is`,
+        where: `Enter it in your ${SITE.name} settings.`,
+      }
+    : {
+        intro: `Your ${SITE.name} log-in code is`,
+        where: `Enter it on ${SITE.url}, or in the terminal where your agent asked for it.`,
+      }
 }
 
-function codeHtml(code: string): string {
-  return `<p>Your ${SITE.name} log-in code is</p>
+export function codeText(code: string, purpose: CodePurpose = "log-in"): string {
+  const { intro, where } = codeWords(purpose)
+  return `${intro} ${code}.\n\n${where} It works for 5 minutes. Nobody from ${SITE.name} will ever ask you for it; if you didn't ask for it, ignore this email.`
+}
+
+function codeHtml(code: string, purpose: CodePurpose): string {
+  const { intro, where } = codeWords(purpose)
+  return `<p>${intro}</p>
 <p style="font-size:28px;font-weight:600;letter-spacing:0.2em;font-family:ui-monospace,monospace">${code}</p>
-<p>Enter it on ${SITE.url}, or in the terminal where your agent asked for it. It works for 5 minutes. Nobody from ${SITE.name} will ever ask you for it; if you didn't ask for it, ignore this email.</p>`
+<p>${where} It works for 5 minutes. Nobody from ${SITE.name} will ever ask you for it; if you didn't ask for it, ignore this email.</p>`
 }

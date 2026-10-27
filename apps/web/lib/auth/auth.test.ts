@@ -4,7 +4,13 @@ import { eq } from "drizzle-orm"
 
 import { beforeAll, describe, expect, it } from "vitest"
 
-import { connectPglite, user, type Db } from "@workspace/db"
+import {
+  account,
+  connectPglite,
+  session,
+  user,
+  type Db,
+} from "@workspace/db"
 
 import { publishLesson, claimLesson, type Deps } from "@/lib/publish/handlers"
 import { MemoryRateLimiter } from "@/lib/publish/rate-limit"
@@ -15,6 +21,7 @@ import {
   createKey,
   deleteKey,
   disconnectMcp,
+  githubLinkedAt,
   listKeys,
   mcpConnection,
   setHandle,
@@ -50,8 +57,9 @@ const buttons = readFileSync(
 let db: Db
 let auth: Auth
 let deps: Deps
-/** The last code "sent" to each address. */
+/** The last code "sent" to each address, and what it was for. */
 const codes = new Map<string, string>()
+const purposes = new Map<string, string>()
 const ORIGIN = "http://localhost:3000"
 
 beforeAll(async () => {
@@ -59,8 +67,9 @@ beforeAll(async () => {
   auth = createAuth({
     db,
     env: { NODE_ENV: "test" } as NodeJS.ProcessEnv,
-    sendCode: async (email, code) => {
+    sendCode: async (email, code, purpose = "log-in") => {
       codes.set(email, code)
+      purposes.set(email, purpose)
     },
     codeLimiter: new MemoryRateLimiter(100),
   })
@@ -131,6 +140,105 @@ describe("email codes", () => {
     const mine = rows.filter((r) => r.identifier.includes(email))
     expect(mine.length).toBeGreaterThan(0)
     for (const row of mine) expect(row.value).not.toContain(codes.get(email)!)
+  })
+})
+
+describe("log-in methods", () => {
+  it("changes the email with a code sent to the new address only", async () => {
+    const cookie = await signIn("old@example.com")
+    const headers = new Headers({ cookie })
+    const before = await getActor(auth, headers)
+    codes.delete("old@example.com")
+
+    await auth.api.requestEmailChangeEmailOTP({
+      headers,
+      body: { newEmail: "New@Example.com" },
+    })
+    expect(codes.has("old@example.com")).toBe(false)
+    expect(purposes.get("new@example.com")).toBe("change-email")
+
+    await expect(
+      auth.api.changeEmailEmailOTP({
+        headers,
+        body: { newEmail: "new@example.com", otp: "000000" },
+      })
+    ).rejects.toMatchObject({ status: "BAD_REQUEST" })
+    await auth.api.requestEmailChangeEmailOTP({
+      headers,
+      body: { newEmail: "new@example.com" },
+    })
+    await auth.api.changeEmailEmailOTP({
+      headers,
+      body: { newEmail: "new@example.com", otp: codes.get("new@example.com")! },
+    })
+
+    // The new address logs in to the same account; the old one would make a new account.
+    const again = await getActor(
+      auth,
+      new Headers({ cookie: await signIn("new@example.com") })
+    )
+    expect(again).toMatchObject({ userId: before!.userId, email: "new@example.com" })
+  })
+
+  it("won't change the email to one that another account has", async () => {
+    await signIn("taken@example.com")
+    const headers = new Headers({ cookie: await signIn("taker@example.com") })
+    codes.delete("taken@example.com")
+    await auth.api.requestEmailChangeEmailOTP({
+      headers,
+      body: { newEmail: "taken@example.com" },
+    })
+    // No code goes out, and none would work.
+    expect(codes.has("taken@example.com")).toBe(false)
+  })
+
+  it("asks a session older than a day to log in again before changing the email", async () => {
+    const cookie = await signIn("stale@example.com")
+    // Only the session token, so the signed cookie cache can't answer with the old createdAt.
+    const token = cookie.split("; ").find((c) => c.includes("session_token"))!
+    const actor = await getActor(auth, new Headers({ cookie }))
+    await db
+      .update(session)
+      .set({ createdAt: new Date(Date.now() - 2 * 864e5) })
+      .where(eq(session.userId, actor!.userId))
+    await expect(
+      auth.api.requestEmailChangeEmailOTP({
+        headers: new Headers({ cookie: token }),
+        body: { newEmail: "fresh@example.com" },
+      })
+    ).rejects.toMatchObject({ status: "FORBIDDEN" })
+  })
+
+  it("never lets an API key change how the account logs in", async () => {
+    const cookie = await signIn("keyed@example.com")
+    const created = await createKey(auth, new Headers({ cookie }), "laptop")
+    const headers = new Headers({ "x-api-key": created.body.key as string })
+    await expect(
+      auth.api.requestEmailChangeEmailOTP({
+        headers,
+        body: { newEmail: "thief@example.com" },
+      })
+    ).rejects.toMatchObject({ status: "FORBIDDEN" })
+    await expect(
+      auth.api.unlinkAccount({ headers, body: { accountId: "1" } })
+    ).rejects.toMatchObject({ status: "FORBIDDEN" })
+  })
+
+  it("unlinks GitHub even when it's the only account row, since the email code still works", async () => {
+    const cookie = await signIn("octo@example.com")
+    const headers = new Headers({ cookie })
+    const actor = await getActor(auth, headers)
+    await db.insert(account).values({
+      id: "gh-octo",
+      accountId: "583231",
+      providerId: "github",
+      userId: actor!.userId,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+    expect(await githubLinkedAt(db, actor!.userId)).not.toBeNull()
+    await auth.api.unlinkAccount({ headers, body: { accountId: "gh-octo" } })
+    expect(await githubLinkedAt(db, actor!.userId)).toBeNull()
   })
 })
 

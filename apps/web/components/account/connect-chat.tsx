@@ -4,12 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import { LinkIcon } from "lucide-react"
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@workspace/ui/components/accordion"
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import {
@@ -20,6 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@workspace/ui/components/dialog"
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@workspace/ui/components/item"
 
 import { CopyButton } from "@/components/site/copy-button"
 import type { McpConnection } from "@/lib/auth/account"
@@ -29,39 +30,15 @@ import {
   type NewMcpConnection,
 } from "@/lib/auth/browser"
 import { mcpPath } from "@/lib/publish/paths"
+import { relative } from "@/lib/relative-time"
 import { SITE } from "@/lib/site"
 
 import { FormError } from "./form-error"
+import { SettingsList } from "./settings-section"
 
 /**
- * "Apps that can't log in", the fallback under Connected apps: the account's personal MCP URL,
- * for apps that take only a URL and can't log in over OAuth (Claude.ai, ChatGPT, and Claude Code
- * log in on their own and show up in Connected apps). Collapsed until the account has a URL,
- * so the main path stays in view.
- */
-export function ConnectChatFallback(props: {
-  initial: McpConnection | null
-  api?: AccountApi
-}) {
-  return (
-    <Accordion
-      className="rounded-xl border px-4"
-      defaultExpandedKeys={props.initial ? ["chat"] : []}
-    >
-      <AccordionItem id="chat">
-        <AccordionTrigger className="py-3 text-base font-semibold">
-          Apps that can&apos;t log in
-        </AccordionTrigger>
-        <AccordionContent className="pb-4 text-base">
-          <ConnectChat {...props} />
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
-  )
-}
-
-/**
- * The personal MCP URL itself. It's a secret that stands for the account (the key at its end),
+ * The personal MCP URL, for apps that take only a URL and can't log in over OAuth (Claude.ai,
+ * ChatGPT, and Claude Code log in on their own and show up in Connected apps). It's a secret that stands for the account (the key at its end),
  * so it's shown once when made, then masked; Rotate makes a new one and Revoke ends it.
  */
 export function ConnectChat({
@@ -113,15 +90,7 @@ export function ConnectChat({
   )
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-muted-foreground">
-        The fallback for an app that only takes a URL and has no log-in step.
-        Claude, ChatGPT, and Claude Code don&apos;t need it: they log in on
-        their own with the public URL. For the others, make your own: every
-        lesson it publishes is saved to your account, private until you publish
-        it.
-      </p>
-
+    <>
       {fresh ? (
         <Alert>
           <LinkIcon />
@@ -148,54 +117,52 @@ export function ConnectChat({
       ) : null}
 
       {connection ? (
-        <div className="flex flex-col gap-3 rounded-xl border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate text-sm font-medium">
-              <bdi dir="ltr" className="font-mono text-xs">
-                {SITE.url}
-                {mcpPath(connection.start ?? "learn_mcp_")}…
-              </bdi>
-            </span>
-            <span className="text-sm text-muted-foreground">
-              made {relative(connection.createdAt)}
-              {connection.lastUsedAt
-                ? ` · last used ${relative(connection.lastUsedAt)}`
-                : " · never used"}
-            </span>
-          </div>
-          <div className="flex shrink-0 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              isDisabled={busy}
-              onPress={() => setConfirming("rotate")}
-            >
-              Rotate
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              isDisabled={busy}
-              onPress={() => setConfirming("revoke")}
-            >
-              Revoke
-            </Button>
-          </div>
-        </div>
+        <SettingsList>
+          <Item role="listitem">
+            <ItemContent className="min-w-0 gap-0.5">
+              <ItemTitle className="w-full min-w-0">
+                <bdi dir="ltr" className="truncate font-mono text-xs">
+                  {SITE.url}
+                  {mcpPath(connection.start ?? "learn_mcp_")}…
+                </bdi>
+              </ItemTitle>
+              <ItemDescription>
+                Made {relative(connection.createdAt)}
+                {connection.lastUsedAt
+                  ? ` · last used ${relative(connection.lastUsedAt)}`
+                  : " · never used"}
+              </ItemDescription>
+            </ItemContent>
+            <ItemActions>
+              <Button
+                variant="outline"
+                size="sm"
+                isDisabled={busy}
+                onPress={() => setConfirming("rotate")}
+              >
+                Rotate
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                isDisabled={busy}
+                onPress={() => setConfirming("revoke")}
+              >
+                Revoke
+              </Button>
+            </ItemActions>
+          </Item>
+        </SettingsList>
       ) : (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm text-muted-foreground">
-            No URL yet. Without one, chat apps use{" "}
-            <bdi dir="ltr" className="font-mono text-xs">
-              {SITE.url}/mcp
-            </bdi>{" "}
-            and log in to your account when you keep a lesson.
-          </p>
-          <div>
-            <Button variant="outline" isDisabled={busy} onPress={() => void connect()}>
-              Make my URL
-            </Button>
-          </div>
+        <div>
+          <Button
+            variant="outline"
+            size="sm"
+            isDisabled={busy}
+            onPress={() => void connect()}
+          >
+            Make my URL
+          </Button>
         </div>
       )}
       <FormError>{error}</FormError>
@@ -227,15 +194,7 @@ export function ConnectChat({
           </Button>
         </DialogFooter>
       </Dialog>
-    </div>
+    </>
   )
 }
 
-/** "today", "3 days ago", "on 2 Oct 2026". */
-function relative(iso: string): string {
-  const days = Math.floor((Date.now() - Date.parse(iso)) / 864e5)
-  if (days <= 0) return "today"
-  if (days === 1) return "yesterday"
-  if (days < 30) return `${days} days ago`
-  return `on ${new Date(iso).toLocaleDateString("en", { dateStyle: "medium" })}`
-}

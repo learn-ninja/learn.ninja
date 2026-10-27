@@ -86,20 +86,16 @@ export function AvatarForm({
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-5">
         <UserAvatar image={preview ?? image} handle={handle} size="settings" />
-        <div className="flex flex-col gap-3">
-          <p className="text-sm text-muted-foreground">
-            {chosen
-              ? "This is how it will look. Save to keep it."
-              : "Shown next to your lessons and on your page. PNG, JPEG, WebP, or GIF up to 5 MB, cropped to a square."}
-          </p>
+        <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
             {chosen ? (
               <>
-                <Button isDisabled={busy} onPress={() => void save()}>
+                <Button size="sm" isDisabled={busy} onPress={() => void save()}>
                   {busy ? "Saving…" : "Save"}
                 </Button>
                 <Button
                   variant="ghost"
+                  size="sm"
                   isDisabled={busy}
                   onPress={() => {
                     setChosen(null)
@@ -113,6 +109,7 @@ export function AvatarForm({
               <>
                 <Button
                   variant="outline"
+                  size="sm"
                   isDisabled={busy}
                   onPress={() => input.current?.click()}
                 >
@@ -121,6 +118,7 @@ export function AvatarForm({
                 {image ? (
                   <Button
                     variant="ghost"
+                    size="sm"
                     isDisabled={busy}
                     onPress={() => void remove()}
                   >

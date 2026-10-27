@@ -3,16 +3,16 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { AccountPage } from "@/components/account/account-page"
-import { ApiKeys } from "@/components/account/api-keys"
-import { AvatarForm } from "@/components/account/avatar-form"
-import { ConnectChatFallback } from "@/components/account/connect-chat"
-import { ConnectedApps } from "@/components/account/connected-apps"
-import { HandleForm } from "@/components/account/handle-form"
-import { ButtonLink } from "@/components/site/button-link"
+import { SettingsView } from "@/components/account/settings-view"
 import { viewerStreak } from "@/lib/activity/server"
-import { connectedApps, listKeys, mcpConnection } from "@/lib/auth/account"
+import {
+  connectedApps,
+  githubLinkedAt,
+  listKeys,
+  mcpConnection,
+} from "@/lib/auth/account"
 import { accountOf } from "@/lib/auth/account-info"
-import { getAuth } from "@/lib/auth/auth"
+import { getAuth, githubFromEnv } from "@/lib/auth/auth"
 import { currentActor } from "@/lib/auth/session"
 import type { KeySummary } from "@/lib/auth/account"
 import { getDb } from "@/lib/publish/store"
@@ -27,58 +27,37 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 /** The account: picture, handle, connected chat apps, and API keys. */
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const actor = await currentActor()
   if (!actor) redirect("/login?callback=/settings")
   const auth = await getAuth()
   const h = await headers()
   const db = await getDb()
-  const [keys, connection, apps, streak] = await Promise.all([
+  // Better Auth sends a refused GitHub link back here with ?error=…
+  const { error } = await searchParams
+  const [keys, connection, apps, streak, linkedAt] = await Promise.all([
     listKeys(auth, h).then((r) => r.body.keys as KeySummary[]),
     mcpConnection(auth, h),
     connectedApps(db, actor.userId),
     viewerStreak(actor.userId),
+    githubLinkedAt(db, actor.userId),
   ])
   return (
     <AccountPage account={accountOf(actor)} streak={streak} wide>
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Logged in as{" "}
-          <bdi dir="ltr" className="font-medium text-foreground">
-            {actor.email}
-          </bdi>
-          .
-        </p>
-      </div>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Picture</h2>
-        <AvatarForm initial={actor.image} handle={actor.handle} />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-xl font-semibold tracking-tight">Handle</h2>
-          {actor.handle ? (
-            <ButtonLink href={`/u/${actor.handle}`} variant="outline" size="sm">
-              View profile
-            </ButtonLink>
-          ) : null}
-        </div>
-        <HandleForm initial={actor.handle} />
-      </section>
-
-      <section id="apps" className="flex scroll-mt-20 flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">Connected apps</h2>
-        <ConnectedApps initial={apps} />
-        <ConnectChatFallback initial={connection} />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold tracking-tight">API keys</h2>
-        <ApiKeys initial={keys} />
-      </section>
+      <SettingsView
+        email={actor.email}
+        github={githubFromEnv() ? { linkedAt } : null}
+        githubError={typeof error === "string" ? error : null}
+        image={actor.image}
+        handle={actor.handle}
+        apps={apps}
+        connection={connection}
+        keys={keys}
+      />
     </AccountPage>
   )
 }

@@ -4,7 +4,11 @@ import { fetchClientMetadataResource } from "@better-auth/cimd/node"
 import { mcp } from "@better-auth/mcp"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
-import { APIError, createAuthMiddleware } from "better-auth/api"
+import {
+  APIError,
+  createAuthMiddleware,
+  getSessionFromCtx,
+} from "better-auth/api"
 import { emailOTP } from "better-auth/plugins/email-otp"
 import { jwt } from "better-auth/plugins/jwt"
 import { eq } from "drizzle-orm"
@@ -54,6 +58,22 @@ export const MCP_KEY_AS_HEADER =
   "This key belongs in a chat app's MCP URL and works nowhere else. For the terminal, run `learn login`."
 
 /** The one OAuth scope the MCP server asks for: publishing and keeping lessons as the user. */
+/**
+ * Routes that change how the account logs in: the email change and linking or unlinking GitHub.
+ * Only a browser session may call them, never an API key, so a leaked key can't take the account.
+ */
+export const LOG_IN_ROUTES = [
+  "/email-otp/request-email-change",
+  "/email-otp/change-email",
+  "/link-social",
+  "/unlink-account",
+]
+
+/** A session older than this logs in again before changing its email (Better Auth's freshAge for unlinking). */
+export const FRESH_SESSION_SECONDS = 24 * 60 * 60
+
+export const LOG_IN_AGAIN = "Log in again to change your email."
+
 export const MCP_SCOPE = "lessons"
 /** Every scope the OAuth server issues; `offline_access` is what makes a chat app stay logged in. */
 export const OAUTH_SCOPES = ["openid", "offline_access", MCP_SCOPE] as const
@@ -176,11 +196,23 @@ export function createAuth(deps: AuthDeps) {
     // The jwt plugin's /token hands out a session JWT; chat apps get theirs from /oauth2/token.
     disabledPaths: ["/token"],
     session: {
+      freshAge: FRESH_SESSION_SECONDS,
       // A signed cookie answers most session checks without a database or Redis read.
       cookieCache: { enabled: true, maxAge: 5 * 60 },
       // With Redis holding sessions, the OAuth provider still needs them in Postgres: its refresh
       // tokens point at the session row, and it refuses to start otherwise.
       storeSessionInDatabase: Boolean(storage),
+    },
+    account: {
+      accountLinking: {
+        // Linking GitHub from the settings page: the user is logged in and proves they own the
+        // GitHub account, so its email may differ. Logging in with GitHub still only joins an
+        // account whose email matches.
+        allowDifferentEmails: true,
+        // Every account can log in with a code to its email, which isn't an account row, so
+        // unlinking GitHub never locks anyone out.
+        allowUnlinkingAll: true,
+      },
     },
     user: {
       additionalFields: {
@@ -211,11 +243,14 @@ export function createAuth(deps: AuthDeps) {
         expiresIn: CODE_EXPIRY_SECONDS,
         allowedAttempts: CODE_ATTEMPTS,
         storeOTP: "hashed",
+        // A code to the new address only: the user is already logged in (recently; see the hook).
+        changeEmail: { enabled: true, verifyCurrentEmail: false },
         // Reviewers get their fixed code and no email; everyone else a random one.
         generateOTP: ({ email, type }) =>
           type === "sign-in" && isReviewer(email) ? review!.code : undefined,
         async sendVerificationOTP({ email, otp, type }) {
           if (type === "sign-in" && !isReviewer(email)) await sendCode(email, otp)
+          if (type === "change-email") await sendCode(email, otp, "change-email")
         },
       }),
       // Signs the OAuth access tokens (and serves their public keys at /jwks).
@@ -264,6 +299,34 @@ export function createAuth(deps: AuthDeps) {
             message: "Make new keys from the website, logged in.",
           })
         }
+        if (LOG_IN_ROUTES.includes(ctx.path) && apiKeyHeader) {
+          throw new APIError("FORBIDDEN", {
+            message: "Change how you log in from the website, logged in.",
+          })
+        }
+        if (ctx.path === "/email-otp/request-email-change") {
+          const session = await getSessionFromCtx(ctx)
+          const age = session
+            ? Date.now() - new Date(session.session.createdAt).getTime()
+            : 0
+          if (age >= FRESH_SESSION_SECONDS * 1000) {
+            throw new APIError("FORBIDDEN", {
+              code: "SESSION_NOT_FRESH",
+              message: LOG_IN_AGAIN,
+            })
+          }
+          const newEmail = (ctx.body as { newEmail?: unknown } | undefined)
+            ?.newEmail
+          if (
+            typeof newEmail === "string" &&
+            !(await codeLimiter.allow(newEmail.trim().toLowerCase()))
+          ) {
+            throw new APIError("TOO_MANY_REQUESTS", {
+              message: "Too many codes sent to this address. Try again later.",
+            })
+          }
+          return
+        }
         if (ctx.path !== "/email-otp/send-verification-otp") return
         const email = (ctx.body as { email?: unknown } | undefined)?.email
         if (typeof email !== "string" || !email) return
@@ -280,6 +343,8 @@ export function createAuth(deps: AuthDeps) {
       customRules: {
         "/email-otp/send-verification-otp": { window: 60, max: 3 },
         "/sign-in/email-otp": { window: 60, max: 6 },
+        "/email-otp/request-email-change": { window: 60, max: 3 },
+        "/email-otp/change-email": { window: 60, max: 6 },
       },
     },
     databaseHooks: {

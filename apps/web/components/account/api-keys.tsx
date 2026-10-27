@@ -14,13 +14,22 @@ import {
   DialogTitle,
 } from "@workspace/ui/components/dialog"
 import { Input } from "@workspace/ui/components/input"
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@workspace/ui/components/item"
 import { Label } from "@workspace/ui/components/label"
 
 import { CopyButton } from "@/components/site/copy-button"
 import type { KeySummary } from "@/lib/auth/account"
 import { accountApi, type AccountApi, type NewKey } from "@/lib/auth/browser"
+import { relative } from "@/lib/relative-time"
 
 import { FormError } from "./form-error"
+import { SettingsList } from "./settings-section"
 
 /**
  * The account's API keys: the ones `learn login` made and any made here. A new key is shown once,
@@ -36,6 +45,7 @@ export function ApiKeys({
   const [keys, setKeys] = React.useState(initial)
   const [name, setName] = React.useState("")
   const [fresh, setFresh] = React.useState<NewKey | null>(null)
+  const [creating, setCreating] = React.useState(false)
   const [revoking, setRevoking] = React.useState<KeySummary | null>(null)
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -47,6 +57,7 @@ export function ApiKeys({
     const result = await api.createKey(name.trim())
     setBusy(false)
     if (result.error || !result.key) return setError(result.error ?? null)
+    setCreating(false)
     setFresh(result.key)
     setName("")
     setKeys([
@@ -73,23 +84,15 @@ export function ApiKeys({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-muted-foreground">
-        Keys let the terminal publish to your account.{" "}
-        <code className="rounded-sm bg-muted px-1 py-0.5 font-mono text-sm">
-          learn login
-        </code>{" "}
-        makes one for each machine. Revoke any you don&apos;t recognize.
-      </p>
-
+    <>
       {fresh ? (
         <Alert>
           <KeyRoundIcon />
           <AlertTitle>Copy your new key now</AlertTitle>
-          <AlertDescription className="flex flex-col gap-2">
+          <AlertDescription className="flex min-w-0 flex-col gap-2">
             <span>
               It&apos;s shown once. Put it in{" "}
-              <code className="font-mono">~/.config/learn/credentials</code>,
+              <code className="font-mono break-all">~/.config/learn/credentials</code>,
               or set <code className="font-mono">LEARN_API_KEY</code>.
             </span>
             <span className="flex items-center gap-2">
@@ -108,17 +111,12 @@ export function ApiKeys({
       ) : null}
 
       {keys.length ? (
-        <ul className="flex flex-col divide-y rounded-xl border">
+        <SettingsList>
           {keys.map((key) => (
-            <li
-              key={key.id}
-              className="flex items-center justify-between gap-4 px-4 py-3"
-            >
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="truncate text-sm font-medium">
-                  {key.name ?? "Unnamed key"}
-                </span>
-                <span className="truncate text-sm text-muted-foreground">
+            <Item key={key.id} role="listitem">
+              <ItemContent className="min-w-0 gap-0.5">
+                <ItemTitle>{key.name ?? "Unnamed key"}</ItemTitle>
+                <ItemDescription>
                   <bdi dir="ltr" className="font-mono text-xs">
                     {key.start ?? "learn_"}…
                   </bdi>{" "}
@@ -126,44 +124,75 @@ export function ApiKeys({
                   {key.lastUsedAt
                     ? ` · last used ${relative(key.lastUsedAt)}`
                     : " · never used"}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                isDisabled={busy}
-                onPress={() => setRevoking(key)}
-              >
-                Revoke
-              </Button>
-            </li>
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  isDisabled={busy}
+                  onPress={() => setRevoking(key)}
+                >
+                  Revoke
+                </Button>
+              </ItemActions>
+            </Item>
           ))}
-        </ul>
-      ) : (
-        <p className="text-sm text-muted-foreground">No keys yet.</p>
-      )}
+        </SettingsList>
+      ) : null}
 
-      <form className="flex flex-col gap-4" onSubmit={(e) => void create(e)}>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="key-name">New key</Label>
-          <div className="flex gap-2">
+      <div>
+        <Button
+          variant="outline"
+          size="sm"
+          isDisabled={busy}
+          onPress={() => {
+            setName("")
+            setError(null)
+            setCreating(true)
+          }}
+        >
+          Create key
+        </Button>
+      </div>
+      {creating ? null : <FormError>{error}</FormError>}
+
+      <Dialog
+        isOpen={creating}
+        onOpenChange={(open) => {
+          if (!open) setCreating(false)
+        }}
+      >
+        <form className="flex flex-col gap-6" onSubmit={(e) => void create(e)}>
+          <DialogHeader>
+            <DialogTitle>Create a key</DialogTitle>
+            <DialogDescription>
+              Name it after where you&apos;ll use it, so you can tell keys
+              apart later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="key-name">Name</Label>
             <Input
               id="key-name"
               name="name"
-              placeholder="What it's for, e.g. work laptop"
+              placeholder="e.g. work laptop"
               maxLength={32}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={busy}
-              className="max-w-xs"
+              autoFocus
             />
-            <Button type="submit" variant="outline" isDisabled={busy}>
-              Create key
-            </Button>
+            <FormError>{error}</FormError>
           </div>
-        </div>
-        <FormError>{error}</FormError>
-      </form>
+          <DialogFooter>
+            <DialogClose>Cancel</DialogClose>
+            <Button type="submit" isDisabled={busy}>
+              {busy ? "Creating…" : "Create key"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </Dialog>
 
       <Dialog
         isOpen={revoking !== null}
@@ -192,15 +221,7 @@ export function ApiKeys({
           </Button>
         </DialogFooter>
       </Dialog>
-    </div>
+    </>
   )
 }
 
-/** "today", "3 days ago", "on 2 Oct 2026". */
-function relative(iso: string): string {
-  const days = Math.floor((Date.now() - Date.parse(iso)) / 864e5)
-  if (days <= 0) return "today"
-  if (days === 1) return "yesterday"
-  if (days < 30) return `${days} days ago`
-  return `on ${new Date(iso).toLocaleDateString("en", { dateStyle: "medium" })}`
-}
