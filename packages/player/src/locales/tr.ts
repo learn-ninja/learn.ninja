@@ -139,6 +139,7 @@ export const tr: Translation = {
   logIn: "Giriş yap",
   likeFailed: "Beğenin kaydedilemedi. Tekrar dene.",
   creatorPrivate: "Gizli",
+  showInExplore: "Explore'da göster",
   creatorPublished: "Yayında",
   creatorHidden: "Bir bildirimden sonra gizlendi",
   publishBody: "Yalnızca bağlantıya sahip olanlar açabilir.",

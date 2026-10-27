@@ -136,6 +136,7 @@ export const id: Translation = {
   logIn: "Masuk",
   likeFailed: "Suka kamu tidak tersimpan. Coba lagi.",
   creatorPrivate: "Privat",
+  showInExplore: "Tampilkan di Explore",
   creatorPublished: "Diterbitkan",
   creatorHidden: "Disembunyikan setelah dilaporkan",
   publishBody: "Hanya orang yang punya tautan yang bisa membukanya.",

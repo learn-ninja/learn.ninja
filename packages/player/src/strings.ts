@@ -155,6 +155,8 @@ export type Strings = {
   likeFailed: string
   /** The maker's Share: where the lesson stands (its icon), the switch to publish it, and Make changes. */
   creatorPrivate: string
+  /** The switch's fixed label: what turning it on does, whatever the lesson's state (publishedBody under it). */
+  showInExplore: string
   creatorPublished: string
   creatorHidden: string
   publishBody: string

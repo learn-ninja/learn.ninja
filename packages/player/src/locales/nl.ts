@@ -146,6 +146,7 @@ export const nl: Translation = {
   logIn: "Inloggen",
   likeFailed: "Je like is niet opgeslagen. Probeer het opnieuw.",
   creatorPrivate: "Privé",
+  showInExplore: "Tonen in Explore",
   creatorPublished: "Gepubliceerd",
   creatorHidden: "Verborgen na een melding",
   publishBody: "Alleen mensen met de link kunnen hem openen.",

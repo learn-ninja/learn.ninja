@@ -126,6 +126,7 @@ export const zhTw: Translation = {
   logIn: "登入",
   likeFailed: "無法儲存你的喜歡，請再試一次。",
   creatorPrivate: "私人",
+  showInExplore: "在 Explore 中顯示",
   creatorPublished: "已發布",
   creatorHidden: "因檢舉已隱藏",
   publishBody: "只有拿到連結的人才能開啟。",

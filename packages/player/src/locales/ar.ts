@@ -148,6 +148,7 @@ export const ar: Translation = {
   logIn: "تسجيل الدخول",
   likeFailed: "تعذّر حفظ إعجابك. حاول مرة أخرى.",
   creatorPrivate: "خاص",
+  showInExplore: "إظهاره في Explore",
   creatorPublished: "منشور",
   creatorHidden: "مخفي بعد بلاغ",
   publishBody: "يمكن فتحه فقط لمن لديه الرابط.",

@@ -143,6 +143,7 @@ export const hi: Translation = {
   logIn: "लॉग इन करें",
   likeFailed: "आपकी पसंद सहेजी नहीं जा सकी। फिर से कोशिश करें।",
   creatorPrivate: "निजी",
+  showInExplore: "Explore में दिखाएँ",
   creatorPublished: "प्रकाशित",
   creatorHidden: "रिपोर्ट के बाद छिपाया गया",
   publishBody: "सिर्फ़ लिंक वाले लोग ही इसे खोल सकते हैं।",

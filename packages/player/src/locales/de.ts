@@ -149,6 +149,7 @@ export const de: Translation = {
   logIn: "Anmelden",
   likeFailed: "Dein Like wurde nicht gespeichert. Versuch es noch einmal.",
   creatorPrivate: "Privat",
+  showInExplore: "In Explore zeigen",
   creatorPublished: "Veröffentlicht",
   creatorHidden: "Nach einer Meldung ausgeblendet",
   publishBody: "Nur Personen mit dem Link können sie öffnen.",

@@ -158,6 +158,7 @@ export const ru: Translation = {
   logIn: "Войти",
   likeFailed: "Не удалось сохранить отметку. Попробуйте ещё раз.",
   creatorPrivate: "Приватный",
+  showInExplore: "Показывать в Explore",
   creatorPublished: "Опубликован",
   creatorHidden: "Скрыт после жалобы",
   publishBody: "Открыть его могут только те, у кого есть ссылка.",

@@ -155,6 +155,7 @@ export const pl: Translation = {
   logIn: "Zaloguj się",
   likeFailed: "Nie udało się zapisać polubienia. Spróbuj ponownie.",
   creatorPrivate: "Prywatna",
+  showInExplore: "Pokaż w Explore",
   creatorPublished: "Opublikowana",
   creatorHidden: "Ukryta po zgłoszeniu",
   publishBody: "Tylko osoby z linkiem mogą ją otworzyć.",

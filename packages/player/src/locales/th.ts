@@ -133,6 +133,7 @@ export const th: Translation = {
   logIn: "เข้าสู่ระบบ",
   likeFailed: "บันทึกการถูกใจไม่สำเร็จ ลองอีกครั้ง",
   creatorPrivate: "ส่วนตัว",
+  showInExplore: "แสดงใน Explore",
   creatorPublished: "เผยแพร่แล้ว",
   creatorHidden: "ถูกซ่อนหลังมีการรายงาน",
   publishBody: "เฉพาะคนที่มีลิงก์เท่านั้นที่เปิดได้",

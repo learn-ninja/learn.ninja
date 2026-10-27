@@ -158,6 +158,7 @@ export const uk: Translation = {
   logIn: "Увійти",
   likeFailed: "Не вдалося зберегти вподобання. Спробуйте ще раз.",
   creatorPrivate: "Приватний",
+  showInExplore: "Показувати в Explore",
   creatorPublished: "Опубліковано",
   creatorHidden: "Приховано після скарги",
   publishBody: "Відкрити його можуть лише ті, хто має посилання.",

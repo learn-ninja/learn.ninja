@@ -126,6 +126,7 @@ export const zh: Translation = {
   logIn: "登录",
   likeFailed: "无法保存你的喜欢，请重试。",
   creatorPrivate: "私密",
+  showInExplore: "在 Explore 中显示",
   creatorPublished: "已发布",
   creatorHidden: "因举报已隐藏",
   publishBody: "只有拿到链接的人才能打开。",

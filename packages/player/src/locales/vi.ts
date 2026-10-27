@@ -133,6 +133,7 @@ export const vi: Translation = {
   logIn: "Đăng nhập",
   likeFailed: "Không lưu được lượt thích. Hãy thử lại.",
   creatorPrivate: "Riêng tư",
+  showInExplore: "Hiển thị trong Explore",
   creatorPublished: "Đã đăng",
   creatorHidden: "Bị ẩn sau một báo cáo",
   publishBody: "Chỉ người có liên kết mới mở được.",

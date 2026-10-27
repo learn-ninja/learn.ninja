@@ -127,6 +127,7 @@ export const ja: Translation = {
   logIn: "ログイン",
   likeFailed: "いいねを保存できませんでした。もう一度お試しください。",
   creatorPrivate: "非公開",
+  showInExplore: "Explore に表示",
   creatorPublished: "公開中",
   creatorHidden: "報告により非表示",
   publishBody: "リンクを知っている人だけが開けます。",

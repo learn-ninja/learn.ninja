@@ -150,6 +150,7 @@ export const fr: Translation = {
   logIn: "Se connecter",
   likeFailed: "Impossible d'enregistrer ton j'aime. Réessaie.",
   creatorPrivate: "Privée",
+  showInExplore: "Afficher dans Explore",
   creatorPublished: "Publiée",
   creatorHidden: "Masquée après un signalement",
   publishBody: "Seules les personnes qui ont le lien peuvent l'ouvrir.",

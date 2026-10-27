@@ -133,7 +133,7 @@ const STATUS_COLOR: Record<Status, string> = {
 }
 
 /**
- * The maker's Share, its icon saying where the lesson stands: a popover with the lesson's link to copy, where it stands with a switch to
+ * The maker's Share, its icon saying where the lesson stands: a popover with the lesson's link to copy, a Show in Explore switch to
  * publish it or make it private, and Make changes.
  */
 export function CreatorShare({
@@ -146,9 +146,10 @@ export function CreatorShare({
   const { t, creator } = usePlayer()
   const controls = useCreatorControls()
   const [open, setOpen] = React.useState(false)
+  const id = React.useId()
   if (!controls || !creator) return null
   const link = url ?? creator.url
-  const { Icon, label, body } = standing(t)[controls.status]
+  const { Icon, label } = standing(t)[controls.status]
 
   async function copy() {
     try {
@@ -195,17 +196,26 @@ export function CreatorShare({
           </div>
         </div>
         <div className="flex flex-col gap-2 border-t p-3">
-          {/* One switch, always there: on is published, off is private; a hidden lesson can't be published. */}
+          {/* One switch, always there, its label and body the same either way so it says what turning it on does: on is published, off is private; a hidden lesson can't be published. */}
           <div className="flex items-center justify-between gap-3">
-            <p className="flex items-center gap-1.5 font-medium">
-              <Icon
+            <p
+              id={`${id}-explore`}
+              className="flex items-center gap-1.5 font-medium"
+            >
+              <GlobeIcon
                 aria-hidden="true"
-                className={cn("size-4", STATUS_COLOR[controls.status])}
+                className={cn(
+                  "size-4",
+                  controls.status === "published"
+                    ? STATUS_COLOR.published
+                    : "text-muted-foreground"
+                )}
               />
-              {label}
+              {t.showInExplore}
             </p>
             <Switch
-              aria-label={t.creatorPublished}
+              aria-labelledby={`${id}-explore`}
+              aria-describedby={`${id}-explore-body`}
               isSelected={controls.status === "published"}
               isDisabled={
                 controls.busy ||
@@ -222,7 +232,12 @@ export function CreatorShare({
               }}
             />
           </div>
-          <p className="text-sm text-muted-foreground">{body}</p>
+          <p
+            id={`${id}-explore-body`}
+            className="text-sm text-muted-foreground"
+          >
+            {controls.status === "hidden" ? t.hiddenBody : t.publishedBody}
+          </p>
         </div>
         <div className="border-t p-1.5">
           <Button
@@ -276,13 +291,9 @@ export function CreatorMenuItems() {
 
 function standing(t: Strings) {
   return {
-    private: { Icon: LockIcon, label: t.creatorPrivate, body: t.publishBody },
-    published: {
-      Icon: GlobeIcon,
-      label: t.creatorPublished,
-      body: t.publishedBody,
-    },
-    hidden: { Icon: EyeOffIcon, label: t.creatorHidden, body: t.hiddenBody },
+    private: { Icon: LockIcon, label: t.creatorPrivate },
+    published: { Icon: GlobeIcon, label: t.creatorPublished },
+    hidden: { Icon: EyeOffIcon, label: t.creatorHidden },
   }
 }
 

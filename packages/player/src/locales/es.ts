@@ -144,6 +144,7 @@ export const es: Translation = {
   logIn: "Iniciar sesión",
   likeFailed: "No se pudo guardar tu me gusta. Inténtalo de nuevo.",
   creatorPrivate: "Privada",
+  showInExplore: "Mostrar en Explore",
   creatorPublished: "Publicada",
   creatorHidden: "Oculta tras una denuncia",
   publishBody: "Solo las personas con el enlace pueden abrirla.",

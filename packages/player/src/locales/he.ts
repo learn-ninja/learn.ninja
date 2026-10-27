@@ -155,6 +155,7 @@ export const he: Translation = {
   logIn: "התחברות",
   likeFailed: "לא הצלחנו לשמור את הלייק. נסו שוב.",
   creatorPrivate: "פרטי",
+  showInExplore: "להציג ב-Explore",
   creatorPublished: "פורסם",
   creatorHidden: "הוסתר בעקבות דיווח",
   publishBody: "רק מי שיש לו את הקישור יכול לפתוח אותו.",

@@ -151,6 +151,7 @@ export const it: Translation = {
   logIn: "Accedi",
   likeFailed: "Impossibile salvare il tuo mi piace. Riprova.",
   creatorPrivate: "Privata",
+  showInExplore: "Mostra in Explore",
   creatorPublished: "Pubblicata",
   creatorHidden: "Nascosta dopo una segnalazione",
   publishBody: "Solo chi ha il link può aprirla.",

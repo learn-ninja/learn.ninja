@@ -147,6 +147,7 @@ export const pt: Translation = {
   logIn: "Entrar",
   likeFailed: "Não foi possível salvar sua curtida. Tente de novo.",
   creatorPrivate: "Privada",
+  showInExplore: "Mostrar no Explore",
   creatorPublished: "Publicada",
   creatorHidden: "Oculta após uma denúncia",
   publishBody: "Só quem tem o link pode abri-la.",

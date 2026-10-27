@@ -129,6 +129,7 @@ export const ko: Translation = {
   logIn: "로그인",
   likeFailed: "좋아요를 저장하지 못했어요. 다시 시도해 주세요.",
   creatorPrivate: "비공개",
+  showInExplore: "Explore에 표시",
   creatorPublished: "게시됨",
   creatorHidden: "신고로 숨겨짐",
   publishBody: "링크가 있는 사람만 열 수 있어요.",

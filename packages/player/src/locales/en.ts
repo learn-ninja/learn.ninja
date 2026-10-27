@@ -148,6 +148,7 @@ export const en: Strings = {
   logIn: "Log in",
   likeFailed: "Couldn't save your like. Try again.",
   creatorPrivate: "Private",
+  showInExplore: "Show in Explore",
   creatorPublished: "Published",
   creatorHidden: "Hidden after a report",
   publishBody: "Only people with the link can open it.",
