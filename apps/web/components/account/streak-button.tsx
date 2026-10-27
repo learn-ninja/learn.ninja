@@ -1,6 +1,7 @@
 "use client"
 
 import { ArrowRightIcon } from "lucide-react"
+import { useState } from "react"
 
 import {
   Lantern,
@@ -30,6 +31,7 @@ export function StreakButton({
   /** For stories: start with the popover open. */
   defaultOpen?: boolean
 }) {
+  const [open, setOpen] = useState(defaultOpen ?? false)
   const today = streak.days.at(-1)?.state === "lit"
   const { current, longest, rest } = streak
   const title = `${current}-day streak`
@@ -42,7 +44,7 @@ export function StreakButton({
           ? "Finish a lesson today, or a rest day will keep your streak."
           : "Finish a lesson today to keep your streak."
   return (
-    <PopoverTrigger defaultOpen={defaultOpen}>
+    <PopoverTrigger isOpen={open} onOpenChange={setOpen}>
       <Button
         variant="ghost"
         size="sm"
@@ -73,6 +75,7 @@ export function StreakButton({
               variant="ghost"
               size="sm"
               className="w-full justify-between"
+              onClick={() => setOpen(false)}
             >
               Your activity
               <ArrowRightIcon
