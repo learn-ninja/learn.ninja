@@ -155,7 +155,7 @@ export function ApiKeys({
           Create key
         </Button>
       </div>
-      {creating ? null : <FormError>{error}</FormError>}
+      <FormError>{creating ? null : error}</FormError>
 
       <Dialog
         isOpen={creating}
