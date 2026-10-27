@@ -192,7 +192,7 @@ describe("log-in methods", () => {
     expect(codes.has("taken@example.com")).toBe(false)
   })
 
-  it("asks a session older than a day to log in again before changing the email", async () => {
+  it("asks a session older than a day to log in again before changing how it logs in", async () => {
     const cookie = await signIn("stale@example.com")
     // Only the session token, so the signed cookie cache can't answer with the old createdAt.
     const token = cookie.split("; ").find((c) => c.includes("session_token"))!
@@ -201,12 +201,39 @@ describe("log-in methods", () => {
       .update(session)
       .set({ createdAt: new Date(Date.now() - 2 * 864e5) })
       .where(eq(session.userId, actor!.userId))
+    const headers = new Headers({ cookie: token })
+    const stale = { status: "FORBIDDEN", body: { code: "SESSION_NOT_FRESH" } }
     await expect(
       auth.api.requestEmailChangeEmailOTP({
-        headers: new Headers({ cookie: token }),
+        headers,
         body: { newEmail: "fresh@example.com" },
       })
-    ).rejects.toMatchObject({ status: "FORBIDDEN" })
+    ).rejects.toMatchObject(stale)
+    // An old stolen cookie can't link the thief's GitHub either.
+    await expect(
+      auth.api.linkSocialAccount({ headers, body: { provider: "github" } })
+    ).rejects.toMatchObject(stale)
+    await expect(
+      auth.api.unlinkAccount({ headers, body: { accountId: "1" } })
+    ).rejects.toMatchObject(stale)
+  })
+
+  it("spends no code allowance on an email change without a session", async () => {
+    const limited = createAuth({
+      db,
+      env: { NODE_ENV: "test" } as NodeJS.ProcessEnv,
+      sendCode: async () => {},
+      codeLimiter: new MemoryRateLimiter(1),
+    })
+    await expect(
+      limited.api.requestEmailChangeEmailOTP({
+        headers: new Headers(),
+        body: { newEmail: "victim@example.com" },
+      })
+    ).rejects.toMatchObject({ status: "UNAUTHORIZED" })
+    await limited.api.sendVerificationOTP({
+      body: { email: "victim@example.com", type: "sign-in" },
+    })
   })
 
   it("never lets an API key change how the account logs in", async () => {

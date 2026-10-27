@@ -57,23 +57,22 @@ export const MCP_KEY_PERMISSIONS = { mcp: ["publish"] }
 export const MCP_KEY_AS_HEADER =
   "This key belongs in a chat app's MCP URL and works nowhere else. For the terminal, run `learn login`."
 
-/** The one OAuth scope the MCP server asks for: publishing and keeping lessons as the user. */
 /**
- * Routes that change how the account logs in: the email change and linking or unlinking GitHub.
- * Only a browser session may call them, never an API key, so a leaked key can't take the account.
+ * Routes that change how the account logs in (the email change, and linking or unlinking GitHub),
+ * with what a session that's too old is told. Only a recent browser session may call them, never
+ * an API key, so neither a leaked key nor an old stolen cookie can take the account.
  */
-export const LOG_IN_ROUTES = [
-  "/email-otp/request-email-change",
-  "/email-otp/change-email",
-  "/link-social",
-  "/unlink-account",
-]
+export const LOG_IN_ROUTES: Record<string, string> = {
+  "/email-otp/request-email-change": "Log in again to change your email.",
+  "/email-otp/change-email": "Log in again to change your email.",
+  "/link-social": "Log in again to connect GitHub.",
+  "/unlink-account": "Log in again to disconnect GitHub.",
+}
 
-/** A session older than this logs in again before changing its email (Better Auth's freshAge for unlinking). */
+/** A session older than this logs in again before changing how it logs in (also Better Auth's freshAge). */
 export const FRESH_SESSION_SECONDS = 24 * 60 * 60
 
-export const LOG_IN_AGAIN = "Log in again to change your email."
-
+/** The one OAuth scope the MCP server asks for: publishing and keeping lessons as the user. */
 export const MCP_SCOPE = "lessons"
 /** Every scope the OAuth server issues; `offline_access` is what makes a chat app stay logged in. */
 export const OAUTH_SCOPES = ["openid", "offline_access", MCP_SCOPE] as const
@@ -299,22 +298,27 @@ export function createAuth(deps: AuthDeps) {
             message: "Make new keys from the website, logged in.",
           })
         }
-        if (LOG_IN_ROUTES.includes(ctx.path) && apiKeyHeader) {
-          throw new APIError("FORBIDDEN", {
-            message: "Change how you log in from the website, logged in.",
-          })
-        }
-        if (ctx.path === "/email-otp/request-email-change") {
+        const logInAgain = Object.hasOwn(LOG_IN_ROUTES, ctx.path)
+          ? LOG_IN_ROUTES[ctx.path]
+          : undefined
+        if (logInAgain) {
+          if (apiKeyHeader) {
+            throw new APIError("FORBIDDEN", {
+              message: "Change how you log in from the website, logged in.",
+            })
+          }
+          // Checked before anything else, so a request without a session spends no code allowance.
           const session = await getSessionFromCtx(ctx)
-          const age = session
-            ? Date.now() - new Date(session.session.createdAt).getTime()
-            : 0
+          if (!session) throw new APIError("UNAUTHORIZED")
+          const age = Date.now() - new Date(session.session.createdAt).getTime()
           if (age >= FRESH_SESSION_SECONDS * 1000) {
             throw new APIError("FORBIDDEN", {
               code: "SESSION_NOT_FRESH",
-              message: LOG_IN_AGAIN,
+              message: logInAgain,
             })
           }
+        }
+        if (ctx.path === "/email-otp/request-email-change") {
           const newEmail = (ctx.body as { newEmail?: unknown } | undefined)
             ?.newEmail
           if (

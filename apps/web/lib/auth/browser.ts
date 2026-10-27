@@ -204,8 +204,6 @@ export const accountApi: AccountApi = {
     const { error } = await authClient.unlinkAccount({
       accountId: github.id,
     })
-    if (error?.code === "SESSION_NOT_FRESH")
-      return { error: "Log in again to disconnect GitHub." }
     return error ? { error: error.message ?? FAILED } : {}
   },
   async consent(accept) {
