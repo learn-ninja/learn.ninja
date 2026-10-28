@@ -3,7 +3,6 @@
 import * as React from "react"
 import {
   createLucideIcon,
-  CheckIcon,
   ChevronDownIcon,
   ClockIcon,
   EllipsisIcon,
@@ -24,6 +23,7 @@ import {
 import type { ConceptKata } from "@workspace/spec"
 import { Button, LinkButton } from "@workspace/ui/components/button"
 import { Input } from "@workspace/ui/components/input"
+import { toast } from "@workspace/ui/components/sonner"
 import {
   Dialog,
   DialogClose,
@@ -355,7 +355,7 @@ function PhoneMenu({
   phoneMenu?: React.ReactNode
   t: Strings
 }) {
-  const { share } = useShare(title, shareUrl)
+  const { share } = useShare(title, shareUrl, t)
   const controls = useCreatorControls()
   return (
     <DropdownMenuTrigger>
@@ -567,17 +567,10 @@ export function formatElapsed(seconds: number): string {
 }
 
 /**
- * Shares the lesson: the system share sheet on phones, the link copied everywhere else. `copied`
- * stays true for two seconds after a copy, for the button to say so.
+ * Shares the lesson: the system share sheet on phones, the link copied everywhere else, with a toast
+ * that says so.
  */
-export function useShare(title: string, url?: string) {
-  const [copied, setCopied] = React.useState(false)
-  React.useEffect(() => {
-    if (!copied) return
-    const id = setTimeout(() => setCopied(false), 2000)
-    return () => clearTimeout(id)
-  }, [copied])
-
+export function useShare(title: string, url: string | undefined, t: Strings) {
   async function share() {
     const link = url ?? window.location.href
     if (navigator.share && matchMedia("(pointer: coarse)").matches) {
@@ -590,13 +583,13 @@ export function useShare(title: string, url?: string) {
     }
     try {
       await navigator.clipboard.writeText(link)
-      setCopied(true)
+      toast.success(t.linkCopied)
     } catch {
-      // Clipboard blocked; nothing else to do.
+      toast.error(t.copyFailed)
     }
   }
 
-  return { share, copied }
+  return { share }
 }
 
 function ShareButton({
@@ -608,22 +601,12 @@ function ShareButton({
   url?: string
   t: Strings
 }) {
-  const { share, copied } = useShare(title, url)
-  const label = copied ? t.linkCopied : t.share
+  const { share } = useShare(title, url, t)
   return (
-    <>
-      <Button variant="outline" size="sm" onPress={share} aria-label={label}>
-        {copied ? (
-          <CheckIcon data-icon="inline-start" />
-        ) : (
-          <ShareIcon className="sm:hidden" />
-        )}
-        <span className="max-sm:sr-only">{label}</span>
-      </Button>
-      <span aria-live="polite" className="sr-only">
-        {copied ? t.linkCopied : ""}
-      </span>
-    </>
+    <Button variant="outline" size="sm" onPress={share} aria-label={t.share}>
+      <ShareIcon className="sm:hidden" />
+      <span className="max-sm:sr-only">{t.share}</span>
+    </Button>
   )
 }
 
