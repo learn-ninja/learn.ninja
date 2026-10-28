@@ -3,8 +3,8 @@
 import * as React from "react"
 
 import { Button } from "@workspace/ui/components/button"
-import { Popover, PopoverTrigger } from "@workspace/ui/components/popover"
 import { Progress, ProgressValue } from "@workspace/ui/components/progress"
+import { Tooltip, TooltipTrigger } from "@workspace/ui/components/tooltip"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
@@ -326,7 +326,7 @@ export function StreakWeek({
  * The rest days: a lantern slot for each one that can be saved (blue once it is), and a bar of
  * the learning days toward the next with the count beside it ("1 of 3 days"), back at 0 once it
  * recharges one. While both are saved, learning days don't count, so a line says so in the bar's
- * place. The title, underlined, explains the rule; it opens on press, so it works on phones. `justFilled`
+ * place. The title, underlined, explains the rule in a tooltip on hover, or on a tap on phones. `justFilled`
  * holds the bar full for the streak screen's moment the recharge happens, before it empties for
  * the next (or gives way to that line, when it saved the last one).
  */
@@ -343,20 +343,33 @@ export function RestDays({
   const { rest, toward, recharged } = streak
   const full = rest >= MAX_REST
   const filled = full || justFilled ? LEARN_PER_REST : toward
+  const [infoOpen, setInfoOpen] = React.useState(false)
   return (
     <div className={cn("flex flex-col gap-2 text-start", className)}>
       <div className="flex items-center justify-between gap-3">
-        <PopoverTrigger>
+        <TooltipTrigger
+          isOpen={infoOpen}
+          onOpenChange={setInfoOpen}
+          shouldCloseOnPress={false}
+        >
           <Button
             variant="link"
-            className="h-auto rounded-xs border-0 p-0 text-[length:inherit] text-foreground underline decoration-dotted underline-offset-3 hover:underline"
+            // React Aria only opens a tooltip on hover after mouse input, and the streak popover
+            // may have opened from the keyboard, so the title opens it on hover itself.
+            onHoverStart={() => setInfoOpen(true)}
+            onHoverEnd={() => setInfoOpen(false)}
+            onPress={(e) => {
+              // Touch has no hover, so a tap opens and closes it.
+              if (e.pointerType === "touch") setInfoOpen((o) => !o)
+            }}
+            className="h-auto cursor-help rounded-xs border-0 p-0 text-[length:inherit] text-foreground underline decoration-dotted underline-offset-3 hover:underline"
           >
             {t.restTitle}
           </Button>
-          <Popover placement="top" className="w-64 dark:bg-black">
+          <Tooltip className="w-64 text-sm">
             <p>{t.restInfo(LEARN_PER_REST, MAX_REST)}</p>
-          </Popover>
-        </PopoverTrigger>
+          </Tooltip>
+        </TooltipTrigger>
         <span
           role="img"
           aria-label={t.restSaved(rest, MAX_REST)}
