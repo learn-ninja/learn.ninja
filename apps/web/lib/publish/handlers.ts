@@ -195,8 +195,9 @@ export async function publishLesson(
 
   const { lesson, skill, notes } = checked
   const editToken = newToken()
-  // An owned lesson never expires and needs no claim token; an anonymous one lasts 7 days and
-  // carries a token that moves it into an account later (`learn login`, or the /keep link).
+  // An owned lesson never expires, needs no claim token, and goes straight to Explore; an anonymous
+  // one lasts 7 days, stays link-only, and carries a token that moves it into an account (and
+  // Explore) later (`learn login`, or the /keep link).
   const owner = req.ownerId ?? null
   const claimToken = owner ? null : newToken()
   const record: StoredLesson = {
@@ -208,8 +209,7 @@ export async function publishLesson(
     editTokenHash: hashToken(editToken),
     claimTokenHash: claimToken ? hashToken(claimToken) : null,
     ownerId: owner,
-    // Every lesson starts private (link only); its owner publishes it to Explore when it's ready.
-    visibility: "unlisted",
+    visibility: owner ? "public" : "unlisted",
     hidden: false,
     views: 0,
     likes: 0,

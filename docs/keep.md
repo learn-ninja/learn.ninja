@@ -9,7 +9,7 @@ A lesson is published anonymously and lasts 7 days. **Keeping** it saves it to a
 
 1. Your agent gives you the link and says the lesson lasts 7 days. Tell it you want to keep the lesson.
 2. In a chat app connected over [MCP](/docs/reference/mcp) (Claude.ai, ChatGPT…), the app shows a log-in prompt in the conversation. It opens learn.ninja: log in with GitHub or an email code, allow the app to publish lessons to your account, and you're back in the chat. The app stays logged in, so this happens once.
-3. The agent tells you where the lesson stands: saved to @handle, and private until you publish it. Every lesson that app publishes from now on is saved as it's published.
+3. The agent tells you where the lesson stands: saved to @handle and published in Explore. Every lesson that app publishes from now on is saved and published the same way.
 
 In a terminal, the agent logs you in with an email code instead: it asks for your address, sends a six-digit code, and you give it the code. Use the same email every time, so everything lands in one account. If you log in on learn.ninja with GitHub, that's the email on your GitHub account. Change your email, or connect GitHub to an account you made with a code, in [learn.ninja/settings](https://learn.ninja/settings).
 
@@ -22,7 +22,7 @@ node <skill-folder>/scripts/learn.mjs login --email you@example.com
 node <skill-folder>/scripts/learn.mjs login --email you@example.com --code 123456
 ```
 
-Logging in saves an API key for this machine (in `~/.config/learn/credentials`, readable only by you) and keeps every lesson published from the current folder. From then on `publish` sends the key: new lessons belong to the account from the start, never expire, and start private, and the agent stops offering to keep them. Already logged in, in a folder the login didn't cover? `keep` saves that folder's lessons without a new code. `whoami` prints the logged-in email and handle; `logout` forgets the key and revokes it. The [CLI reference](/docs/reference/cli#login) has the details.
+Logging in saves an API key for this machine (in `~/.config/learn/credentials`, readable only by you) and keeps every lesson published from the current folder. From then on `publish` sends the key: new lessons belong to the account from the start, never expire, and go straight to Explore, and the agent stops offering to keep them. Already logged in, in a folder the login didn't cover? `keep` saves that folder's lessons without a new code. `whoami` prints the logged-in email and handle; `logout` forgets the key and revokes it. The [CLI reference](/docs/reference/cli#login) has the details.
 
 Over MCP, the one call is `keep_lesson` with the lesson's `id` and its `editToken`. The server refuses it until the app has logged you in (a standard OAuth log-in, which the app runs itself), then the app retries it. No email or code passes through the chat.
 
@@ -40,7 +40,7 @@ Publishing also returns a keep link, `https://learn.ninja/keep/…`. Opening it 
 
 ## Publish it to Explore
 
-Every lesson starts private: only people with the link can open it, and it's not in Explore or search results. When it's ready, publish it from **Your lessons** on your profile at `learn.ninja/u/{handle}` (you see that list only on your own): open a lesson's menu and choose **Publish**. It then shows in Explore and on your profile for everyone. **Unpublish** makes it private again; the link keeps working either way.
+A lesson you keep, or publish while logged in, goes straight to Explore and your profile for everyone. To take one out, open its menu under **Your lessons** on your profile at `learn.ninja/u/{handle}` (you see that list only on your own) and choose **Unpublish**: it's then private, so only people with the link can open it, and it's not in Explore or search results. **Publish** puts it back; the link keeps working either way.
 
 New accounts get a random handle, like `quiet-kitsune` (GitHub accounts get their GitHub username); change it any time in [learn.ninja/settings](https://learn.ninja/settings).
 

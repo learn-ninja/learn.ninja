@@ -28,7 +28,7 @@ import { applyPatches, PatchError, type DraftStore, type Patch } from "./drafts"
 // in front of the route (gate.ts) answers `keep_lesson` from a logged-out app with a 401 that
 // makes the app run OAuth against Better Auth, and from then on every call carries a token and
 // `actor` is the account. At /mcp/{key}, a personal URL from the settings page, the key in the
-// path is the account instead. Either way, lessons are saved to it, private until the owner publishes them.
+// path is the account instead. Either way, lessons published through it are saved to it and go straight to Explore.
 
 export interface McpDeps extends Deps {
   /** The looser limit checks use, as /api/validate does. */
@@ -224,7 +224,7 @@ function registerTools(server: McpServer, deps: McpDeps) {
   )
 
   const owned = actor
-    ? `Lessons are saved to ${actor.handle ? `@${actor.handle}` : "the user's account"} (this connection is theirs) and start private: only people with the link can open them. ${actor.handle ? `They publish one to Explore from their profile, learn.ninja/u/${actor.handle}` : "They publish one to Explore from their profile once they pick a handle at learn.ninja/settings"}.`
+    ? `Lessons are saved to ${actor.handle ? `@${actor.handle}` : "the user's account"} (this connection is theirs) and published in Explore right away. ${actor.handle ? `They unpublish one from their profile, learn.ninja/u/${actor.handle}` : "They unpublish one from their profile once they pick a handle at learn.ninja/settings"}.`
     : null
 
   server.registerTool(
@@ -290,8 +290,8 @@ function registerTools(server: McpServer, deps: McpDeps) {
       title: "Keep a lesson in an account",
       _meta: NEEDS_AUTH,
       description: actor
-        ? `Saves a lesson that was published anonymously (in another chat, or before the user logged in) to ${actor.handle ? `@${actor.handle}` : "the user's account"}, given its \`id\` and \`editToken\`; it stays private. Lessons published here are already saved, so it's rarely needed.`
-        : `Saves a published lesson to the user's learn.ninja account, given the \`id\` and \`editToken\` from \`publish_lesson\`: it stops expiring and stays private until they publish it to Explore. For when the user asks to keep a lesson. It needs the user logged in; this app asks them to, once, then retries the call. The reply names the account (\`owner.handle\`, \`visibility\`), and a lesson already in an account answers \`already_claimed\`.`,
+        ? `Saves a lesson that was published anonymously (in another chat, or before the user logged in) to ${actor.handle ? `@${actor.handle}` : "the user's account"}, given its \`id\` and \`editToken\`; it's published in Explore. Lessons published here are already saved, so it's rarely needed.`
+        : `Saves a published lesson to the user's learn.ninja account, given the \`id\` and \`editToken\` from \`publish_lesson\`: it stops expiring and is published in Explore. For when the user asks to keep a lesson. It needs the user logged in; this app asks them to, once, then retries the call. The reply names the account (\`owner.handle\`, \`visibility\`), and a lesson already in an account answers \`already_claimed\`.`,
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z

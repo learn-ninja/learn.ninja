@@ -84,7 +84,7 @@ export interface StoredLesson {
   claimTokenHash: string | null
   /** The user who owns it; null for anonymous lessons. */
   ownerId: string | null
-  /** Who sees it: in Explore ("public"), by link only ("unlisted", shown as Private), or a team's later. Every lesson starts private; only its owner can publish it. */
+  /** Who sees it: in Explore ("public"), by link only ("unlisted", shown as Private), or a team's later. An anonymous lesson is private; one in an account starts public, and its owner can unpublish it. */
   visibility: "public" | "unlisted" | "team"
   /** Set by hand after a report: out of Explore and profiles, and only the owner can open the link. */
   hidden: boolean
@@ -108,7 +108,7 @@ export interface LessonStore {
   /** Replaces a lesson without changing when it expires or who owns it. */
   update(record: StoredLesson): Promise<void>
   /**
-   * Gives an unowned lesson to `ownerId`: it stops expiring, stays private, and its claim token
+   * Gives an unowned lesson to `ownerId`: it stops expiring, goes to Explore, and its claim token
    * stops working. Returns the lesson as it now is, or null when it's owned by now (another claim
    * got there first) or gone.
    */
@@ -193,6 +193,7 @@ export class PostgresLessonStore implements LessonStore {
       .update(lesson)
       .set({
         ownerId,
+        visibility: "public",
         claimTokenHash: null,
         expiresAt: null,
         updatedAt: this.date(),

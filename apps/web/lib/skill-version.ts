@@ -3,7 +3,7 @@
 // the CLI itself does.
 
 /** The current CLI version. Bump it with SKILL_VERSION when the CLI or the installed SKILL.md changes. */
-export const LATEST_SKILL_VERSION = "0.18.0"
+export const LATEST_SKILL_VERSION = "0.19.0"
 
 /** The oldest CLI the served guides still work with. Raise it when a guide relies on new CLI behavior; `sync` stops below it. */
 export const MIN_SKILL_VERSION = "0.9.0"

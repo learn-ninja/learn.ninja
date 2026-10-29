@@ -18,7 +18,7 @@ import {
 // the current guides into .learn/skill/ (text only, never code), and `validate` checks the lesson on the
 // server. The copies that came with the install are the fallback when the server can't be reached.
 
-export const SKILL_VERSION = "0.18.0"
+export const SKILL_VERSION = "0.19.0"
 export const DEFAULT_API_URL = "https://learn.ninja"
 /** Where `sync` puts the guides, relative to the current folder. */
 export const SYNC_DIR = ".learn/skill"
@@ -101,8 +101,8 @@ Options:
   --json        Print machine-readable JSON instead of text
 
 Logged in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to your account, never
-expires, and starts private: publish it to Explore from your profile. Anonymous lessons last 7 days;
-\`login\` and \`keep\` save the ones published from this folder.`
+expires, and goes straight to Explore: unpublish it from your profile. Anonymous lessons last 7 days;
+\`login\` and \`keep\` save the ones published from this folder the same way.`
 
 export async function run(argv: string[], io: Io): Promise<number> {
   const flags = new Set(argv.filter((a) => a.startsWith("--")))
@@ -640,6 +640,7 @@ function standingOf(body: Record<string, unknown>): Standing {
 function ownedLine({ handle, listed }: Standing, api: string): string {
   if (handle && listed)
     return `Saved to @${handle} and published in Explore. Unpublish it any time at ${api}/u/${handle}.`
+  if (listed) return `Saved to your account and published in Explore.`
   if (handle)
     return `Saved to @${handle}. It's private: only people with the link can open it. Publish it to Explore at ${api}/u/${handle}.`
   return `Saved to your account. It's private: only people with the link can open it. Pick a handle at ${api}/settings to publish it to Explore.`
@@ -781,7 +782,7 @@ async function login(
         `Logged in as ${email}${handle ? ` (@${handle})` : ""}. Saved the key in ${credentialsPath(io)}.`,
         kept.length
           ? keptLines(kept, o.api)
-          : `No lessons from this folder to keep. From now on, every lesson you publish is saved to your account${handle ? ` as @${handle}` : ""} and starts private.`,
+          : `No lessons from this folder to keep. From now on, every lesson you publish is saved to your account${handle ? ` as @${handle}` : ""} and published in Explore.`,
         handle
           ? null
           : `Pick a handle at ${o.api}/settings to publish your lessons to Explore.`,

@@ -173,7 +173,7 @@ describe("publishing", () => {
     expect((await deps.store.get(unnamed.body.id as string))?.origin).toBeNull()
   })
 
-  it("publishes an owned lesson private, with no expiry and no claim token, naming the owner", async () => {
+  it("publishes an owned lesson to Explore, with no expiry and no claim token, naming the owner", async () => {
     const reply = await publishLesson(
       { text: buttons, client: "x", ownerId: "user_1" },
       deps
@@ -182,7 +182,7 @@ describe("publishing", () => {
       owned: true,
       expiresAt: null,
       owner: { handle: "one" },
-      visibility: "unlisted",
+      visibility: "public",
     })
     // An owner without a handle yet is still named, so clients can say where to pick one.
     const unnamed = await publishLesson(
@@ -206,7 +206,7 @@ describe("publishing", () => {
       ownerId: "user_1",
       expiresAt: null,
       claimTokenHash: null,
-      visibility: "unlisted",
+      visibility: "public",
     })
     // Never swept, and still there long after anonymous lessons are gone.
     now += 365 * 24 * 3.6e6
@@ -479,7 +479,7 @@ describe("claiming", () => {
     expect((await deps.store.get(body.id as string))?.ownerId).toBe(winner)
   })
 
-  it("keeps a lesson with its id and claim token: owned, still private, never expiring, token spent", async () => {
+  it("keeps a lesson with its id and claim token: owned, in Explore, never expiring, token spent", async () => {
     const { body } = await anonymous()
     const reply = await claimLesson(
       {
@@ -499,7 +499,7 @@ describe("claiming", () => {
         owned: true,
         expiresAt: null,
         owner: { handle: "one" },
-        visibility: "unlisted",
+        visibility: "public",
       },
     })
     const stored = await deps.store.get(body.id as string)
@@ -507,7 +507,7 @@ describe("claiming", () => {
       ownerId: "user_1",
       expiresAt: null,
       claimTokenHash: null,
-      visibility: "unlisted",
+      visibility: "public",
     })
     // The reply describes the row as claiming left it, not as it was read before.
     expect(reply.body.visibility).toBe(stored?.visibility)
@@ -742,27 +742,6 @@ describe("claiming", () => {
     expect((await reissueClaimToken(req, deps)).status).toBe(429)
   })
 
-  it("keeps the edit token working after a claim", async () => {
-    const { body } = await anonymous()
-    await claimLesson(
-      { claimToken: body.claimToken as string, ownerId: "user_1" },
-      deps
-    )
-    const reply = await updateLesson(
-      {
-        id: body.id as string,
-        editToken: body.editToken as string,
-        text: buttons,
-        client: "x",
-      },
-      deps
-    )
-    expect(reply).toMatchObject({
-      status: 200,
-      body: { owned: true, expiresAt: null, owner: { handle: "one" } },
-    })
-  })
-
   it("stops taking the anonymous edit token once a kept lesson is in Explore, but not its owner", async () => {
     const { body } = await anonymous()
     const id = body.id as string
@@ -770,10 +749,6 @@ describe("claiming", () => {
       { claimToken: body.claimToken as string, ownerId: "user_1" },
       deps
     )
-    await db
-      .update(lesson)
-      .set({ visibility: "public" })
-      .where(eq(lesson.id, id))
     const edit = (who: { editToken: string | null; actorId?: string }) =>
       updateLesson({ id, text: buttons, client: "x", ...who }, deps)
     expect(await edit({ editToken: body.editToken as string })).toMatchObject({
@@ -786,6 +761,15 @@ describe("claiming", () => {
     expect((await edit({ editToken: null, actorId: "user_1" })).status).toBe(
       200
     )
+    // Unpublished, it's private again, and the token works again.
+    await db
+      .update(lesson)
+      .set({ visibility: "unlisted" })
+      .where(eq(lesson.id, id))
+    expect(await edit({ editToken: body.editToken as string })).toMatchObject({
+      status: 200,
+      body: { owned: true, expiresAt: null, owner: { handle: "one" } },
+    })
   })
 })
 
@@ -1014,7 +998,7 @@ describe("updating", () => {
       { text: buttons, client: "x", ownerId: "user_1" },
       deps
     )
-    expect(created.body).toMatchObject({ owned: true, visibility: "unlisted" })
+    expect(created.body).toMatchObject({ owned: true, visibility: "public" })
     const id = created.body.id as string
     const changed = JSON.stringify({ ...JSON.parse(buttons), title: "Mine" })
     const asOwner = await updateLesson(

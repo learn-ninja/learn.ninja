@@ -857,7 +857,7 @@ describe("learn login", () => {
     expect(await run(["login"], t.io)).toBe(0)
     expect(readCredentials(t)["https://learn.ninja"].apiKey).toBe(KEY)
     expect(t.out.join("\n")).toMatch(
-      /No lessons from this folder to keep\. From now on, every lesson you publish is saved to your account as @ada and starts private\./
+      /No lessons from this folder to keep\. From now on, every lesson you publish is saved to your account as @ada and published in Explore\./
     )
   })
 

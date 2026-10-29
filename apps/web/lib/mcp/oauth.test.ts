@@ -381,7 +381,7 @@ describe("the gate in front of /mcp", () => {
       ok: true,
       expiresAt: null,
       owner: { handle: expect.stringMatching(/^[a-z]+-[a-z]+$/) },
-      visibility: "unlisted",
+      visibility: "public",
     })
     expect(body).not.toHaveProperty("editToken")
     expect(body).not.toHaveProperty("claimUrl")
@@ -399,7 +399,7 @@ describe("the gate in front of /mcp", () => {
     )
     expect(updated.isError).toBeFalsy()
 
-    // A lesson published logged out, then kept once the app logged in: saved to the account, still private.
+    // A lesson published logged out, then kept once the app logged in: saved to the account and published in Explore.
     const anonymous = await resultOf(await call("publish_lesson", { lesson: buttons }))
     const kept = await resultOf(
       await call(
@@ -414,7 +414,7 @@ describe("the gate in front of /mcp", () => {
     expect(kept.structuredContent).toMatchObject({
       ok: true,
       id: anonymous.structuredContent.id,
-      visibility: "unlisted",
+      visibility: "public",
     })
     expect((await store.get(anonymous.structuredContent.id as string))?.ownerId).toBe(ada!.id)
   })

@@ -39,7 +39,7 @@ Checks the lesson, then publishes it and prints the link. If this lesson was pub
 node scripts/learn.mjs publish lesson.json
 ```
 
-An anonymous lesson lasts 7 days; the tool says so, and gives the agent the one sentence to offer keeping it. Once you're logged in (`login`), every lesson you publish is saved to your account, never expires, and starts private until you publish it to Explore from your profile; the tool says so. Logged in and updating a lesson that was published anonymously, it keeps that lesson as it goes.
+An anonymous lesson lasts 7 days; the tool says so, and gives the agent the one sentence to offer keeping it. Once you're logged in (`login`), every lesson you publish is saved to your account, never expires, and goes straight to Explore (unpublish it from your profile); the tool says so. Logged in and updating a lesson that was published anonymously, it keeps that lesson as it goes.
 
 The edit token for each published lesson is saved in `.learn/state.json` next to where you run it, along with the claim token that `login` and `keep` use. Don't delete or share that file. The tool adds a `.gitignore` to `.learn/` so none of it gets committed.
 
@@ -74,7 +74,7 @@ Saves every lesson published from this folder to the logged-in account, without 
 node scripts/learn.mjs keep
 ```
 
-It prints the lessons it kept and where they stand (saved to @handle, and private), says when there's nothing new to keep, exits 1 when the server couldn't be reached for any of them, and asks you to run `login` first when you're not logged in.
+It prints the lessons it kept and where they stand (saved to @handle, and published in Explore), says when there's nothing new to keep, exits 1 when the server couldn't be reached for any of them, and asks you to run `login` first when you're not logged in.
 
 ### `logout`
 

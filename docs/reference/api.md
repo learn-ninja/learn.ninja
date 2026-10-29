@@ -3,7 +3,7 @@ title: Publish API
 description: The HTTP API behind publishing. The CLI uses it; you can too.
 ---
 
-Base URL: `https://learn.ninja`. Requests and responses are JSON. No account is needed: publishing returns an edit token for that one lesson, and anonymous lessons last 7 days. Logged in, with a session cookie or an API key, lessons are saved to your account, never expire, and start private until you publish them to Explore.
+Base URL: `https://learn.ninja`. Requests and responses are JSON. No account is needed: publishing returns an edit token for that one lesson, and anonymous lessons last 7 days. Logged in, with a session cookie or an API key, lessons are saved to your account, never expire, and go straight to Explore.
 
 ## Publish a lesson
 
@@ -30,7 +30,7 @@ The body is the lesson file. A valid lesson returns `201`:
 }
 ```
 
-Keep `editToken` private: it's the way to update the lesson, and it's shown once. `claimToken` is shown once too; it moves the lesson into an account later (see [Keep a lesson](#keep-a-lesson)), and so does the edit token. With an `x-api-key` header or a session cookie, the lesson belongs to that account from the start: `owned` is `true`, `expiresAt` is `null`, `owner` is `{ "handle": "…" }` (the handle is `null` until the account picks one), `visibility` is `unlisted` (private: link only, as every lesson starts) or `public` (published in Explore), and there's no claim token. The same four fields come back from updating and keeping, so a client can say "saved to @handle" and whether it's private in one place.
+Keep `editToken` private: it's the way to update the lesson, and it's shown once. `claimToken` is shown once too; it moves the lesson into an account later (see [Keep a lesson](#keep-a-lesson)), and so does the edit token. With an `x-api-key` header or a session cookie, the lesson belongs to that account from the start: `owned` is `true`, `expiresAt` is `null`, `owner` is `{ "handle": "…" }` (the handle is `null` until the account picks one), `visibility` is `public` (published in Explore, as every lesson in an account starts) or `unlisted` (private: link only, once its owner unpublishes it), and there's no claim token. The same four fields come back from updating and keeping, so a client can say "saved to @handle" and whether it's private in one place.
 
 When the checker tidied something that didn't stop the publish, the reply also has `notes`: an array of `{ "path": "tags[0]", "message": "Kept the tag \" Git\" as \"Git\"." }`, the same shape as `issues`. Today that's a tag label it trimmed, whose whitespace it collapsed, or whose leading `#` it dropped. The field is absent when there's nothing to say. Updating and validating reply with it the same way.
 
@@ -52,7 +52,7 @@ Content-Type: application/json
 x-api-key: <key>
 ```
 
-The body is `{ "claimToken": "…" }` or `{ "editToken": "…" }` from publishing (both together is fine; either one proves the lesson is yours). Needs a logged-in caller: an API key or a session cookie. The lesson then belongs to that account, stops expiring, and the claim token stops working; the edit token keeps working. Returns `200` with `id`, `url`, `title`, `owned: true`, `expiresAt: null`, `owner`, and `visibility`; `401 unauthorized` if neither token matches; `409 already_claimed` if another account has it; `404` once it has expired.
+The body is `{ "claimToken": "…" }` or `{ "editToken": "…" }` from publishing (both together is fine; either one proves the lesson is yours). Needs a logged-in caller: an API key or a session cookie. The lesson then belongs to that account, stops expiring, and goes to Explore; the claim token stops working, and so does the edit token (the account edits it now). Returns `200` with `id`, `url`, `title`, `owned: true`, `expiresAt: null`, `owner`, and `visibility`; `401 unauthorized` if neither token matches; `409 already_claimed` if another account has it; `404` once it has expired.
 
 `claimUrl` from publishing (`/keep/{claimToken}`) does the same thing in the browser: it signs the visitor in, then keeps that one lesson. The MCP server's `keep_lesson` tool does the same for a chat app that has signed the user in over OAuth (see [Connect with your account](/docs/reference/mcp#connect-with-your-account)).
 
@@ -64,7 +64,7 @@ Content-Type: application/json
 x-api-key: <key>
 ```
 
-The body is `{ "visibility": "public" }` to publish a lesson to [Explore](/explore) and your profile, or `{ "visibility": "unlisted" }` to make it private (link only) again. Owner only (`403 not_owner` otherwise). Every lesson starts private, and only a lesson saved to an account can be published; anonymous lessons stay private. Returns `200` with `id`, `url`, and `visibility`. The same switch is under **Your lessons** on your own profile.
+The body is `{ "visibility": "public" }` to publish a lesson to [Explore](/explore) and your profile, or `{ "visibility": "unlisted" }` to make it private (link only) again. Owner only (`403 not_owner` otherwise). A lesson saved to an account, by publishing or keeping, starts public; only a lesson saved to an account can be published, so anonymous lessons stay private. Returns `200` with `id`, `url`, and `visibility`. The same switch is under **Your lessons** on your own profile.
 
 ## Like a lesson
 
