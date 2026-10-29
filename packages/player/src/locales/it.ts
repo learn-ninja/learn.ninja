@@ -149,6 +149,7 @@ export const it: Translation = {
   liked: "Ti piace",
   likeLogIn: "Accedi per salvare questa lezione tra i tuoi mi piace.",
   logIn: "Accedi",
+  keepLogIn: "Accedi per tenerlo nel tuo profilo",
   likeFailed: "Impossibile salvare il tuo mi piace. Riprova.",
   creatorPrivate: "Privata",
   showInExplore: "Mostra in Explore",

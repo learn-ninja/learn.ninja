@@ -141,6 +141,7 @@ export const hi: Translation = {
   liked: "पसंद किया",
   likeLogIn: "इस पाठ को अपनी पसंद में सहेजने के लिए लॉग इन करें।",
   logIn: "लॉग इन करें",
+  keepLogIn: "इसे अपनी प्रोफ़ाइल पर रखने के लिए लॉग इन करें",
   likeFailed: "आपकी पसंद सहेजी नहीं जा सकी। फिर से कोशिश करें।",
   creatorPrivate: "निजी",
   showInExplore: "Explore में दिखाएँ",

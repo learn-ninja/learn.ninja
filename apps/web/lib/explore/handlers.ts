@@ -139,16 +139,27 @@ export async function unlikeLesson(
  * adds to that day's count in activity_day (the profile's grid and streaks), but each lesson only
  * once a day. The day is the learner's calendar day in `tz` (the player sends the browser's), or
  * in UTC without one.
+ *
+ * `at` (ms) is when a finish made logged out happened, sent once the browser that kept it is logged
+ * in: the finish counts then, on that day. It's taken only from the last week (a lesson's life), and
+ * never after now. Such a late finish never counts on a day before one this lesson already counted
+ * on, so a replay can't be counted twice.
  */
 export async function completeLesson(
-  req: { id: string; userId: string; tz?: string },
+  req: { id: string; userId: string; tz?: string; at?: unknown },
   deps: ExploreDeps
 ): Promise<Reply> {
   const found = await liveLesson(deps, req.id)
   if (!found) return NOT_FOUND
-  const at = new Date(deps.now?.() ?? Date.now())
+  const now = deps.now?.() ?? Date.now()
+  const late =
+    typeof req.at === "number" &&
+    Number.isFinite(req.at) &&
+    req.at <= now &&
+    req.at >= now - LATE_FINISH_MS
+  const at = new Date(late ? (req.at as number) : now)
   const day = localDay(at, isTimeZone(req.tz) ? req.tz : "UTC")
-  // A first finish inserts the row; a replay on a new day moves counted_day. Either returns a row
+  // A first finish inserts the row; a finish on a later day moves counted_day. Either returns a row
   // only when this finish counts.
   const counted = await deps.db
     .insert(completion)
@@ -161,9 +172,20 @@ export async function completeLesson(
     .onConflictDoUpdate({
       target: [completion.userId, completion.lessonId],
       set: { countedDay: day },
-      setWhere: sql`${completion.countedDay} is distinct from ${day}`,
+      setWhere: sql`${completion.countedDay} is null or ${completion.countedDay} < ${day}`,
     })
     .returning({ completedAt: completion.completedAt })
+  // A late finish from before the first one recorded is the first.
+  if (late)
+    await deps.db
+      .update(completion)
+      .set({ completedAt: sql`least(${completion.completedAt}, ${at.toISOString()}::timestamptz)` })
+      .where(
+        and(
+          eq(completion.userId, req.userId),
+          eq(completion.lessonId, found.id)
+        )
+      )
   // Finished, so no longer in progress.
   await deps.db
     .delete(lessonProgress)
@@ -198,6 +220,9 @@ export async function completeLesson(
     body: { ok: true, completedAt: row?.completedAt.toISOString() ?? null },
   }
 }
+
+/** How far back a late finish (`at`) may be: as long as a lesson lives. */
+const LATE_FINISH_MS = 7 * 24 * 3.6e6
 
 /** The most katas a lesson's progress may name: well above any lesson the spec allows. */
 const PROGRESS_MAX = 200

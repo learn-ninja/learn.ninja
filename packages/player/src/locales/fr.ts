@@ -148,6 +148,7 @@ export const fr: Translation = {
   liked: "Aimée",
   likeLogIn: "Connecte-toi pour garder cette leçon dans tes j'aime.",
   logIn: "Se connecter",
+  keepLogIn: "Connecte-toi pour garder ça sur ton profil",
   likeFailed: "Impossible d'enregistrer ton j'aime. Réessaie.",
   creatorPrivate: "Privée",
   showInExplore: "Afficher dans Explore",

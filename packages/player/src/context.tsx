@@ -29,6 +29,8 @@ interface PlayerContextValue {
   like?: LessonLike
   /** The lesson's maker is the one playing: the wrap-up shows their card instead of the heart. */
   creator?: LessonCreator
+  /** Where a logged-out learner logs in so this finish counts on their profile. */
+  keepLogIn?: string
   /** The streak this finish lit, for the wrap-up's card. Without it there's no card. */
   streak?: DayStreak
 }

@@ -146,6 +146,7 @@ export const ar: Translation = {
   liked: "أعجبك",
   likeLogIn: "سجّل الدخول لحفظ هذا الدرس في إعجاباتك.",
   logIn: "تسجيل الدخول",
+  keepLogIn: "سجّل الدخول لحفظ هذا في ملفك الشخصي",
   likeFailed: "تعذّر حفظ إعجابك. حاول مرة أخرى.",
   creatorPrivate: "خاص",
   showInExplore: "إظهاره في Explore",

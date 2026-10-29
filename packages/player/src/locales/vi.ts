@@ -131,6 +131,7 @@ export const vi: Translation = {
   liked: "Đã thích",
   likeLogIn: "Đăng nhập để lưu bài học này vào mục đã thích.",
   logIn: "Đăng nhập",
+  keepLogIn: "Đăng nhập để lưu kết quả này vào hồ sơ của bạn",
   likeFailed: "Không lưu được lượt thích. Hãy thử lại.",
   creatorPrivate: "Riêng tư",
   showInExplore: "Hiển thị trong Explore",

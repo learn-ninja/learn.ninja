@@ -147,6 +147,7 @@ export const de: Translation = {
   liked: "Gefällt dir",
   likeLogIn: "Melde dich an, um diese Lektion in deinen Likes zu speichern.",
   logIn: "Anmelden",
+  keepLogIn: "Melde dich an, um das in deinem Profil zu behalten",
   likeFailed: "Dein Like wurde nicht gespeichert. Versuch es noch einmal.",
   creatorPrivate: "Privat",
   showInExplore: "In Explore zeigen",

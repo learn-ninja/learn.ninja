@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import type { DayStreak } from "@workspace/player"
 import { cn } from "@workspace/ui/lib/utils"
 
@@ -7,6 +8,7 @@ import { AccountLink, useAccount } from "@/components/account/account-link"
 import { AccountMenu } from "@/components/account/account-menu"
 import { StreakButton } from "@/components/account/streak-button"
 import type { AccountInfo } from "@/lib/auth/account-info"
+import { sendFinishes } from "@/lib/explore/finishes"
 
 import { ButtonLink } from "./button-link"
 import { Wordmark } from "./wordmark"
@@ -20,6 +22,7 @@ import { Wordmark } from "./wordmark"
  * page that checked the session knows about the user; static pages
  * leave it out and the marker cookie decides after hydration. Until then the visitor's links are
  * kept but invisible, so the header doesn't shift for the many visitors who aren't logged in.
+ * Logged in, it sends the lessons this browser finished while logged out (lib/explore/finishes).
  */
 export function SiteHeader({
   start,
@@ -36,6 +39,10 @@ export function SiteHeader({
 }) {
   const account = useAccount(known)
   const visitor = account === null || account === undefined
+  // Lessons this browser finished logged out, once it's logged in.
+  React.useEffect(() => {
+    if (!visitor) void sendFinishes()
+  }, [visitor])
   return (
     <header className="sticky top-0 z-40 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/70">
       <div className="flex h-14 w-full items-center gap-2 px-4 sm:h-16 sm:px-8">

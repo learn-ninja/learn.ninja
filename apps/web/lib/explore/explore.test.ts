@@ -380,6 +380,49 @@ describe("completions", () => {
     expect(await activityDays(db, "ada")).toEqual([])
   })
 
+  it("counts a finish made logged out on the day it happened", async () => {
+    const id = await published("ada", { visibility: "public" })
+    now = Date.UTC(2026, 9, 25, 12)
+    const before = now - 2 * DAY
+    expect(
+      await completeLesson({ id, userId: "bob", at: before }, deps)
+    ).toMatchObject({ body: { completedAt: new Date(before).toISOString() } })
+    expect(await activityDays(db, "bob")).toEqual([
+      { day: "2026-10-23", lessons: 1 },
+    ])
+    // Sent again (a second tab), it changes nothing.
+    await completeLesson({ id, userId: "bob", at: before }, deps)
+    expect(await activityDays(db, "bob")).toHaveLength(1)
+  })
+
+  it("takes an earlier late finish as the first, but never counts it twice", async () => {
+    const id = await published("ada", { visibility: "public" })
+    now = Date.UTC(2026, 9, 25, 12)
+    await completeLesson({ id, userId: "bob" }, deps)
+    // A logged-out finish from the day before arrives after today's.
+    const before = now - DAY
+    expect(
+      await completeLesson({ id, userId: "bob", at: before }, deps)
+    ).toMatchObject({ body: { completedAt: new Date(before).toISOString() } })
+    // Today already counted this lesson, so yesterday doesn't get it too.
+    expect(await activityDays(db, "bob")).toEqual([
+      { day: "2026-10-25", lessons: 1 },
+    ])
+  })
+
+  it("ignores a late finish from the future or over a week ago", async () => {
+    const id = await published("ada", { visibility: "public" })
+    now = Date.UTC(2026, 9, 25, 12)
+    for (const at of [now + DAY, now - 8 * DAY, "yesterday"]) {
+      expect(
+        await completeLesson({ id, userId: "bob", at }, deps)
+      ).toMatchObject({ body: { completedAt: new Date(now).toISOString() } })
+    }
+    expect(await activityDays(db, "bob")).toEqual([
+      { day: "2026-10-25", lessons: 1 },
+    ])
+  })
+
   it("answers 404 for a lesson that's gone", async () => {
     expect(
       await completeLesson({ id: "nope1234", userId: "bob" }, deps)

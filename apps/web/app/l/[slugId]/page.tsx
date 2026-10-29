@@ -94,6 +94,12 @@ export default async function PublishedLessonPage({
         streak={streak ?? undefined}
         likes={{ likes: record.likes, liked, signedIn }}
         loginHref={`/login?callback=${encodeURIComponent(`/l/${slugId}?like=1`)}`}
+        // Logged out, the finish is kept in the browser; logging in sends it.
+        keepLogIn={
+          signedIn
+            ? undefined
+            : `/login?callback=${encodeURIComponent(`/l/${slugId}`)}`
+        }
         owner={
           isOwner
             ? {

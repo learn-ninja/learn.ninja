@@ -8,7 +8,7 @@ import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 // the lesson, sent by the lesson page each time the wrap-up shows. The first finish's time is kept;
 // replays still count toward the day's activity, each lesson once a day. The body may carry the
 // browser's time zone as { tz }, which decides the day the finish counts for on the profile;
-// without it the tz cookie, then UTC.
+// without it the tz cookie, then UTC. A finish made logged out also sends { at }, when it happened.
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -20,8 +20,9 @@ export async function POST(req: Request, { params }: Params) {
     const sent =
       body && typeof body === "object" && "tz" in body ? body.tz : undefined
     const tz = typeof sent === "string" ? sent : await viewerTimeZone()
+    const at = body && typeof body === "object" && "at" in body ? body.at : undefined
     return completeLesson(
-      { id: (await params).id, userId: actor.userId, tz },
+      { id: (await params).id, userId: actor.userId, tz, at },
       await exploreDepsFor(req)
     )
   })

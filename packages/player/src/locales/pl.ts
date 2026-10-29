@@ -153,6 +153,7 @@ export const pl: Translation = {
   liked: "Polubiono",
   likeLogIn: "Zaloguj się, aby zapisać tę lekcję w polubionych.",
   logIn: "Zaloguj się",
+  keepLogIn: "Zaloguj się, aby zachować to w swoim profilu",
   likeFailed: "Nie udało się zapisać polubienia. Spróbuj ponownie.",
   creatorPrivate: "Prywatna",
   showInExplore: "Pokaż w Explore",

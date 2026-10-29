@@ -127,6 +127,7 @@ export const ko: Translation = {
   liked: "좋아요 누름",
   likeLogIn: "로그인하면 이 레슨을 좋아요 목록에 저장할 수 있어요.",
   logIn: "로그인",
+  keepLogIn: "로그인하면 이 기록을 프로필에 남길 수 있어요",
   likeFailed: "좋아요를 저장하지 못했어요. 다시 시도해 주세요.",
   creatorPrivate: "비공개",
   showInExplore: "Explore에 표시",

@@ -156,6 +156,7 @@ export const uk: Translation = {
   liked: "Сподобалося",
   likeLogIn: "Увійдіть, щоб зберегти цей урок у вподобаних.",
   logIn: "Увійти",
+  keepLogIn: "Увійдіть, щоб зберегти це у своєму профілі",
   likeFailed: "Не вдалося зберегти вподобання. Спробуйте ще раз.",
   creatorPrivate: "Приватний",
   showInExplore: "Показувати в Explore",

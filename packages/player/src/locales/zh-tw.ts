@@ -124,6 +124,7 @@ export const zhTw: Translation = {
   liked: "已喜歡",
   likeLogIn: "登入即可把這堂課存到你的喜歡清單。",
   logIn: "登入",
+  keepLogIn: "登入即可把這次完成記錄到你的個人檔案",
   likeFailed: "無法儲存你的喜歡，請再試一次。",
   creatorPrivate: "私人",
   showInExplore: "在 Explore 中顯示",

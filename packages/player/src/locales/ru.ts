@@ -156,6 +156,7 @@ export const ru: Translation = {
   liked: "Понравилось",
   likeLogIn: "Войдите, чтобы сохранить этот урок в понравившихся.",
   logIn: "Войти",
+  keepLogIn: "Войдите, чтобы сохранить это в своём профиле",
   likeFailed: "Не удалось сохранить отметку. Попробуйте ещё раз.",
   creatorPrivate: "Приватный",
   showInExplore: "Показывать в Explore",

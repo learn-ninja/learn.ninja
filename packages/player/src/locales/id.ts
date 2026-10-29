@@ -134,6 +134,7 @@ export const id: Translation = {
   liked: "Disukai",
   likeLogIn: "Masuk untuk menyimpan pelajaran ini ke daftar suka kamu.",
   logIn: "Masuk",
+  keepLogIn: "Masuk untuk menyimpan ini di profilmu",
   likeFailed: "Suka kamu tidak tersimpan. Coba lagi.",
   creatorPrivate: "Privat",
   showInExplore: "Tampilkan di Explore",

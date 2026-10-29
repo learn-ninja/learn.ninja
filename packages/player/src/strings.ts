@@ -152,6 +152,8 @@ export type Strings = {
   /** Shown in the heart's place when a logged-out learner presses it, beside the Log in link. */
   likeLogIn: string
   logIn: string
+  /** Under a logged-out learner's score, linking to log in: their finish then counts on their profile. */
+  keepLogIn: string
   likeFailed: string
   /** The maker's Share: where the lesson stands (its icon), the switch to publish it, and Make changes. */
   creatorPrivate: string

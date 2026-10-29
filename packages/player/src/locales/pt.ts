@@ -145,6 +145,7 @@ export const pt: Translation = {
   liked: "Curtiu",
   likeLogIn: "Entre para salvar esta lição nas suas curtidas.",
   logIn: "Entrar",
+  keepLogIn: "Entre para manter isso no seu perfil",
   likeFailed: "Não foi possível salvar sua curtida. Tente de novo.",
   creatorPrivate: "Privada",
   showInExplore: "Mostrar no Explore",

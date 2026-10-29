@@ -125,6 +125,7 @@ export const ja: Translation = {
   liked: "いいね済み",
   likeLogIn: "ログインすると、このレッスンをいいねに保存できます。",
   logIn: "ログイン",
+  keepLogIn: "ログインすると、この記録をプロフィールに残せます",
   likeFailed: "いいねを保存できませんでした。もう一度お試しください。",
   creatorPrivate: "非公開",
   showInExplore: "Explore に表示",

@@ -99,6 +99,23 @@ export function RunBar({
   )
 }
 
+/**
+ * For a logged-out learner, under the score: this finish is kept in the browser, and logging in
+ * puts it on their profile. A quiet link, since finishing needs no account.
+ */
+export function KeepLogIn() {
+  const { t, keepLogIn } = usePlayer()
+  if (!keepLogIn) return null
+  return (
+    <a
+      href={keepLogIn}
+      className="rounded-md text-sm font-medium text-muted-foreground underline underline-offset-4 outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      {t.keepLogIn}
+    </a>
+  )
+}
+
 /** For a challenged learner, under the score: whether they beat the score they were sent. */
 export function ChallengeVerdict({ summary }: { summary: Summary }) {
   const { t, challenge } = usePlayer()

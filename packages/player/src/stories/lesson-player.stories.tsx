@@ -216,13 +216,17 @@ export const WrapUpLiked: Story = {
   },
   loaders: atWrap(lessons.buttons, "story-wrap-liked"),
 }
-/** Logged out: pressing the heart shows a toast asking them to log in, with a Log in button. */
+/**
+ * Logged out: a link under the score offers to log in and keep this finish on their profile, and
+ * pressing the heart shows a toast asking them to log in, with a Log in button.
+ */
 export const WrapUpLikeLoggedOut: Story = {
-  name: "Wrap-up: like, logged out",
+  name: "Wrap-up: logged out",
   args: {
     lesson: lessons.buttons,
     progressKey: "story-wrap-like-out",
     like: { likes: 12, liked: false, loginHref: "#login" },
+    keepLogIn: "#login",
   },
   loaders: atWrap(lessons.buttons, "story-wrap-like-out"),
 }

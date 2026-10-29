@@ -124,6 +124,7 @@ export const zh: Translation = {
   liked: "已喜欢",
   likeLogIn: "登录即可把这节课保存到你的喜欢列表。",
   logIn: "登录",
+  keepLogIn: "登录即可把这次完成记录到你的个人主页",
   likeFailed: "无法保存你的喜欢，请重试。",
   creatorPrivate: "私密",
   showInExplore: "在 Explore 中显示",

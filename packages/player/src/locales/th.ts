@@ -131,6 +131,7 @@ export const th: Translation = {
   liked: "ถูกใจแล้ว",
   likeLogIn: "เข้าสู่ระบบเพื่อบันทึกบทเรียนนี้ไว้ในรายการที่ถูกใจ",
   logIn: "เข้าสู่ระบบ",
+  keepLogIn: "เข้าสู่ระบบเพื่อเก็บผลนี้ไว้ในโปรไฟล์ของคุณ",
   likeFailed: "บันทึกการถูกใจไม่สำเร็จ ลองอีกครั้ง",
   creatorPrivate: "ส่วนตัว",
   showInExplore: "แสดงใน Explore",

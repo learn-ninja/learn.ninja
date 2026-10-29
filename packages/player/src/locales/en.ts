@@ -146,6 +146,7 @@ export const en: Strings = {
   liked: "Liked",
   likeLogIn: "Log in to save this lesson to your likes.",
   logIn: "Log in",
+  keepLogIn: "Log in to keep this on your profile",
   likeFailed: "Couldn't save your like. Try again.",
   creatorPrivate: "Private",
   showInExplore: "Show in Explore",

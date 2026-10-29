@@ -144,6 +144,7 @@ export const nl: Translation = {
   liked: "Leuk gevonden",
   likeLogIn: "Log in om deze les bij je likes te bewaren.",
   logIn: "Inloggen",
+  keepLogIn: "Log in om dit op je profiel te bewaren",
   likeFailed: "Je like is niet opgeslagen. Probeer het opnieuw.",
   creatorPrivate: "Privé",
   showInExplore: "Tonen in Explore",

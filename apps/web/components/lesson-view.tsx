@@ -16,6 +16,7 @@ import { DropdownMenuItem } from "@workspace/ui/components/dropdown-menu"
 
 import { ReportDialog } from "@/components/explore/report-dialog"
 import { exploreApi } from "@/lib/explore/browser"
+import { keepFinish, sendFinishes } from "@/lib/explore/finishes"
 import type { Visibility } from "@/lib/explore/queries"
 import { AGENT_PROMPT } from "@/lib/site"
 
@@ -40,7 +41,8 @@ export interface LessonViewProps extends LessonPlayerProps {
   owner?: { visibility: Visibility; hidden: boolean; handle: string | null }
   /**
    * Record finishing the lesson, and how far the viewer gets before that, to their account (logged in
-   * only): the check on Explore and their profile's In progress tab.
+   * only): the check on Explore and their profile's In progress tab. Logged out, a finish is kept in
+   * the browser and sent on the first page that's logged in.
    */
   recordCompletion?: boolean
   /** The lesson's likes and the viewer's, for the heart on the wrap-up; logged out, it offers `loginHref`. */
@@ -82,6 +84,8 @@ export function LessonView({
   const sentProgress = React.useRef<Promise<unknown>>(Promise.resolve())
   React.useEffect(() => {
     setMounted(true)
+    // Lessons this browser finished logged out, now that it's logged in.
+    if (recordCompletion) void sendFinishes()
     setUrl(window.location.origin + window.location.pathname)
     const params = new URLSearchParams(window.location.search)
     if (!props.challenge)
@@ -205,22 +209,25 @@ export function LessonView({
             : undefined
         }
         onComplete={
-          lessonId && recordCompletion
-            ? () => {
-                // After the last progress lands, or that would mark the lesson in progress again.
-                void sentProgress.current.then(() =>
-                  fetch(`/api/lessons/${lessonId}/complete`, {
-                    method: "POST",
-                    keepalive: true,
-                    headers: { "content-type": "application/json" },
-                    // The day this counts for on the profile is the learner's, not UTC's.
-                    body: JSON.stringify({
-                      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                    }),
-                  }).catch(() => {})
-                )
-              }
-            : undefined
+          !lessonId
+            ? undefined
+            : recordCompletion
+              ? () => {
+                  // After the last progress lands, or that would mark the lesson in progress again.
+                  void sentProgress.current.then(() =>
+                    fetch(`/api/lessons/${lessonId}/complete`, {
+                      method: "POST",
+                      keepalive: true,
+                      headers: { "content-type": "application/json" },
+                      // The day this counts for on the profile is the learner's, not UTC's.
+                      body: JSON.stringify({
+                        tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                      }),
+                    }).catch(() => {})
+                  )
+                }
+              : // Logged out: kept in the browser, and sent once it's logged in.
+                () => keepFinish(lessonId)
         }
       />
       {lessonId && canReport ? (

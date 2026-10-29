@@ -142,6 +142,7 @@ export const es: Translation = {
   liked: "Te gusta",
   likeLogIn: "Inicia sesión para guardar esta lección en tus me gusta.",
   logIn: "Iniciar sesión",
+  keepLogIn: "Inicia sesión para guardar esto en tu perfil",
   likeFailed: "No se pudo guardar tu me gusta. Inténtalo de nuevo.",
   creatorPrivate: "Privada",
   showInExplore: "Mostrar en Explore",

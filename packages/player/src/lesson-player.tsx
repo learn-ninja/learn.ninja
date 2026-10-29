@@ -134,6 +134,7 @@ import { Visual } from "./visuals"
 import {
   ChallengeNote,
   ChallengeVerdict,
+  KeepLogIn,
   KeepLearning,
   RunBar,
   Takeaways,
@@ -209,6 +210,11 @@ export interface LessonPlayerProps {
   /** When the lesson's maker is playing: their card on the wrap-up (publish it, ask for changes) instead of the heart. */
   creator?: LessonCreator
   /**
+   * For a logged-out learner: where to log in so their finish counts on their profile, offered on
+   * the wrap-up. Omit it when they're logged in, or when a finish can't be kept for them.
+   */
+  keepLogIn?: string
+  /**
    * The streak finishing this lesson lights, for the screen before the wrap-up: pass it only when
    * finishing will light today's lantern (logged in, nothing finished yet today, and this lesson not
    * finished before, which doesn't count again). Leave it out otherwise.
@@ -253,6 +259,7 @@ function LessonInLanguage({
   challenge,
   challenger,
   like,
+  keepLogIn,
   creator,
   streak,
 }: LessonPlayerProps) {
@@ -324,6 +331,7 @@ function LessonInLanguage({
           challenger,
           like,
           creator,
+          keepLogIn,
           streak,
         }}
       >
@@ -906,7 +914,9 @@ function Player({
   React.useEffect(() => {
     if (startAt || item.kind === "intro" || item.kind === "wrap") return
     const progress = countProgress(state.items, state.index)
-    if (progress.done === sentDone.current) return
+    // The fix round is past every kata: nothing new to say until the finish does.
+    if (progress.done >= progress.total || progress.done === sentDone.current)
+      return
     sentDone.current = progress.done
     progressRef.current?.(progress)
     // The items only change along with the index or the run.
@@ -1919,6 +1929,7 @@ function WrapUp({
           </div>
           <RunBar lesson={lesson} results={results} />
           <ChallengeVerdict summary={s} />
+          <KeepLogIn />
         </div>
         <WrapActions
           lesson={lesson}

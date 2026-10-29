@@ -153,6 +153,7 @@ export const he: Translation = {
   liked: "אהבת",
   likeLogIn: "התחברו כדי לשמור את השיעור הזה בלייקים שלכם.",
   logIn: "התחברות",
+  keepLogIn: "התחברו כדי לשמור את זה בפרופיל שלכם",
   likeFailed: "לא הצלחנו לשמור את הלייק. נסו שוב.",
   creatorPrivate: "פרטי",
   showInExplore: "להציג ב-Explore",

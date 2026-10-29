@@ -137,6 +137,7 @@ export const tr: Translation = {
   liked: "Beğendin",
   likeLogIn: "Bu dersi beğenilerine kaydetmek için giriş yap.",
   logIn: "Giriş yap",
+  keepLogIn: "Bunu profilinde tutmak için giriş yap",
   likeFailed: "Beğenin kaydedilemedi. Tekrar dene.",
   creatorPrivate: "Gizli",
   showInExplore: "Explore'da göster",
