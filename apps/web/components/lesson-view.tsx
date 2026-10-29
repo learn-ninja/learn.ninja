@@ -107,27 +107,26 @@ export function LessonView({
     // Only on arriving at the page.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  const menuItems = lessonId ? (
-    <>
-      {owner ? (
-        <>
-          {/* Where it stands is the badge by Share; the menu keeps the way to the rest. */}
-          {owner.handle ? (
-            <DropdownMenuItem href={`/u/${owner.handle}`}>
-              <SettingsIcon />
-              Your lessons
-            </DropdownMenuItem>
-          ) : null}
-        </>
-      ) : null}
-      {canReport ? (
-        <DropdownMenuItem onAction={() => setReportOpen(true)}>
-          <FlagIcon />
-          Report lesson
-        </DropdownMenuItem>
-      ) : null}
-    </>
-  ) : undefined
+  // Where it stands is the badge by Share; the menu keeps the way to the rest. Left undefined when
+  // there's nothing to add, or the player draws a separator over an empty group.
+  const yourLessons = owner?.handle ? `/u/${owner.handle}` : null
+  const menuItems =
+    lessonId && (yourLessons || canReport) ? (
+      <>
+        {yourLessons ? (
+          <DropdownMenuItem href={yourLessons}>
+            <SettingsIcon />
+            Your lessons
+          </DropdownMenuItem>
+        ) : null}
+        {canReport ? (
+          <DropdownMenuItem onAction={() => setReportOpen(true)}>
+            <FlagIcon />
+            Report lesson
+          </DropdownMenuItem>
+        ) : null}
+      </>
+    ) : undefined
   return (
     <>
       <LessonPlayer
