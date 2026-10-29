@@ -332,7 +332,20 @@ describe("completions", () => {
     expect(await completedAt(db, "ada", [id])).toEqual(new Map())
   })
 
-  it("counts a first finish on the learner's day, once", async () => {
+  it("counts a replay once a day", async () => {
+    const id = await published("ada", { visibility: "public" })
+    now = Date.UTC(2026, 9, 23, 12)
+    await completeLesson({ id, userId: "bob" }, deps)
+    now += DAY
+    await completeLesson({ id, userId: "bob" }, deps)
+    await completeLesson({ id, userId: "bob" }, deps)
+    expect(await activityDays(db, "bob")).toEqual([
+      { day: "2026-10-23", lessons: 1 },
+      { day: "2026-10-24", lessons: 1 },
+    ])
+  })
+
+  it("counts each lesson on the learner's day, once", async () => {
     const a = await published("ada", { visibility: "public" })
     const b = await published("ada", { visibility: "public" })
     // 06:30 UTC on 2026-10-23 is still the 22nd in Los Angeles.

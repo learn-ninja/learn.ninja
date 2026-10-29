@@ -84,7 +84,7 @@ export const viewPublished = cache(
     const [author, liked, streak] = await Promise.all([
       record.ownerId ? authorOf(db, record.ownerId) : null,
       actor ? likedIds(db, actor.userId, [record.id]) : new Set<string>(),
-      actor ? comingStreak(actor.userId, record.id) : null,
+      actor ? comingStreak(actor.userId) : null,
     ])
     return {
       record,

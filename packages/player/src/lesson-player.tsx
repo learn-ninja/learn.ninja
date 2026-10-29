@@ -882,12 +882,12 @@ function Player({
   React.useEffect(() => {
     if (item.kind === "wrap" && !startAt) completeRef.current?.()
   }, [item.kind, state.run, startAt])
-  // The streak screen comes first on the wrap-up, once per run, when finishing lit today's lantern.
-  const [streakSeenRun, setStreakSeenRun] = React.useState<number | null>(null)
-  const onStreak =
-    item.kind === "wrap" && !!streak && streakSeenRun !== state.run
+  // The streak screen comes first on the wrap-up when finishing lit today's lantern: once, since a
+  // retry finishes on a day that's already lit.
+  const [streakSeen, setStreakSeen] = React.useState(false)
+  const onStreak = item.kind === "wrap" && !!streak && !streakSeen
   const leaveStreak = () => {
-    setStreakSeenRun(state.run)
+    setStreakSeen(true)
     scrollRef.current?.scrollTo({ top: 0 })
     scrollRef.current?.focus({ preventScroll: true })
   }

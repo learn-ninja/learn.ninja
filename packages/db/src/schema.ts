@@ -490,13 +490,18 @@ export const completion = pgTable(
       .notNull()
       .references(() => lesson.id, { onDelete: "cascade" }),
     completedAt: time("completed_at").notNull().defaultNow(),
+    /**
+     * The learner's day (YYYY-MM-DD) this lesson last counted toward activity_day, so a replay counts
+     * once per day: finishing it again on a later day counts again, the same day doesn't.
+     */
+    countedDay: date("counted_day"),
   },
   (t) => [primaryKey({ columns: [t.userId, t.lessonId] })]
 )
 
 /**
- * One row per user per calendar day on which they finished a lesson for the first time, with how
- * many: what the profile's activity grid and streaks read. `day` is the day where the learner was
+ * One row per user per calendar day on which they finished a lesson, with how many (each lesson once
+ * a day, replays included): what the profile's activity grid and streaks read. `day` is the day where the learner was
  * (the player sends their time zone), so a late evening doesn't land on tomorrow. Nothing here
  * points at the lesson, so the day stays when the lesson expires or is deleted.
  */

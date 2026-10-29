@@ -3,7 +3,7 @@ import { cookies } from "next/headers"
 import type { DayStreak } from "@workspace/player"
 
 import { TZ_COOKIE } from "@/components/site/timezone-cookie"
-import { activityDays, completedAt } from "@/lib/explore/queries"
+import { activityDays } from "@/lib/explore/queries"
 import { getDb } from "@/lib/publish/store"
 
 import { dayStreak, isTimeZone, localDay, streakAfterFinish } from "./activity"
@@ -25,7 +25,6 @@ async function daysAndToday(userId: string) {
   const [db, tz] = await Promise.all([getDb(), viewerTimeZone()])
   const rows = await activityDays(db, userId)
   return {
-    db,
     days: rows.filter((r) => r.lessons > 0).map((r) => r.day),
     today: localDay(new Date(), tz),
   }
@@ -38,16 +37,10 @@ export async function viewerStreak(userId: string): Promise<DayStreak> {
 }
 
 /**
- * The streak finishing `lessonId` will light, for the streak screen before its wrap-up, or null
- * when it won't: today already has a lesson, or the learner finished this one before (only a
- * lesson's first finish counts toward their days).
+ * The streak finishing a lesson will light, for the streak screen before its wrap-up, or null when
+ * today already has a lesson. Replays count too, so any lesson lights an empty today.
  */
-export async function comingStreak(
-  userId: string,
-  lessonId: string
-): Promise<DayStreak | null> {
-  const { db, days, today } = await daysAndToday(userId)
-  if (days.includes(today)) return null
-  const done = await completedAt(db, userId, [lessonId])
-  return done.has(lessonId) ? null : streakAfterFinish(days, today)
+export async function comingStreak(userId: string): Promise<DayStreak | null> {
+  const { days, today } = await daysAndToday(userId)
+  return days.includes(today) ? null : streakAfterFinish(days, today)
 }

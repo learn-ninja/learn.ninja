@@ -5,9 +5,10 @@ import { actorFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 
 // POST /api/lessons/{id}/complete records that the logged-in user (cookie or x-api-key) finished
-// the lesson, sent by the lesson page when the wrap-up shows. Only the first time is kept. The
-// body may carry the browser's time zone as { tz }, which decides the day the finish counts for
-// on the profile; without it the tz cookie, then UTC.
+// the lesson, sent by the lesson page each time the wrap-up shows. The first finish's time is kept;
+// replays still count toward the day's activity, each lesson once a day. The body may carry the
+// browser's time zone as { tz }, which decides the day the finish counts for on the profile;
+// without it the tz cookie, then UTC.
 
 type Params = { params: Promise<{ id: string }> }
 

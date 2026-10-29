@@ -133,10 +133,11 @@ export async function unlikeLesson(
 }
 
 /**
- * POST /api/lessons/{id}/complete: the logged-in learner reached the wrap-up. Only the first time
- * is kept, so the check on Explore says when they first finished it, and only the first time adds
- * to that day's count in activity_day, the profile's grid and streaks. The day is the learner's
- * calendar day in `tz` (the player sends the browser's), or in UTC without one.
+ * POST /api/lessons/{id}/complete: the logged-in learner reached the wrap-up. The first finish's time
+ * is kept, so the check on Explore says when they first finished it. Every finish, replays too,
+ * adds to that day's count in activity_day (the profile's grid and streaks), but each lesson only
+ * once a day. The day is the learner's calendar day in `tz` (the player sends the browser's), or
+ * in UTC without one.
  */
 export async function completeLesson(
   req: { id: string; userId: string; tz?: string },
@@ -145,13 +146,24 @@ export async function completeLesson(
   const found = await liveLesson(deps, req.id)
   if (!found) return NOT_FOUND
   const at = new Date(deps.now?.() ?? Date.now())
-  const inserted = await deps.db
+  const day = localDay(at, isTimeZone(req.tz) ? req.tz : "UTC")
+  // A first finish inserts the row; a replay on a new day moves counted_day. Either returns a row
+  // only when this finish counts.
+  const counted = await deps.db
     .insert(completion)
-    .values({ userId: req.userId, lessonId: found.id, completedAt: at })
-    .onConflictDoNothing()
+    .values({
+      userId: req.userId,
+      lessonId: found.id,
+      completedAt: at,
+      countedDay: day,
+    })
+    .onConflictDoUpdate({
+      target: [completion.userId, completion.lessonId],
+      set: { countedDay: day },
+      setWhere: sql`${completion.countedDay} is distinct from ${day}`,
+    })
     .returning({ completedAt: completion.completedAt })
-  if (inserted.length) {
-    const day = localDay(at, isTimeZone(req.tz) ? req.tz : "UTC")
+  if (counted.length) {
     await deps.db
       .insert(activityDay)
       .values({ userId: req.userId, day, lessons: 1 })
@@ -160,8 +172,8 @@ export async function completeLesson(
         set: { lessons: sql`${activityDay.lessons} + 1` },
       })
   }
-  const [row] = inserted.length
-    ? inserted
+  const [row] = counted.length
+    ? counted
     : await deps.db
         .select({ completedAt: completion.completedAt })
         .from(completion)
