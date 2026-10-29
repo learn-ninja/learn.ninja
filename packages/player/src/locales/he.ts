@@ -229,7 +229,7 @@ export const he: Translation = {
   },
   shortcuts: "קיצורי מקלדת",
   shortcutMain: "המשך",
-  shortcutPick: "בחירת תשובה",
+  shortcutPick: "בחירת תשובה, מילה או פריט",
   shortcutOrder: "הזזת פריט שמוקם למעלה או למטה",
   shortcutSort: "העברת פריט בין קבוצות",
   shortcutUnsort: "הוצאת פריט מהקבוצה",

@@ -214,7 +214,7 @@ export const tr: Translation = {
   },
   shortcuts: "Klavye kısayolları",
   shortcutMain: "Devam",
-  shortcutPick: "Cevap seç",
+  shortcutPick: "Cevap, kelime veya öğe seç",
   shortcutOrder: "Yerleşen öğeyi yukarı veya aşağı taşı",
   shortcutSort: "Öğeyi başka gruba taşı",
   shortcutUnsort: "Öğeyi gruptan çıkar",

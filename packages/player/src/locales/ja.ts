@@ -202,7 +202,7 @@ export const ja: Translation = {
   },
   shortcuts: "キーボードショートカット",
   shortcutMain: "次へ",
-  shortcutPick: "回答を選ぶ",
+  shortcutPick: "回答・単語・項目を選ぶ",
   shortcutOrder: "置いた項目を上下に移動",
   shortcutSort: "項目を別のグループへ移動",
   shortcutUnsort: "項目をグループから外す",

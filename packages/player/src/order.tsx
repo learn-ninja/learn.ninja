@@ -7,6 +7,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import type { QuestionKataProps } from "./katas"
 import { usePlayer } from "./context"
+import { shortcutBlocked } from "./keys"
 import {
   controlPadding,
   controlStyles,
@@ -20,8 +21,10 @@ import { Visual } from "./visuals"
 
 // The order kata: numbered slots wait on top and the shuffled items below. Tap the items in order and
 // each slides into the next open slot, leaving a dashed space in the pool so the rest never shift; tap
-// a placed item to send it back. With a keyboard, Enter or Space places or returns an item, ↑ and ↓
-// move a placed item up or down, and focus never gets lost.
+// a placed item to send it back. With a keyboard, a number key or Enter places an item (1 for the
+// first one waiting), Space places or returns one, Delete returns one, ↑ and ↓ move a placed item up
+// or down, and focus never gets lost. Enter on a placed item checks the answer instead of returning
+// it, so it never undoes the order.
 
 export function OrderKata({
   kata,
@@ -30,7 +33,7 @@ export function OrderKata({
   marks,
   locked,
 }: QuestionKataProps) {
-  const { t } = usePlayer()
+  const { t, keyScope } = usePlayer()
   const uid = React.useId().replace(/[^\w-]/g, "")
   const root = React.useRef<HTMLDivElement>(null)
   const buttons = React.useRef<Record<string, HTMLButtonElement | null>>({})
@@ -51,6 +54,24 @@ export function OrderKata({
   React.useEffect(() => {
     if (wrong) shake(root.current)
   }, [wrong])
+
+  // Number keys place the items waiting in the pool: 1 for the first, 2 for the second…
+  const pick = React.useRef<(n: number) => void>(() => {})
+  React.useEffect(() => {
+    if (locked) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
+      const el = e.target as HTMLElement | null
+      if (keyScope && !keyScope.current?.contains(el)) return
+      if (shortcutBlocked(e)) return
+      const n = Number(e.key)
+      if (!Number.isInteger(n) || n < 1 || n > 9) return
+      e.preventDefault()
+      pick.current(n - 1)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [locked, keyScope])
 
   if (kata.type !== "order" || answer.kind !== "sequence") return null
 
@@ -88,6 +109,10 @@ export function OrderKata({
       t.placedAt(textOf(id), next + 1),
       nextPool[Math.min(at, nextPool.length - 1)] ?? id
     )
+  }
+  pick.current = (n) => {
+    const id = shown.filter((s) => pool.includes(s))[n]
+    if (id) place(id)
   }
   /** From a slot back to the end of the pool. */
   const unplace = (id: string) =>
@@ -136,17 +161,29 @@ export function OrderKata({
         }}
         data-vt={`learn-${uid}-o${it.i}`}
         data-status={placed ? marks[id] : undefined}
+        // Enter on a placed item checks the answer rather than sending it back (Space still does).
+        data-enter={placed ? "main" : undefined}
         variant="outline"
         isDisabled={locked}
         onPress={() => (placed ? unplace(id) : place(id))}
         onKeyDown={(e) => {
-          if (!placed || locked) return
-          if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+          if (
+            placed &&
+            !locked &&
+            (e.key === "ArrowUp" || e.key === "ArrowDown")
+          ) {
             e.preventDefault()
             shift(id, e.key === "ArrowUp" ? -1 : 1)
-          } else if (e.key === "Delete" || e.key === "Backspace") {
+          } else if (
+            placed &&
+            !locked &&
+            (e.key === "Delete" || e.key === "Backspace")
+          ) {
             e.preventDefault()
             unplace(id)
+          } else {
+            // React Aria stops a key here unless told otherwise; the number keys listen on the window.
+            e.continuePropagation()
           }
         }}
         className={cn(

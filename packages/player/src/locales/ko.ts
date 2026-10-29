@@ -203,7 +203,7 @@ export const ko: Translation = {
   },
   shortcuts: "키보드 단축키",
   shortcutMain: "계속",
-  shortcutPick: "답 고르기",
+  shortcutPick: "답, 단어, 항목 고르기",
   shortcutOrder: "놓은 항목을 위아래로 옮기기",
   shortcutSort: "항목을 다른 그룹으로 옮기기",
   shortcutUnsort: "항목을 그룹에서 빼기",

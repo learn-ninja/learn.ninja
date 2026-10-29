@@ -226,7 +226,7 @@ export const de: Translation = {
   },
   shortcuts: "Tastenkürzel",
   shortcutMain: "Weiter",
-  shortcutPick: "Antwort wählen",
+  shortcutPick: "Antwort, Wort oder Element wählen",
   shortcutOrder: "Platziertes Element nach oben oder unten schieben",
   shortcutSort: "Element zwischen Gruppen verschieben",
   shortcutUnsort: "Element aus der Gruppe nehmen",

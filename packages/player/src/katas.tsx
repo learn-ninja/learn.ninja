@@ -495,7 +495,7 @@ export function MatchKata({
   onDone?: () => void
 }) {
   const root = React.useRef<HTMLDivElement>(null)
-  const { t } = usePlayer()
+  const { t, keyScope } = usePlayer()
   // What a screen reader hears about the last pair, as sort and order say where an item went.
   const [said, setSaid] = React.useState("")
   // The item waiting for its match: either column can go first.
@@ -526,6 +526,25 @@ export function MatchKata({
     const id = window.setTimeout(() => done.current?.(), PAIR_FLASH)
     return () => window.clearTimeout(id)
   }, [complete, locked])
+
+  // Number keys pick down a column, as taps do: 1 for the first item on the left, then, with one
+  // picked, 1 for the first item on the right to pair it with.
+  const pick = React.useRef<(n: number) => void>(() => {})
+  React.useEffect(() => {
+    if (locked) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.repeat) return
+      const el = e.target as HTMLElement | null
+      if (keyScope && !keyScope.current?.contains(el)) return
+      if (shortcutBlocked(e)) return
+      const n = Number(e.key)
+      if (!Number.isInteger(n) || n < 1 || n > 9) return
+      e.preventDefault()
+      pick.current(n - 1)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [locked, keyScope])
 
   if (kata.type !== "match" || answer.kind !== "pairs") return null
   const links = answer.links
@@ -558,6 +577,13 @@ export function MatchKata({
     setArmed(isArmed(side, index) ? null : { side, index })
   }
 
+  pick.current = (n) => {
+    if (armed?.side === "left") {
+      const j = rightOrder[n]
+      if (j !== undefined && !matchedRight.has(j)) press("right", j)
+    } else if (n < kata.pairs.length && !(n in links)) press("left", n)
+  }
+
   /** The tile's look: its check mark, the pair it's flashing in, matched, or waiting. */
   const statusOf = (side: "L" | "R", index: number) =>
     marks[`${side}${index}`] ??
@@ -583,6 +609,8 @@ export function MatchKata({
         onChange={() => press(side, index)}
         isDisabled={locked || matched}
         data-status={status}
+        // A matched pair never comes apart on Enter.
+        data-enter={matched ? "main" : undefined}
         lang={lang}
         className={cn(
           settled
@@ -759,6 +787,8 @@ export function BlankKata({
               aria-label={value || t.emptyGap}
               isSelected={waiting}
               onChange={() => (value ? unplace(id) : setActive(id))}
+              // Enter on a filled gap checks the answer rather than taking its word out (Space still does).
+              data-enter={value ? "main" : undefined}
               isDisabled={locked}
               className={cn(
                 // A line the word lands on, as wide as the longest word.

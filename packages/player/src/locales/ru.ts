@@ -232,7 +232,7 @@ export const ru: Translation = {
   },
   shortcuts: "Горячие клавиши",
   shortcutMain: "Продолжить",
-  shortcutPick: "Выбрать ответ",
+  shortcutPick: "Выбрать ответ, слово или элемент",
   shortcutOrder: "Переместить элемент выше или ниже",
   shortcutSort: "Переместить элемент в другую группу",
   shortcutUnsort: "Убрать элемент из группы",

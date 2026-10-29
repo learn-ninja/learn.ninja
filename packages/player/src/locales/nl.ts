@@ -221,7 +221,7 @@ export const nl: Translation = {
   },
   shortcuts: "Sneltoetsen",
   shortcutMain: "Doorgaan",
-  shortcutPick: "Antwoord kiezen",
+  shortcutPick: "Antwoord, woord of item kiezen",
   shortcutOrder: "Geplaatst item omhoog of omlaag zetten",
   shortcutSort: "Item naar een andere groep verplaatsen",
   shortcutUnsort: "Item uit de groep halen",

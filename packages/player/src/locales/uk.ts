@@ -232,7 +232,7 @@ export const uk: Translation = {
   },
   shortcuts: "Гарячі клавіші",
   shortcutMain: "Далі",
-  shortcutPick: "Вибрати відповідь",
+  shortcutPick: "Вибрати відповідь, слово або елемент",
   shortcutOrder: "Перемістити елемент вище або нижче",
   shortcutSort: "Перемістити елемент в іншу групу",
   shortcutUnsort: "Прибрати елемент із групи",

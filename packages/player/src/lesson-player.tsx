@@ -66,7 +66,7 @@ import {
   Note,
   OptionsKata,
 } from "./katas"
-import { shortcutBlocked } from "./keys"
+import { enterTarget, shortcutBlocked } from "./keys"
 import { BRAND } from "./logo"
 import { OrderKata } from "./order"
 import { SortKata } from "./sort"
@@ -335,6 +335,9 @@ function LessonInLanguage({
             // Hidden while the resume script (in Player) has marked it before hydration: see
             // progress.ts. React must not report that mark as a mismatch.
             suppressHydrationWarning
+            // The site's own D (the theme, while developing) stays off while a lesson is on the page,
+            // unless it's a demo that only takes keys from inside itself.
+            data-lesson-player={scopeKeys ? undefined : ""}
             className="flex h-full min-h-0 flex-col bg-background text-foreground data-resuming:invisible"
           >
             <Player
@@ -874,6 +877,10 @@ function Player({
       scrollRef.current?.focus({ preventScroll: true })
     shownIndex.current = state.index
   }, [state.index])
+  const focusLesson = React.useCallback(
+    () => scrollRef.current?.focus({ preventScroll: true }),
+    []
+  )
   // The clock starts when the learner leaves the title screen and stops at the wrap-up.
   const [clock, setClock] = React.useState<{ start?: number; end?: number }>({})
   React.useEffect(() => {
@@ -1231,6 +1238,8 @@ function Player({
                 >
                   <div
                     data-text-size={textSize}
+                    // The screen's own controls, which keep their Enter (enterTarget in keys.ts).
+                    data-player-content
                     className="flex flex-col gap-6"
                   >
                     {onStreak ? (
@@ -1288,6 +1297,7 @@ function Player({
                     }
                     onRewind={rewind}
                     rewinding={rewinding}
+                    onFocusLost={focusLesson}
                     why={
                       canWhy
                         ? {
@@ -2056,6 +2066,7 @@ export function ActionArea({
   brief = null,
   onRewind,
   rewinding = false,
+  onFocusLost,
 }: {
   lesson: Lesson
   item: Item
@@ -2098,6 +2109,8 @@ export function ActionArea({
   onRewind?: () => void
   /** The rewind is playing: the bubble fades and the buttons wait. */
   rewinding?: boolean
+  /** Feedback appeared with no main button to focus (the tray is hidden): put focus somewhere useful. */
+  onFocusLost?: () => void
 }) {
   const { t, keyScope, lang = "en" } = usePlayer()
   const ownPicker = React.useMemo(
@@ -2298,7 +2311,8 @@ export function ActionArea({
     state.question !== null &&
     explanationShown(state.question, item.role)
 
-  // Enter runs the main action, including while an answer option has focus (Space still toggles it).
+  // Enter runs the main action wherever focus is, so a click on Sound, the notch, or a menu doesn't
+  // leave Enter pressing that control again (see enterTarget). Space still presses the focused one.
   const run = React.useRef<typeof primary | null>(primary)
   run.current = actionless ? null : primary
   React.useEffect(() => {
@@ -2307,15 +2321,17 @@ export function ActionArea({
       if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
       const target = e.target as HTMLElement | null
       if (keyScope && !keyScope.current?.contains(target)) return
-      const onOption = target?.closest("[data-slot=selectable]")
-      if (
-        !onOption &&
-        target?.closest(
-          "button, a, input, textarea, select, [role=grid], [role=menu], [role=dialog], [contenteditable=true]"
-        )
-      )
+      const to = enterTarget(e, primaryRef.current)
+      if (to === "own") return
+      // Before the main action is ready, a control that would undo (data-enter=main) still keeps it.
+      if (!run.current || run.current.isDisabled) {
+        if (to === "hold") {
+          e.preventDefault()
+          e.stopPropagation()
+        }
         return
-      if (!run.current || run.current.isDisabled) return
+      }
+      // In the capture phase, so React Aria's own press on the focused control never fires too.
       e.preventDefault()
       e.stopPropagation()
       run.current.onPress()
@@ -2324,15 +2340,20 @@ export function ActionArea({
     return () => window.removeEventListener("keydown", onKey, { capture: true })
   }, [keyScope])
 
-  // Once feedback appears, focus moves to its button (Continue or Try again). Not on mount: a demo
-  // that loads already checked must not pull the page to itself.
+  // Once feedback appears, focus moves to its button (Continue or Try again), or to the lesson itself
+  // when the tray is hidden (D), so it doesn't fall to the page. Not on mount: a demo that loads
+  // already checked must not pull the page to itself.
   const primaryRef = React.useRef<HTMLButtonElement>(null)
   const hadFeedback = React.useRef(Boolean(title))
   React.useEffect(() => {
     const has = Boolean(title)
-    if (has && !hadFeedback.current) primaryRef.current?.focus()
+    if (has && !hadFeedback.current) {
+      const button = primaryRef.current
+      if (button && button.closest("[inert]") === null) button.focus()
+      else onFocusLost?.()
+    }
     hadFeedback.current = has
-  }, [title])
+  }, [title, onFocusLost])
 
   // How much taller the bubble stands than the room the screen leaves for it (pb-40, 160px).
   const [bubbleEl, setBubbleEl] = React.useState<HTMLDivElement | null>(null)

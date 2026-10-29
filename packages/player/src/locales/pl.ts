@@ -230,7 +230,7 @@ export const pl: Translation = {
   },
   shortcuts: "Skróty klawiszowe",
   shortcutMain: "Dalej",
-  shortcutPick: "Wybierz odpowiedź",
+  shortcutPick: "Wybierz odpowiedź, słowo lub element",
   shortcutOrder: "Przesuń umieszczony element w górę lub w dół",
   shortcutSort: "Przenieś element do innej grupy",
   shortcutUnsort: "Wyjmij element z grupy",

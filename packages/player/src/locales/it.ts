@@ -226,7 +226,7 @@ export const it: Translation = {
   },
   shortcuts: "Scorciatoie da tastiera",
   shortcutMain: "Continua",
-  shortcutPick: "Scegli risposta",
+  shortcutPick: "Scegli risposta, parola o elemento",
   shortcutOrder: "Spostare su o giù un elemento posizionato",
   shortcutSort: "Spostare un elemento tra i gruppi",
   shortcutUnsort: "Togliere un elemento dal gruppo",

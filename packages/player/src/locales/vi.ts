@@ -209,7 +209,7 @@ export const vi: Translation = {
   },
   shortcuts: "Phím tắt",
   shortcutMain: "Tiếp tục",
-  shortcutPick: "Chọn đáp án",
+  shortcutPick: "Chọn đáp án, từ hoặc mục",
   shortcutOrder: "Đưa mục đã đặt lên hoặc xuống",
   shortcutSort: "Chuyển mục sang nhóm khác",
   shortcutUnsort: "Bỏ mục ra khỏi nhóm",

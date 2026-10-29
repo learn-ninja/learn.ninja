@@ -222,7 +222,7 @@ export const ar: Translation = {
   },
   shortcuts: "اختصارات لوحة المفاتيح",
   shortcutMain: "متابعة",
-  shortcutPick: "اختيار إجابة",
+  shortcutPick: "اختيار إجابة أو كلمة أو عنصر",
   shortcutOrder: "تحريك عنصر موضوع لأعلى أو لأسفل",
   shortcutSort: "نقل عنصر بين المجموعات",
   shortcutUnsort: "إخراج عنصر من مجموعته",

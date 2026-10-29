@@ -219,7 +219,7 @@ export const es: Translation = {
   },
   shortcuts: "Atajos de teclado",
   shortcutMain: "Continuar",
-  shortcutPick: "Elegir respuesta",
+  shortcutPick: "Elegir respuesta, palabra o elemento",
   shortcutOrder: "Subir o bajar un elemento colocado",
   shortcutSort: "Mover un elemento entre grupos",
   shortcutUnsort: "Sacar un elemento de su grupo",

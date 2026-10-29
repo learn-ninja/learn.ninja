@@ -226,7 +226,7 @@ export const fr: Translation = {
   },
   shortcuts: "Raccourcis clavier",
   shortcutMain: "Continuer",
-  shortcutPick: "Répondre",
+  shortcutPick: "Choisir une réponse, un mot ou un élément",
   shortcutOrder: "Monter ou descendre un élément placé",
   shortcutSort: "Déplacer un élément entre les groupes",
   shortcutUnsort: "Retirer un élément de son groupe",

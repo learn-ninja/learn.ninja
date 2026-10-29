@@ -211,7 +211,7 @@ export const id: Translation = {
   },
   shortcuts: "Pintasan keyboard",
   shortcutMain: "Lanjut",
-  shortcutPick: "Pilih jawaban",
+  shortcutPick: "Pilih jawaban, kata, atau item",
   shortcutOrder: "Geser item yang sudah ditempatkan ke atas atau bawah",
   shortcutSort: "Pindahkan item antarkelompok",
   shortcutUnsort: "Keluarkan item dari kelompoknya",

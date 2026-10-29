@@ -207,7 +207,7 @@ export const th: Translation = {
   },
   shortcuts: "แป้นพิมพ์ลัด",
   shortcutMain: "ต่อไป",
-  shortcutPick: "เลือกคำตอบ",
+  shortcutPick: "เลือกคำตอบ คำ หรือรายการ",
   shortcutOrder: "เลื่อนรายการที่วางแล้วขึ้นหรือลง",
   shortcutSort: "ย้ายรายการไปกลุ่มอื่น",
   shortcutUnsort: "นำรายการออกจากกลุ่ม",

@@ -103,7 +103,11 @@ function Demo({
               item.kind === "question" && actions && "pb-28"
             )}
           >
-            <div data-text-size={textSize} className="flex flex-col gap-6">
+            <div
+              data-text-size={textSize}
+              data-player-content
+              className="flex flex-col gap-6"
+            >
               <Screen
                 lesson={lesson}
                 item={item}

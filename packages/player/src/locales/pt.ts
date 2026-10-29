@@ -223,7 +223,7 @@ export const pt: Translation = {
   },
   shortcuts: "Atalhos de teclado",
   shortcutMain: "Continuar",
-  shortcutPick: "Escolher resposta",
+  shortcutPick: "Escolher resposta, palavra ou item",
   shortcutOrder: "Subir ou descer um item colocado",
   shortcutSort: "Mover um item entre grupos",
   shortcutUnsort: "Tirar um item do grupo",

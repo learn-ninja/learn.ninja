@@ -200,7 +200,7 @@ export const zh: Translation = {
   },
   shortcuts: "键盘快捷键",
   shortcutMain: "继续",
-  shortcutPick: "选择答案",
+  shortcutPick: "选择答案、词语或项目",
   shortcutOrder: "把已放好的项上移或下移",
   shortcutSort: "把一项移到其他分组",
   shortcutUnsort: "把一项移出分组",

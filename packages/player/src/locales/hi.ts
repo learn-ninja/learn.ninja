@@ -217,7 +217,7 @@ export const hi: Translation = {
   },
   shortcuts: "कीबोर्ड शॉर्टकट",
   shortcutMain: "आगे बढ़ें",
-  shortcutPick: "उत्तर चुनें",
+  shortcutPick: "उत्तर, शब्द या आइटम चुनें",
   shortcutOrder: "रखे गए आइटम को ऊपर या नीचे ले जाएँ",
   shortcutSort: "आइटम को दूसरे समूह में ले जाएँ",
   shortcutUnsort: "आइटम को समूह से निकालें",

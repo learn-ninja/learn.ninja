@@ -223,7 +223,7 @@ export const en: Strings = {
   },
   shortcuts: "Keyboard shortcuts",
   shortcutMain: "Continue",
-  shortcutPick: "Pick answer",
+  shortcutPick: "Pick an answer, word, or item",
   shortcutOrder: "Move a placed item up or down",
   shortcutSort: "Move an item between groups",
   shortcutUnsort: "Take an item out of its group",
