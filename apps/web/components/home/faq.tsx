@@ -4,8 +4,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@workspace/ui/components/accordion"
+import { Separator } from "@workspace/ui/components/separator"
 
-import { LogoDivider } from "@/components/site/logo-divider"
 import { FAQ } from "@/lib/faq"
 
 export function Faq() {
@@ -14,7 +14,7 @@ export function Faq() {
       id="faq"
       className="mx-auto flex w-full max-w-3xl scroll-mt-20 flex-col gap-20 px-4 pb-20 sm:gap-28 sm:px-6 sm:pb-28"
     >
-      <LogoDivider />
+      <Separator />
       <div className="flex flex-col gap-10">
         <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           FAQ
