@@ -23,6 +23,7 @@ import {
   liveViewCounts,
   deleteLesson,
   likeLesson,
+  recordProgress,
   recordView,
   renameLesson,
   reportLesson,
@@ -35,6 +36,7 @@ import {
   activityDays,
   authorOf,
   completedAt,
+  lessonsInProgress,
   lessonsLikedBy,
   lessonsOwnedBy,
   likedIds,
@@ -47,7 +49,7 @@ import { backfillTags, formatBackfill } from "./backfill"
 import { formatTagReport, tagReport } from "./tag-report"
 
 // Explore over an in-memory Postgres: what gets listed, how the tabs sort, likes, visibility,
-// completions, reports, and views.
+// completions, progress, reports, and views.
 
 const example = (file: string) =>
   readFileSync(new URL(`../../../../examples/${file}`, import.meta.url), "utf8")
@@ -350,9 +352,18 @@ describe("completions", () => {
     const b = await published("ada", { visibility: "public" })
     // 06:30 UTC on 2026-10-23 is still the 22nd in Los Angeles.
     now = Date.UTC(2026, 9, 23, 6, 30)
-    await completeLesson({ id: a, userId: "bob", tz: "America/Los_Angeles" }, deps)
-    await completeLesson({ id: a, userId: "bob", tz: "America/Los_Angeles" }, deps)
-    await completeLesson({ id: b, userId: "bob", tz: "America/Los_Angeles" }, deps)
+    await completeLesson(
+      { id: a, userId: "bob", tz: "America/Los_Angeles" },
+      deps
+    )
+    await completeLesson(
+      { id: a, userId: "bob", tz: "America/Los_Angeles" },
+      deps
+    )
+    await completeLesson(
+      { id: b, userId: "bob", tz: "America/Los_Angeles" },
+      deps
+    )
     expect(await activityDays(db, "bob")).toEqual([
       { day: "2026-10-22", lessons: 2 },
     ])
@@ -373,6 +384,71 @@ describe("completions", () => {
     expect(
       await completeLesson({ id: "nope1234", userId: "bob" }, deps)
     ).toMatchObject({ status: 404, body: { error: "not_found" } })
+  })
+})
+
+describe("progress", () => {
+  const progressOf = async (userId: string) =>
+    (await lessonsInProgress(db, userId)).map((l) => [l.id, l.progress])
+
+  it("lists the lessons a learner left midway, most recent first", async () => {
+    const a = await published("ada", { visibility: "public" })
+    const b = await published("ada", { visibility: "unlisted" })
+    await recordProgress({ id: a, userId: "bob", done: 2, total: 9 }, deps)
+    now += 1000
+    await recordProgress({ id: b, userId: "bob", done: 1, total: 9 }, deps)
+    expect(await progressOf("bob")).toEqual([
+      [b, { done: 1, total: 9 }],
+      [a, { done: 2, total: 9 }],
+    ])
+    // Moving on updates the row and brings it to the top.
+    now += 1000
+    await recordProgress({ id: a, userId: "bob", done: 5, total: 9 }, deps)
+    expect(await progressOf("bob")).toEqual([
+      [a, { done: 5, total: 9 }],
+      [b, { done: 1, total: 9 }],
+    ])
+    expect(await progressOf("ada")).toEqual([])
+  })
+
+  it("drops a lesson once it's finished, and counts a replay again", async () => {
+    const id = await published("ada", { visibility: "public" })
+    await recordProgress({ id, userId: "bob", done: 3, total: 9 }, deps)
+    await completeLesson({ id, userId: "bob" }, deps)
+    expect(await progressOf("bob")).toEqual([])
+    await recordProgress({ id, userId: "bob", done: 1, total: 9 }, deps)
+    expect(await progressOf("bob")).toEqual([[id, { done: 1, total: 9 }]])
+  })
+
+  it("ignores the first kata and refuses nonsense", async () => {
+    const id = await published("ada", { visibility: "public" })
+    expect(
+      await recordProgress({ id, userId: "bob", done: 0, total: 9 }, deps)
+    ).toMatchObject({ status: 200, body: { recorded: false } })
+    for (const [done, total] of [
+      [9, 9],
+      [-1, 9],
+      [1.5, 9],
+      ["2", 9],
+      [1, 5000],
+    ])
+      expect(
+        await recordProgress({ id, userId: "bob", done, total }, deps)
+      ).toMatchObject({ status: 400 })
+    expect(
+      await recordProgress(
+        { id: "nope1234", userId: "bob", done: 1, total: 9 },
+        deps
+      )
+    ).toMatchObject({ status: 404 })
+    expect(await progressOf("bob")).toEqual([])
+  })
+
+  it("forgets deleted lessons", async () => {
+    const id = await published("ada", { visibility: "public" })
+    await recordProgress({ id, userId: "bob", done: 2, total: 9 }, deps)
+    await deleteLesson({ id, userId: "ada" }, deps)
+    expect(await progressOf("bob")).toEqual([])
   })
 })
 

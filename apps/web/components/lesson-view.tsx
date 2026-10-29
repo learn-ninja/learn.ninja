@@ -38,7 +38,10 @@ export interface LessonViewProps extends LessonPlayerProps {
   canReport?: boolean
   /** When the viewer owns the lesson: how it's listed, with a way to their profile's list once they have a handle. */
   owner?: { visibility: Visibility; hidden: boolean; handle: string | null }
-  /** Record finishing the lesson to the viewer's account (logged in only), for the check on Explore. */
+  /**
+   * Record finishing the lesson, and how far the viewer gets before that, to their account (logged in
+   * only): the check on Explore and their profile's In progress tab.
+   */
   recordCompletion?: boolean
   /** The lesson's likes and the viewer's, for the heart on the wrap-up; logged out, it offers `loginHref`. */
   likes?: { likes: number; liked: boolean; signedIn: boolean }
@@ -51,7 +54,7 @@ export interface LessonViewProps extends LessonPlayerProps {
  * pass `uiLanguage` (the prerendered /lessons pages) still honors ?ui=, read after mounting, the
  * same moment the player loads saved preferences, so the page can stay static. Published lessons
  * add the site's own items to the lesson menu: a report, or the owner's listing status, tell the
- * server when a logged-in viewer reaches the wrap-up, and give the wrap-up its heart.
+ * server how far a logged-in viewer gets and when they reach the wrap-up, and give the wrap-up its heart.
  */
 export function LessonView({
   lessonId,
@@ -75,6 +78,8 @@ export function LessonView({
   const [url, setUrl] = React.useState("")
   // A challenge in the link: the server reads it for /l/ pages; prerendered pages read it here.
   const [linkChallenge, setLinkChallenge] = React.useState<Challenge>()
+  // The last progress sent, which the finish waits for.
+  const sentProgress = React.useRef<Promise<unknown>>(Promise.resolve())
   React.useEffect(() => {
     setMounted(true)
     setUrl(window.location.origin + window.location.pathname)
@@ -185,18 +190,36 @@ export function LessonView({
               }
             : undefined
         }
+        onProgress={
+          lessonId && recordCompletion
+            ? (progress) => {
+                sentProgress.current = fetch(
+                  `/api/lessons/${lessonId}/progress`,
+                  {
+                    method: "PUT",
+                    keepalive: true,
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify(progress),
+                  }
+                ).catch(() => {})
+              }
+            : undefined
+        }
         onComplete={
           lessonId && recordCompletion
             ? () => {
-                fetch(`/api/lessons/${lessonId}/complete`, {
-                  method: "POST",
-                  keepalive: true,
-                  headers: { "content-type": "application/json" },
-                  // The day this counts for on the profile is the learner's, not UTC's.
-                  body: JSON.stringify({
-                    tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                  }),
-                }).catch(() => {})
+                // After the last progress lands, or that would mark the lesson in progress again.
+                void sentProgress.current.then(() =>
+                  fetch(`/api/lessons/${lessonId}/complete`, {
+                    method: "POST",
+                    keepalive: true,
+                    headers: { "content-type": "application/json" },
+                    // The day this counts for on the profile is the learner's, not UTC's.
+                    body: JSON.stringify({
+                      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    }),
+                  }).catch(() => {})
+                )
               }
             : undefined
         }

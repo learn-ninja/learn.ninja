@@ -25,6 +25,8 @@ export interface Viewer {
   liked: ReadonlySet<string>
   /** When the viewer first finished each lesson they've finished, as lesson id → ms since epoch. */
   completed?: ReadonlyMap<string, number>
+  /** How far the viewer got in each lesson they left midway, from their account: id → katas done of all. */
+  progress?: ReadonlyMap<string, { done: number; total: number }>
   /** The viewer's user id, so their own rows get the menu to unpublish, rename, or delete them. */
   userId?: string
 }
@@ -41,7 +43,7 @@ const ROW_LINK =
  * end, so the ages line up as a column down the feed. Then the title, up to two lines of summary,
  * and one meta line with the lesson's length and level, and the views and likes at its end. The
  * length gives way to the viewer's own state: Done with a green check once they've finished it, or
- * the minutes left beside an amber pie when this browser holds their progress. Neither the subject
+ * the minutes left beside an amber pie when their account or this browser holds their progress. Neither the subject
  * nor the tags are shown: the subject is for filters, and tags stay hidden until they're governed
  * well enough to read as labels (plans/subjects-and-tags.md). The whole row opens the lesson; the
  * author, the agent, the check, the progress, and the heart are their own targets. Rows sit
@@ -65,7 +67,9 @@ export function LessonRow({
   className?: string
 }) {
   const href = lessonPath(lesson.slug, lesson.id)
-  const completedAt = viewer?.completed?.get(lesson.id)
+  const progress = viewer?.progress?.get(lesson.id)
+  // A replay in progress shows how far it's got rather than the earlier finish.
+  const completedAt = progress ? undefined : viewer?.completed?.get(lesson.id)
   const author = lesson.author
   const mine = viewer?.userId !== undefined && author?.id === viewer.userId
   const badge = !mine
@@ -110,6 +114,7 @@ export function LessonRow({
         key="time"
         minutes={lesson.minutes}
         progressKey={href.slice(1)}
+        saved={progress}
         className="relative z-10"
       />
     ),

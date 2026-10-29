@@ -451,7 +451,16 @@ export const Report: Story = {
 export const OwnProfileTabs: Story = {
   name: "Profile tabs (own profile)",
   render: () => {
-    const own = { ...signedIn, userId: "ada" }
+    // Partway through two lessons, as the account has it (no browser progress needed).
+    const started = [LESSONS[3]!, LESSONS[4]!]
+    const own = {
+      ...signedIn,
+      userId: "ada",
+      progress: new Map([
+        [started[0]!.id, { done: 4, total: 9 }],
+        [started[1]!.id, { done: 1, total: 7 }],
+      ]),
+    }
     const author = LESSONS[0]!.author
     const lessons: LessonSummary[] = [
       LESSONS[0]!,
@@ -478,6 +487,10 @@ export const OwnProfileTabs: Story = {
               label: "My lessons",
               count: lessons.length,
               panel: <LessonFeed lessons={lessons} viewer={own} />,
+            }}
+            inProgress={{
+              count: started.length,
+              panel: <LessonFeed lessons={started} viewer={own} />,
             }}
             likes={{
               count: 2,

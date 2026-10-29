@@ -4,6 +4,7 @@ import {
   activityDay,
   completion,
   lesson,
+  lessonProgress,
   like,
   report,
   type Db,
@@ -21,7 +22,7 @@ import type { ReportSender } from "./report-email"
 
 export { REASON_MAX, TITLE_MAX }
 
-// The API behind likes, completions, visibility, reports, and views, independent of Next.js so it can be tested
+// The API behind likes, completions, progress, visibility, reports, and views, independent of Next.js so it can be tested
 // directly. Routes under app/api/lessons/[id]/ call these.
 
 export interface ExploreDeps {
@@ -163,6 +164,15 @@ export async function completeLesson(
       setWhere: sql`${completion.countedDay} is distinct from ${day}`,
     })
     .returning({ completedAt: completion.completedAt })
+  // Finished, so no longer in progress.
+  await deps.db
+    .delete(lessonProgress)
+    .where(
+      and(
+        eq(lessonProgress.userId, req.userId),
+        eq(lessonProgress.lessonId, found.id)
+      )
+    )
   if (counted.length) {
     await deps.db
       .insert(activityDay)
@@ -187,6 +197,55 @@ export async function completeLesson(
     status: 200,
     body: { ok: true, completedAt: row?.completedAt.toISOString() ?? null },
   }
+}
+
+/** The most katas a lesson's progress may name: well above any lesson the spec allows. */
+const PROGRESS_MAX = 200
+
+/**
+ * PUT /api/lessons/{id}/progress with { done, total }: the logged-in learner moved past a kata, for
+ * their profile's In progress tab. `done` counts the katas behind them, out of `total`; nothing
+ * behind them (still on the first) isn't progress yet, so it's ignored, and finishing deletes the
+ * row (completeLesson).
+ */
+export async function recordProgress(
+  req: { id: string; userId: string; done: unknown; total: unknown },
+  deps: ExploreDeps
+): Promise<Reply> {
+  const { done, total } = req
+  if (
+    !Number.isInteger(done) ||
+    !Number.isInteger(total) ||
+    (done as number) < 0 ||
+    (done as number) >= (total as number) ||
+    (total as number) > PROGRESS_MAX
+  ) {
+    return {
+      status: 400,
+      body: {
+        ok: false,
+        error: "bad_request",
+        message:
+          'Send { "done": n, "total": m } with whole numbers, done below total.',
+      },
+    }
+  }
+  const found = await liveLesson(deps, req.id)
+  if (!found) return NOT_FOUND
+  if (done === 0) return { status: 200, body: { ok: true, recorded: false } }
+  const values = {
+    done: done as number,
+    total: total as number,
+    updatedAt: new Date(deps.now?.() ?? Date.now()),
+  }
+  await deps.db
+    .insert(lessonProgress)
+    .values({ userId: req.userId, lessonId: found.id, ...values })
+    .onConflictDoUpdate({
+      target: [lessonProgress.userId, lessonProgress.lessonId],
+      set: values,
+    })
+  return { status: 200, body: { ok: true, recorded: true } }
 }
 
 /**
@@ -277,7 +336,7 @@ export async function renameLesson(
 }
 
 /**
- * DELETE /api/lessons/{id}: the owner deletes a lesson for good. Its likes, completions, tags,
+ * DELETE /api/lessons/{id}: the owner deletes a lesson for good. Its likes, completions, progress, tags,
  * and reports go with it (the foreign keys cascade), and its link stops working.
  */
 export async function deleteLesson(

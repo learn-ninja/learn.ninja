@@ -13,6 +13,7 @@ import { cachedProfile } from "@/lib/explore/cache"
 import {
   activityDays,
   completedAt,
+  lessonsInProgress,
   lessonsLikedBy,
   lessonsOwnedBy,
   likedIds,
@@ -23,7 +24,8 @@ import { SITE } from "@/lib/site"
 // A person's public lessons at /u/{handle}, with views and likes. Hidden and unlisted lessons
 // aren't here, nor is anything from an anonymous publish. On your own profile the tab is My
 // lessons and shows every lesson you own instead, with a Private or Hidden badge on the ones visitors don't
-// see. The Likes tab lists the listed lessons they liked, plus, on your own profile, liked lessons
+// see, and In progress follows it: the lessons you started and haven't finished, with how far you
+// got, most recently played first. The Likes tab lists the listed lessons they liked, plus, on your own profile, liked lessons
 // that have since gone unlisted. Above the tabs, in one box with them, a year of their learning
 // as a grid of days with their streaks (lib/activity/activity.ts), ending on the viewer's today. The
 // frame around the page is the (feed) layout's; loading.tsx beside this file stands in until the
@@ -55,14 +57,15 @@ export default async function ProfilePage({ params }: Props) {
   if (!profile) notFound()
   const own = actor?.userId === profile.id
   const db = await getDb()
-  const [owned, likedLessons, days] = await Promise.all([
+  const [owned, started, likedLessons, days] = await Promise.all([
     own ? lessonsOwnedBy(db, profile.id) : null,
+    own ? lessonsInProgress(db, profile.id) : null,
     lessonsLikedBy(db, profile.id, { listedOnly: !own }),
     activityDays(db, profile.id),
   ])
   const grid = buildGrid(days, localDay(new Date(), tz))
   const lessons = owned ?? profile.lessons
-  const ids = [...lessons, ...likedLessons].map((l) => l.id)
+  const ids = [...lessons, ...(started ?? []), ...likedLessons].map((l) => l.id)
   const [liked, completed] = actor
     ? await Promise.all([
         likedIds(db, actor!.userId, ids),
@@ -73,6 +76,10 @@ export default async function ProfilePage({ params }: Props) {
     signedIn: actor !== null,
     liked,
     completed,
+    // Your own progress, on every tab: a lesson you made or liked may be one you're partway through.
+    progress: started
+      ? new Map(started.map((l) => [l.id, l.progress]))
+      : undefined,
     userId: actor?.userId,
   }
   const joined = new Date(profile.joinedAt).toLocaleDateString("en", {
@@ -117,6 +124,20 @@ export default async function ProfilePage({ params }: Props) {
             </Empty>
           ),
         }}
+        inProgress={
+          started
+            ? {
+                count: started.length,
+                panel: started.length ? (
+                  <LessonFeed lessons={started} viewer={viewer} />
+                ) : (
+                  <Empty>
+                    Lessons you start show up here until you finish them.
+                  </Empty>
+                ),
+              }
+            : undefined
+        }
         likes={{
           count: likedLessons.length,
           panel: likedLessons.length ? (

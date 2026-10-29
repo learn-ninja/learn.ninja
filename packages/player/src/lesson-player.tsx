@@ -96,6 +96,7 @@ import {
 import { emptyPrepared, type Prepared } from "./prepared"
 import {
   browserStorage,
+  countProgress,
   fingerprint,
   loadProgress,
   resumeScript,
@@ -190,6 +191,11 @@ export interface LessonPlayerProps {
   /** Called when the learner reaches the wrap-up (not in demos), once per run through the lesson. */
   onComplete?: () => void
   /**
+   * Called as the learner moves on from a kata (not in demos), with the katas behind them out of all
+   * of them: what Explore's pie shows. Not on the intro or the wrap-up, and not twice for the same count.
+   */
+  onProgress?: (progress: { done: number; total: number }) => void
+  /**
    * The prompt the wrap-up's Keep learning box copies for the learner's agent: the kind of lesson
    * they picked, the topic in its field, and this lesson's title. Omit it to leave the box out.
    */
@@ -242,6 +248,7 @@ function LessonInLanguage({
   chrome = true,
   progressKey,
   onComplete,
+  onProgress,
   nextPrompt,
   challenge,
   challenger,
@@ -335,6 +342,7 @@ function LessonInLanguage({
               startAt={startAt}
               progressKey={progressKey}
               onComplete={onComplete}
+              onProgress={onProgress}
               onRename={(next) => {
                 setTitle(next)
                 onRename?.(next)
@@ -455,9 +463,7 @@ export function freshQuestion(
   if (!item || item.kind !== "question") return null
   const kata = item.kata
   const optionIds =
-    "options" in kata
-      ? (kata.options as { id: string }[]).map((o) => o.id)
-      : []
+    "options" in kata ? (kata.options as { id: string }[]).map((o) => o.id) : []
   return {
     answer: initialAnswer(kata, random),
     attempts: 0,
@@ -779,6 +785,7 @@ function Player({
   menuItems,
   progressKey,
   onComplete,
+  onProgress,
 }: {
   lesson: Lesson
   prefs: Preferences
@@ -802,6 +809,7 @@ function Player({
   menuItems?: React.ReactNode
   progressKey?: string
   onComplete?: () => void
+  onProgress?: (progress: { done: number; total: number }) => void
 }) {
   const { t, keyScope, lang = "en", streak } = usePlayer()
   const { textSize } = prefs
@@ -882,6 +890,21 @@ function Player({
   React.useEffect(() => {
     if (item.kind === "wrap" && !startAt) completeRef.current?.()
   }, [item.kind, state.run, startAt])
+  // And how far they've got, each time that changes mid-lesson.
+  const progressRef = React.useRef(onProgress)
+  React.useEffect(() => {
+    progressRef.current = onProgress
+  })
+  const sentDone = React.useRef<number>(undefined)
+  React.useEffect(() => {
+    if (startAt || item.kind === "intro" || item.kind === "wrap") return
+    const progress = countProgress(state.items, state.index)
+    if (progress.done === sentDone.current) return
+    sentDone.current = progress.done
+    progressRef.current?.(progress)
+    // The items only change along with the index or the run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.index, state.run, item.kind, startAt])
   // The streak screen comes first on the wrap-up when finishing lit today's lantern: once, since a
   // retry finishes on a day that's already lit.
   const [streakSeen, setStreakSeen] = React.useState(false)
@@ -1109,8 +1132,7 @@ function Player({
     [item.kind, lesson, state.results]
   )
   // He waits in his corner through the streak screen, then leaps up for the wrap-up.
-  const celebrate =
-    run && !onStreak ? run : undefined
+  const celebrate = run && !onStreak ? run : undefined
   const hydrated = useHydrated()
 
   return (
@@ -1743,10 +1765,7 @@ function QuestionScreen({
   }
   // How to answer, when the interaction isn't obvious: above the prompt, beside the screen's label.
   const helper = helperFor(kata, t)
-  const eyebrow = [
-    label,
-    helper && !kata.prompt.includes(helper) ? helper : "",
-  ]
+  const eyebrow = [label, helper && !kata.prompt.includes(helper) ? helper : ""]
     .filter(Boolean)
     .join(" · ")
   const best =

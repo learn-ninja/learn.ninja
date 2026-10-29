@@ -500,6 +500,32 @@ export const completion = pgTable(
 )
 
 /**
+ * A lesson the user left midway, with how far they got: their profile's In progress tab. The player
+ * sends it as the learner moves past each kata (logged in only); finishing the lesson deletes the
+ * row, and so does the lesson expiring or being deleted.
+ */
+export const lessonProgress = pgTable(
+  "lesson_progress",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    lessonId: text("lesson_id")
+      .notNull()
+      .references(() => lesson.id, { onDelete: "cascade" }),
+    /** The katas behind the learner (the hook, katas, and challenge; fix-round retries don't count). */
+    done: integer("done").notNull(),
+    /** All of them, so the row can draw the pie without loading the lesson. */
+    total: integer("total").notNull(),
+    updatedAt: time("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.lessonId] }),
+    index("lesson_progress_lesson_id_idx").on(t.lessonId),
+  ]
+)
+
+/**
  * One row per user per calendar day on which they finished a lesson, with how many (each lesson once
  * a day, replays included): what the profile's activity grid and streaks read. `day` is the day where the learner was
  * (the player sends their time zone), so a late evening doesn't land on tomorrow. Nothing here

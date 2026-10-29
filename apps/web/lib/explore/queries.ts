@@ -15,6 +15,7 @@ import {
   activityDay,
   completion,
   lesson,
+  lessonProgress,
   lessonTag,
   like,
   user,
@@ -413,6 +414,43 @@ export async function lessonsLikedBy(
     )
     .orderBy(desc(like.createdAt), desc(lesson.id))
   return rows.map(toSummary)
+}
+
+/** A lesson the user left midway, as a card, with how far they got. */
+export interface InProgress extends LessonSummary {
+  progress: { done: number; total: number }
+}
+
+/**
+ * The lessons the user started and hasn't finished, most recently played first: the In progress
+ * tab on their own profile. Expired lessons and ones hidden after a report drop out, as in Likes.
+ */
+export async function lessonsInProgress(
+  db: Db,
+  userId: string,
+  now = Date.now()
+): Promise<InProgress[]> {
+  const rows = await db
+    .select({
+      ...columns,
+      done: lessonProgress.done,
+      total: lessonProgress.total,
+    })
+    .from(lessonProgress)
+    .innerJoin(lesson, eq(lesson.id, lessonProgress.lessonId))
+    .leftJoin(user, eq(user.id, lesson.ownerId))
+    .where(
+      and(
+        eq(lessonProgress.userId, userId),
+        eq(lesson.hidden, false),
+        live(now)
+      )
+    )
+    .orderBy(desc(lessonProgress.updatedAt), desc(lesson.id))
+  return rows.map((row) => ({
+    ...toSummary(row),
+    progress: { done: row.done, total: row.total },
+  }))
 }
 
 /** A lesson owner's public name, for the lesson page. */

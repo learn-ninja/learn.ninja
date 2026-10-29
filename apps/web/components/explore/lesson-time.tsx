@@ -12,27 +12,31 @@ const t = stringsFor("en")
 /**
  * A lesson's length on its row, or, for a lesson the viewer left midway, the minutes left beside
  * an amber pie filled to the share of katas behind them, with the count on hover or focus.
- * CompletedCheck takes its place once the lesson is finished. Progress lives only in this browser
- * (the player saves it under the lesson's path), so it's read after hydration and the server
- * renders the length.
+ * CompletedCheck takes its place once the lesson is finished. The server knows a logged-in
+ * viewer's progress (`saved`); this browser's (the player saves it under the lesson's path) is
+ * read after hydration and wins, being at least as fresh. Without either the row shows the length.
  */
 export function LessonTime({
   minutes,
   progressKey,
+  saved = null,
   className,
 }: {
   minutes: number
   /** The player's progress key: the lesson's path without the leading slash. */
   progressKey: string
+  /** The viewer's progress as their account has it, if they're logged in and left it midway. */
+  saved?: { done: number; total: number } | null
   className?: string
 }) {
   const [progress, setProgress] = React.useState<{
     done: number
     total: number
-  } | null>(null)
+  } | null>(saved)
   React.useEffect(() => {
     try {
-      setProgress(savedProgress(localStorage, progressKey))
+      const local = savedProgress(localStorage, progressKey)
+      if (local) setProgress(local)
     } catch {
       // Storage is blocked: the length stays.
     }

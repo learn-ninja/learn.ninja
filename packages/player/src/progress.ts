@@ -221,7 +221,8 @@ export function savedProgress(
   }
 }
 
-function countProgress(
+/** The katas behind the learner at `index` (fix-round retries don't count), out of all of them. */
+export function countProgress(
   items: Item[],
   index: number
 ): { done: number; total: number } {
