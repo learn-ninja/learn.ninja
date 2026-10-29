@@ -40,10 +40,9 @@ export function enterTarget(
   if (target.closest("a[href]")) return "own"
   if (main?.contains(target)) return "own"
   if (target.closest("[data-slot=selectable]")) return "main"
-  // The kata's own controls; the header, the tray's settings, and the footer are chrome, not these.
-  const control = target.closest(
-    "button, [role=button], [role=radio], [role=grid]"
-  )
+  // The kata's own buttons; the header, the tray's settings, and the footer are chrome, not these.
+  // Not a sort row (a radio group): its keys are the arrows and numbers, so Enter checks the answer.
+  const control = target.closest("button, [role=button], [role=grid]")
   if (control?.closest("[data-player-content]")) return "own"
   return "main"
 }

@@ -167,6 +167,23 @@ describe("Enter in the order kata", () => {
   })
 })
 
+describe("Enter in the sort kata", () => {
+  it("checks the answer from a focused row once everything is sorted", async () => {
+    await play(buttons, "p3")
+    const rows = [...document.querySelectorAll("[role=radiogroup]")]
+    expect(rows.length).toBeGreaterThan(0)
+    for (const row of rows) {
+      focus(row.querySelector("[role=radio]"))
+      await key("1")
+    }
+    // Focus stays on a row (a radio): Enter checks rather than going to the radio.
+    expect(document.activeElement?.getAttribute("role")).toBe("radio")
+    expect(feedback()).toBeNull()
+    await key("Enter")
+    expect(feedback()).not.toBeNull()
+  })
+})
+
 describe("Enter in the blank kata", () => {
   const gaps = () =>
     [
