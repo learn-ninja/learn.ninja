@@ -150,13 +150,25 @@
     },
     {
       "id": "p6",
-      "type": "hotspot",
-      "prompt": "Tap the line that's an implementation detail, not a requirement.",
-      "visual": {
-        "kind": "html",
-        "html": "<ul class='space-y-2 text-sm'><li data-hotspot='rerun' class='p-2 rounded border'>Users can rerun a saved search in one click</li><li data-hotspot='cache' class='p-2 rounded border'>Store saved searches in a Redis cache</li><li data-hotspot='sync' class='p-2 rounded border'>Saved searches appear on every device</li></ul>"
-      },
-      "correct": ["cache"],
+      "type": "choice",
+      "prompt": "Which of these is an implementation detail, not a requirement?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Users can rerun a saved search in one click",
+          "feedback": "That's a requirement: it says what users can do, and leaves how to build it open."
+        },
+        {
+          "id": "b",
+          "text": "Store saved searches in a Redis cache"
+        },
+        {
+          "id": "c",
+          "text": "Saved searches appear on every device",
+          "feedback": "That's a requirement: it describes what users see. How the devices stay in sync is up to engineers."
+        }
+      ],
+      "correct": ["b"],
       "multiple": false,
       "explanation": "Where data is stored is an engineering decision. The requirement is what users experience."
     }

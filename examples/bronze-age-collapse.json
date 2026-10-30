@@ -179,13 +179,30 @@
     },
     {
       "id": "p4",
-      "type": "hotspot",
-      "prompt": "A site report for a hypothetical Late Bronze Age town. Tap the inference the evidence doesn't support.",
+      "type": "choice",
+      "prompt": "A site report for a hypothetical Late Bronze Age town. Which inference doesn't the evidence support?",
       "visual": {
         "kind": "html",
-        "html": "<div class='card max-w-md mx-auto'><header><h2>Site report</h2><p>Hypothetical Late Bronze Age town, destruction phase</p></header><section><ol class='flex flex-col gap-2 text-sm'><li data-hotspot='ash' aria-label='A thick ash layer seals the palace floors.' class='rounded-md border bg-background p-2'>A thick ash layer seals the palace floors.</li><li data-hotspot='arrows' aria-label='Bronze arrowheads are embedded in the outer wall.' class='rounded-md border bg-background p-2'>Bronze arrowheads are embedded in the outer wall.</li><li data-hotspot='fighting' aria-label='The arrowheads show the town saw fighting.' class='rounded-md border bg-background p-2'>The arrowheads show the town saw fighting.</li><li data-hotspot='walls' aria-label='Two skeletons under fallen masonry show the attackers brought the walls down on residents.' class='rounded-md border bg-background p-2'>Two skeletons under fallen masonry show the attackers brought the walls down on residents.</li><li data-hotspot='pottery' aria-label='Local-style pottery above the ash suggests survivors or neighbours reoccupied the site.' class='rounded-md border bg-background p-2'>Local-style pottery above the ash suggests survivors or neighbours reoccupied the site.</li></ol></section></div>"
+        "html": "<div class='card max-w-md mx-auto'><header><h2>Site report</h2><p>Hypothetical Late Bronze Age town, destruction phase</p></header><section><ol class='flex flex-col gap-2 text-sm'><li class='rounded-md border bg-background p-2'>A thick ash layer seals the palace floors.</li><li class='rounded-md border bg-background p-2'>Bronze arrowheads are embedded in the outer wall.</li><li class='rounded-md border bg-background p-2'>Two skeletons lie under fallen masonry.</li><li class='rounded-md border bg-background p-2'>Local-style pottery sits above the ash.</li></ol></section></div>",
+        "alt": "A site report listing four finds: an ash layer on the palace floors, bronze arrowheads in the outer wall, two skeletons under fallen masonry, and local-style pottery above the ash."
       },
-      "correct": ["walls"],
+      "options": [
+        {
+          "id": "a",
+          "text": "The arrowheads show the town saw fighting.",
+          "feedback": "This one holds. Arrowheads lodged in a wall mean fighting, even if they can't say when or who won."
+        },
+        {
+          "id": "b",
+          "text": "The skeletons show the attackers brought the walls down on residents."
+        },
+        {
+          "id": "c",
+          "text": "The pottery suggests survivors or neighbours reoccupied the site.",
+          "feedback": "This one holds. Local-style pots above the ash point to people returning, and \"suggests\" claims no more than that."
+        }
+      ],
+      "correct": ["b"],
       "multiple": false,
       "explanation": "Bodies under fallen masonry are what earthquakes leave, and nothing ties the arrowheads to the collapse. Fighting then a quake, or a quake then raiders, both fit."
     },

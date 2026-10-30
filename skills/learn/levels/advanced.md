@@ -20,7 +20,7 @@ A claim most advanced learners accept that the evidence complicates, or two acco
 ## Questions
 
 - Ask the learner to analyse and evaluate: which explanation does this evidence support, where is the flaw in this argument, what does this case rule out, which of two accounts is stronger and why.
-- Natural katas: `compare` of two real arguments; `hotspot` for the weak step in an argument, chart, or code; `scenario` where no option is clean; `choice` with `multiple: true` when several claims hold; `sort` by what the evidence supports.
+- Natural katas: `compare` of two real arguments; `hotspot` for the weak step in a worked solution, chart, or code; `scenario` where no option is clean; `choice` with `multiple: true` when several claims hold; `sort` by what the evidence supports.
 - Wrong options are defensible but weaker: the popular explanation the evidence undercuts, a true statement that doesn't answer the question, a conclusion that overreaches. Feedback says what the option gets right and where it stops holding.
 - Hints are sparse: one or two at most, pointing at the frame ("what would this evidence look like under the other account?"), never at a step.
 

@@ -38,7 +38,7 @@ Each question kata should ask the learner to do what they'd really do with this 
 | ---------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `choice`   | Pick the right answer, cause, or next move                                                      | Never really; it's the safe default. Use `multiple: true` only when several answers are genuinely right.  |
 | `compare`  | Judge which of two real examples is better (two UIs, two sentences, two plans)                  | The two options are just a right and a wrong statement; that's a `choice`.                                |
-| `hotspot`  | Find something inside a realistic artifact: a screen, a recipe, a contract, a line of code      | The "artifact" is a list you built only so there's something to tap.                                      |
+| `hotspot`  | Find something inside a realistic artifact: a screen, a recipe, a contract, a line of code      | The tappable parts are statements to read and judge; that's a `choice` or a `scenario`.                   |
 | `sort`     | Classify things into categories people really use, each with a name of its own                  | The groups are invented, one is just "not the other" (Goal / Non-goal), or each group has only two items. |
 | `order`    | Sequence a real process where the order matters and mistakes have consequences                  | The order is arbitrary, or obvious from the wording.                                                      |
 | `match`    | Pair things that come in pairs: terms and meanings, words and translations, symptoms and causes | It just re-tests the concept kata's vocabulary with no thinking involved.                                |
@@ -51,6 +51,7 @@ Before you keep a question kata, ask:
 - **Does it ask something new?** Each kata should test a different aspect or application of the idea, not restate the last one in another format.
 - **Can it be answered by looking up?** If the concept kata or its visual lists the answer (a table of cases, then a `sort` of the same cases; three bolded terms, then a `match` of those terms), it's a lookup, not a question. Ask about a new case the rule decides.
 - **Is the artifact real?** Hotspots, compares and scenarios work when they show something the learner will meet: a real screen, a real recipe step, a real decision.
+- **Does tapping add anything?** If a hotspot's regions are statements to read and judge (claims, requirements, the points of a summary), where they sit doesn't matter: they're options. Use `choice`, or `scenario` for a judgment call, and put anything to check them against (call notes, a report) in the kata's `visual`. Keep hotspots for what the learner finds in place: a control on a screen, a part of a chart, a line of code, a step in a worked solution.
 
 Mechanics of each type:
 
