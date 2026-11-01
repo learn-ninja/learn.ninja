@@ -6,6 +6,7 @@ import { CopyButton } from "@/components/site/copy-button"
 import { HERO_CTA_ID, SETUPS } from "@/lib/site"
 import { useSetup } from "@/lib/use-setup"
 
+import { HeroDemo } from "./hero-demo"
 import { RotatingWord } from "./rotating-word"
 import { SetupPicker } from "./setup-picker"
 
@@ -39,6 +40,15 @@ export function Hero() {
             Explore
           </ButtonLink>
         </div>
+      </div>
+      {/* The product shot follows the setup toggle: a terminal for the skill, a chat window for MCP.
+          The key restarts its story on a switch. One image for assistive tech; its words are drawn, not read. */}
+      <div
+        role="img"
+        aria-label="A prompt typed into an agent comes back as a lesson link, and the lesson plays on a phone."
+        className="w-full"
+      >
+        <HeroDemo key={setup} setup={setup} />
       </div>
       <AgentLogos />
     </section>

@@ -51,6 +51,15 @@
         "--no-open"
       ],
       "port": 6007
+    },
+    {
+      "name": "stageshow",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd spikes/stageshow && npx vite playground --config playground/vite.config.ts --port 5177 --strictPort"
+      ],
+      "port": 5177
     }
   ]
 }

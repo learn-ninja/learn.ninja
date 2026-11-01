@@ -1,0 +1,537 @@
+/* The site's look on the stage: the dark theme as fixed values (lib/og.tsx
+   holds the same ones), the site's fonts, the shadcn radius scale, white as
+   the only accent. The page is the ground, so the stage itself is invisible. */
+.lh .ss-stage {
+  --gutter: 32px;
+  --ss-canvas: #171717;
+  --ss-surface: #1f1f1f;
+  --ss-chrome: #1f1f1f;
+  --ss-raised: #262626;
+  --ss-well: #171717;
+  --ss-line: rgba(255, 255, 255, 0.1);
+  --ss-line-faint: rgba(255, 255, 255, 0.06);
+  --ss-text-strong: #fafafa;
+  --ss-text: #d4d4d8;
+  --ss-text-faint: #a1a1aa;
+  --ss-font: var(--font-inter), "Inter", system-ui, sans-serif;
+  --ss-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ss-radius-sm: 6px;
+  --ss-radius-md: 8px;
+  --ss-radius-lg: 10px;
+  --ss-radius-window: 12px;
+  /* The player's answer green (Tailwind green-500 and green-400) */
+  --lh-green: #22c55e;
+  --lh-green-text: #4ade80;
+  overflow: hidden;
+  background: transparent;
+  /* Framed like the site's other windows (rounded-2xl, a 1px border, no fill); the ring instead of a
+     border so the stage keeps its design size */
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* ---- The terminal: pinned top-left, off the bottom ---- */
+
+.lh-term {
+  position: absolute;
+  top: var(--gutter);
+  left: var(--gutter);
+  width: 520px;
+  height: 460px;
+  --ss-term-bg: #1f1f1f;
+  --ss-term-path: #a1a1aa;
+  --ss-term-sigil: #fafafa;
+  --ss-term-ok: var(--lh-green-text);
+  --ss-term-dim: #71717a;
+  border-radius: 12px;
+}
+
+.lh-term .ss-term {
+  gap: 4px;
+  /* The text column stops short of the phone: the satellite covers margin, never words */
+  padding: 6px 160px 18px 18px;
+  color: #a1a1aa;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.lh-rest {
+  position: absolute;
+  left: 600px;
+  top: 420px;
+  width: 1px;
+  height: 1px;
+}
+
+.lh-cmd {
+  transition: opacity 0.35s ease;
+}
+
+.lh-cmd[data-clearing] {
+  opacity: 0;
+}
+
+.lh-out {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lh-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #a1a1aa;
+  transition: color 0.3s ease;
+}
+
+.lh-step[data-done] {
+  color: #d4d4d8;
+}
+
+/* One character cell for the spinner and the tick, swapped in place */
+.lh-step__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1ch;
+  height: 1.7em;
+}
+
+.lh-step__mark .ss-spinner {
+  color: #a1a1aa;
+}
+
+.lh-step__mark .ok,
+.lh-term .ok {
+  color: var(--lh-green-text);
+}
+
+.lh-link {
+  margin-top: 6px;
+  color: #fafafa;
+  text-decoration: underline;
+  text-decoration-color: rgba(250, 250, 250, 0.35);
+  text-underline-offset: 3px;
+}
+
+.lh-term .dim {
+  color: #71717a;
+}
+
+/* ---- The chat window (MCP): the same place as the terminal ---- */
+
+.lh-chat {
+  position: absolute;
+  top: var(--gutter);
+  left: var(--gutter);
+  width: 520px;
+  height: 460px;
+  border-radius: 12px;
+  box-shadow: var(--ss-shadow-hero);
+}
+
+.lh-chat__body {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  /* The composer ends 16px above the stage's edge (the window runs 52px past it) and runs under the
+     phone on the right; only the thread's words stop short of it */
+  padding: 16px 20px 68px;
+  background: var(--ss-surface);
+}
+
+.lh-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  padding-right: 150px;
+  overflow: hidden;
+  font-family: var(--ss-font);
+}
+
+.lh-turn--past {
+  display: grid;
+  gap: 8px;
+}
+
+.lh-past-q {
+  justify-self: end;
+}
+
+.lh-exchange {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lh-q {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lh-q .ss-text {
+  max-width: 80%;
+  white-space: normal;
+  text-wrap: pretty;
+  padding: 8px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ss-text-strong);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.lh-reply {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  color: var(--ss-text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.lh-reply .lh-step {
+  font-size: 13px;
+}
+
+.lh-reply .lh-step__mark {
+  height: 1.5em;
+  width: 14px;
+}
+
+.lh-reply .lh-link {
+  font-family: var(--ss-mono);
+  font-size: 12.5px;
+}
+
+.lh-reply .dim {
+  color: #a1a1aa;
+}
+
+.lh-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  font-family: var(--ss-font);
+}
+
+.lh-composer__box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 52px;
+  padding: 0 44px 0 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #262626;
+  color: var(--ss-text-strong);
+  font-size: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.25s ease;
+}
+
+.lh-composer__box[data-focused] {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.lh-composer__text {
+  display: inline-flex;
+  align-items: center;
+  white-space: pre;
+}
+
+.lh-composer__placeholder {
+  color: #8a8a8f;
+}
+
+.lh-composer__caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 17px;
+  margin-left: 1px;
+  background: var(--ss-text-strong);
+  animation: lh-blink 1s steps(2, start) infinite;
+}
+
+@keyframes lh-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.lh-composer__enter {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  translate: 0 -50%;
+  color: #8a8a8f;
+}
+
+.lh-composer__row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 10px;
+  color: #8a8a8f;
+  font-size: 11.5px;
+}
+
+.lh-composer__tools {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  gap: 12px;
+  color: #a1a1aa;
+}
+
+.lh-composer__tools > :last-child {
+  margin-left: -8px;
+}
+
+.lh-composer__note {
+  text-align: center;
+}
+
+/* Compact: the row is tools and the note, end to end */
+.lh .ss-stage[data-layout="compact"] .lh-composer__row {
+  grid-template-columns: auto 1fr;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-composer__note {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-composer__end {
+  display: none;
+}
+
+/* ---- The phone: straddling the terminal's right edge, off the bottom ---- */
+
+.lh-phone {
+  position: absolute;
+  top: 60px;
+  right: var(--gutter);
+  box-shadow: var(--ss-shadow-satellite);
+  border-radius: 54px;
+}
+
+/* The player on a phone, in points: the page, a 56pt header, the kata at the top */
+.lh-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 62px;
+  background: #171717;
+  color: #fafafa;
+  font-family: var(--ss-font);
+  letter-spacing: 0;
+  transition: opacity 0.3s ease;
+}
+
+.lh-kata {
+  transition: opacity 0.25s ease;
+}
+
+.lh-kata[data-reload] {
+  opacity: 0;
+}
+
+.lh-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 16px;
+}
+
+.lh-logo {
+  display: flex;
+  color: #fafafa;
+}
+
+.lh-progress {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.lh-progress__fill {
+  display: block;
+  width: 14%;
+  height: 100%;
+  border-radius: 3px;
+  background: rgba(250, 250, 250, 0.7);
+}
+
+.lh-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.lh-menu > span {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #fafafa;
+}
+
+.lh-kata {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px 16px 0;
+}
+
+.lh-label {
+  color: #a1a1aa;
+  font-family: var(--ss-mono);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.lh-q {
+  margin-top: -6px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;
+}
+
+.lh-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lh-opt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 49px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.045);
+  font-size: 18px;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.25s ease;
+}
+
+.lh-opt[data-pressed="true"] {
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.lh-opt[data-picked] {
+  border-color: #fafafa;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.lh-opt[data-correct] {
+  border-color: var(--lh-green);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.lh-opt__check {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--lh-green);
+  color: #052e16;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.6);
+  transition:
+    opacity 0.2s ease,
+    transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.lh-opt[data-correct] .lh-opt__check {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* ---- Compact: stacked, the terminal whole across and the phone under it, off the bottom ---- */
+
+.lh .ss-stage[data-layout="compact"] {
+  --gutter: 16px;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-term {
+  width: 420px;
+  height: 300px;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-term .ss-window__body {
+  padding-right: 100px;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-label {
+  font-size: 14px;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-rest {
+  left: 180px;
+  top: 700px;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-chat {
+  width: 420px;
+  height: 300px;
+}
+
+/* Narrow, the thread is pinned to its foot as chat apps do: what arrives pushes the older turn up and out */
+.lh .ss-stage[data-layout="compact"] .lh-thread {
+  justify-content: flex-end;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-chat__body {
+  padding: 12px 16px 14px;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-thread {
+  padding-right: 94px;
+}
+
+/* Inside the stage: a sliced composer would read as a cut control */
+.lh .ss-stage[data-layout="compact"] .lh-composer {
+  margin-right: 94px;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-term .ss-term {
+  font-size: 11px;
+  padding: 4px 14px 14px;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-link,
+.lh .ss-stage[data-layout="compact"] .lh-term .dim {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.lh .ss-stage[data-layout="compact"] .lh-phone {
+  top: 328px;
+  right: auto;
+  left: 16px;
+}
