@@ -245,27 +245,11 @@ export type Strings = {
 }
 
 /**
- * Strings added while translations are on hold (UI_TRANSLATIONS): only English has them, and every
- * other language falls back to English for them (loadLanguage). Translate them and take them off
- * this list before switching translations back on.
+ * Strings only English has so far: every other language falls back to English for them
+ * (loadLanguage). Translate them and take them off this list before shipping, or switch
+ * UI_TRANSLATIONS off while they wait.
  */
-export type Untranslated =
-  | "streakDays"
-  | "streakUnit"
-  | "streakLit"
-  | "streakStarts"
-  | "streakAgain"
-  | "streakWeek"
-  | "streakDayLit"
-  | "streakDayRest"
-  | "streakDayUnlit"
-  | "streakDayOpen"
-  | "restTitle"
-  | "restInfo"
-  | "restSaved"
-  | "restProgress"
-  | "restProgressValue"
-  | "restFull"
+export type Untranslated = never
 /** A language's own strings: everything but the ones still waiting for translation. */
 export type Translation = Omit<Strings, Untranslated>
 
@@ -321,11 +305,10 @@ function normalize(lang: string): UiLanguage | undefined {
 
 /**
  * Whether the player's interface follows the learner: their saved choice, the language menu, and
- * the lesson's language. Off for now, so it's in English until people can test the translations;
- * they're kept up to date meanwhile, and ?ui= still shows one, for testing. Lessons themselves are
- * written in any language either way.
+ * the lesson's language. Off, it's always English, and only ?ui= shows a translation, for testing.
+ * Lessons themselves are written in any language either way.
  */
-export const UI_TRANSLATIONS = false
+export const UI_TRANSLATIONS = true
 
 /** The menu entry for a language code, or undefined when the player has no translation for it. */
 export function uiLanguageFor(lang: string) {

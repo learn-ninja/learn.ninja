@@ -130,6 +130,27 @@ export const id: Translation = {
     second: "Setelah mencoba lagi",
     missed: "Terlewat",
   },
+  streakDays: (days) => `Beruntun ${days} hari`,
+  streakUnit: () => "hari beruntun",
+  streakLit:
+    "Lenteramu sudah menyala hari ini. Kembali besok agar tetap menyala.",
+  streakStarts:
+    "Runtunanmu dimulai hari ini. Kembali besok untuk menyalakan hari ke-2.",
+  streakAgain:
+    "Jatuh tujuh kali, bangkit delapan kali. Runtunanmu dimulai lagi hari ini.",
+  streakWeek: "7 hari terakhir",
+  streakDayLit: "pelajaran selesai",
+  streakDayRest: "hari istirahat",
+  streakDayUnlit: "tanpa pelajaran",
+  streakDayOpen: "belum",
+  restTitle: "Hari istirahat",
+  restInfo: (perRest, max) =>
+    `Hari istirahat menjaga runtunanmu di hari tanpa pelajaran. ${perRest === 1 ? "Setiap hari belajar menyimpan satu" : `Setiap ${perRest} hari belajar menyimpan satu`}, hingga ${max}.`,
+  restSaved: (saved, max) => `${saved} dari ${max} tersimpan`,
+  restProgress: "Menuju hari istirahat berikutnya",
+  restProgressValue: (days, of) => `${days} dari ${of} hari`,
+  restFull:
+    "Semua tersimpan. Pakai satu, dan hari belajar akan mengisinya lagi.",
   like: "Suka",
   liked: "Disukai",
   likeLogIn: "Masuk untuk menyimpan pelajaran ini ke daftar suka kamu.",

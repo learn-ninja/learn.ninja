@@ -141,6 +141,26 @@ export const pt: Translation = {
     second: "Depois de outra tentativa",
     missed: "Errada",
   },
+  streakDays: (days) =>
+    p(days, { one: "Sequência de # dia", other: "Sequência de # dias" }),
+  streakUnit: (days) =>
+    p(days, { one: "dia de sequência", other: "dias de sequência" }),
+  streakLit: "Sua lanterna está acesa hoje. Volte amanhã para mantê-la assim.",
+  streakStarts: "Sua sequência começa hoje. Volte amanhã para acender o dia 2.",
+  streakAgain: "Caia sete vezes, levante-se oito. Sua sequência recomeça hoje.",
+  streakWeek: "Os últimos 7 dias",
+  streakDayLit: "lição concluída",
+  streakDayRest: "dia de descanso",
+  streakDayUnlit: "sem lição",
+  streakDayOpen: "ainda não",
+  restTitle: "Dias de descanso",
+  restInfo: (perRest, max) =>
+    `Um dia de descanso mantém sua sequência num dia sem lição. ${p(perRest, { one: "Cada dia de estudo guarda um", other: "Cada # dias de estudo guardam um" })}, até ${max}.`,
+  restSaved: (saved, max) => `${saved} de ${max} guardados`,
+  restProgress: "Rumo ao próximo dia de descanso",
+  restProgressValue: (days, of) =>
+    p(of, { one: `${days} de # dia`, other: `${days} de # dias` }),
+  restFull: "Todos guardados. Use um, e os dias de estudo o recarregam.",
   like: "Curtir",
   liked: "Curtiu",
   likeLogIn: "Entre para salvar esta lição nas suas curtidas.",

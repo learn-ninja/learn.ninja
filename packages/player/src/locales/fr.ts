@@ -144,6 +144,30 @@ export const fr: Translation = {
     second: "Au deuxième essai",
     missed: "Raté",
   },
+  streakDays: (days) =>
+    p(days, { one: "Série de # jour", other: "Série de # jours" }),
+  streakUnit: (days) =>
+    p(days, { one: "jour de série", other: "jours de série" }),
+  streakLit:
+    "Votre lanterne est allumée pour aujourd'hui. Revenez demain pour la garder allumée.",
+  streakStarts:
+    "Votre série commence aujourd'hui. Revenez demain pour allumer le jour 2.",
+  streakAgain:
+    "Tomber sept fois, se relever huit. Votre série repart aujourd'hui.",
+  streakWeek: "Les 7 derniers jours",
+  streakDayLit: "leçon terminée",
+  streakDayRest: "jour de repos",
+  streakDayUnlit: "pas de leçon",
+  streakDayOpen: "pas encore",
+  restTitle: "Jours de repos",
+  restInfo: (perRest, max) =>
+    `Un jour de repos garde votre série un jour sans leçon. ${p(perRest, { one: "Chaque jour d'apprentissage en met un de côté", other: "Tous les # jours d'apprentissage, un de plus est mis de côté" })}, jusqu'à ${max}.`,
+  restSaved: (saved, max) => `${saved} sur ${max} de côté`,
+  restProgress: "Vers le prochain jour de repos",
+  restProgressValue: (days, of) =>
+    p(of, { one: `${days} jour sur #`, other: `${days} jours sur #` }),
+  restFull:
+    "Tous mis de côté. Utilisez-en un, et vos jours d'apprentissage le rechargent.",
   like: "J'aime",
   liked: "Aimée",
   likeLogIn: "Connecte-toi pour garder cette leçon dans tes j'aime.",

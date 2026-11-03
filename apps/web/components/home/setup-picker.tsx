@@ -10,11 +10,12 @@ import { SETUPS, type SetupId } from "@/lib/site"
 import { setSetup, useSetup } from "@/lib/use-setup"
 
 /** The CLI/MCP toggle. */
-export function SetupPicker() {
+export function SetupPicker({ className }: { className?: string }) {
   const setup = useSetup()
 
   return (
     <ToggleGroup
+      className={className}
       aria-label="How your agent sets up learn.ninja"
       variant="outline"
       size="sm"

@@ -50,7 +50,7 @@ export function loadLanguage(lang: string): Promise<Pack> {
   if (!promise) {
     promise = LOADERS[code as Exclude<UiLanguage, "en">]().then(
       (chunk) => {
-        // English stands in for the strings added while translations are on hold.
+        // English stands in for any strings still waiting for translation (Untranslated).
         const pack = { ...chunk, strings: { ...en, ...chunk.strings } }
         packs.set(code, pack)
         return pack
