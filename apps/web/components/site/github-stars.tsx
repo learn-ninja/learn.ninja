@@ -13,13 +13,8 @@ const compact = new Intl.NumberFormat("en", {
   maximumFractionDigits: 1,
 })
 
-/** "1.2K" for 1234. */
-export function formatStars(stars: number) {
-  return compact.format(stars)
-}
-
-/** The repository's star count once /api/github/stars answers, null until then. */
-export function useGitHubStars() {
+/** The header's link to the repository, with its star count once /api/github/stars answers. */
+export function GitHubStars({ className }: { className?: string }) {
   const [stars, setStars] = React.useState<number | null>(null)
   React.useEffect(() => {
     let live = true
@@ -33,12 +28,6 @@ export function useGitHubStars() {
       live = false
     }
   }, [])
-  return stars
-}
-
-/** The header's link to the repository, with its star count once /api/github/stars answers. */
-export function GitHubStars({ className }: { className?: string }) {
-  const stars = useGitHubStars()
   return (
     <a
       href={SITE.repo}
@@ -46,9 +35,7 @@ export function GitHubStars({ className }: { className?: string }) {
       rel="noreferrer"
       data-slot="button"
       aria-label={
-        stars === null
-          ? "GitHub"
-          : `GitHub, ${stars.toLocaleString("en")} stars`
+        stars === null ? "GitHub" : `GitHub, ${stars.toLocaleString("en")} stars`
       }
       className={cn(
         buttonVariants({ variant: "ghost", size: "sm" }),
@@ -57,7 +44,7 @@ export function GitHubStars({ className }: { className?: string }) {
       )}
     >
       <GitHubLogo />
-      {stars === null ? null : <span>{formatStars(stars)}</span>}
+      {stars === null ? null : <span>{compact.format(stars)}</span>}
     </a>
   )
 }

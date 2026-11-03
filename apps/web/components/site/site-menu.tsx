@@ -23,9 +23,7 @@ import { FeedbackDialog } from "@/components/feedback/feedback-dialog"
 import { accountApi, type AccountApi } from "@/lib/auth/browser"
 import { SITE } from "@/lib/site"
 
-import { formatStars, useGitHubStars } from "./github-stars"
 import { LivelyLogo } from "./lively-logo"
-import { GitHubLogo } from "./social-icons"
 
 /** A drawer row: a ghost button the width of the drawer, 44px tall for a thumb, its icon first. */
 const ROW =
@@ -34,11 +32,12 @@ const ROW =
 /**
  * The header's menu on phones, where its links don't fit beside the wordmark: a button at the end
  * of the header that opens a drawer from the same side. A visitor's drawer holds the header's
- * links (Explore, Docs, and GitHub or the bug report, as `feedback` says) and Log in; a logged-in
- * learner's holds what the profile picture's menu holds on wider screens (Explore, their profile,
- * settings, the docs in a new tab) plus the bug report or GitHub, and Log out. Following a link
- * or opening the bug report closes it. The trigger only shows below `sm`; the drawer itself
- * isn't tied to a breakpoint, so stories open it anywhere with `defaultOpen`.
+ * links (Explore, Docs) and Log in; a logged-in learner's holds what the profile picture's menu
+ * holds on wider screens (Explore, their profile, settings, the docs in a new tab) and Log out.
+ * On the app's pages (`feedback`) both get the bug report too; the GitHub link stays in the
+ * header. Following a link or opening the bug report closes it. The trigger only shows below
+ * `sm`; the drawer itself isn't tied to a breakpoint, so stories open it anywhere with
+ * `defaultOpen`.
  */
 export function SiteMenu({
   account,
@@ -49,7 +48,7 @@ export function SiteMenu({
   className,
 }: {
   account: Account
-  /** Offer "Report a bug" (the app's pages) instead of the GitHub link (marketing pages, docs). */
+  /** Add "Report a bug", on the app's pages (not the marketing pages or the docs). */
   feedback?: boolean
   api?: AccountApi
   /** Where to go after logging out; the browser's own navigation by default. */
@@ -140,9 +139,7 @@ export function SiteMenu({
                 <BugIcon />
                 Report a bug
               </Button>
-            ) : (
-              <GitHubRow onPress={close} />
-            )}
+            ) : null}
           </nav>
           <div className="mt-auto flex flex-col pt-2">
             {user ? (
@@ -193,32 +190,5 @@ function Away() {
       className="ms-auto size-3.5 text-muted-foreground rtl:-scale-x-100"
       aria-hidden="true"
     />
-  )
-}
-
-/** The repository, with its star count once it's known, as a drawer row. */
-function GitHubRow({ onPress }: { onPress: () => void }) {
-  const stars = useGitHubStars()
-  return (
-    <Row
-      href={SITE.repo}
-      target="_blank"
-      rel="noreferrer"
-      aria-label={
-        stars === null
-          ? "GitHub"
-          : `GitHub, ${stars.toLocaleString("en")} stars`
-      }
-      onPress={onPress}
-    >
-      <GitHubLogo />
-      GitHub
-      {stars === null ? null : (
-        <span className="text-muted-foreground tabular-nums">
-          {formatStars(stars)}
-        </span>
-      )}
-      <Away />
-    </Row>
   )
 }

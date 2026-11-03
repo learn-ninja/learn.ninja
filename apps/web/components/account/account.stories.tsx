@@ -456,7 +456,7 @@ export const HeaderMenu: Story = {
 export const HeaderDrawer: Story = {
   name: "Header drawer, visitor",
   render: () => (
-    // The phone header's drawer for a visitor: the links, GitHub, and Log in. Narrow the window
+    // The phone header's drawer for a visitor: the links and Log in. Narrow the window
     // below 640px to see the menu button in the headers above.
     <div className="flex h-96 flex-col gap-2 [&_header]:static">
       <SiteHeader account={null} />

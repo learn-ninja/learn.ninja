@@ -25,8 +25,8 @@ import { Wordmark } from "./wordmark"
  * page that checked the session knows about the user; static pages
  * leave it out and the marker cookie decides after hydration. Until then the visitor's links are
  * kept but invisible, so the header doesn't shift for the many visitors who aren't logged in.
- * On phones the links, the GitHub or bug button, and the picture's menu fold into one drawer
- * behind a menu button at the end (`SiteMenu`); the wordmark, the docs menu, and the lantern stay.
+ * On phones the links, the bug button, and the picture's menu fold into one drawer behind a menu
+ * button at the end (`SiteMenu`); the wordmark, the docs menu, the GitHub link, and the lantern stay.
  * Logged in, it sends the lessons this browser finished while logged out (lib/explore/finishes).
  */
 export function SiteHeader({
@@ -61,7 +61,7 @@ export function SiteHeader({
           {feedback ? (
             <FeedbackButton className="max-sm:hidden" />
           ) : (
-            <GitHubStars className="max-sm:hidden" />
+            <GitHubStars />
           )}
           {visitor ? (
             <>
