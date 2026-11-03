@@ -21,7 +21,7 @@ import { cn } from "@workspace/ui/lib/utils"
 import { UserAvatar } from "@/components/account/user-avatar"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
-import { GitHubLogo } from "@/components/site/social-icons"
+import { GitHubLogo, XLogo } from "@/components/site/social-icons"
 import { loadContributors, type Person } from "@/lib/contributors"
 import {
   AREA_GROUPS,
@@ -161,18 +161,19 @@ function Letter({ picture }: { picture: string | null }) {
         <footer className="mt-4 flex items-center gap-3.5">
           <UserAvatar image={picture} handle="Colin" size="signature" />
           <div className="flex flex-col text-sm leading-normal">
-            <span className="font-semibold">Colin Pace</span>
-            <span className="mission-paper-muted">
-              Founder, {SITE.name} ·{" "}
+            <span className="flex items-center gap-1 font-semibold">
+              Colin Pace
               <a
                 href={SITE.makerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-sm underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+                aria-label={`Colin Pace on X (${SITE.maker})`}
+                className="mission-paper-muted inline-flex size-6 items-center justify-center rounded-md outline-none hover:bg-white/10 hover:text-inherit focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-3"
               >
-                <bdi dir="ltr">{SITE.maker}</bdi>
+                <XLogo />
               </a>
             </span>
+            <span className="mission-paper-muted">Founder, {SITE.name}</span>
           </div>
         </footer>
       </article>
