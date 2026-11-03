@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { CONTRIBUTORS, loadContributors, mergeContributors } from "./contributors"
-import { AREA_GROUPS, areaHref, IDEA_URL } from "./mission"
+import { AREAS, areaHref, IDEA_URL } from "./mission"
 
 const contributing = readFileSync(
   join(__dirname, "../../../CONTRIBUTING.md"),
@@ -13,16 +13,14 @@ const contributing = readFileSync(
 
 describe("mission areas", () => {
   it("lists the same nine areas as CONTRIBUTING.md", () => {
-    const areas = AREA_GROUPS.flatMap((g) => g.areas)
-    expect(areas).toHaveLength(9)
-    for (const area of areas) {
+    expect(AREAS).toHaveLength(9)
+    for (const area of AREAS) {
       expect(contributing, area.title).toContain(`| ${area.title} |`)
     }
   })
 
   it("sends proposals to the Idea form and the rest to their label", () => {
-    const areas = AREA_GROUPS.flatMap((g) => g.areas)
-    for (const area of areas) {
+    for (const area of AREAS) {
       if (area.proposal) expect(areaHref(area)).toBe(IDEA_URL)
       else expect(decodeURIComponent(areaHref(area))).toContain(area.label)
     }

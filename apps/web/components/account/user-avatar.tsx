@@ -12,7 +12,7 @@ import { cn } from "@workspace/ui/lib/utils"
 /** Where a picture shows, which sets its size: a feed row's 20px author, the header's 28px control, the settings form, a profile's 24px heading, the mission page's signature and wall. */
 const SIZES = {
   signature: { avatar: "size-12", fallback: "text-base", px: 48 },
-  wall: { avatar: "size-16", fallback: "text-xl", px: 64 },
+  wall: { avatar: "size-10", fallback: "text-sm", px: 40 },
   row: { avatar: "size-5", fallback: "text-xs", px: 20 },
   header: { avatar: "size-7", fallback: "text-xs", px: 28 },
   settings: { avatar: "size-20", fallback: "text-2xl", px: 80 },

@@ -1,10 +1,11 @@
-// The words on /mission: the mission line, the nine areas where help
-// goes furthest (grouped), and the four steps for someone new. CONTRIBUTING.md's "Where we want
-// help" table lists the same areas; mission.test.ts keeps the two in step.
+// The words on /mission: the mission line and the nine areas where help goes furthest.
+// CONTRIBUTING.md's "Where we want help" table lists the same areas; mission.test.ts keeps
+// the two in step.
 
 import { SITE } from "./site"
 
-export const MISSION = "The best interactive learning in the world. Free for everyone."
+export const MISSION =
+  "The best interactive learning in the world. Free for everyone."
 
 export const MISSION_SUMMARY =
   "Duolingo and Brilliant proved short, hands-on lessons work. Together, we're bringing them to every subject, in every language."
@@ -31,111 +32,80 @@ export type Area = {
   ask: string
   /** The GitHub label its issues carry; a proposal links to the Idea form instead. */
   label?: string
-  /** Spans both columns. */
-  wide?: boolean
 }
 
-export type AreaGroup = { title: string; lead: string; areas: Area[] }
-
-export const AREA_GROUPS: AreaGroup[] = [
+export const AREAS: Area[] = [
   {
-    title: "Content",
-    lead: "What the agent learns from, and what the player says in your language.",
-    areas: [
-      {
-        title: "Subjects",
-        icon: "subjects",
-        level: "Beginner",
-        who: "If you know a subject",
-        ask: "Example lessons for subjects we don't cover, and reports of bad published lessons.",
-        label: "area: subjects",
-      },
-      {
-        title: "Languages",
-        icon: "languages",
-        level: "Beginner",
-        who: "If you speak a language",
-        ask: "Check one of the player's translations as a native speaker, and fix right-to-left issues.",
-        label: "translation",
-      },
-    ],
+    title: "Subjects",
+    icon: "subjects",
+    level: "Beginner",
+    who: "If you know a subject",
+    ask: "Example lessons for subjects we don't cover yet.",
+    label: "area: subjects",
   },
   {
-    title: "The lesson",
-    lead: "What happens on each screen: the question, the feedback, the visual, the help.",
-    areas: [
-      {
-        title: "Katas",
-        icon: "katas",
-        level: "Intermediate",
-        who: "If you care how a question lands",
-        ask: "Sharper feedback, hints, and visuals in the nine kata types, and question-first teaching in the guide.",
-        label: "area: katas",
-      },
-      {
-        title: "Rich lessons",
-        icon: "rich",
-        level: "Advanced",
-        who: "If you build things",
-        ask: "Interactive visuals the player renders itself, like chess and maps today, plus sounds, motion, and haptics.",
-        label: "area: rich-lessons",
-      },
-      {
-        title: "Tutor",
-        icon: "tutor",
-        level: "Project",
-        proposal: true,
-        who: 'If you\'ve wanted to ask a lesson "why?"',
-        ask: "Explain-my-answer and Socratic hints inside a lesson, from the agent that wrote it or from a server. The cost question comes before the code.",
-        wide: true,
-      },
-    ],
+    title: "Languages",
+    icon: "languages",
+    level: "Beginner",
+    who: "If you speak a language",
+    ask: "Check a translation as a native speaker.",
+    label: "translation",
   },
   {
-    title: "The journey",
-    lead: "What happens between lessons: remembering, sequencing, and coming back tomorrow.",
-    areas: [
-      {
-        title: "Memory",
-        icon: "memory",
-        level: "Advanced",
-        proposal: true,
-        who: "If you know how learning sticks",
-        ask: "Review and spaced repetition across lessons, and a Mistakes mode. Needs accounts.",
-      },
-      {
-        title: "Paths",
-        icon: "paths",
-        level: "Advanced",
-        proposal: true,
-        who: "If you've designed a curriculum",
-        ask: "Courses as sequences of lessons, placement, and adaptive difficulty. Needs accounts.",
-      },
-      {
-        title: "Motivation",
-        icon: "motivation",
-        level: "Intermediate",
-        who: "If you've felt a streak pull you back",
-        ask: "XP, quests, milestones, share cards, leagues, reminders and widgets. Rewarding usage, never punishing mistakes.",
-        label: "area: motivation",
-        wide: true,
-      },
-    ],
+    title: "Katas",
+    icon: "katas",
+    level: "Intermediate",
+    who: "If you care how a question lands",
+    ask: "A kata is one lesson screen. Sharper feedback, hints, and visuals.",
+    label: "area: katas",
   },
   {
-    title: "Across all three",
-    lead: "The agent writes every part above. Teach it well and everything gets better at once.",
-    areas: [
-      {
-        title: "Agents",
-        icon: "agents",
-        level: "Project",
-        who: "If you use an agent",
-        ask: "The teaching guide, the checker, and round trips from every agent, so every part above gets written well the first time.",
-        label: "area: agents",
-        wide: true,
-      },
-    ],
+    title: "Rich lessons",
+    icon: "rich",
+    level: "Advanced",
+    who: "If you build things",
+    ask: "Visuals the player draws itself, like chess and maps, plus sound and motion.",
+    label: "area: rich-lessons",
+  },
+  {
+    title: "Tutor",
+    icon: "tutor",
+    level: "Project",
+    proposal: true,
+    who: 'If you\'ve wanted to ask a lesson "why?"',
+    ask: "Explain-my-answer and Socratic hints inside a lesson.",
+  },
+  {
+    title: "Memory",
+    icon: "memory",
+    level: "Advanced",
+    proposal: true,
+    who: "If you know how learning sticks",
+    ask: "Spaced review and a Mistakes mode. Needs accounts.",
+  },
+  {
+    title: "Paths",
+    icon: "paths",
+    level: "Advanced",
+    proposal: true,
+    who: "If you've designed a curriculum",
+    ask: "Courses, placement, and adaptive difficulty. Needs accounts.",
+  },
+  {
+    title: "Motivation",
+    icon: "motivation",
+    level: "Intermediate",
+    who: "If you've felt a streak pull you back",
+    ask: "XP, quests, leagues, and reminders that reward, never punish.",
+    label: "area: motivation",
+  },
+  {
+    title: "Agents",
+    icon: "agents",
+    level: "Project",
+    who: "If you use an agent",
+    ask: "The teaching guide and checker, so every lesson is written well the first time.",
+    label: "area: agents",
   },
 ]
 

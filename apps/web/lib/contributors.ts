@@ -1,5 +1,5 @@
 // The people on /mission: everyone who has landed a commit, read from GitHub, plus the people
-// listed here. List yourself to show your name and X profile, or to be credited without commits
+// listed here. List yourself to show your name and link your X profile, or to be credited without commits
 // (design, testing, translations). Both links are optional; a GitHub username brings your picture.
 
 import { SITE } from "./site"
@@ -23,7 +23,7 @@ export const CONTRIBUTORS: Contributor[] = [
 export type Person = {
   /** Unique on the wall: the GitHub username in lower case, else the listed name. */
   id: string
-  /** Shown under the picture: the listed name, else the GitHub username. */
+  /** Shown on hover: the listed name, else the GitHub username. */
   name: string
   /** GitHub username, when there is one. */
   login: string | null

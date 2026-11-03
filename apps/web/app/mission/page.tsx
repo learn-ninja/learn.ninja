@@ -1,5 +1,6 @@
 import {
   ArrowRightIcon,
+  ArrowUpRightIcon,
   BookOpenIcon,
   BotIcon,
   BrainIcon,
@@ -12,21 +13,21 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import type { Metadata } from "next"
-import Link from "next/link"
 
 import { Aura } from "@workspace/player/ninja"
 import { Badge } from "@workspace/ui/components/badge"
 import { LinkButton } from "@workspace/ui/components/button"
-import { cn } from "@workspace/ui/lib/utils"
+import { Tooltip, TooltipTrigger } from "@workspace/ui/components/tooltip"
 
 import { UserAvatar } from "@/components/account/user-avatar"
+import { SectionDivider } from "@/components/home/section-divider"
 import { MissionNinja } from "@/components/mission/hero-ninja"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
-import { GitHubLogo, XLogo } from "@/components/site/social-icons"
+import { XLogo } from "@/components/site/social-icons"
 import { loadContributors, type Person } from "@/lib/contributors"
 import {
-  AREA_GROUPS,
+  AREAS,
   areaHref,
   CONTRIBUTING_URL,
   GOOD_FIRST_ISSUES_URL,
@@ -73,35 +74,15 @@ export default async function MissionPage() {
         <Hero />
         <Letter picture={colin?.image ?? null} />
         <Areas />
-        <Steps />
         <People people={people} />
       </main>
-      {/* The page ends with the footer ninja's send-off and the two ways to start. */}
+      <div className="pt-28 sm:pt-36">
+        <SectionDivider />
+      </div>
+      {/* The page ends with the footer ninja's send-off. */}
       <SiteFooter
-        className="max-w-5xl"
+        className="max-w-3xl"
         greeting="Pick the part that's yours."
-        actions={
-          <>
-            <LinkButton
-              href={SITE.repo}
-              target="_blank"
-              rel="noopener noreferrer"
-              size="lg"
-            >
-              <GitHubLogo />
-              Open on GitHub
-            </LinkButton>
-            <LinkButton
-              href={GOOD_FIRST_ISSUES_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              variant="outline"
-              size="lg"
-            >
-              Good first issues
-            </LinkButton>
-          </>
-        }
       />
     </div>
   )
@@ -110,15 +91,11 @@ export default async function MissionPage() {
 function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <div className="relative isolate mx-auto flex max-w-4xl flex-col items-center gap-7 px-4 pt-16 pb-20 text-center sm:px-6 sm:pt-20 sm:pb-24">
+      <div className="relative isolate mx-auto flex max-w-3xl flex-col items-center gap-7 px-4 pt-16 pb-20 text-center sm:px-6 sm:pt-20 sm:pb-24">
         {/* The lesson intro's smoke, lifted (px) to billow around the ninja and the headline. */}
         <Aura shift={-110} />
         <MissionNinja />
-        <Badge variant="outline" className="h-7 gap-1.5 px-3 text-sm">
-          <GitHubLogo />
-          Open source
-        </Badge>
-        <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
+        <h1 className="font-mono text-3xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
           {MISSION}
         </h1>
         <p className="max-w-2xl text-base text-pretty text-muted-foreground sm:text-lg">
@@ -127,7 +104,10 @@ function Hero() {
         <div className="flex flex-wrap justify-center gap-2">
           <LinkButton href="#areas" size="lg">
             Find your part
-            <ArrowRightIcon data-icon="inline-end" className="rtl:-scale-x-100" />
+            <ArrowRightIcon
+              data-icon="inline-end"
+              className="rtl:-scale-x-100"
+            />
           </LinkButton>
           <LinkButton href="#note" variant="outline" size="lg">
             Read Colin&apos;s note
@@ -142,9 +122,9 @@ function Letter({ picture }: { picture: string | null }) {
   return (
     <section
       id="note"
-      className="mx-auto flex w-full max-w-2xl scroll-mt-16 flex-col gap-10 px-4 pt-24 sm:px-6 sm:pt-32"
+      className="mx-auto flex w-full max-w-3xl scroll-mt-16 flex-col gap-10 px-4 pt-24 sm:px-6 sm:pt-32"
     >
-      <div className="flex flex-col gap-4 text-center">
+      <div className="flex flex-col gap-4">
         <p className={EYEBROW}>A note from Colin</p>
         <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
           The expensive part of great learning just disappeared.
@@ -156,8 +136,8 @@ function Letter({ picture }: { picture: string | null }) {
           Hi, I&apos;m Colin. For seven years I&apos;ve been building Uxcel, an
           interactive design-education platform that grew to half a million
           learners and Fortune 500 teams around the world. It taught me what
-          Duolingo, Brilliant, and Mimo know: people learn from short,
-          hands-on lessons that answer back.
+          Duolingo, Brilliant, and Mimo know: people learn from short, hands-on
+          lessons that answer back.
         </p>
         <p>
           It also taught me the cost. One great lesson takes a writer, a
@@ -199,53 +179,39 @@ function Letter({ picture }: { picture: string | null }) {
 }
 
 function Areas() {
+  // The cards are wider than the page's column, like the home page's bento; the text keeps the
+  // column (max-w-3xl less the other sections' sm:px-6, 45rem, so their edges line up).
   return (
     <section
       id="areas"
-      className="mx-auto flex w-full max-w-5xl scroll-mt-16 flex-col gap-16 px-4 pt-28 sm:gap-20 sm:px-6 sm:pt-36"
+      className="mx-auto flex w-full max-w-[1032px] scroll-mt-16 flex-col gap-16 px-4 pt-28 sm:gap-20 sm:px-6 sm:pt-36"
     >
-      <div className="flex max-w-2xl flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-[45rem] flex-col gap-4">
         <p className={EYEBROW}>Where help goes furthest</p>
         <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
           Nine parts. Each its own craft.
         </h2>
         <p className="text-base text-pretty text-muted-foreground sm:text-lg">
-          A lesson is only as good as its weakest part. Pick the one you know
-          best. Three of them reach every lesson ever published, so they start
-          as a proposal rather than a pull request.
+          Pick the one you know best. The three marked Proposal first touch
+          every lesson, so they start as an idea, not a pull request.
         </p>
       </div>
-      {AREA_GROUPS.map((group, i) => (
-        <div
-          key={group.title}
-          className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[16rem_minmax(0,1fr)] md:gap-10"
-        >
-          <div className="flex flex-col gap-3">
-            <span
-              aria-hidden="true"
-              className="text-4xl font-semibold tracking-tight text-muted-foreground tabular-nums"
-            >
-              {String(i + 1).padStart(2, "0")}
-            </span>
-            <h3 className="text-2xl font-semibold tracking-tight">
-              {group.title}
-            </h3>
-            <p className="text-sm text-pretty text-muted-foreground">
-              {group.lead}
-            </p>
-          </div>
-          <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
-            {group.areas.map((area) => (
-              <li
-                key={area.title}
-                className={cn("flex", area.wide && "sm:col-span-2")}
-              >
-                <AreaCard area={area} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2 min-[60rem]:grid-cols-3">
+        {AREAS.map((area) => (
+          <li key={area.title} className="flex">
+            <AreaCard area={area} />
+          </li>
+        ))}
+      </ul>
+      <p className="mx-auto -mt-8 w-full max-w-[45rem] text-sm text-pretty text-muted-foreground sm:-mt-12">
+        Read{" "}
+        <ExternalLink href={CONTRIBUTING_URL}>CONTRIBUTING.md</ExternalLink> and
+        pick a{" "}
+        <ExternalLink href={GOOD_FIRST_ISSUES_URL}>
+          good first issue
+        </ExternalLink>
+        . We answer every pull request within a week.
+      </p>
     </section>
   )
 }
@@ -257,87 +223,44 @@ function AreaCard({ area }: { area: Area }) {
       href={areaHref(area)}
       target="_blank"
       rel="noopener noreferrer"
-      className="group/area flex w-full flex-col gap-4 rounded-xl bg-card p-6 shadow-xs ring-1 ring-foreground/10 outline-none hover:ring-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50 motion-safe:transition motion-safe:hover:-translate-y-0.5"
+      className="group/area flex w-full flex-col gap-4 rounded-xl bg-card p-6 shadow-xs ring-1 ring-foreground/10 outline-none hover:ring-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50"
     >
-      <span
-        aria-hidden="true"
-        className="flex size-10 items-center justify-center rounded-lg bg-muted"
-      >
-        <Icon className="size-5" />
-      </span>
+      <div className="flex items-start justify-between gap-4">
+        <span
+          aria-hidden="true"
+          className="flex size-10 items-center justify-center rounded-lg bg-muted"
+        >
+          <Icon className="size-5" />
+        </span>
+        <ArrowUpRightIcon
+          aria-hidden="true"
+          className="size-4 text-muted-foreground opacity-0 group-hover/area:opacity-100 group-focus-visible/area:opacity-100 motion-safe:transition-opacity rtl:-scale-x-100"
+        />
+        <span className="sr-only">(opens in a new tab)</span>
+      </div>
       <div className="flex flex-col gap-2">
-        <h4 className="text-lg font-semibold tracking-tight">{area.title}</h4>
+        <h3 className="text-lg font-semibold tracking-tight">{area.title}</h3>
         <p className="max-w-xl text-sm text-pretty text-muted-foreground">
           <span className="font-medium text-foreground">{area.who}.</span>{" "}
           {area.ask}
         </p>
       </div>
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1">
-        <span className="flex gap-1.5">
-          <Badge variant="outline" className="border-foreground/15">
-            {area.level}
+      <div className="mt-auto flex flex-wrap gap-1.5 pt-1">
+        <Badge variant="outline" className="border-foreground/15">
+          {area.level}
+        </Badge>
+        {area.proposal ? (
+          <Badge
+            variant="outline"
+            className="border-dashed border-foreground/30 text-muted-foreground"
+          >
+            Proposal first
           </Badge>
-          {area.proposal ? (
-            <Badge
-              variant="outline"
-              className="border-dashed border-foreground/30 text-muted-foreground"
-            >
-              Proposal first
-            </Badge>
-          ) : null}
-        </span>
-        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground group-hover/area:text-foreground">
-          {area.proposal ? "Open an idea" : "See open issues"}
-          <ArrowRightIcon
-            aria-hidden="true"
-            className="size-3.5 rtl:-scale-x-100"
-          />
-        </span>
+        ) : null}
       </div>
     </a>
   )
 }
-
-const STEPS = [
-  {
-    title: "Read the guide",
-    body: (
-      <>
-        <ExternalLink href={CONTRIBUTING_URL}>CONTRIBUTING.md</ExternalLink>{" "}
-        and the code of conduct. Ten minutes.
-      </>
-    ),
-  },
-  {
-    title: "Play a lesson",
-    body: (
-      <>
-        Open one from{" "}
-        <Link
-          href="/explore"
-          className="rounded-sm underline underline-offset-4 outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          Explore
-        </Link>{" "}
-        and find something you&apos;d make better.
-      </>
-    ),
-  },
-  {
-    title: "Pick a small task",
-    body: (
-      <>
-        Issues labelled{" "}
-        <ExternalLink href={GOOD_FIRST_ISSUES_URL}>good first issue</ExternalLink>{" "}
-        are sized for a first evening.
-      </>
-    ),
-  },
-  {
-    title: "Send a pull request",
-    body: "Say what changed and why, with a screenshot for anything visible.",
-  },
-]
 
 function ExternalLink({
   href,
@@ -358,41 +281,9 @@ function ExternalLink({
   )
 }
 
-function Steps() {
-  return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 pt-28 sm:px-6 sm:pt-36">
-      <div className="flex max-w-2xl flex-col gap-3">
-        <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-          New here? Four steps.
-        </h2>
-        <p className="text-base text-pretty text-muted-foreground">
-          Colin and Yan answer every pull request and issue within a week, even
-          if the answer is &ldquo;not yet&rdquo;.
-        </p>
-      </div>
-      <ol className="grid grid-cols-[minmax(0,1fr)] border-t sm:grid-cols-2 lg:grid-cols-4">
-        {STEPS.map((step, i) => (
-          <li key={step.title} className="flex flex-col gap-2.5 pt-7 pe-6 pb-2">
-            <span
-              aria-hidden="true"
-              className="text-4xl font-semibold tracking-tight text-muted-foreground tabular-nums"
-            >
-              {i + 1}
-            </span>
-            <span className="text-base font-semibold">{step.title}</span>
-            <span className="text-sm text-pretty text-muted-foreground">
-              {step.body}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </section>
-  )
-}
-
 function People({ people }: { people: Person[] }) {
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-4 pt-28 text-center sm:px-6 sm:pt-36">
+    <section className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 pt-28 sm:px-6 sm:pt-36">
       <div className="flex max-w-2xl flex-col gap-3">
         <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
           Built in the open, by people like you.
@@ -402,36 +293,32 @@ function People({ people }: { people: Person[] }) {
           without one. The next circle is yours.
         </p>
       </div>
-      <ul className="flex flex-wrap justify-center gap-x-2 gap-y-6 pt-2">
+      <ul className="flex flex-wrap gap-2 pt-2">
         {people.map((p) => (
-          <li key={p.id} className="flex w-32 flex-col items-center gap-2">
+          <li key={p.id}>
             <Face person={p} />
           </li>
         ))}
-        <li className="flex w-32 flex-col items-center gap-2">
-          <a
-            href={CONTRIBUTING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Add yourself"
-            className="flex size-16 items-center justify-center rounded-full border border-dashed border-foreground/30 text-sm font-medium text-muted-foreground outline-none hover:border-foreground/60 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            You
-          </a>
-          <span className="text-sm text-muted-foreground">Add yourself</span>
+        <li>
+          <TooltipTrigger>
+            <a
+              href={CONTRIBUTING_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Add yourself"
+              className="flex size-10 items-center justify-center rounded-full border border-dashed border-foreground/30 text-xs font-medium text-muted-foreground outline-none hover:border-foreground/60 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              You
+            </a>
+            <Tooltip>Add yourself</Tooltip>
+          </TooltipTrigger>
         </li>
       </ul>
-      <p className="text-sm text-muted-foreground">
-        {people.length} contributors ·{" "}
-        <ExternalLink href={`${SITE.repo}/graphs/contributors`}>
-          See everyone on GitHub
-        </ExternalLink>
-      </p>
     </section>
   )
 }
 
-/** A contributor's picture, linked to their profile, with their name and X link under it. */
+/** A contributor's picture, linked to their profile, with their name on hover. */
 function Face({ person }: { person: Person }) {
   const avatar = (
     <UserAvatar
@@ -442,7 +329,7 @@ function Face({ person }: { person: Person }) {
     />
   )
   return (
-    <>
+    <TooltipTrigger>
       {person.href ? (
         <a
           href={person.href}
@@ -458,26 +345,15 @@ function Face({ person }: { person: Person }) {
           {avatar}
         </a>
       ) : (
-        avatar
-      )}
-      <span className="flex max-w-full items-center gap-0.5">
-        <span className="truncate text-sm font-medium" title={person.name}>
-          {person.name}
+        <span
+          tabIndex={0}
+          aria-label={person.name}
+          className="block rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          {avatar}
         </span>
-        {person.x && person.login ? (
-          <LinkButton
-            href={person.x}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="ghost"
-            size="icon-xs"
-            aria-label={`${person.name} on X`}
-            className="shrink-0 text-muted-foreground"
-          >
-            <XLogo />
-          </LinkButton>
-        ) : null}
-      </span>
-    </>
+      )}
+      <Tooltip>{person.name}</Tooltip>
+    </TooltipTrigger>
   )
 }
