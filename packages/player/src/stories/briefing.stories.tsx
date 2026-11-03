@@ -7,6 +7,7 @@ import { Button } from "@workspace/ui/components/button"
 import { Briefing } from "../briefing"
 import { usePlayer } from "../context"
 import { Ninja } from "../ninja"
+import { directionOf } from "../strings"
 import { lessons, PlayerFrame } from "./fixtures"
 
 function situation({ challenge }: Lesson): string {
@@ -31,7 +32,12 @@ function BriefingDemo({
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
-      <div className="w-full max-w-lg" data-text-size={textSize} lang={lang}>
+      <div
+        className="w-full max-w-lg"
+        data-text-size={textSize}
+        lang={lang}
+        dir={directionOf(lang)}
+      >
         <Briefing
           key={telling}
           text={text}
@@ -96,9 +102,8 @@ export const LongBrief: Story = {
   },
 }
 
-/** Arabic content and player controls, with direction supplied by PlayerFrame. */
+/** An Arabic brief under the English interface: the brief runs right to left, Skip stays English. */
 export const RightToLeft: Story = {
-  globals: { ui: "ar" },
   args: {
     text: "تحتوي صفحة الإعدادات على ثلاثة إجراءات: **حفظ التغييرات**، و**استعادة الإعدادات الافتراضية**، و**حذف الحساب**. يريد الفريق أن يكون الحفظ واضحًا وسهلًا. اختر ترتيبًا يميّز الإجراء الأساسي عن الإجراء الذي يحذف الحساب نهائيًا.",
     lang: "ar",
