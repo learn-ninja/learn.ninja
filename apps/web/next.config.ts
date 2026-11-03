@@ -131,8 +131,6 @@ const nextConfig: NextConfig = {
     ),
     "/lessons/[slug]": PREPARE_FILES,
     "/docs/[[...slug]]": PREPARE_FILES,
-    // The site's link preview card reads the agent logos from public/ (lib/og.tsx).
-    "/opengraph-image": ["./public/agents/*.svg"],
   },
   async rewrites() {
     return {

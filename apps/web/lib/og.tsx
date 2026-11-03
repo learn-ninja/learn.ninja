@@ -1,21 +1,18 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
-
 import { ImageResponse } from "next/og"
 
 import { plainText } from "@workspace/player/plain-text"
 import {
   loadLanguage,
-  stringsFor,
   UI_TRANSLATIONS,
   type Strings,
 } from "@workspace/player/strings"
 import type { Lesson } from "@workspace/spec"
 
-import { AGENTS, INSTALL_COMMAND, SITE } from "./site"
+import { INSTALL_COMMAND, SITE } from "./site"
 
-// Link preview images (Open Graph), drawn with next/og: the site's card, one per lesson, and one for
-// expired links. They mirror the player: a bordered window showing the lesson's first question.
+// Link preview images (Open Graph), drawn with next/og: the site's card (the tagline and the install
+// command), one per lesson, and one for expired links. The lesson cards mirror the player: a bordered
+// window showing the lesson's first question.
 // The site's card also renders at other sizes for the files in brand/ (scripts/build-share-images.tsx).
 
 export const OG_SIZE = { width: 1200, height: 630 }
@@ -197,43 +194,6 @@ function Command({ k = 1 }: { k?: number }) {
     >
       <span style={{ color: C.faint }}>$</span>
       {INSTALL_COMMAND}
-    </div>
-  )
-}
-
-/** The first few agents from the home page, as the muted marks shown there. */
-const SHOWN_AGENTS = AGENTS.slice(0, 6)
-
-/**
- * An agent's logo as a data URL for an <img>, in the given color. The SVGs are drawn with
- * currentColor, which an image can't inherit. Read from public/agents (traced into the image route
- * by next.config.ts); if a file is missing, the logo is skipped.
- */
-function agentLogo(logo: string, color: string): string | null {
-  try {
-    const svg = readFileSync(
-      join(process.cwd(), "public", "agents", `${logo}.svg`),
-      "utf8"
-    ).replaceAll("currentColor", color)
-    return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`
-  } catch {
-    return null
-  }
-}
-
-/** A quiet row of agent marks, shown over the chat: it could be any of them. */
-function Agents({ k = 1 }: { k?: number }) {
-  const logos = SHOWN_AGENTS.map((a) => agentLogo(a.logo, C.muted)).filter(
-    (src): src is string => src !== null
-  )
-  if (!logos.length) return null
-  return (
-    <div
-      style={{ ...row, justifyContent: "center", gap: 24 * k, opacity: 0.8 }}
-    >
-      {logos.map((src, i) => (
-        <img key={i} src={src} width={26 * k} height={26 * k} alt="" />
-      ))}
     </div>
   )
 }
@@ -445,180 +405,35 @@ function Tagline({ size }: { size: number }) {
   )
 }
 
-/** The lesson the site's card pretends to have made. */
-const EXAMPLE = {
-  ask: "How can I get started with vibe coding?",
-  reply: "I made you a short lesson to get you started:",
-  title: "How vibe coding works",
-  link: "learn.ninja/l/vibe-coding-k3x9a2mq",
-  minutes: 6,
-  level: "beginner",
-} as const
-
-/**
- * The ask and the answer: you tell your agent what to teach, it replies with the lesson's link.
- * `k` scales every measure.
- */
-function Chat({
-  t,
-  k = 1,
-  width = 420,
-}: {
-  t: Strings
-  k?: number
-  width?: number
-}) {
-  const facts = [t.minutes(EXAMPLE.minutes), t.levels[EXAMPLE.level]]
-  return (
-    <div
-      style={{
-        ...column,
-        width,
-        gap: 22 * k,
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <div
-          style={{
-            display: "flex",
-            maxWidth: 400 * k,
-            padding: `${12 * k}px ${16 * k}px`,
-            borderRadius: 18 * k,
-            borderBottomRightRadius: 6 * k,
-            border: `1.5px solid ${C.border}`,
-            background: C.card,
-            fontSize: 17 * k,
-            fontWeight: 500,
-            lineHeight: 1.35,
-          }}
-        >
-          {EXAMPLE.ask}
-        </div>
-      </div>
-      <div style={{ ...column, gap: 14 * k }}>
-        <div
-          style={{
-            display: "flex",
-            fontSize: 17 * k,
-            lineHeight: 1.35,
-            color: C.body,
-          }}
-        >
-          {EXAMPLE.reply}
-        </div>
-        <div
-          style={{
-            ...column,
-            maxWidth: 520 * k,
-            gap: 16 * k,
-            padding: 20 * k,
-            borderRadius: 16 * k,
-            border: `1.5px solid ${C.border}`,
-            background: C.card,
-          }}
-        >
-          <div style={{ ...row, gap: 8 * k }}>
-            <Mark size={18 * k} color={C.muted} />
-            <div
-              style={{
-                display: "flex",
-                fontFamily: "Geist Mono",
-                fontSize: 13 * k,
-                color: C.muted,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {EXAMPLE.link}
-            </div>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              fontSize: 20 * k,
-              fontWeight: 600,
-              lineHeight: 1.25,
-              letterSpacing: -0.3 * k,
-              lineClamp: 2,
-            }}
-          >
-            {EXAMPLE.title}
-          </div>
-          <div style={{ ...row, gap: 10 * k }}>
-            {facts.map((f) => (
-              <Pill key={f} k={0.8 * k}>
-                {f}
-              </Pill>
-            ))}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignSelf: "flex-start",
-              marginTop: 4 * k,
-              padding: `${10 * k}px ${16 * k}px`,
-              borderRadius: 8 * k,
-              background: C.primary,
-              color: C.page,
-              fontSize: 15 * k,
-              fontWeight: 600,
-            }}
-          >
-            {t.start}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/** The agent marks over the chat. */
-function Demo({ k, width }: { k: number; width: number }) {
-  const t = stringsFor("en")
-  return (
-    <div style={{ ...column, alignItems: "center", gap: 20 * k }}>
-      <Agents k={k} />
-      <Chat t={t} k={k} width={width} />
-    </div>
-  )
-}
-
 // ---------- cards ----------
 
 /**
- * The site's card: the tagline beside the ask-and-answer chat. Wide sizes put the chat beside the
- * tagline; a square stacks them.
+ * The site's card: the tagline over the install command, as one block in the middle of the page,
+ * so a square crop (X's small card) keeps it. The lines inside the block stay left-aligned like the
+ * hero's; a square draws them larger.
  */
 export function siteImage(size: Size = OG_SIZE) {
   const aspect = size.width / size.height
   const stacked = aspect < 1.4
   const banner = aspect > 2.5
   const k = size.width / 1200
-
-  if (stacked) {
-    return respond(
-      <Page padding={`${60 * k}px ${72 * k}px`}>
-        <Header k={k} />
-        <div
-          style={{ ...column, flex: 1, justifyContent: "center", gap: 44 * k }}
-        >
-          <Tagline size={76 * k} />
-          <Demo k={1.3 * k} width={size.width - 144 * k} />
-          <Command k={k} />
-        </div>
-      </Page>,
-      size
-    )
-  }
-
+  const tagline = stacked ? 96 * k : banner ? 60 : 80 * k
+  const command = stacked ? 1.3 * k : banner ? 1 : 1.1 * k
   return respond(
-    <Page padding={banner ? "40px 72px" : `${48 * k}px ${56 * k}px`}>
-      <Header k={banner ? 1 : k} />
-      <div style={{ ...row, flex: 1, gap: 40 * k }}>
-        <div style={{ ...column, flex: 1, gap: 32 * k }}>
-          <Tagline size={banner ? 60 : 64 * k} />
-          <Command k={banner ? 1 : k} />
+    <Page padding={banner ? "40px 72px" : `${48 * k}px ${64 * k}px`}>
+      <div style={{ ...column, flex: 1, justifyContent: "center" }}>
+        <div
+          style={{
+            ...column,
+            alignSelf: "center",
+            alignItems: "flex-start",
+            gap: banner ? 28 : 40 * k,
+          }}
+        >
+          <Header k={banner ? 1 : k} />
+          <Tagline size={tagline} />
+          <Command k={command} />
         </div>
-        <Demo k={banner ? 1.05 : 1.18 * k} width={banner ? 440 : 500 * k} />
       </div>
     </Page>,
     size
