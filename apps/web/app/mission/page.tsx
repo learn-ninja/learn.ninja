@@ -31,7 +31,6 @@ import {
   CONTRIBUTING_URL,
   GOOD_FIRST_ISSUES_URL,
   MISSION,
-  MISSION_STATS,
   MISSION_SUMMARY,
   type Area,
   type AreaIcon,
@@ -117,7 +116,7 @@ function Hero() {
         <MissionNinja />
         <Badge variant="outline" className="h-7 gap-1.5 px-3 text-sm">
           <GitHubLogo />
-          Open source · Apache-2.0
+          Open source
         </Badge>
         <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
           {MISSION}
@@ -135,19 +134,6 @@ function Hero() {
           </LinkButton>
         </div>
       </div>
-      <dl className="relative mx-auto grid max-w-5xl grid-cols-2 px-4 sm:grid-cols-4 sm:border-t sm:px-6">
-        {MISSION_STATS.map((s) => (
-          <div
-            key={s.value}
-            className="flex flex-col gap-1.5 border-t py-6 sm:border-t-0 sm:border-s sm:ps-6 sm:first:border-s-0 sm:first:ps-0"
-          >
-            <dt className="order-2 text-sm text-muted-foreground">{s.label}</dt>
-            <dd className="order-1 text-3xl font-semibold tracking-tight">
-              {s.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
     </section>
   )
 }

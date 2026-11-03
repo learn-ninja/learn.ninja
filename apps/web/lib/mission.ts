@@ -1,4 +1,4 @@
-// The words on /mission: the mission line, the stats under the hero, the nine areas where help
+// The words on /mission: the mission line, the nine areas where help
 // goes furthest (grouped), and the four steps for someone new. CONTRIBUTING.md's "Where we want
 // help" table lists the same areas; mission.test.ts keeps the two in step.
 
@@ -7,14 +7,7 @@ import { SITE } from "./site"
 export const MISSION = "The best interactive learning in the world. Free for everyone."
 
 export const MISSION_SUMMARY =
-  "Duolingo, Brilliant, and Mimo proved that short, hands-on lessons are how people learn. learn.ninja is the open-source project making that kind of lesson free, for any subject, in every language, written by your agent."
-
-export const MISSION_STATS = [
-  { value: "9", label: "kata types, from choice to scenario" },
-  { value: "$0", label: "no account, no ads, no paywall" },
-  { value: "Any", label: "language, right-to-left included" },
-  { value: "1 link", label: "plays on any phone, anywhere" },
-] as const
+  "Duolingo and Brilliant proved short, hands-on lessons work. Together, we're bringing them to every subject, in every language."
 
 export type AreaIcon =
   | "subjects"
