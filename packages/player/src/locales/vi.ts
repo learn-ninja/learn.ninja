@@ -127,6 +127,26 @@ export const vi: Translation = {
     second: "Sau khi thử lại",
     missed: "Bỏ lỡ",
   },
+  streakDays: (days) => `Chuỗi ${days} ngày`,
+  streakUnit: () => "ngày liên tiếp",
+  streakLit:
+    "Đèn lồng của bạn đã sáng hôm nay. Quay lại ngày mai để giữ nó cháy.",
+  streakStarts:
+    "Chuỗi của bạn bắt đầu hôm nay. Quay lại ngày mai để thắp ngày thứ 2.",
+  streakAgain:
+    "Ngã bảy lần, đứng dậy tám lần. Chuỗi của bạn bắt đầu lại từ hôm nay.",
+  streakWeek: "7 ngày qua",
+  streakDayLit: "đã học xong",
+  streakDayRest: "ngày nghỉ",
+  streakDayUnlit: "không học",
+  streakDayOpen: "chưa đến",
+  restTitle: "Ngày nghỉ",
+  restInfo: (perRest, max) =>
+    `Ngày nghỉ giữ chuỗi của bạn vào ngày không học. ${perRest === 1 ? "Mỗi ngày học để dành được một" : `Cứ ${perRest} ngày học để dành được một`}, tối đa ${max}.`,
+  restSaved: (saved, max) => `Đã để dành ${saved}/${max}`,
+  restProgress: "Đến ngày nghỉ tiếp theo",
+  restProgressValue: (days, of) => `${days}/${of} ngày`,
+  restFull: "Đã để dành đủ. Dùng một ngày, và những ngày học sẽ nạp lại.",
   like: "Thích",
   liked: "Đã thích",
   likeLogIn: "Đăng nhập để lưu bài học này vào mục đã thích.",
