@@ -142,6 +142,43 @@ export const ar: Translation = {
     second: "بعد محاولة أخرى",
     missed: "خطأ",
   },
+  streakDays: (days) =>
+    p(days, {
+      zero: "سلسلة # يوم",
+      one: "سلسلة يوم واحد",
+      two: "سلسلة يومين",
+      few: "سلسلة # أيام",
+      many: "سلسلة # يومًا",
+      other: "سلسلة # يوم",
+    }),
+  streakUnit: (days) =>
+    p(days, {
+      two: "يومان متتاليان",
+      few: "أيام متتالية",
+      many: "يومًا متتاليًا",
+      other: "يوم متتالٍ",
+    }),
+  streakLit: "فانوسك مُضاء لليوم. عُد غدًا لتُبقيه مشتعلًا.",
+  streakStarts: "تبدأ سلسلتك اليوم. عُد غدًا لتُضيء اليوم الثاني.",
+  streakAgain: "اسقط سبع مرات، وانهض ثماني. تبدأ سلسلتك من جديد اليوم.",
+  streakWeek: "آخر 7 أيام",
+  streakDayLit: "أُنهي الدرس",
+  streakDayRest: "يوم راحة",
+  streakDayUnlit: "بلا درس",
+  streakDayOpen: "ليس بعد",
+  restTitle: "أيام الراحة",
+  restInfo: (perRest, max) =>
+    `يوم الراحة يحفظ سلسلتك في يوم بلا درس. ${p(perRest, { one: "كل يوم تتعلّم فيه يدّخر يومًا", two: "كل يومين تتعلّم فيهما يدّخران يومًا", few: "كل # أيام تتعلّم فيها تدّخر يومًا", other: "كل # يومًا تتعلّم فيها تدّخر يومًا" })}، حتى ${max}.`,
+  restSaved: (saved, max) => `${saved} من ${max} مُدّخرة`,
+  restProgress: "نحو يوم الراحة التالي",
+  restProgressValue: (days, of) =>
+    p(of, {
+      one: `${days} من يوم واحد`,
+      two: `${days} من يومين`,
+      few: `${days} من # أيام`,
+      other: `${days} من # يومًا`,
+    }),
+  restFull: "كلها مُدّخرة. استخدم واحدًا، وأيام التعلّم تعيد شحنه.",
   like: "أعجبني",
   liked: "أعجبك",
   likeLogIn: "سجّل الدخول لحفظ هذا الدرس في إعجاباتك.",
