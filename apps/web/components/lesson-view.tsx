@@ -18,6 +18,7 @@ import { AccountMenuItems } from "@/components/account/account-menu"
 import { LessonAccount } from "@/components/account/lesson-account"
 import { ReportDialog } from "@/components/explore/report-dialog"
 import { FeedbackButton } from "@/components/feedback/feedback-button"
+import { GitHubStars } from "@/components/site/github-stars"
 import type { AccountInfo } from "@/lib/auth/account-info"
 import { exploreApi } from "@/lib/explore/browser"
 import { keepFinish, sendFinishes } from "@/lib/explore/finishes"
@@ -153,10 +154,14 @@ export function LessonView({
         uiLanguage={props.uiLanguage ?? urlLanguage}
         menuItems={menuItems}
         headerActions={
-          <FeedbackButton
-            lessonId={lessonId}
-            onReport={canReport ? () => setReportOpen(true) : undefined}
-          />
+          <>
+            <FeedbackButton
+              lessonId={lessonId}
+              onReport={canReport ? () => setReportOpen(true) : undefined}
+            />
+            {/* Guests may not know the site yet; logged in, they're in the app. */}
+            {account ? null : <GitHubStars className="max-sm:hidden" />}
+          </>
         }
         headerAccount={<LessonAccount account={account} streak={lantern} />}
         phoneAccount={

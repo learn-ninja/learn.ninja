@@ -18,11 +18,11 @@ import { Wordmark } from "./wordmark"
 /**
  * The bar at the top of every page. Visitors get Explore · Docs · Log in and a wordmark that
  * links home; once logged in, Explore is home, so the wordmark goes there and the links fold
- * into the account menu behind the profile picture (which also opens on hover). The GitHub link
- * with its star count leads the links on wider screens. `start` adds
+ * into the account menu behind the profile picture (which also opens on hover). On the marketing
+ * pages and the docs, the GitHub link with its star count leads the links on wider screens. `start` adds
  * page-specific controls before the wordmark (the docs menu), `action` a button after it (copy
  * prompt). `feedback` adds the bug button at the start of the links, for the app's own pages
- * (not the marketing pages or the docs). `streak` puts the logged-in learner's lantern before the picture. `account` is what a
+ * (not the marketing pages or the docs), in place of the GitHub link. `streak` puts the logged-in learner's lantern before the picture. `account` is what a
  * page that checked the session knows about the user; static pages
  * leave it out and the marker cookie decides after hydration. Until then the visitor's links are
  * kept but invisible, so the header doesn't shift for the many visitors who aren't logged in.
@@ -41,7 +41,7 @@ export function SiteHeader({
   account?: AccountInfo | null
   /** The logged-in learner's streak, for pages that know it. */
   streak?: DayStreak | null
-  /** Show the bug button: on the app's pages, not on marketing pages or the docs. */
+  /** Show the bug button instead of the GitHub link: on the app's pages, not on marketing pages or the docs. */
   feedback?: boolean
 }) {
   const account = useAccount(known)
@@ -57,8 +57,11 @@ export function SiteHeader({
         <Wordmark href={visitor ? "/" : "/explore"} className="me-2" />
         {action}
         <nav aria-label="Site" className="ms-auto flex items-center gap-1">
-          {feedback ? <FeedbackButton /> : null}
-          <GitHubStars className="max-sm:hidden" />
+          {feedback ? (
+            <FeedbackButton />
+          ) : (
+            <GitHubStars className="max-sm:hidden" />
+          )}
           {visitor ? (
             <>
               <ButtonLink href="/explore" variant="ghost" size="sm">
