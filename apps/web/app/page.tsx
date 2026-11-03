@@ -4,7 +4,9 @@ import { Faq } from "@/components/home/faq"
 import { GetStarted } from "@/components/home/get-started"
 import { Hero } from "@/components/home/hero"
 import { MadeThisWeek } from "@/components/home/made-this-week"
+import { SectionDivider } from "@/components/home/section-divider"
 import { SetupBar } from "@/components/home/setup-bar"
+import { SetupPicker } from "@/components/home/setup-picker"
 import { SiteFooter } from "@/components/site/site-footer"
 import { JsonLd } from "@/components/site/json-ld"
 import { SiteHeader } from "@/components/site/site-header"
@@ -21,13 +23,16 @@ export default function HomePage() {
   return (
     // The padding keeps the footer clear of the fixed bar.
     <div className="flex min-h-svh flex-col pb-[calc(3rem+1px+env(safe-area-inset-bottom))]">
-      <SiteHeader />
+      <SiteHeader action={<SetupPicker className="max-sm:hidden" />} />
       <JsonLd data={homeJsonLd()} />
       <main className="flex-1">
         <Hero />
         <MadeThisWeek />
+        <SectionDivider />
         <Faq />
+        <SectionDivider />
         <GetStarted />
+        <SectionDivider />
       </main>
       <SiteFooter className="max-w-3xl" />
       <SetupBar />

@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import type { DayStreak } from "@workspace/player"
-import { cn } from "@workspace/ui/lib/utils"
-
 import { AccountLink, useAccount } from "@/components/account/account-link"
 import { AccountMenu } from "@/components/account/account-menu"
 import { FeedbackButton } from "@/components/feedback/feedback-button"
@@ -12,18 +10,23 @@ import type { AccountInfo } from "@/lib/auth/account-info"
 import { sendFinishes } from "@/lib/explore/finishes"
 
 import { ButtonLink } from "./button-link"
+import { GitHubStars } from "./github-stars"
+import { SiteMenu } from "./site-menu"
 import { Wordmark } from "./wordmark"
 
 /**
  * The bar at the top of every page. Visitors get Explore · Docs · Log in and a wordmark that
  * links home; once logged in, Explore is home, so the wordmark goes there and the links fold
- * into the account menu behind the profile picture (which also opens on hover). `start` adds
+ * into the account menu behind the profile picture (which also opens on hover). On the marketing
+ * pages and the docs, the GitHub link with its star count leads the links on wider screens. `start` adds
  * page-specific controls before the wordmark (the docs menu), `action` a button after it (copy
  * prompt). `feedback` adds the bug button at the start of the links, for the app's own pages
- * (not the marketing pages or the docs). `streak` puts the logged-in learner's lantern before the picture. `account` is what a
+ * (not the marketing pages or the docs), in place of the GitHub link. `streak` puts the logged-in learner's lantern before the picture. `account` is what a
  * page that checked the session knows about the user; static pages
  * leave it out and the marker cookie decides after hydration. Until then the visitor's links are
  * kept but invisible, so the header doesn't shift for the many visitors who aren't logged in.
+ * On phones the links, the bug button, and the picture's menu fold into one drawer behind a menu
+ * button at the end (`SiteMenu`); the wordmark, the docs menu, the GitHub link, and the lantern stay.
  * Logged in, it sends the lessons this browser finished while logged out (lib/explore/finishes).
  */
 export function SiteHeader({
@@ -39,7 +42,7 @@ export function SiteHeader({
   account?: AccountInfo | null
   /** The logged-in learner's streak, for pages that know it. */
   streak?: DayStreak | null
-  /** Show the bug button: on the app's pages, not on marketing pages or the docs. */
+  /** Show the bug button instead of the GitHub link: on the app's pages, not on marketing pages or the docs. */
   feedback?: boolean
 }) {
   const account = useAccount(known)
@@ -55,22 +58,30 @@ export function SiteHeader({
         <Wordmark href={visitor ? "/" : "/explore"} className="me-2" />
         {action}
         <nav aria-label="Site" className="ms-auto flex items-center gap-1">
-          {feedback ? <FeedbackButton /> : null}
+          {feedback ? (
+            <FeedbackButton className="max-sm:hidden" />
+          ) : (
+            <GitHubStars />
+          )}
           {visitor ? (
             <>
-              <ButtonLink href="/explore" variant="ghost" size="sm">
+              <ButtonLink
+                href="/explore"
+                variant="ghost"
+                size="sm"
+                className="max-sm:hidden"
+              >
                 Explore
               </ButtonLink>
-              {/* On phones the docs menu (`start`) stands in for this link. */}
               <ButtonLink
                 href="/docs"
                 variant="ghost"
                 size="sm"
-                className={cn(start && "max-sm:hidden")}
+                className="max-sm:hidden"
               >
                 Docs
               </ButtonLink>
-              <AccountLink account={account} />
+              <AccountLink account={account} className="max-sm:hidden" />
             </>
           ) : (
             <>
@@ -82,9 +93,10 @@ export function SiteHeader({
                   }
                 />
               ) : null}
-              <AccountMenu account={account} />
+              <AccountMenu account={account} className="max-sm:hidden" />
             </>
           )}
+          <SiteMenu account={account} feedback={feedback} />
         </nav>
       </div>
     </header>

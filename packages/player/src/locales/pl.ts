@@ -149,6 +149,37 @@ export const pl: Translation = {
     second: "Po kolejnej próbie",
     missed: "Błędna",
   },
+  streakDays: (days) =>
+    p(days, {
+      one: "Seria # dnia",
+      few: "Seria # dni",
+      many: "Seria # dni",
+      other: "Seria # dnia",
+    }),
+  streakUnit: (days) =>
+    p(days, {
+      one: "dzień serii",
+      few: "dni serii",
+      many: "dni serii",
+      other: "dnia serii",
+    }),
+  streakLit: "Twój lampion świeci na dziś. Wróć jutro, żeby nie zgasł.",
+  streakStarts: "Twoja seria zaczyna się dziś. Wróć jutro, by zapalić dzień 2.",
+  streakAgain:
+    "Upaść siedem razy, wstać osiem. Twoja seria zaczyna się dziś od nowa.",
+  streakWeek: "Ostatnie 7 dni",
+  streakDayLit: "lekcja ukończona",
+  streakDayRest: "dzień odpoczynku",
+  streakDayUnlit: "bez lekcji",
+  streakDayOpen: "jeszcze nie",
+  restTitle: "Dni odpoczynku",
+  restInfo: (perRest, max) =>
+    `Dzień odpoczynku podtrzymuje serię w dniu bez lekcji. ${p(perRest, { one: "Każdy dzień nauki odkłada jeden", other: "Co # dni nauki odkładasz jeden" })}, maksymalnie ${max}.`,
+  restSaved: (saved, max) => `Odłożone: ${saved} z ${max}`,
+  restProgress: "Do następnego dnia odpoczynku",
+  restProgressValue: (days, of) =>
+    p(of, { one: `${days} z # dnia`, other: `${days} z # dni` }),
+  restFull: "Wszystkie odłożone. Wykorzystaj jeden, a dni nauki go odnowią.",
   like: "Lubię to",
   liked: "Polubiono",
   likeLogIn: "Zaloguj się, aby zapisać tę lekcję w polubionych.",

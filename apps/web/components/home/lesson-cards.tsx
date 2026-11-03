@@ -9,37 +9,57 @@ import type { LessonSummary } from "@/lib/explore/queries"
 import { lessonPath } from "@/lib/publish/paths"
 import { SITE } from "@/lib/site"
 
+import { MarqueeHold } from "./marquee-hold"
+
+import "./lesson-cards.css"
+
 // The lesson cards of the home page's Made this week section (made-this-week.tsx reads the
 // lessons; this file only draws them, so Storybook can too).
 
 const t = stringsFor("en")
 
-/** The cards, in two rows offset by half a card, centered on the page and cut by the window. */
+/**
+ * The cards in two rows. From lg up, a static field: the rows offset by half a card, centered on
+ * the page and cut by the window. Below lg, two marquees drifting opposite ways (lesson-cards.css):
+ * each row's track holds its cards twice, and the copy is inert so each lesson is read and tabbed
+ * to once.
+ */
 export function LessonCards({ lessons }: { lessons: LessonSummary[] }) {
   const half = Math.ceil(lessons.length / 2)
   const rows = [lessons.slice(0, half), lessons.slice(half)]
   return (
-    <div className="w-full overflow-hidden mask-x-from-80% mask-x-to-100%">
-      <ul className="mx-auto flex w-max flex-col gap-3.5">
+    <MarqueeHold className="lc">
+      <div className="lc-rows mx-auto flex w-max flex-col">
         {rows.map((row, i) => (
-          <li key={i} className="contents">
-            <ul
-              className={cn(
-                "flex w-max gap-3.5",
-                // The second row starts half a card in, so the rows read as one field, not a grid
-                i === 1 && "ps-[170px]"
-              )}
-            >
-              {row.map((lesson) => (
-                <li key={lesson.id} className="contents">
-                  <LessonCard lesson={lesson} />
-                </li>
-              ))}
-            </ul>
-          </li>
+          <div
+            key={i}
+            className="lc-track flex w-max"
+            data-reverse={i === 1 || undefined}
+          >
+            {[false, true].map((copy) => (
+              <ul
+                key={String(copy)}
+                className={cn(
+                  "flex w-max",
+                  copy && "lc-copy",
+                  // In the static field the second row starts half a card in, so the rows read
+                  // as one field, not a grid
+                  i === 1 && !copy && "lg:ps-[170px]"
+                )}
+                aria-hidden={copy || undefined}
+                inert={copy || undefined}
+              >
+                {row.map((lesson) => (
+                  <li key={lesson.id} className="contents">
+                    <LessonCard lesson={lesson} />
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
         ))}
-      </ul>
-    </div>
+      </div>
+    </MarqueeHold>
   )
 }
 

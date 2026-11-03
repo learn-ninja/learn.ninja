@@ -118,3 +118,13 @@ type Story = StoryObj<typeof meta>
 
 /** Two staggered rows of lesson cards, wider than the window and fading at its edges. */
 export const Field: Story = {}
+
+/** On a phone the rows drift slowly, opposite ways, and loop; hold one to stop it. */
+export const Phone: Story = {
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+}
+
+/** A tablet drifts too; the static field starts at lg. */
+export const Tablet: Story = {
+  globals: { viewport: { value: "tablet", isRotated: false } },
+}

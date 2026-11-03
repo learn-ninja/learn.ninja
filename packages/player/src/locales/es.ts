@@ -138,6 +138,27 @@ export const es: Translation = {
     second: "Tras otro intento",
     missed: "Fallada",
   },
+  streakDays: (days) =>
+    p(days, { one: "Racha de # día", other: "Racha de # días" }),
+  streakUnit: (days) =>
+    p(days, { one: "día de racha", other: "días de racha" }),
+  streakLit: "Tu farol está encendido por hoy. Vuelve mañana para mantenerlo.",
+  streakStarts: "Tu racha empieza hoy. Vuelve mañana para encender el día 2.",
+  streakAgain:
+    "Cae siete veces, levántate ocho. Tu racha vuelve a empezar hoy.",
+  streakWeek: "Los últimos 7 días",
+  streakDayLit: "lección terminada",
+  streakDayRest: "día de descanso",
+  streakDayUnlit: "sin lección",
+  streakDayOpen: "todavía no",
+  restTitle: "Días de descanso",
+  restInfo: (perRest, max) =>
+    `Un día de descanso mantiene tu racha un día sin lección. ${p(perRest, { one: "Cada día que aprendes guarda uno", other: "Cada # días que aprendes guardan uno" })}, hasta ${max}.`,
+  restSaved: (saved, max) => `${saved} de ${max} guardados`,
+  restProgress: "Hacia el próximo día de descanso",
+  restProgressValue: (days, of) =>
+    p(of, { one: `${days} de # día`, other: `${days} de # días` }),
+  restFull: "Todos guardados. Usa uno y los días de aprendizaje lo recargan.",
   like: "Me gusta",
   liked: "Te gusta",
   likeLogIn: "Inicia sesión para guardar esta lección en tus me gusta.",

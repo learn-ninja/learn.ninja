@@ -1,0 +1,113 @@
+/* The Made this week field (lesson-cards.tsx). From lg up it's the static field: two staggered
+   rows wider than the window, cut by it and faded at its edges. Below lg (phones and tablets) each
+   row is a marquee: its cards twice over in one track that slides by one copy and starts again, so
+   the row drifts forever and wraps without a seam. The rows drift opposite ways at slightly
+   different speeds, so they read as two currents rather than one sheet. Only transform moves. */
+
+.lc {
+  --lc-gap: 0.875rem;
+  /* How much of each side fades out */
+  --lc-fade: 40px;
+  /* The slow drift: about a card every ten seconds. A lap is one copy of the row plus a gap. */
+  --lc-lap: 50s;
+  width: 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black var(--lc-fade),
+    black calc(100% - var(--lc-fade)),
+    transparent
+  );
+}
+
+.lc-rows,
+.lc-track,
+.lc-track > ul {
+  gap: var(--lc-gap);
+}
+
+/* A lap slides the track one copy toward the start, where it hangs from (the track's content
+   only extends toward the end, so that's the only way it can go without baring the floor). The
+   first row plays it forward, the second backward, a little slower. */
+.lc-track {
+  --lc-sign: -1;
+}
+[dir="rtl"] .lc-track {
+  --lc-sign: 1;
+}
+.lc-track[data-reverse] {
+  --lc-lap: 58s;
+  animation-direction: reverse;
+}
+
+@media (max-width: calc(64rem - 1px)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lc-track {
+      animation: lc-drift var(--lc-lap) linear infinite;
+      will-change: transform;
+    }
+    /* The second row starts a third of the way through its lap, so the rows never line up */
+    .lc-track[data-reverse] {
+      animation-delay: calc(var(--lc-lap) / -3);
+    }
+    /* Holding a row (or hovering it with a mouse) stops it, to read a card before tapping it */
+    .lc[data-held] .lc-track {
+      animation-play-state: paused;
+    }
+    @media (hover: hover) {
+      .lc:hover .lc-track {
+        animation-play-state: paused;
+      }
+    }
+  }
+
+  /* With motion off, each row scrolls by finger instead, with a page gutter and no fade */
+  @media (prefers-reduced-motion: reduce) {
+    .lc {
+      mask-image: none;
+    }
+    .lc-rows,
+    .lc-track {
+      width: 100%;
+    }
+    .lc-track {
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: 1rem;
+      scrollbar-width: none;
+    }
+    .lc-track::-webkit-scrollbar {
+      display: none;
+    }
+    .lc-track > ul {
+      padding-inline: 1rem;
+    }
+    .lc-track > ul > li > a {
+      scroll-snap-align: start;
+    }
+    .lc-copy {
+      display: none;
+    }
+  }
+}
+
+/* The static field from lg up: a wider fade, no second copy */
+@media (min-width: 64rem) {
+  .lc {
+    --lc-fade: 20%;
+  }
+  .lc-copy {
+    display: none;
+  }
+}
+
+/* One copy of the row plus the gap after it, so the second copy lands where the first began */
+@keyframes lc-drift {
+  from {
+    translate: 0;
+  }
+  to {
+    translate: calc(var(--lc-sign) * (50% + var(--lc-gap) / 2));
+  }
+}

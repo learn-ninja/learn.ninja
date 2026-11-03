@@ -140,6 +140,28 @@ export const nl: Translation = {
     second: "Na nog een poging",
     missed: "Gemist",
   },
+  streakDays: (days) =>
+    p(days, { one: "Reeks van # dag", other: "Reeks van # dagen" }),
+  streakUnit: (days) => p(days, { one: "dag op rij", other: "dagen op rij" }),
+  streakLit:
+    "Je lantaarn brandt voor vandaag. Kom morgen terug om hem brandend te houden.",
+  streakStarts:
+    "Je reeks begint vandaag. Kom morgen terug om dag 2 aan te steken.",
+  streakAgain:
+    "Zeven keer vallen, acht keer opstaan. Je reeks begint vandaag opnieuw.",
+  streakWeek: "De afgelopen 7 dagen",
+  streakDayLit: "les afgerond",
+  streakDayRest: "rustdag",
+  streakDayUnlit: "geen les",
+  streakDayOpen: "nog niet",
+  restTitle: "Rustdagen",
+  restInfo: (perRest, max) =>
+    `Een rustdag houdt je reeks in stand op een dag zonder les. ${p(perRest, { one: "Elke dag dat je leert spaart er één", other: "Elke # dagen dat je leert spaar je er één" })}, tot ${max}.`,
+  restSaved: (saved, max) => `${saved} van ${max} gespaard`,
+  restProgress: "Op weg naar de volgende rustdag",
+  restProgressValue: (days, of) =>
+    p(of, { one: `${days} van # dag`, other: `${days} van # dagen` }),
+  restFull: "Alles gespaard. Gebruik er een, en leerdagen laden hem weer op.",
   like: "Vind ik leuk",
   liked: "Leuk gevonden",
   likeLogIn: "Log in om deze les bij je likes te bewaren.",

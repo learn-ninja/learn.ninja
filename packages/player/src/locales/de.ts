@@ -143,6 +143,29 @@ export const de: Translation = {
     second: "Nach einem weiteren Versuch",
     missed: "Verpasst",
   },
+  streakDays: (days) =>
+    p(days, { one: "# Tag in Folge", other: "# Tage in Folge" }),
+  streakUnit: (days) =>
+    p(days, { one: "Tag in Folge", other: "Tage in Folge" }),
+  streakLit:
+    "Deine Laterne leuchtet für heute. Komm morgen wieder, damit sie weiterbrennt.",
+  streakStarts:
+    "Deine Serie beginnt heute. Komm morgen wieder, um Tag 2 zu entzünden.",
+  streakAgain:
+    "Siebenmal fallen, achtmal aufstehen. Deine Serie beginnt heute neu.",
+  streakWeek: "Die letzten 7 Tage",
+  streakDayLit: "Lektion geschafft",
+  streakDayRest: "Ruhetag",
+  streakDayUnlit: "keine Lektion",
+  streakDayOpen: "noch nicht",
+  restTitle: "Ruhetage",
+  restInfo: (perRest, max) =>
+    `Ein Ruhetag hält deine Serie an einem Tag ohne Lektion. ${p(perRest, { one: "Jeder Lerntag spart einen", other: "Alle # Lerntage sparst du einen" })}, bis zu ${max}.`,
+  restSaved: (saved, max) => `${saved} von ${max} gespart`,
+  restProgress: "Bis zum nächsten Ruhetag",
+  restProgressValue: (days, of) =>
+    p(of, { one: `${days} von # Tag`, other: `${days} von # Tagen` }),
+  restFull: "Alle gespart. Nutze einen, und Lerntage laden ihn wieder auf.",
   like: "Gefällt mir",
   liked: "Gefällt dir",
   likeLogIn: "Melde dich an, um diese Lektion in deinen Likes zu speichern.",
