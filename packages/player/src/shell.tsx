@@ -179,6 +179,7 @@ export function LessonHeader({
   homeHref,
   shareUrl,
   settings,
+  actions,
   account,
   menuItems,
   phoneMenu,
@@ -200,6 +201,8 @@ export function LessonHeader({
   shareUrl?: string
   /** The app's settings menu, shown before Share. */
   settings?: React.ReactNode
+  /** The app's own buttons, first in the header's end group, on phones too (the bug button). */
+  actions?: React.ReactNode
   /** The app's account controls, last in the header, on phones too. */
   account?: React.ReactNode
   /** The app's own entries for the lesson menu, after Restart. */
@@ -313,6 +316,7 @@ export function LessonHeader({
         <div aria-hidden="true" className="min-w-0 max-sm:hidden sm:flex-1" />
       )}
       <div className="flex shrink-0 items-center justify-end gap-2 sm:flex-1">
+        {actions}
         <div className="flex items-center gap-2 max-sm:hidden">
           {settings}
           {/* The maker's Share shows where the lesson stands and holds the link and publishing. */}

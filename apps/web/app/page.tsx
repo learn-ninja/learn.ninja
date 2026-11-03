@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 
-import { Bento } from "@/components/home/bento"
 import { Faq } from "@/components/home/faq"
 import { GetStarted } from "@/components/home/get-started"
 import { Hero } from "@/components/home/hero"
@@ -26,7 +25,6 @@ export default function HomePage() {
       <JsonLd data={homeJsonLd()} />
       <main className="flex-1">
         <Hero />
-        <Bento />
         <MadeThisWeek />
         <Faq />
         <GetStarted />

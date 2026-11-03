@@ -6,41 +6,117 @@
 
 .bn {
   container-type: inline-size;
+  /* The player's answer green (Tailwind green-500, green-400, and the 10% tint) */
+  --bn-green: #22c55e;
+  --bn-green-text: #4ade80;
+  --bn-green-tint: rgba(34, 197, 94, 0.1);
 }
 
 .bn-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 480px 300px 320px 320px;
-  grid-template-areas: "kata" "agents" "subjects" "streak";
+  grid-template-rows: 416px 356px 320px 330px 300px;
+  grid-template-areas: "kata" "subjects" "agents" "share" "activity";
   gap: 14px;
 }
 
 .bn-tile[data-tile="kata"] {
   grid-area: kata;
 }
-.bn-tile[data-tile="agents"] {
-  grid-area: agents;
-}
 .bn-tile[data-tile="subjects"] {
   grid-area: subjects;
 }
-.bn-tile[data-tile="streak"] {
-  grid-area: streak;
+.bn-tile[data-tile="agents"] {
+  grid-area: agents;
+}
+.bn-tile[data-tile="share"] {
+  grid-area: share;
+}
+.bn-tile[data-tile="activity"] {
+  grid-area: activity;
 }
 
 /* Stacked but wide enough for the desktop card: the kata tile is only as tall as the card needs */
 @container (min-width: 420px) {
   .bn-grid {
-    grid-template-rows: 400px 300px 320px 320px;
+    grid-template-rows: 440px 356px 320px 330px 300px;
   }
 }
 
+/* A tablet column: the kata and the subjects each across the grid, the three small tiles in pairs */
 @container (min-width: 640px) {
   .bn-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: 380px 320px;
-    grid-template-areas: "kata kata agents" "subjects subjects streak";
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 440px 370px 330px 290px;
+    grid-template-areas: "kata kata" "subjects subjects" "agents share" "activity activity";
+  }
+}
+
+/* The wide grid: two halves over three thirds. Below this a half is too narrow for the desktop card. */
+@container (min-width: 900px) {
+  .bn-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-rows: 440px 330px;
+    grid-template-areas:
+      "kata kata kata subjects subjects subjects"
+      "agents agents share share activity activity";
+  }
+}
+
+/* ---- The picture area: under the copy, cropped by the tile, faded where a picture runs off ----
+   Every picture keeps the tile's 24px inset on the start and top; it may run off the end or the
+   bottom, and only there it fades out. The activity grid runs off the start instead and fades its
+   own strip (.bn-days-clip) with the same --bn-fade. */
+
+.bn-pic {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  --bn-fade: 56px;
+}
+
+.bn-pic[data-fade="end"] {
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - var(--bn-fade)),
+    transparent
+  );
+}
+
+.bn-pic[data-fade="bottom"] {
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - var(--bn-fade)),
+    transparent
+  );
+}
+
+.bn-pic[data-fade="end bottom"] {
+  mask-image:
+    linear-gradient(to right, #000 calc(100% - var(--bn-fade)), transparent),
+    linear-gradient(to bottom, #000 calc(100% - var(--bn-fade)), transparent);
+  mask-composite: intersect;
+}
+
+[dir="rtl"] .bn-pic[data-fade="end"] {
+  mask-image: linear-gradient(
+    to left,
+    #000 calc(100% - var(--bn-fade)),
+    transparent
+  );
+}
+
+[dir="rtl"] .bn-pic[data-fade="end bottom"] {
+  mask-image:
+    linear-gradient(to left, #000 calc(100% - var(--bn-fade)), transparent),
+    linear-gradient(to bottom, #000 calc(100% - var(--bn-fade)), transparent);
+}
+
+/* The phone player fits its tile: nothing to fade */
+@container (max-width: 419px) {
+  .bn-tile[data-tile="kata"] .bn-pic {
+    mask-image: none;
   }
 }
 
@@ -76,10 +152,9 @@
   --ss-radius-sm: 6px;
   --ss-radius-md: 8px;
   --ss-radius-lg: 10px;
-  /* The player's answer green (Tailwind green-500, green-400, and the 10% tint) */
-  --bn-green: #22c55e;
-  --bn-green-text: #4ade80;
-  --bn-green-tint: rgba(34, 197, 94, 0.1);
+  /* A miss: the player's yellow (Tailwind yellow-500 and its 10% tint) */
+  --bn-yellow: #eab308;
+  --bn-yellow-tint: rgba(234, 179, 8, 0.1);
   --bn-ink: #fafafa;
   --bn-ink-2: #a1a1aa;
   --bn-line: rgba(255, 255, 255, 0.1);
@@ -95,8 +170,8 @@
 .bn-card {
   position: absolute;
   top: 12px;
-  left: 24px;
-  height: 264px;
+  inset-inline-start: 24px;
+  height: 304px;
   border: 1px solid var(--bn-line);
   border-radius: 16px;
 }
@@ -243,6 +318,51 @@
   background: var(--bn-green-tint);
 }
 
+.bn-chip[data-state="miss"] {
+  border-color: var(--bn-yellow);
+  background: var(--bn-yellow-tint);
+}
+
+/* The note under the answers after a miss: the player's amber note, a filled "!" at its start */
+.bn-note {
+  display: flex;
+  align-self: flex-start;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--bn-yellow);
+  border-radius: 8px;
+  background: var(--bn-yellow-tint);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--bn-ink);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.bn-note[data-on] {
+  opacity: 1;
+  transform: none;
+}
+
+.bn-note__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: var(--bn-yellow);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  color: #171717;
+}
+
 .bn-key {
   display: inline-flex;
   align-items: center;
@@ -314,6 +434,11 @@
   transform: none;
 }
 
+/* A miss: yellow 22% in the card's dark, as the player mixes it */
+.bn-sensei[data-tone="miss"] .bn-bubble {
+  background: #45391a;
+}
+
 /* The tray along the card's foot: Check answer in the middle, a pill, as the player's is */
 .bn-tray {
   position: absolute;
@@ -354,7 +479,12 @@
   transform: scale(0.97);
 }
 
-.bn-button[data-done] {
+.bn-button[data-tone="miss"] {
+  background: var(--bn-yellow);
+  color: #422006;
+}
+
+.bn-button[data-tone="right"] {
   background: var(--bn-green);
   color: #052e16;
 }
@@ -425,9 +555,14 @@
     border-color 0.3s ease;
 }
 
-.bn-stage--phone .bn-tray[data-checked] {
+.bn-stage--phone .bn-tray[data-checked="right"] {
   border-top-color: var(--bn-green);
   background: #19291f;
+}
+
+.bn-stage--phone .bn-tray[data-checked="miss"] {
+  border-top-color: var(--bn-yellow);
+  background: #2c2814;
 }
 
 .bn-tray__line {
@@ -440,6 +575,11 @@
 
 .bn-stage--phone .bn-tray[data-checked] .bn-tray__line {
   display: block;
+}
+
+/* The phone shows the note in its tray instead */
+.bn-stage--phone .bn-note {
+  display: none;
 }
 
 .bn-stage--phone .bn-button {
@@ -469,7 +609,7 @@
     transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.bn-button[data-done] .bn-button__mark {
+.bn-button[data-tone="right"] .bn-button__mark {
   opacity: 1;
   transform: translateY(-50%) scale(1);
 }
@@ -478,7 +618,8 @@
 
 .bn-marks {
   position: relative;
-  margin: 20px 0 0 24px;
+  margin-block-start: 20px;
+  margin-inline-start: 24px;
   display: grid;
   grid-template-columns: repeat(6, 60px);
   gap: 12px;
@@ -551,7 +692,8 @@
 
 .bn-cards {
   position: relative;
-  margin: 20px 0 0 24px;
+  margin-block-start: 20px;
+  margin-inline-start: 24px;
   display: grid;
   grid-template-columns: repeat(2, 176px);
   gap: 12px;
@@ -566,12 +708,12 @@
 /* The wide grid (the bento past the page's column): bigger cards, still off the right and bottom */
 @container (min-width: 900px) {
   .bn-cards {
-    grid-template-columns: repeat(3, 210px);
+    grid-template-columns: repeat(3, 180px);
     gap: 16px;
   }
 
   .bn-lesson {
-    height: 136px;
+    height: 150px;
   }
 }
 
@@ -627,99 +769,206 @@
   width: auto;
 }
 
-/* A question in Arabic: the kata's prompt and two options, right to left */
-.bn-arabic {
+/* ---- Share (UI): the lesson's link, and the lesson open on a phone off the bottom ---- */
+
+.bn-share {
+  position: absolute;
+  inset: 0;
+}
+
+/* The link as a control on the card */
+.bn-share__link {
+  position: absolute;
+  top: 20px;
+  inset-inline: 24px;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  color: var(--foreground);
-}
-
-.bn-arabic__q {
-  margin-bottom: 2px;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 20px;
-}
-
-.bn-arabic__opt {
-  padding: 4px 8px;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  padding: 7px 10px;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  background: color-mix(in oklab, var(--input) 30%, transparent);
+  border-radius: 8px;
+  background: var(--background);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 12px;
-  font-weight: 500;
   line-height: 16px;
+  color: var(--muted-foreground);
   white-space: nowrap;
+}
+
+.dark .bn-share__link {
+  background: color-mix(in oklab, var(--input) 30%, transparent);
+}
+
+.bn-share__link span {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* ---- Streak (stat): type and lanterns, no picture ---- */
-
-.bn-streak {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  margin: 16px 24px 24px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: minmax(0, 1fr) auto;
-  grid-template-areas:
-    "count lantern"
-    "week week";
-  align-items: center;
-  gap: 16px 12px;
+.bn-share__link svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
 }
 
-.bn-streak__count {
-  grid-area: count;
+/* The phone: outlined like the player's window, centred under the link, rising as the tile comes in */
+.bn-phone {
+  position: absolute;
+  top: 76px;
+  inset-inline: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 10px;
+  width: 232px;
+  height: 320px;
+  margin-inline: auto;
+  box-sizing: border-box;
+  padding: 20px 16px;
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  background: var(--background);
+  color: var(--foreground);
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.45s ease,
+    transform 0.7s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.bn-share[data-on] .bn-phone {
+  opacity: 1;
+  transform: none;
+}
+
+.bn-phone__progress {
+  height: 6px;
+  margin-bottom: 4px;
+  border-radius: 9999px;
+  background: var(--muted);
+  overflow: hidden;
+}
+
+.bn-phone__progress span {
+  display: block;
+  width: 30%;
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--foreground);
+}
+
+.bn-phone__prompt {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+.bn-phone__option {
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.dark .bn-phone__option {
+  background: color-mix(in oklab, var(--input) 30%, transparent);
+}
+
+.bn-phone__option[data-correct] {
+  border-color: var(--bn-green);
+  background: var(--bn-green-tint);
+}
+
+/* ---- Activity (stat): the last weeks of the profile's grid in ink shades, newest at the end edge ---- */
+
+.bn-activity {
+  position: absolute;
+  inset: 0;
+}
+
+/* The grid's strip: the tile's width, faded at the start where the oldest weeks run off */
+.bn-days-clip {
+  position: absolute;
+  top: 20px;
+  inset-inline: 0;
+  height: 136px;
+  overflow: hidden;
+  mask-image: linear-gradient(to left, #000 calc(100% - var(--bn-fade)), transparent);
+}
+
+[dir="rtl"] .bn-days-clip {
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--bn-fade)), transparent);
+}
+
+/* The grid sits against the end edge and runs off the start, as many weeks as the tile shows */
+.bn-days {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 24px;
+  display: grid;
+  grid-template-rows: repeat(7, 14px);
+  grid-auto-columns: 14px;
+  grid-auto-flow: column;
+  gap: 3px;
+}
+
+/* One square a day: the ink at five strengths, so nothing competes with today's */
+.bn-day {
+  border-radius: 3px;
+  background: color-mix(in oklab, var(--foreground) 7%, transparent);
+}
+
+.bn-day[data-level="1"] {
+  background: color-mix(in oklab, var(--foreground) 20%, transparent);
+}
+.bn-day[data-level="2"] {
+  background: color-mix(in oklab, var(--foreground) 34%, transparent);
+}
+.bn-day[data-level="3"] {
+  background: color-mix(in oklab, var(--foreground) 52%, transparent);
+}
+.bn-day[data-level="4"] {
+  background: color-mix(in oklab, var(--foreground) 75%, transparent);
+}
+
+/* Today: empty until the tile comes in, then the lantern's color, the one lit square */
+.bn-day[data-today] {
+  transition:
+    background-color 0.4s ease 0.2s,
+    box-shadow 0.4s ease 0.2s;
+}
+
+.bn-activity[data-on] .bn-day[data-today] {
+  background: var(--activity-3);
+  box-shadow:
+    0 0 0 2px var(--card),
+    0 0 0 3px var(--activity-3);
+}
+
+.bn-activity__count {
+  position: absolute;
+  bottom: 24px;
+  inset-inline-start: 24px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   color: var(--foreground);
 }
 
-.bn-streak__number {
-  font-size: 56px;
+.bn-activity__number {
+  font-size: 40px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
 }
 
-.bn-streak__label {
+.bn-activity__label {
   font-size: 14px;
   font-weight: 500;
   color: var(--muted-foreground);
-}
-
-.bn-streak__lantern {
-  grid-area: lantern;
-  justify-self: end;
-}
-
-.bn-week {
-  grid-area: week;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.bn-week li {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.bn-week li[data-today] {
-  font-weight: 500;
-  color: var(--foreground);
 }

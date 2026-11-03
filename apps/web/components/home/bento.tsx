@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { Link2Icon } from "lucide-react"
 
-import { Lantern } from "@workspace/player/streak"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { logoMask } from "@/components/site/agent-logos"
@@ -20,19 +20,20 @@ import visuals from "./bento-visuals.generated.json"
 import "./bento.css"
 
 // The home page's feature grid (stageshow's bento, see components/stage/README.md): what a
-// lesson is, in four tiles. Hero and strip: the kata across two thirds, the agents beside it,
-// then the subjects across two thirds and the streak beside it. One picture is UI (the hero's
-// lesson card, the only window); the rest are a collection of marks, a collection of real lesson
-// drawings, and a stat. Across and down, no kind sits next to itself. Each picture is drawn at
-// 1:1 inside its tile; the copy is page text over it. Every tile plays one beat, once, as the
-// grid scrolls in, 110ms after the one before it in reading order.
+// lesson is, in five tiles. Two halves over three thirds: the kata and the subjects on top, the
+// agents, the link, and the activity grid under them. One picture is UI (the kata's lesson card,
+// the only window); the rest are a collection of real lesson drawings, a collection of marks, a
+// shared link on a phone, and a stat. Each picture is drawn at 1:1 inside its tile; the copy is
+// page text over it. Every tile plays one beat, once, as the grid scrolls in, 110ms after the one
+// before it in reading order.
 //
-//   Tile      Span   Kind         The one thing                              Moves
-//   Kata      2 × 1  Hero UI      a word chip lands in the gap, Check turns   the chip flies, the tray goes green
-//                                 it green and the sensei cheers
-//   Agents    1 × 1  Collection   agent and chat-app marks, off the edges     the marks settle in
-//   Subjects  2 × 1  Collection   real lesson drawings, off the edges         the cards settle in
-//   Streak    1 × 1  Stat         today's lantern lights, 11 becomes 12       the lantern lights, the count rolls
+//   Tile      Span   Kind         The one thing                               Moves
+//   Kata      ½      Hero UI      the wrong chip is checked and the ninja     the chip flies, goes yellow, the note
+//                                 says why, then the right one goes green     shows; the right chip flies, goes green
+//   Subjects  ½      Collection   real lesson drawings, off the edges         the cards settle in
+//   Agents    ⅓      Collection   agent and chat-app marks, off the edges     the marks settle in
+//   Link      ⅓      UI           a lesson link, and the lesson on a phone    the phone rises
+//   Activity  ⅓      Stat         the last weeks of learning, today's cell    today's cell fills, the count rolls
 
 const STEP = 110
 const LEAD = 450
@@ -56,27 +57,31 @@ export function Bento() {
       <div className="bn">
         <div className="bn-grid">
           <Kata />
-          <Agents />
           <Subjects />
-          <Streak />
+          <Agents />
+          <Share />
+          <Activity />
         </div>
       </div>
     </section>
   )
 }
 
-/** One tile: the card look, run-in copy at the top, the picture pinned under it and cropped by the tile. */
+/** One tile: the card look, a lead and one muted line at the top, the picture under them, cropped by the tile. */
 function Tile({
   name,
   lead,
   children,
   picture,
+  fade,
   className,
 }: {
   name: string
   lead: string
   children: React.ReactNode
   picture?: React.ReactNode
+  /** The edges the picture runs off, faded out (bento.css) */
+  fade?: "end" | "bottom" | "end bottom"
   className?: string
 }) {
   return (
@@ -88,11 +93,15 @@ function Tile({
       data-tile={name}
       data-crop
     >
-      <p className="relative z-10 max-w-md px-6 pt-6 text-base font-semibold text-pretty text-foreground sm:text-lg">
-        {lead}
-        {children ? <span className="sr-only"> {children}</span> : null}
-      </p>
-      {picture}
+      <div className="relative z-10 flex max-w-md flex-col gap-1 px-6 pt-6">
+        <p className="text-base font-semibold text-pretty text-foreground sm:text-lg">
+          {lead}
+        </p>
+        <p className="text-sm text-pretty text-muted-foreground">{children}</p>
+      </div>
+      <div className="bn-pic" data-fade={fade}>
+        {picture}
+      </div>
     </div>
   )
 }
@@ -143,39 +152,83 @@ function useInView<T extends Element>(delay: number) {
 
 /* ---------------- Kata (hero) ---------------- */
 
-// Real strings: the prompt, the sentence, three word chips, the button, the sensei's line.
+// The Spanish greetings lesson (examples/spanish-greetings.json) turned into a blank: its 9 a.m.
+// in Madrid and its three greetings as word chips. The buttons and the sensei's lines are the
+// player's real ones (its English voices); the wrong chip's feedback is written as a lesson would.
 const PROMPT = "It's 9 a.m. in Madrid. Finish the greeting."
 const BEFORE = "—Buenos"
 const AFTER = ", ¿cómo estás?"
 const CHIPS = ["noches", "días", "tardes"]
+const WRONG = 0
 const RIGHT = 1
+const NUDGE = "Not quite. Take another look."
+const FEEDBACK = "Noches is for the night. At 9 a.m. it's still morning."
 const PRAISE = "Yosh! Nice work."
 
 type S = {
-  /** The chip is in the air between the bank and the gap */
+  /** The chip the learner goes for: the wrong one first, then the right one */
+  aim: number
+  /** That chip is in the air between the bank and the gap */
   flying: boolean
-  /** The chip sits in the gap */
+  /** It sits in the gap */
   placed: boolean
-  /** Checked: the chip is green, the sensei has spoken, Continue is up */
-  checked: boolean
+  /** Checked: a miss (yellow, the ninja nudges, the feedback shows) or right (green, Continue) */
+  checked: "miss" | "right" | null
+  /** What the sensei last said: kept after Try again, so the bubble fades out on its own words */
+  said: "miss" | "right"
 }
-const initial: S = { flying: false, placed: false, checked: false }
-const poster: S = { flying: false, placed: true, checked: true }
+const initial: S = {
+  aim: WRONG,
+  flying: false,
+  placed: false,
+  checked: null,
+  said: "miss",
+}
+const poster: S = {
+  aim: RIGHT,
+  flying: false,
+  placed: true,
+  checked: "right",
+  said: "right",
+}
 
 const script = async (a: Act<S>) => {
   await a.wait(LEAD)
   a.mark("pick")
-  await a.click(`chip-${RIGHT}`)
+  await a.click(`chip-${WRONG}`)
   // The chip leaves the bank as it lifts: a dashed ghost holds its place
   a.put({ flying: true })
   await a.wait(640)
   a.put({ flying: false, placed: true })
-  await a.wait(800)
+  await a.wait(700)
   a.mark("check")
   await a.click("check")
-  a.put({ checked: true })
+  a.put({ checked: "miss", said: "miss" })
+  a.mark("miss")
+  // Long enough to read the feedback
+  await a.wait(2600)
+  await a.click("check")
+  a.put({ aim: RIGHT, placed: false, checked: null })
+  await a.wait(500)
+  a.mark("retry")
+  await a.click(`chip-${RIGHT}`)
+  a.put({ flying: true })
+  await a.wait(640)
+  a.put({ flying: false, placed: true })
+  await a.wait(600)
+  await a.click("check")
+  a.put({ checked: "right", said: "right" })
   a.mark("payoff")
 }
+
+/** The tray's button: Check answer, then Try again after a miss, then Continue. */
+const BUTTON = {
+  check: "Check answer",
+  retry: "Try again",
+  next: "Continue",
+} as const
+const buttonState = (s: S) =>
+  s.checked === "right" ? "next" : s.checked === "miss" ? "retry" : "check"
 
 function Mark({ size = 24, className }: { size?: number; className?: string }) {
   return (
@@ -208,7 +261,7 @@ function Chip({
 }: {
   word: string
   index?: number
-  state?: "gone" | "placed" | "correct"
+  state?: "gone" | "placed" | "miss" | "correct"
   /** The number key, as the desktop player shows on each chip */
   keyHint?: boolean
   /** Once the answer is checked the keys go, but the chip keeps their room, as the player's do */
@@ -226,7 +279,7 @@ function Chip({
   )
 }
 
-/** The sentence with its gap, and the bank of chips under it. One markup for both layouts. */
+/** The sentence with its gap, the bank of chips under it, and the miss's note. One markup for both layouts. */
 function Blank({
   s,
   keyHint,
@@ -241,7 +294,9 @@ function Blank({
     height: number
   }
 }) {
-  const word = CHIPS[RIGHT]!
+  const word = CHIPS[s.aim]!
+  const mark =
+    s.checked === "right" ? "correct" : s.checked === "miss" ? "miss" : "placed"
   return (
     <>
       <div className="bn-sentence" lang="es">
@@ -258,7 +313,7 @@ function Blank({
             data-target="gap-word"
             data-shown={s.placed || undefined}
           >
-            <Chip word={word} state={s.checked ? "correct" : "placed"} />
+            <Chip word={word} state={mark} />
           </span>
           {!s.placed && !s.flying && (
             <span className="bn-caret" aria-hidden>
@@ -275,17 +330,26 @@ function Blank({
             word={c}
             index={i}
             keyHint={keyHint}
-            hideKey={s.checked}
-            state={i === RIGHT && (s.flying || s.placed) ? "gone" : undefined}
+            hideKey={s.checked === "right"}
+            state={i === s.aim && (s.flying || s.placed) ? "gone" : undefined}
             data-target={`chip-${i}`}
             data-cursor="pointer"
           />
         ))}
       </div>
-      {/* The flyer waits over its chip in the bank, flies, and is gone once the word is in the gap */}
+      {/* The wrong chip's feedback, as the player's note under the answers */}
+      <div className="bn-note" data-on={s.checked === "miss" || undefined}>
+        <span className="bn-note__icon" aria-hidden>
+          !
+        </span>
+        <span>{FEEDBACK}</span>
+      </div>
+      {/* The flyer waits over its chip in the bank, flies, and is gone once the word is in the gap.
+          Each chip gets its own, so the second flight starts from the right place. */}
       {!s.placed && (
         <Fly
-          from={rect(`chip-${RIGHT}`)}
+          key={s.aim}
+          from={rect(`chip-${s.aim}`)}
           to={rect("gap-word")}
           go={s.flying}
           held
@@ -293,7 +357,7 @@ function Blank({
           {/* Drawn at the bank chip's size, its key's room included, so it leaves at one size and lands at another */}
           <Chip
             word={word}
-            index={RIGHT}
+            index={s.aim}
             keyHint={keyHint}
             hideKey
             state="placed"
@@ -309,14 +373,14 @@ function Desktop({ width }: { width: number }) {
   return (
     <Stage<S>
       width={width}
-      height={300}
+      height={340}
       theme="dark"
       palette="mono"
       initial={initial}
       poster={poster}
       script={script}
       play="once"
-      cursor={{ at: { x: width - 60, y: 270 }, style: "arrow" }}
+      cursor={{ at: { x: width - 60, y: 310 }, style: "arrow" }}
       className="bn-stage"
     >
       {(s, rect) => (
@@ -325,22 +389,25 @@ function Desktop({ width }: { width: number }) {
             <div className="bn-prompt">{PROMPT}</div>
             <Blank s={s} keyHint rect={rect} />
           </div>
-          <div className="bn-sensei" data-on={s.checked || undefined}>
+          <div
+            className="bn-sensei"
+            data-on={s.checked || undefined}
+            data-tone={s.said}
+          >
             <Mark size={28} className="bn-sensei__mark" />
-            <span className="bn-bubble">{PRAISE}</span>
+            <span className="bn-bubble">
+              {s.said === "miss" ? NUDGE : PRAISE}
+            </span>
           </div>
-          <div className="bn-tray" data-checked={s.checked || undefined}>
+          <div className="bn-tray" data-checked={s.checked ?? undefined}>
             <span
               className="bn-button"
               data-target="check"
               data-cursor="pointer"
               data-ready={s.placed || undefined}
-              data-done={s.checked || undefined}
+              data-tone={s.checked ?? undefined}
             >
-              <States
-                value={s.checked ? "next" : "check"}
-                states={{ check: "Check answer", next: "Continue" }}
-              />
+              <States value={buttonState(s)} states={BUTTON} />
             </span>
           </div>
         </div>
@@ -354,14 +421,14 @@ function Phone() {
   return (
     <Stage<S>
       width={358}
-      height={370}
+      height={330}
       theme="dark"
       palette="mono"
       initial={initial}
       poster={poster}
       script={script}
       play="once"
-      cursor={{ at: { x: 300, y: 350 }, style: "touch" }}
+      cursor={{ at: { x: 300, y: 310 }, style: "touch" }}
       className="bn-stage bn-stage--phone"
     >
       {(s, rect) => (
@@ -371,7 +438,7 @@ function Phone() {
             <span className="bn-progress">
               <span
                 className="bn-progress__fill"
-                style={{ width: s.checked ? "38%" : "30%" }}
+                style={{ width: s.checked === "right" ? "38%" : "30%" }}
               />
             </span>
             <span className="bn-menu" aria-hidden>
@@ -384,20 +451,20 @@ function Phone() {
             <div className="bn-prompt">{PROMPT}</div>
             <Blank s={s} keyHint={false} rect={rect} />
           </div>
-          <div className="bn-tray" data-checked={s.checked || undefined}>
-            <div className="bn-tray__line">{PRAISE}</div>
+          <div className="bn-tray" data-checked={s.checked ?? undefined}>
+            {/* On phones the tray carries the miss's feedback itself, so the kata keeps no empty room for a note */}
+            <div className="bn-tray__line">
+              {s.checked === "miss" ? FEEDBACK : PRAISE}
+            </div>
             <span
               className="bn-button"
               data-target="check"
               data-cursor="pointer"
               data-ready={s.placed || undefined}
-              data-done={s.checked || undefined}
+              data-tone={s.checked ?? undefined}
             >
               <Mark size={20} className="bn-button__mark" />
-              <States
-                value={s.checked ? "next" : "check"}
-                states={{ check: "Check answer", next: "Continue" }}
-              />
+              <States value={buttonState(s)} states={BUTTON} />
             </span>
           </div>
         </div>
@@ -413,13 +480,14 @@ function Kata() {
   return (
     <Tile
       name="kata"
-      lead="One screen at a time."
+      lead="Wrong answers teach you."
+      fade="end"
       picture={
         <div
           ref={picture}
           className="absolute inset-x-0 bottom-0"
           role="img"
-          aria-label="A word chip dropped into a gap in a Spanish sentence, checked, and marked right."
+          aria-label="The wrong word dropped into a Spanish sentence: the ninja explains why it's wrong, then the right word goes in and turns green."
         >
           <div className="bn-player bn-player--desktop">
             <Desktop width={width} />
@@ -430,7 +498,7 @@ function Kata() {
         </div>
       }
     >
-      Tap, check, continue, with feedback on every answer.
+      The ninja explains every miss.
     </Tile>
   )
 }
@@ -451,11 +519,12 @@ const MARKS = [
 ]
 
 function Agents() {
-  const [ref, on] = useInView<HTMLDivElement>(LEAD + STEP)
+  const [ref, on] = useInView<HTMLDivElement>(LEAD + 2 * STEP)
   return (
     <Tile
       name="agents"
       lead="Any agent."
+      fade="end bottom"
       picture={
         <div
           ref={ref}
@@ -477,34 +546,36 @@ function Agents() {
         </div>
       }
     >
-      Terminal or chat: the skill, or the MCP server.
+      In your terminal or your chat app.
     </Tile>
   )
 }
 
 /* ---------------- Subjects (collection) ---------------- */
 
+// Three columns at most, the third cut by the tile's edge: the molecule goes there, so the map,
+// chess, chart and clock show whole.
 const CARDS = [
-  { name: "arabic", alt: "A question in Arabic: why is the sky blue?" },
   {
     name: "map",
     alt: "A map of Europe with the six founders of the EU shaded.",
   },
   { name: "chess", alt: "A chess position, the Italian Game." },
+  { name: "molecule", alt: "The caffeine molecule." },
   {
     name: "chart",
     alt: "A chart: compound interest curving above simple interest.",
   },
-  { name: "molecule", alt: "The caffeine molecule." },
   { name: "clock", alt: "A clock showing a quarter to four." },
 ] as const
 
 function Subjects() {
-  const [ref, on] = useInView<HTMLDivElement>(LEAD + 2 * STEP)
+  const [ref, on] = useInView<HTMLDivElement>(LEAD + STEP)
   return (
     <Tile
       name="subjects"
-      lead="Any subject, any language."
+      lead="Any subject."
+      fade="end"
       picture={
         <div
           ref={ref}
@@ -520,83 +591,136 @@ function Subjects() {
               data-visual={c.name}
               style={{ transitionDelay: `${i * 60}ms` }}
             >
-              {c.name === "arabic" ? (
-                <div className="bn-arabic" dir="rtl" lang="ar">
-                  <div className="bn-arabic__q">لماذا السماء زرقاء؟</div>
-                  <div className="bn-arabic__opt">يشتت الهواء الضوء الأزرق</div>
-                  <div className="bn-arabic__opt">يعكس البحر لونه</div>
-                </div>
-              ) : (
-                <div
-                  className="bn-lesson__visual"
-                  dangerouslySetInnerHTML={{ __html: visuals[c.name] }}
-                />
-              )}
+              <div
+                className="bn-lesson__visual"
+                dangerouslySetInnerHTML={{ __html: visuals[c.name] }}
+              />
             </div>
           ))}
         </div>
       }
     >
-      Chess, code, maps, molecules, in the learner&apos;s own language.
+      Real maps, boards, charts and diagrams.
     </Tile>
   )
 }
 
-/* ---------------- Streak (stat) ---------------- */
+/* ---------------- Share (UI) ---------------- */
 
-// This week so far: learned, learned, learned, a rest day, learned, learned, and today's lantern
-// still to light.
-const WEEK = [
-  { letter: "M", look: "lit" },
-  { letter: "T", look: "lit" },
-  { letter: "W", look: "lit" },
-  { letter: "T", look: "rest" },
-  { letter: "F", look: "lit" },
-  { letter: "S", look: "lit" },
-  { letter: "S", look: "today" },
-] as const
+// Real strings from examples/correlation-vs-causation.json; the link is slugify() of its title and an
+// id of the publish shape (lib/publish/ids.ts: eight of 0-9 and a-z).
+const LINK = "learn.ninja/l/correlation-isn-t-causation-m4q8z2tw"
+const SHARED = {
+  prompt:
+    "Among children aged 5 to 12, shoe size correlates with reading score. Which confounder explains it?",
+  options: ["Age", "Family income", "School quality"],
+  right: 0,
+}
 
-function Streak() {
+function Share() {
   const [ref, on] = useInView<HTMLDivElement>(LEAD + 3 * STEP)
   return (
     <Tile
-      name="streak"
-      lead="Keep a streak."
+      name="share"
+      lead="Send one link."
+      fade="bottom"
       picture={
         <div
           ref={ref}
-          className="bn-streak"
+          className="bn-share"
           data-on={on || undefined}
           role="img"
-          aria-label="A twelve-day streak: this week's lanterns, one of them a rest day, and today's lighting up."
+          aria-label="A lesson link, and the lesson open on a phone."
         >
-          <div className="bn-streak__count">
-            <span className="bn-streak__number">
-              <Count value={on ? 12 : 11} duration={900} />
-            </span>
-            <span className="bn-streak__label">day streak</span>
+          <div className="bn-share__link">
+            <Link2Icon aria-hidden />
+            <span>{LINK}</span>
           </div>
-          <Lantern
-            look={on ? "lit" : "unlit"}
-            big
-            strokeWidth={1.25}
-            className="bn-streak__lantern size-24"
-          />
-          <ol className="bn-week">
-            {WEEK.map((d, i) => (
-              <li key={i} data-today={d.look === "today" || undefined}>
-                <Lantern
-                  look={d.look === "today" ? (on ? "lit" : "unlit") : d.look}
-                  className="size-[18px]"
-                />
-                <span>{d.letter}</span>
-              </li>
+          <div className="bn-phone">
+            <div className="bn-phone__progress">
+              <span />
+            </div>
+            <div className="bn-phone__prompt">{SHARED.prompt}</div>
+            {SHARED.options.map((o, i) => (
+              <div
+                key={o}
+                className="bn-phone__option"
+                data-correct={i === SHARED.right || undefined}
+              >
+                {o}
+              </div>
             ))}
-          </ol>
+          </div>
         </div>
       }
     >
-      A lantern a day, rest days included.
+      Anyone can play it. No account, no app.
+    </Tile>
+  )
+}
+
+/* ---------------- Activity (stat) ---------------- */
+
+// The profile's grid (components/explore/activity-grid.tsx), its last 26 weeks: Sunday at the top,
+// today a Wednesday, so the newest column has four days. A 12-day streak ends today, after a day
+// off. The shades are the ink's, so the only lit square is today's, empty until the tile comes in.
+const WEEKS = 26
+const DAYS = (WEEKS - 1) * 7 + 4
+const TODAY = DAYS - 1
+const STREAK = 12
+const START = TODAY - STREAK
+
+function levelOf(day: number): Level {
+  if (day === START - 1) return 0
+  // A small integer hash, so neighbouring days don't fall into stripes
+  let h = Math.imul(day ^ 0x5bd1e995, 0x27d4eb2d)
+  h ^= h >>> 15
+  const roll = (h >>> 0) % SHADES.length
+  if (day >= START) return ((roll % 4) + 1) as Level
+  // About half the days off, mostly light ones, the odd big one
+  return SHADES[roll]!
+}
+
+type Level = 0 | 1 | 2 | 3 | 4
+const SHADES: Level[] = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 3, 4]
+
+function Activity() {
+  const [ref, on] = useInView<HTMLDivElement>(LEAD + 4 * STEP)
+  return (
+    <Tile
+      name="activity"
+      lead="Come back tomorrow."
+      picture={
+        <div
+          ref={ref}
+          className="bn-activity"
+          data-on={on || undefined}
+          role="img"
+          aria-label="Six months of learning, one square a day, and a twelve-day streak as today's square fills in."
+        >
+          {/* The grid's own clip, so only the weeks fade where they run off, not the count */}
+          <div className="bn-days-clip">
+            <div className="bn-days">
+              {Array.from({ length: DAYS }, (_, day) => (
+                <span
+                  key={day}
+                  className="bn-day"
+                  data-level={day === TODAY ? undefined : levelOf(day)}
+                  data-today={day === TODAY || undefined}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="bn-activity__count">
+            <span className="bn-activity__number">
+              <Count value={on ? STREAK : STREAK - 1} duration={900} />
+            </span>
+            <span className="bn-activity__label">day streak</span>
+          </div>
+        </div>
+      }
+    >
+      A square for every day you learn.
     </Tile>
   )
 }

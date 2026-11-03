@@ -8,7 +8,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   decorators: [
     (Story) => (
-      <div className="dark min-h-screen bg-background py-10">
+      <div className="dark min-h-screen bg-background py-10 text-foreground">
         <Story />
       </div>
     ),
@@ -18,7 +18,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** The grid at the home page's column width: hero and strip. */
+/** The grid at the home page's column width: two halves over three thirds. */
 export const Wide: Story = {}
 
 /** Stacked, as a phone shows it: the kata as the phone player. */

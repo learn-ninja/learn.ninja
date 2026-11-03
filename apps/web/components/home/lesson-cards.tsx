@@ -4,6 +4,7 @@ import { LearnLogo } from "@workspace/player/logo"
 import { stringsFor } from "@workspace/player/strings"
 import { cn } from "@workspace/ui/lib/utils"
 
+import { UserAvatar } from "@/components/account/user-avatar"
 import type { LessonSummary } from "@/lib/explore/queries"
 import { lessonPath } from "@/lib/publish/paths"
 import { SITE } from "@/lib/site"
@@ -42,7 +43,7 @@ export function LessonCards({ lessons }: { lessons: LessonSummary[] }) {
   )
 }
 
-/** A lesson's link-preview card: the mark and the site, the title and summary, its length and level. */
+/** A lesson's link-preview card: who made it (the mark and the site when nobody's named), the title and summary, its length and level. */
 function LessonCard({ lesson }: { lesson: LessonSummary }) {
   const dir = /^(ar|he|fa|ur)\b/i.test(lesson.language) ? "rtl" : "ltr"
   return (
@@ -56,8 +57,21 @@ function LessonCard({ lesson }: { lesson: LessonSummary }) {
         dir="ltr"
         className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
       >
-        <LearnLogo className="size-4" />
-        {SITE.name}
+        {lesson.author?.handle ? (
+          <>
+            <UserAvatar
+              image={lesson.author.image}
+              handle={lesson.author.handle}
+              size="row"
+            />
+            <bdi>{lesson.author.handle}</bdi>
+          </>
+        ) : (
+          <>
+            <LearnLogo className="size-4" />
+            {SITE.name}
+          </>
+        )}
       </span>
       <span className="flex flex-col gap-1.5">
         <span className="line-clamp-2 text-base leading-snug font-semibold text-balance">
@@ -76,11 +90,6 @@ function LessonCard({ lesson }: { lesson: LessonSummary }) {
             {fact}
           </span>
         ))}
-        {lesson.author?.handle ? (
-          <bdi dir="ltr" className="ms-auto text-muted-foreground">
-            {lesson.author.handle}
-          </bdi>
-        ) : null}
       </span>
     </Link>
   )
