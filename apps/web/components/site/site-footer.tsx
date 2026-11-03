@@ -1,3 +1,4 @@
+import type * as React from "react"
 import Link from "next/link"
 
 import { LinkButton } from "@workspace/ui/components/button"
@@ -47,9 +48,18 @@ const SMALL_LINK_CLASS =
 /**
  * The bottom of every page, on the page background: the ninja on his own row, the name, tagline,
  * and social links level with the link columns under him, and the legal row last. `className`
- * sets its width to match the page (`max-w-*`).
+ * sets its width to match the page (`max-w-*`). `greeting` swaps the ninja's first line for the
+ * page's own (the mission page's send-off), and `actions` puts buttons beside him.
  */
-export function SiteFooter({ className }: { className?: string }) {
+export function SiteFooter({
+  className,
+  greeting,
+  actions,
+}: {
+  className?: string
+  greeting?: string
+  actions?: React.ReactNode
+}) {
   return (
     <footer
       className={cn(
@@ -58,7 +68,14 @@ export function SiteFooter({ className }: { className?: string }) {
       )}
     >
       <div className="flex flex-col gap-6">
-        <FooterNinja />
+        {actions ? (
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <FooterNinja greeting={greeting} />
+            <div className="flex flex-wrap gap-2">{actions}</div>
+          </div>
+        ) : (
+          <FooterNinja greeting={greeting} />
+        )}
         <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium">

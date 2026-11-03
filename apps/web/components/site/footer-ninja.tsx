@@ -43,14 +43,19 @@ function saveSound(on: boolean) {
  * starts off and stays as the visitor left it. He's pulled back by the empty edge of his drawing,
  * so he lines up with the name below, and he's drawn with room around him for his moves.
  */
-export function FooterNinja() {
+export function FooterNinja({
+  greeting = FOOTER_GREETING,
+}: {
+  /** What he says before the first click; a page can give its own. Shown, not spoken. */
+  greeting?: string
+}) {
   // Which of his lines he's on; null until the first click, when he shows the greeting.
   const [at, setAt] = React.useState<number | null>(null)
   const [sound, setSound] = React.useState(false)
   const audio = React.useRef<HTMLAudioElement | null>(null)
   const ninja = React.useRef<SVGSVGElement>(null)
   const settle = React.useRef(0)
-  const line = at === null ? FOOTER_GREETING : FOOTER_LINES[at]!
+  const line = at === null ? greeting : FOOTER_LINES[at]!
 
   // After mounting, so the server's render and the first one in the browser agree.
   React.useEffect(() => setSound(savedSound()), [])

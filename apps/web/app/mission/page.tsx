@@ -74,9 +74,34 @@ export default async function MissionPage() {
         <Areas />
         <Steps />
         <People people={people} />
-        <Closing />
       </main>
-      <SiteFooter className="max-w-5xl" />
+      {/* The page ends with the footer ninja's send-off and the two ways to start. */}
+      <SiteFooter
+        className="max-w-5xl"
+        greeting="Pick the part that's yours."
+        actions={
+          <>
+            <LinkButton
+              href={SITE.repo}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="lg"
+            >
+              <GitHubLogo />
+              Open on GitHub
+            </LinkButton>
+            <LinkButton
+              href={GOOD_FIRST_ISSUES_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="outline"
+              size="lg"
+            >
+              Good first issues
+            </LinkButton>
+          </>
+        }
+      />
     </div>
   )
 }
@@ -440,42 +465,5 @@ function Face({ person }: { person: Person }) {
     >
       {avatar}
     </a>
-  )
-}
-
-function Closing() {
-  return (
-    <section className="relative mt-28 overflow-hidden border-t sm:mt-36">
-      <div aria-hidden="true" className="mission-glow-bottom absolute inset-0" />
-      <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-6 px-4 py-24 text-center sm:px-6 sm:py-32">
-        <h2 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          Pick the part that&apos;s yours.
-        </h2>
-        <p className="text-base text-pretty text-muted-foreground sm:text-lg">
-          Read the guide, find a small task, and send a pull request. Colin
-          answers every one.
-        </p>
-        <div className="flex flex-wrap justify-center gap-2">
-          <LinkButton
-            href={SITE.repo}
-            target="_blank"
-            rel="noopener noreferrer"
-            size="lg"
-          >
-            <GitHubLogo />
-            Open on GitHub
-          </LinkButton>
-          <LinkButton
-            href={GOOD_FIRST_ISSUES_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="outline"
-            size="lg"
-          >
-            Good first issues
-          </LinkButton>
-        </div>
-      </div>
-    </section>
   )
 }

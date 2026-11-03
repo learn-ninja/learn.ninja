@@ -8,11 +8,6 @@
   color: var(--shiki-dark);
 }
 
-/* The mission page's closing band: a soft light rising from the bottom edge. */
-.mission-glow-bottom {
-  background: radial-gradient(50% 60% at 50% 100%, color-mix(in oklab, var(--foreground) 8%, transparent), transparent 70%);
-}
-
 /* The mission page's note: a sheet of dark, slightly warm paper with light ink, lifted off the
    page. The sheet behind the text is tilted a touch; the text stays level. */
 .mission-paper {
