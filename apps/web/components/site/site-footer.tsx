@@ -45,9 +45,9 @@ const SMALL_LINK_CLASS =
   "shrink-0 rounded-md outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
 
 /**
- * The bottom of every page, on the page background: the ninja on his own row, the name and the
- * links level under him, and the legal row last. `className` sets its width to match the page
- * (`max-w-*`).
+ * The bottom of every page, on the page background: the ninja on his own row, the name, tagline,
+ * and social links level with the link columns under him, and the legal row last. `className`
+ * sets its width to match the page (`max-w-*`).
  */
 export function SiteFooter({ className }: { className?: string }) {
   return (
@@ -87,6 +87,22 @@ export function SiteFooter({ className }: { className?: string }) {
               ))}
             </div>
             <p className="text-sm text-muted-foreground">{SITE.tagline}</p>
+            {/* The negative margin lines the first icon up with the text above. */}
+            <div className="-ms-1.5 flex items-center pt-2">
+              {SOCIALS.map(({ name, href, Logo }) => (
+                <LinkButton
+                  key={name}
+                  variant="ghost"
+                  size="icon-sm"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${SITE.name} on ${name}`}
+                >
+                  <Logo />
+                </LinkButton>
+              ))}
+            </div>
           </div>
           {/* The padding centers the column titles on the name's row. */}
           <nav className="flex gap-16 sm:pt-1.5">
@@ -121,36 +137,19 @@ export function SiteFooter({ className }: { className?: string }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <p className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
-          <Link href="/" className={SMALL_LINK_CLASS}>
-            © {new Date().getFullYear()} {SITE.name}
-          </Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/privacy" className={SMALL_LINK_CLASS}>
-            Privacy
-          </Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/terms" className={SMALL_LINK_CLASS}>
-            Terms
-          </Link>
-        </p>
-        <div className="-me-1.5 flex shrink-0 items-center">
-          {SOCIALS.map(({ name, href, Logo }) => (
-            <LinkButton
-              key={name}
-              variant="ghost"
-              size="icon-sm"
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${SITE.name} on ${name}`}
-            >
-              <Logo />
-            </LinkButton>
-          ))}
-        </div>
-      </div>
+      <p className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <Link href="/" className={SMALL_LINK_CLASS}>
+          © {new Date().getFullYear()} {SITE.name}
+        </Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/privacy" className={SMALL_LINK_CLASS}>
+          Privacy
+        </Link>
+        <span aria-hidden="true">·</span>
+        <Link href="/terms" className={SMALL_LINK_CLASS}>
+          Terms
+        </Link>
+      </p>
     </footer>
   )
 }

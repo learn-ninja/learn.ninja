@@ -43,9 +43,6 @@ export function Hero() {
           >
             Try a lesson
           </ButtonLink>
-          <ButtonLink href="/explore" variant="ghost" size="lg">
-            Explore
-          </ButtonLink>
         </div>
       </div>
       {/* The product shot follows the setup toggle: a terminal for the skill, a chat window for MCP.
