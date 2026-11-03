@@ -65,7 +65,7 @@ export function SiteMenu({
   return (
     <>
       <Button
-        variant="ghost"
+        variant="outline"
         size="icon"
         aria-label="Menu"
         className={cn("sm:hidden", className)}
