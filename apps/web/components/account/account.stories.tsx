@@ -10,6 +10,7 @@ import type {
 import type { AccountApi } from "@/lib/auth/browser"
 import { ButtonLink } from "@/components/site/button-link"
 import { SiteHeader } from "@/components/site/site-header"
+import { SiteMenu } from "@/components/site/site-menu"
 
 import { AccountMenu } from "./account-menu"
 import { ApiKeys } from "./api-keys"
@@ -448,6 +449,38 @@ export const HeaderMenu: Story = {
           defaultOpen
         />
       </div>
+    </div>
+  ),
+}
+
+export const HeaderDrawer: Story = {
+  name: "Header drawer, visitor",
+  render: () => (
+    // The phone header's drawer for a visitor: the links, GitHub, and Log in. Narrow the window
+    // below 640px to see the menu button in the headers above.
+    <div className="flex h-96 flex-col gap-2 [&_header]:static">
+      <SiteHeader account={null} />
+      <SiteMenu account={null} defaultOpen />
+    </div>
+  ),
+}
+
+export const HeaderDrawerLoggedIn: Story = {
+  name: "Header drawer, logged in",
+  render: () => (
+    // Logged in on an app page: the picture's menu as rows, the bug report, and Log out.
+    <div className="flex h-96 flex-col gap-2 [&_header]:static">
+      <SiteHeader
+        account={{ handle: "ada-lovelace", image: PICTURE }}
+        feedback
+      />
+      <SiteMenu
+        account={{ handle: "ada-lovelace", image: PICTURE }}
+        feedback
+        api={fakeApi()}
+        navigate={navigate}
+        defaultOpen
+      />
     </div>
   ),
 }

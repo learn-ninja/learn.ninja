@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { AnchorProvider, TOCItem } from "fumadocs-core/toc"
-import { MenuIcon } from "lucide-react"
+import { PanelLeftIcon } from "lucide-react"
 
 import { Button } from "@workspace/ui/components/button"
 import { Sheet, SheetTitle } from "@workspace/ui/components/sheet"
@@ -183,7 +183,8 @@ function PageHeadings({
   )
 }
 
-/** The sidebar in a sheet, for screens without room for it. */
+/** The sidebar in a sheet, for screens without room for it. Its button is a panel, not the
+ * site menu's hamburger, since on phones both sit in the header. */
 export function MobileDocsNav({ sections }: { sections: NavSection[] }) {
   const [open, setOpen] = React.useState(false)
   return (
@@ -195,9 +196,9 @@ export function MobileDocsNav({ sections }: { sections: NavSection[] }) {
         className="lg:hidden"
         onPress={() => setOpen(true)}
       >
-        <MenuIcon />
+        <PanelLeftIcon className="rtl:-scale-x-100" />
       </Button>
-      <Sheet side="left" isOpen={open} onOpenChange={setOpen}>
+      <Sheet side="start" isOpen={open} onOpenChange={setOpen}>
         <div className="flex h-full flex-col gap-4 overflow-y-auto p-4">
           <SheetTitle className="px-3">Docs</SheetTitle>
           <DocsNav sections={sections} onNavigate={() => setOpen(false)} />

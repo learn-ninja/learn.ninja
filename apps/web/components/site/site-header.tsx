@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import type { DayStreak } from "@workspace/player"
-import { cn } from "@workspace/ui/lib/utils"
-
 import { AccountLink, useAccount } from "@/components/account/account-link"
 import { AccountMenu } from "@/components/account/account-menu"
 import { FeedbackButton } from "@/components/feedback/feedback-button"
@@ -13,6 +11,7 @@ import { sendFinishes } from "@/lib/explore/finishes"
 
 import { ButtonLink } from "./button-link"
 import { GitHubStars } from "./github-stars"
+import { SiteMenu } from "./site-menu"
 import { Wordmark } from "./wordmark"
 
 /**
@@ -26,6 +25,8 @@ import { Wordmark } from "./wordmark"
  * page that checked the session knows about the user; static pages
  * leave it out and the marker cookie decides after hydration. Until then the visitor's links are
  * kept but invisible, so the header doesn't shift for the many visitors who aren't logged in.
+ * On phones the links, the GitHub or bug button, and the picture's menu fold into one drawer
+ * behind a menu button at the end (`SiteMenu`); the wordmark, the docs menu, and the lantern stay.
  * Logged in, it sends the lessons this browser finished while logged out (lib/explore/finishes).
  */
 export function SiteHeader({
@@ -58,25 +59,29 @@ export function SiteHeader({
         {action}
         <nav aria-label="Site" className="ms-auto flex items-center gap-1">
           {feedback ? (
-            <FeedbackButton />
+            <FeedbackButton className="max-sm:hidden" />
           ) : (
             <GitHubStars className="max-sm:hidden" />
           )}
           {visitor ? (
             <>
-              <ButtonLink href="/explore" variant="ghost" size="sm">
+              <ButtonLink
+                href="/explore"
+                variant="ghost"
+                size="sm"
+                className="max-sm:hidden"
+              >
                 Explore
               </ButtonLink>
-              {/* On phones the docs menu (`start`) stands in for this link. */}
               <ButtonLink
                 href="/docs"
                 variant="ghost"
                 size="sm"
-                className={cn(start && "max-sm:hidden")}
+                className="max-sm:hidden"
               >
                 Docs
               </ButtonLink>
-              <AccountLink account={account} />
+              <AccountLink account={account} className="max-sm:hidden" />
             </>
           ) : (
             <>
@@ -88,9 +93,10 @@ export function SiteHeader({
                   }
                 />
               ) : null}
-              <AccountMenu account={account} />
+              <AccountMenu account={account} className="max-sm:hidden" />
             </>
           )}
+          <SiteMenu account={account} feedback={feedback} />
         </nav>
       </div>
     </header>
