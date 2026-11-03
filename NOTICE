@@ -13,3 +13,7 @@ of Uxcel Inc. Neither license grants permission to use them; see TRADEMARK.md.
 Third-party packages are listed in package-lock.json and keep their own licenses. The vendored
 shadcn skill in .claude/skills/shadcn is MIT-licensed by shadcn. The map visual's country shapes
 are derived from Natural Earth (public domain) through world-atlas.
+
+The ninja's voice clips (apps/web/public/voice/) and the sound effect in apps/web/public/sfx/ were
+generated with ElevenLabs under a paid plan, whose terms give the subscriber the output and a
+commercial license to it; they are distributed here under the Apache License, Version 2.0.

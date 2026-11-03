@@ -14,7 +14,7 @@ import { listed } from "./queries"
 // The weekly tag report (`npm run tags -w web`): subjects by lesson count, the top tags in each,
 // and the tags used only once. It's the whole moderation process for tags until the numbers ask
 // for more: a person reads it, adds synonyms to packages/spec/src/tags.ts, notices a subject that
-// is swallowing everything, and decides when a tag has earned a filter (plans/subjects-and-tags.md).
+// is swallowing everything, and decides when a tag has earned a filter.
 
 export interface TagCount {
   /** The key the lessons share. */
