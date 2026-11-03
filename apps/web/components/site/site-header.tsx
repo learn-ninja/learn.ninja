@@ -26,7 +26,7 @@ import { Wordmark } from "./wordmark"
  * leave it out and the marker cookie decides after hydration. Until then the visitor's links are
  * kept but invisible, so the header doesn't shift for the many visitors who aren't logged in.
  * On phones the links, the bug button, and the picture's menu fold into one drawer behind a menu
- * button at the end (`SiteMenu`); the wordmark, the docs menu, the GitHub link, and the lantern stay.
+ * button at the end (`SiteMenu`, the profile picture once logged in); the wordmark, the docs menu, the GitHub link, and the lantern stay.
  * Logged in, it sends the lessons this browser finished while logged out (lib/explore/finishes).
  */
 export function SiteHeader({

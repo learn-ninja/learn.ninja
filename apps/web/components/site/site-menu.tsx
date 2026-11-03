@@ -31,7 +31,8 @@ const ROW =
 
 /**
  * The header's menu on phones, where its links don't fit beside the wordmark: a button at the end
- * of the header that opens a drawer from the same side. A visitor's drawer holds the header's
+ * of the header that opens a drawer from the same side (a menu icon for visitors, the profile
+ * picture once logged in). A visitor's drawer holds the header's
  * links (Explore, Docs) and Log in; a logged-in learner's holds what the profile picture's menu
  * holds on wider screens (Explore, their profile, settings, the docs in a new tab) and Log out.
  * On the app's pages (`feedback`) both get the bug report too; the GitHub link stays in the
@@ -64,15 +65,28 @@ export function SiteMenu({
   const user = account ?? null
   return (
     <>
-      <Button
-        variant="outline"
-        size="icon"
-        aria-label="Menu"
-        className={cn("sm:hidden", className)}
-        onPress={() => setOpen(true)}
-      >
-        <MenuIcon />
-      </Button>
+      {user ? (
+        // Logged in, the trigger is the profile picture, as the account menu is on wider screens.
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={`${user.handle ? `@${user.handle}` : "Account"}: menu`}
+          className={cn("ms-1 rounded-full sm:hidden", className)}
+          onPress={() => setOpen(true)}
+        >
+          <UserAvatar image={user.image} handle={user.handle} size="header" />
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Menu"
+          className={cn("sm:hidden", className)}
+          onPress={() => setOpen(true)}
+        >
+          <MenuIcon />
+        </Button>
+      )}
       <Sheet side="end" isOpen={open} onOpenChange={setOpen}>
         <div className="flex h-full flex-col gap-2 overflow-y-auto p-3">
           {/* Room at the end for the close button. */}
