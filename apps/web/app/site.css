@@ -7,3 +7,18 @@
 .dark .shiki-themes span {
   color: var(--shiki-dark);
 }
+
+/* The mission page's hero: a faint grid fading out from the top, under a soft light. */
+.mission-grid {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(70% 60% at 50% 0%, #000 20%, transparent 100%);
+}
+.mission-glow {
+  background: radial-gradient(60% 50% at 50% 0%, color-mix(in oklab, var(--foreground) 9%, transparent), transparent 70%);
+}
+.mission-glow-bottom {
+  background: radial-gradient(50% 60% at 50% 100%, color-mix(in oklab, var(--foreground) 8%, transparent), transparent 70%);
+}

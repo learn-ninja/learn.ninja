@@ -24,7 +24,7 @@ const COLUMNS: {
     links: [
       { href: "/docs/reference/api", label: "API" },
       { href: "/llms.txt", label: "llms.txt" },
-      { href: "/contributors", label: "Contributors" },
+      { href: "/mission", label: "Mission" },
       { href: SITE.repo, label: "GitHub", external: true },
     ],
   },

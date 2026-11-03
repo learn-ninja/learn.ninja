@@ -4,18 +4,21 @@ Thanks for helping. learn.ninja is small and built by a few people, so a good pu
 
 ## Where we want help
 
-How a change is reviewed depends on how much of the lesson experience it touches.
+The [mission page](https://learn.ninja/mission) groups these nine areas the same way (`apps/web/lib/mission.ts`; a test keeps the two in step). How a change is reviewed depends on how much of the lesson experience it touches.
 
 | Area | Examples | Touches | Review path |
 | --- | --- | --- | --- |
-| Languages | Translate the player's interface, fix right-to-left issues | `player/src/locales` | Pull request |
-| Sounds and motion | Better sound effects, transitions, celebration moments | `player` | Pull request |
-| Summary screen | A richer end-of-lesson summary, sharing, what to learn next | `player` | Pull request |
-| Visuals | New or better maps, charts, diagrams, chess, molecules | `player`, sometimes `spec` | Pull request; a proposal if the format changes |
-| Teaching guide | How the agent writes better lessons, more examples | `skills/learn`, `examples/` | Pull request |
-| Agent round trips | Lessons that send results back to the agent, editing from the agent, a local preview | `cli`, `skills/learn` | Proposal first |
-| Voices | New ninja lines, voices for other languages | `player/src/voices.ts` | Proposal first: clips are generated with our voice key |
-| New kata types | A new kind of question or screen | `spec`, `player`, `cli`, guide | Proposal first |
+| Subjects | Example lessons for subjects we don't cover, reports of bad published lessons | `examples/` | Pull request |
+| Languages | Check the player's interface as a native speaker, fix right-to-left issues | `player/src/locales` | Pull request |
+| Katas | Sharper feedback, hints, and visuals in the kata types; question-first teaching in the guide | `player`, `skills/learn` | Pull request; new kata types are proposal first |
+| Rich lessons | Visuals the player renders (maps, charts, chess, molecules), sounds, motion, haptics, a richer summary screen | `player`, sometimes `spec` | Pull request; a proposal if the format changes |
+| Tutor | Explain-my-answer and Socratic hints inside a lesson | `player`, `cli`, `skills/learn` | Proposal first |
+| Memory | Review and spaced repetition across lessons, a Mistakes mode | `apps/web`, `player`, `db` | Proposal first: needs accounts |
+| Paths | Courses as sequences of lessons, placement, adaptive difficulty | `spec`, `apps/web`, `player` | Proposal first: needs accounts |
+| Motivation | XP, quests, milestones, share cards, leagues, reminders | `player`, `apps/web` | Pull request |
+| Agents | The teaching guide, the checker, agent round trips, a local preview | `cli`, `skills/learn`, `examples/` | Pull request; round trips are proposal first |
+
+Voices are their own case: new ninja lines and voices for other languages go through a proposal, since the clips are generated with our voice key.
 
 Fixes to the docs in [`docs/`](docs), bug fixes, and accessibility fixes are always welcome as a pull request. Issues labelled `good first issue` are a good place to start.
 

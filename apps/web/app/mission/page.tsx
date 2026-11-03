@@ -1,0 +1,506 @@
+import {
+  ArrowRightIcon,
+  BookOpenIcon,
+  BotIcon,
+  BrainIcon,
+  FlameIcon,
+  LanguagesIcon,
+  MessageCircleQuestionMarkIcon,
+  RouteIcon,
+  ShapesIcon,
+  TargetIcon,
+  type LucideIcon,
+} from "lucide-react"
+import type { Metadata } from "next"
+import Link from "next/link"
+
+import { Badge } from "@workspace/ui/components/badge"
+import { LinkButton } from "@workspace/ui/components/button"
+import { cn } from "@workspace/ui/lib/utils"
+
+import { UserAvatar } from "@/components/account/user-avatar"
+import { SiteFooter } from "@/components/site/site-footer"
+import { SiteHeader } from "@/components/site/site-header"
+import { GitHubLogo } from "@/components/site/social-icons"
+import { loadContributors, type Person } from "@/lib/contributors"
+import {
+  AREA_GROUPS,
+  areaHref,
+  CONTRIBUTING_URL,
+  GOOD_FIRST_ISSUES_URL,
+  MISSION,
+  MISSION_STATS,
+  MISSION_SUMMARY,
+  type Area,
+  type AreaIcon,
+} from "@/lib/mission"
+import { SITE } from "@/lib/site"
+
+export const metadata: Metadata = {
+  title: "Mission",
+  description: `${MISSION} ${SITE.name} is open source, and every part of a lesson needs people who know it best.`,
+  alternates: { canonical: "/mission" },
+}
+
+/** The contributor wall comes from GitHub, read again once a day. */
+export const revalidate = 86400
+
+const ICONS: Record<AreaIcon, LucideIcon> = {
+  subjects: BookOpenIcon,
+  languages: LanguagesIcon,
+  katas: TargetIcon,
+  rich: ShapesIcon,
+  tutor: MessageCircleQuestionMarkIcon,
+  memory: BrainIcon,
+  paths: RouteIcon,
+  motivation: FlameIcon,
+  agents: BotIcon,
+}
+
+const EYEBROW =
+  "text-xs font-medium tracking-widest text-muted-foreground uppercase"
+
+export default async function MissionPage() {
+  const people = await loadContributors()
+  const colin = people.find((p) => p.href === "https://github.com/cmicpace")
+
+  return (
+    <div className="flex min-h-svh flex-col">
+      <SiteHeader />
+      <main className="flex flex-1 flex-col">
+        <Hero />
+        <Letter picture={colin?.image ?? null} />
+        <Areas />
+        <Steps />
+        <People people={people} />
+        <Closing />
+      </main>
+      <SiteFooter className="max-w-5xl" />
+    </div>
+  )
+}
+
+function Hero() {
+  return (
+    <section className="relative overflow-hidden">
+      <div aria-hidden="true" className="mission-grid absolute inset-0" />
+      <div aria-hidden="true" className="mission-glow absolute inset-0" />
+      <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-7 px-4 pt-20 pb-20 text-center sm:px-6 sm:pt-28 sm:pb-24">
+        <Badge variant="outline" className="h-7 gap-1.5 px-3 text-sm">
+          <GitHubLogo />
+          Open source · Apache-2.0
+        </Badge>
+        <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl sm:leading-[1.05]">
+          {MISSION}
+        </h1>
+        <p className="max-w-2xl text-base text-pretty text-muted-foreground sm:text-lg">
+          {MISSION_SUMMARY}
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <LinkButton href="#areas" size="lg">
+            Find your part
+            <ArrowRightIcon data-icon="inline-end" className="rtl:-scale-x-100" />
+          </LinkButton>
+          <LinkButton href="#note" variant="outline" size="lg">
+            Read Colin&apos;s note
+          </LinkButton>
+        </div>
+      </div>
+      <dl className="relative mx-auto grid max-w-5xl grid-cols-2 px-4 sm:grid-cols-4 sm:border-t sm:px-6">
+        {MISSION_STATS.map((s) => (
+          <div
+            key={s.value}
+            className="flex flex-col gap-1.5 border-t py-6 sm:border-t-0 sm:border-s sm:ps-6 sm:first:border-s-0 sm:first:ps-0"
+          >
+            <dt className="order-2 text-sm text-muted-foreground">{s.label}</dt>
+            <dd className="order-1 text-3xl font-semibold tracking-tight">
+              {s.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  )
+}
+
+function Letter({ picture }: { picture: string | null }) {
+  return (
+    <section
+      id="note"
+      className="mx-auto flex w-full max-w-2xl scroll-mt-16 flex-col gap-8 px-4 pt-24 sm:px-6 sm:pt-32"
+    >
+      <p className={EYEBROW}>A note from Colin</p>
+      <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+        The expensive part of great learning just disappeared. Now it&apos;s
+        our move.
+      </h2>
+      <div className="flex flex-col gap-5 text-base leading-relaxed text-pretty text-foreground/85 sm:text-lg sm:leading-relaxed">
+        <p>
+          Hi, I&apos;m Colin. For the last seven years I&apos;ve been building
+          Uxcel, an interactive design-education platform that grew to half a
+          million learners and is used by Fortune 500 teams all over the world.
+          I&apos;ve seen up close what Duolingo, Brilliant, and Mimo already
+          know: people learn when a lesson is short, hands-on, and gives you
+          instant feedback. Not from a wall of text, not from a recording of
+          someone talking.
+        </p>
+        <p>
+          I&apos;ve also seen the cost. Making one lesson that good takes a
+          writer, a designer, an engineer, and weeks. That&apos;s why
+          interactive learning has stayed behind a subscription, and why it
+          only exists for the subjects a company can sell.
+        </p>
+        <p>
+          Agents change the arithmetic. Your agent can already read anything
+          you give it: an article, your notes, a codebase, a transcript.{" "}
+          {SITE.name} teaches it to turn that into a lesson that plays like
+          Duolingo, in any language, on your phone, with a link you can send to
+          anyone. The lesson is written on your side, so there&apos;s nothing
+          for us to charge for. No account, no ads, no paywall. Just the
+          lessons.
+        </p>
+        <p>
+          That&apos;s the bet: if the expensive part is gone, best-in-class
+          interactive learning can be free, for any subject, in every language.
+          But no one company can build that, and no one person should. A lesson
+          is only as good as its weakest part: the way a kata gives feedback,
+          the visual that makes an idea click, the translation that reads like
+          it was written by a native speaker, the examples that teach the agent
+          what good looks like. Each of those is its own craft. {SITE.name} is
+          at its best as the sum of all of them, with each part built by the
+          people who know it best, and the code is open under Apache-2.0 so
+          that&apos;s exactly how it can be built.
+        </p>
+        <p>
+          So here&apos;s where you come in. If you know a subject, the examples
+          need lessons about it, and so does the agent that learns from them.
+          If you care about how a question lands, the katas need sharper
+          feedback, hints, and visuals. If you speak a language, the player
+          speaks it too, and no native speaker has checked it yet. If you build
+          things, the biggest open question is what a rich lesson looks like
+          when an agent writes it: maps, chess, molecules, code you can run,
+          scenarios that branch. Pick the part that&apos;s yours.
+        </p>
+        <p>
+          Read the guide, find a small task, and send a pull request. I answer
+          every one.
+        </p>
+      </div>
+      <div className="flex items-center gap-3.5 pt-2">
+        <UserAvatar image={picture} handle="Colin" size="signature" />
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold">Colin Pace</span>
+          <span className="text-sm text-muted-foreground">
+            Co-founder, Uxcel and {SITE.name} ·{" "}
+            <a
+              href={SITE.makerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-sm outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <bdi dir="ltr">{SITE.maker}</bdi>
+            </a>
+          </span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Areas() {
+  return (
+    <section
+      id="areas"
+      className="mx-auto flex w-full max-w-5xl scroll-mt-16 flex-col gap-16 px-4 pt-28 sm:gap-20 sm:px-6 sm:pt-36"
+    >
+      <div className="flex max-w-2xl flex-col gap-4">
+        <p className={EYEBROW}>Where help goes furthest</p>
+        <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+          Nine parts. Each its own craft.
+        </h2>
+        <p className="text-base text-pretty text-muted-foreground sm:text-lg">
+          A lesson is only as good as its weakest part. Pick the one you know
+          best. Three of them reach every lesson ever published, so they start
+          as a proposal rather than a pull request.
+        </p>
+      </div>
+      {AREA_GROUPS.map((group, i) => (
+        <div
+          key={group.title}
+          className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[16rem_minmax(0,1fr)] md:gap-10"
+        >
+          <div className="flex flex-col gap-3">
+            <span
+              aria-hidden="true"
+              className="text-4xl font-semibold tracking-tight text-muted-foreground tabular-nums"
+            >
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <h3 className="text-2xl font-semibold tracking-tight">
+              {group.title}
+            </h3>
+            <p className="text-sm text-pretty text-muted-foreground">
+              {group.lead}
+            </p>
+          </div>
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
+            {group.areas.map((area) => (
+              <li
+                key={area.title}
+                className={cn("flex", area.wide && "sm:col-span-2")}
+              >
+                <AreaCard area={area} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  )
+}
+
+function AreaCard({ area }: { area: Area }) {
+  const Icon = ICONS[area.icon]
+  return (
+    <a
+      href={areaHref(area)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group/area flex w-full flex-col gap-4 rounded-xl bg-card p-6 shadow-xs ring-1 ring-foreground/10 outline-none hover:ring-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50 motion-safe:transition motion-safe:hover:-translate-y-0.5"
+    >
+      <span
+        aria-hidden="true"
+        className="flex size-10 items-center justify-center rounded-lg bg-muted"
+      >
+        <Icon className="size-5" />
+      </span>
+      <div className="flex flex-col gap-2">
+        <h4 className="text-lg font-semibold tracking-tight">{area.title}</h4>
+        <p className="max-w-xl text-sm text-pretty text-muted-foreground">
+          <span className="font-medium text-foreground">{area.who}.</span>{" "}
+          {area.ask}
+        </p>
+      </div>
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1">
+        <span className="flex gap-1.5">
+          <Badge variant="outline" className="border-foreground/15">
+            {area.level}
+          </Badge>
+          {area.proposal ? (
+            <Badge
+              variant="outline"
+              className="border-dashed border-foreground/30 text-muted-foreground"
+            >
+              Proposal first
+            </Badge>
+          ) : null}
+        </span>
+        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground group-hover/area:text-foreground">
+          {area.proposal ? "Open an idea" : "See open issues"}
+          <ArrowRightIcon
+            aria-hidden="true"
+            className="size-3.5 rtl:-scale-x-100"
+          />
+        </span>
+      </div>
+    </a>
+  )
+}
+
+const STEPS = [
+  {
+    title: "Read the guide",
+    body: (
+      <>
+        <ExternalLink href={CONTRIBUTING_URL}>CONTRIBUTING.md</ExternalLink>{" "}
+        and the code of conduct. Ten minutes.
+      </>
+    ),
+  },
+  {
+    title: "Play a lesson",
+    body: (
+      <>
+        Open one from{" "}
+        <Link
+          href="/explore"
+          className="rounded-sm underline underline-offset-4 outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          Explore
+        </Link>{" "}
+        and find something you&apos;d make better.
+      </>
+    ),
+  },
+  {
+    title: "Pick a small task",
+    body: (
+      <>
+        Issues labelled{" "}
+        <ExternalLink href={GOOD_FIRST_ISSUES_URL}>good first issue</ExternalLink>{" "}
+        are sized for a first evening.
+      </>
+    ),
+  },
+  {
+    title: "Send a pull request",
+    body: "Say what changed and why, with a screenshot for anything visible.",
+  },
+]
+
+function ExternalLink({
+  href,
+  children,
+}: {
+  href: string
+  children: React.ReactNode
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="rounded-sm underline underline-offset-4 outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      {children}
+    </a>
+  )
+}
+
+function Steps() {
+  return (
+    <section className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 pt-28 sm:px-6 sm:pt-36">
+      <div className="flex max-w-2xl flex-col gap-3">
+        <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+          New here? Four steps.
+        </h2>
+        <p className="text-base text-pretty text-muted-foreground">
+          Colin and Yan answer every pull request and issue within a week, even
+          if the answer is &ldquo;not yet&rdquo;.
+        </p>
+      </div>
+      <ol className="grid grid-cols-[minmax(0,1fr)] border-t sm:grid-cols-2 lg:grid-cols-4">
+        {STEPS.map((step, i) => (
+          <li key={step.title} className="flex flex-col gap-2.5 pt-7 pe-6 pb-2">
+            <span
+              aria-hidden="true"
+              className="text-4xl font-semibold tracking-tight text-muted-foreground tabular-nums"
+            >
+              {i + 1}
+            </span>
+            <span className="text-base font-semibold">{step.title}</span>
+            <span className="text-sm text-pretty text-muted-foreground">
+              {step.body}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )
+}
+
+function People({ people }: { people: Person[] }) {
+  return (
+    <section className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-4 pt-28 text-center sm:px-6 sm:pt-36">
+      <div className="flex max-w-2xl flex-col gap-3">
+        <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+          Built in the open, by people like you.
+        </h2>
+        <p className="text-base text-pretty text-muted-foreground">
+          Everyone who has landed a change on GitHub, and everyone helping
+          without one. The next circle is yours.
+        </p>
+      </div>
+      <ul className="flex flex-wrap justify-center gap-4 pt-2">
+        {people.map((p) => (
+          <li key={p.name}>
+            <Face person={p} />
+          </li>
+        ))}
+        <li>
+          <a
+            href={CONTRIBUTING_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex size-16 items-center justify-center rounded-full border border-dashed border-foreground/30 text-sm font-medium text-muted-foreground outline-none hover:border-foreground/60 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
+            You
+          </a>
+        </li>
+      </ul>
+      <p className="text-sm text-muted-foreground">
+        {people.length} contributors ·{" "}
+        <ExternalLink href={`${SITE.repo}/graphs/contributors`}>
+          See everyone on GitHub
+        </ExternalLink>
+      </p>
+    </section>
+  )
+}
+
+function Face({ person }: { person: Person }) {
+  const avatar = (
+    <UserAvatar
+      image={person.image}
+      handle={person.name}
+      size="wall"
+      className="ring-4 ring-background"
+    />
+  )
+  if (!person.href) {
+    return (
+      <span role="img" aria-label={person.name} title={person.name}>
+        {avatar}
+      </span>
+    )
+  }
+  return (
+    <a
+      href={person.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={person.name}
+      title={person.name}
+      className="block rounded-full outline-none motion-safe:transition hover:opacity-90 focus-visible:ring-3 focus-visible:ring-ring/50 motion-safe:hover:-translate-y-0.5"
+    >
+      {avatar}
+    </a>
+  )
+}
+
+function Closing() {
+  return (
+    <section className="relative mt-28 overflow-hidden border-t sm:mt-36">
+      <div aria-hidden="true" className="mission-glow-bottom absolute inset-0" />
+      <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-6 px-4 py-24 text-center sm:px-6 sm:py-32">
+        <h2 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+          Pick the part that&apos;s yours.
+        </h2>
+        <p className="text-base text-pretty text-muted-foreground sm:text-lg">
+          Read the guide, find a small task, and send a pull request. Colin
+          answers every one.
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <LinkButton
+            href={SITE.repo}
+            target="_blank"
+            rel="noopener noreferrer"
+            size="lg"
+          >
+            <GitHubLogo />
+            Open on GitHub
+          </LinkButton>
+          <LinkButton
+            href={GOOD_FIRST_ISSUES_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="outline"
+            size="lg"
+          >
+            Good first issues
+          </LinkButton>
+        </div>
+      </div>
+    </section>
+  )
+}

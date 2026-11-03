@@ -204,6 +204,8 @@ const nextConfig: NextConfig = {
       { source: "/create", destination: "/docs", permanent: false },
       // The login page was /sign-in until October 2026; old links and keep emails still point there.
       { source: "/sign-in", destination: "/login", permanent: true },
+      // The contributors list became part of the mission page in November 2026.
+      { source: "/contributors", destination: "/mission", permanent: true },
       ...moved("/docs/install", "/docs#install"),
       ...moved("/docs/quick-start", "/docs"),
       ...moved("/docs/reference/agents", "/docs#plain-text"),
