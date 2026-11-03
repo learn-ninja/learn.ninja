@@ -458,6 +458,31 @@ export function setMood(svg: SVGSVGElement, mood: NinjaMood) {
   if (mood !== "idle") svg.classList.add(`e-${mood}`)
 }
 
+/**
+ * Plays one mood on a mark, then settles him back to idle after `ms`; a new mood cuts the last
+ * one short, and unmounting cancels the settle. For a single emote on a click (the footer, the
+ * mission page); a reaction of several beats goes through `useNinjaLife().play`.
+ */
+export function useEmote(
+  svg: React.RefObject<SVGSVGElement | null>,
+  ms: number
+): (mood: NinjaMood) => void {
+  const settle = React.useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  )
+  React.useEffect(() => () => clearTimeout(settle.current), [])
+  return React.useCallback(
+    (mood: NinjaMood) => {
+      const el = svg.current
+      if (!el) return
+      clearTimeout(settle.current)
+      setMood(el, mood)
+      settle.current = setTimeout(() => setMood(el, "idle"), ms)
+    },
+    [svg, ms]
+  )
+}
+
 // ---------- idle life ----------
 
 export interface NinjaLife {

@@ -12,6 +12,8 @@ export const SITE = {
   /** The contact named on the Privacy and Terms pages. */
   maker: "@cmicpace",
   makerUrl: "https://x.com/cmicpace",
+  /** The maker's GitHub username: the mission page's signature and contributor wall. */
+  makerGithub: "cmicpace",
   /** The X handles credited in the footer. */
   makers: [
     { handle: "@cmicpace", url: "https://x.com/cmicpace" },

@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { mergeContributors } from "./contributors"
+import { CONTRIBUTORS, loadContributors, mergeContributors } from "./contributors"
 import { AREA_GROUPS, areaHref, IDEA_URL } from "./mission"
 
 const contributing = readFileSync(
@@ -55,7 +55,7 @@ describe("mergeContributors", () => {
     const people = mergeContributors(
       repo,
       [
-        { name: "Gene Kamenez", github: "halowe" },
+        { name: "Gene Kamenez", github: "halowe", x: "gkamenz" },
         { name: "Yan Sokalau", github: "yan-sokalau" },
         { name: "Someone", x: "someone" },
       ],
@@ -67,14 +67,28 @@ describe("mergeContributors", () => {
       "Yan Sokalau",
       "Someone",
     ])
+    // A listed committer keeps their X profile.
+    expect(people[1]!.x).toBe("https://x.com/gkamenz")
     expect(people[2]!.image).toBe(
       "https://avatars.githubusercontent.com/u/4?v=4"
     )
     expect(people[3]).toEqual({
+      id: "Someone",
       name: "Someone",
+      login: null,
       image: null,
       href: "https://x.com/someone",
+      x: "https://x.com/someone",
     })
+  })
+
+  it("gives everyone a unique id, even when a login matches a listed name", () => {
+    const people = mergeContributors(
+      [{ ...repo[0]!, login: "Sam", html_url: "https://github.com/Sam" }],
+      [{ name: "Sam" }, { name: "Sam" }]
+    )
+    const ids = people.map((p) => p.id)
+    expect(new Set(ids).size).toBe(ids.length)
   })
 
   it("leaves out pictures the image optimizer can't fetch", () => {
@@ -83,5 +97,30 @@ describe("mergeContributors", () => {
       []
     )
     expect(people[0]!.image).toBeNull()
+  })
+})
+
+describe("loadContributors", () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  const listedNames = CONTRIBUTORS.map((c) => c.name)
+
+  it("falls back to the listed people when GitHub can't be reached", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")))
+    const people = await loadContributors()
+    expect(people.map((p) => p.name)).toEqual(listedNames)
+    expect(people.every((p) => p.image === null)).toBe(true)
+  })
+
+  it("falls back when GitHub answers without a list", async () => {
+    // 202 while GitHub computes the list, 204 for a repository with no history: no body to read.
+    for (const status of [202, 204, 403]) {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(new Response(null, { status }))
+      )
+      const people = await loadContributors()
+      expect(people.map((p) => p.name)).toEqual(listedNames)
+    }
   })
 })

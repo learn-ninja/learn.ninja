@@ -14,12 +14,13 @@ import {
 import type { Metadata } from "next"
 import Link from "next/link"
 
+import { Aura } from "@workspace/player/ninja"
 import { Badge } from "@workspace/ui/components/badge"
 import { LinkButton } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { UserAvatar } from "@/components/account/user-avatar"
-import { MissionNinja, MissionSmoke } from "@/components/mission/hero-ninja"
+import { MissionNinja } from "@/components/mission/hero-ninja"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { GitHubLogo, XLogo } from "@/components/site/social-icons"
@@ -63,7 +64,8 @@ const EYEBROW =
 
 export default async function MissionPage() {
   const people = await loadContributors()
-  const colin = people.find((p) => p.href === "https://github.com/cmicpace")
+  const maker = SITE.makerGithub.toLowerCase()
+  const colin = people.find((p) => p.id === maker)
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -110,7 +112,8 @@ function Hero() {
   return (
     <section className="relative overflow-hidden">
       <div className="relative isolate mx-auto flex max-w-4xl flex-col items-center gap-7 px-4 pt-16 pb-20 text-center sm:px-6 sm:pt-20 sm:pb-24">
-        <MissionSmoke />
+        {/* The lesson intro's smoke, lifted (px) to billow around the ninja and the headline. */}
+        <Aura shift={-110} />
         <MissionNinja />
         <Badge variant="outline" className="h-7 gap-1.5 px-3 text-sm">
           <GitHubLogo />
@@ -189,15 +192,17 @@ function Letter({ picture }: { picture: string | null }) {
           <div className="flex flex-col text-sm leading-normal">
             <span className="flex items-center gap-1 font-semibold">
               Colin Pace
-              <a
+              <LinkButton
                 href={SITE.makerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                variant="ghost"
+                size="icon-xs"
                 aria-label={`Colin Pace on X (${SITE.maker})`}
-                className="mission-paper-muted inline-flex size-6 items-center justify-center rounded-md outline-none hover:bg-white/10 hover:text-inherit focus-visible:ring-3 focus-visible:ring-ring/50 [&_svg]:size-3"
+                className="mission-paper-muted"
               >
                 <XLogo />
-              </a>
+              </LinkButton>
             </span>
             <span className="mission-paper-muted">Founder, {SITE.name}</span>
           </div>
@@ -411,21 +416,23 @@ function People({ people }: { people: Person[] }) {
           without one. The next circle is yours.
         </p>
       </div>
-      <ul className="flex flex-wrap justify-center gap-4 pt-2">
+      <ul className="flex flex-wrap justify-center gap-x-2 gap-y-6 pt-2">
         {people.map((p) => (
-          <li key={p.name}>
+          <li key={p.id} className="flex w-32 flex-col items-center gap-2">
             <Face person={p} />
           </li>
         ))}
-        <li>
+        <li className="flex w-32 flex-col items-center gap-2">
           <a
             href={CONTRIBUTING_URL}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Add yourself"
             className="flex size-16 items-center justify-center rounded-full border border-dashed border-foreground/30 text-sm font-medium text-muted-foreground outline-none hover:border-foreground/60 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             You
           </a>
+          <span className="text-sm text-muted-foreground">Add yourself</span>
         </li>
       </ul>
       <p className="text-sm text-muted-foreground">
@@ -438,6 +445,7 @@ function People({ people }: { people: Person[] }) {
   )
 }
 
+/** A contributor's picture, linked to their profile, with their name and X link under it. */
 function Face({ person }: { person: Person }) {
   const avatar = (
     <UserAvatar
@@ -447,23 +455,43 @@ function Face({ person }: { person: Person }) {
       className="ring-4 ring-background"
     />
   )
-  if (!person.href) {
-    return (
-      <span role="img" aria-label={person.name} title={person.name}>
-        {avatar}
-      </span>
-    )
-  }
   return (
-    <a
-      href={person.href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={person.name}
-      title={person.name}
-      className="block rounded-full outline-none motion-safe:transition hover:opacity-90 focus-visible:ring-3 focus-visible:ring-ring/50 motion-safe:hover:-translate-y-0.5"
-    >
-      {avatar}
-    </a>
+    <>
+      {person.href ? (
+        <a
+          href={person.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={
+            person.login
+              ? `${person.name} on GitHub (${person.login})`
+              : `${person.name} on X`
+          }
+          className="block rounded-full outline-none hover:opacity-90 focus-visible:ring-3 focus-visible:ring-ring/50 motion-safe:transition motion-safe:hover:-translate-y-0.5"
+        >
+          {avatar}
+        </a>
+      ) : (
+        avatar
+      )}
+      <span className="flex max-w-full items-center gap-0.5">
+        <span className="truncate text-sm font-medium" title={person.name}>
+          {person.name}
+        </span>
+        {person.x && person.login ? (
+          <LinkButton
+            href={person.x}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="ghost"
+            size="icon-xs"
+            aria-label={`${person.name} on X`}
+            className="shrink-0 text-muted-foreground"
+          >
+            <XLogo />
+          </LinkButton>
+        ) : null}
+      </span>
+    </>
   )
 }

@@ -8,7 +8,7 @@ import {
   FOOTER_LINES,
   footerClip,
 } from "@workspace/player/footer-lines"
-import { Ninja, setMood, type NinjaMood } from "@workspace/player/ninja"
+import { Ninja, useEmote, type NinjaMood } from "@workspace/player/ninja"
 import { Button } from "@workspace/ui/components/button"
 import { Toggle } from "@workspace/ui/components/toggle"
 
@@ -54,24 +54,15 @@ export function FooterNinja({
   const [sound, setSound] = React.useState(false)
   const audio = React.useRef<HTMLAudioElement | null>(null)
   const ninja = React.useRef<SVGSVGElement>(null)
-  const settle = React.useRef(0)
+  const emote = useEmote(ninja, EMOTE_MS)
   const line = at === null ? greeting : FOOTER_LINES[at]!
 
   // After mounting, so the server's render and the first one in the browser agree.
   React.useEffect(() => setSound(savedSound()), [])
-  React.useEffect(() => () => window.clearTimeout(settle.current), [])
 
   function stop() {
     audio.current?.pause()
     audio.current = null
-  }
-
-  function emote(mood: NinjaMood) {
-    const svg = ninja.current
-    if (!svg) return
-    window.clearTimeout(settle.current)
-    setMood(svg, mood)
-    settle.current = window.setTimeout(() => setMood(svg, "idle"), EMOTE_MS)
   }
 
   function say() {
