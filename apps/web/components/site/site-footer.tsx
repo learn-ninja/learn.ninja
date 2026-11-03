@@ -8,7 +8,10 @@ import { SITE } from "@/lib/site"
 import { FooterNinja } from "./footer-ninja"
 import { InstagramLogo, TikTokLogo, XLogo, YouTubeLogo } from "./social-icons"
 
-const COLUMNS = [
+const COLUMNS: {
+  title: string
+  links: { href: string; label: string; external?: boolean }[]
+}[] = [
   {
     title: "Product",
     links: [
@@ -22,6 +25,7 @@ const COLUMNS = [
       { href: "/docs/reference/api", label: "API" },
       { href: "/llms.txt", label: "llms.txt" },
       { href: "/contributors", label: "Contributors" },
+      { href: SITE.repo, label: "GitHub", external: true },
     ],
   },
 ]
@@ -110,9 +114,20 @@ export function SiteFooter({ className }: { className?: string }) {
                 <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
                   {column.links.map((l) => (
                     <li key={l.href}>
-                      <Link href={l.href} className={LINK_CLASS}>
-                        {l.label}
-                      </Link>
+                      {l.external ? (
+                        <a
+                          href={l.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={LINK_CLASS}
+                        >
+                          {l.label}
+                        </a>
+                      ) : (
+                        <Link href={l.href} className={LINK_CLASS}>
+                          {l.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>

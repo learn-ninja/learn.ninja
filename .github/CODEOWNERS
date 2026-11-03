@@ -1,4 +1,9 @@
-# The skill's core (the steps, teaching guide, and lesson format) needs a maintainer's review.
-# Topic packs in skills/learn/topics/ are open to everyone.
+# Changes here need a maintainer's review: the skill's core (the steps, teaching guide, and lesson
+# format), the lesson spec, and what keeps lesson content from running code (the visual sandbox and
+# the Content-Security-Policy). The level guides in skills/learn/levels/ are open to everyone.
 /skills/learn/SKILL.md @learn-ninja/learn-core
+/skills/learn/steps.md @learn-ninja/learn-core
 /skills/learn/reference/ @learn-ninja/learn-core
+/packages/spec/ @learn-ninja/learn-core
+/packages/player/src/visuals* @learn-ninja/learn-core
+/apps/web/next.config.ts @learn-ninja/learn-core

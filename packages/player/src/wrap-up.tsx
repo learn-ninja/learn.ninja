@@ -20,7 +20,7 @@ import { usePlayer } from "./context"
 import { useCreatorControls } from "./creator"
 import { scoredQuestions, type Outcome, type Summary } from "./flow"
 import { RichText } from "./rich-text"
-import { NEXT_KINDS, type NextKind } from "./strings"
+import { directionOf, NEXT_KINDS, type NextKind } from "./strings"
 
 // The wrap-up's pieces, laid out by WrapUp (lesson-player.tsx) in one narrow column: the run bar
 // and the challenge's result under the score, a row of actions with one filled, then the
@@ -201,7 +201,14 @@ export function WrapActions({
 }
 
 /** The takeaways as a grouped list, a check on each row, with Make changes by the label for the maker. */
-export function Takeaways({ items }: { items: string[] }) {
+export function Takeaways({
+  items,
+  language,
+}: {
+  items: string[]
+  /** The lesson's language: each takeaway reads in its direction, under the interface's heading. */
+  language?: string
+}) {
   const { t } = usePlayer()
   const controls = useCreatorControls()
   return (
@@ -223,7 +230,12 @@ export function Takeaways({ items }: { items: string[] }) {
       }
     >
       {items.map((k) => (
-        <div key={k} className="flex gap-3 px-4 py-3 text-sm font-medium">
+        <div
+          key={k}
+          dir={language ? directionOf(language) : undefined}
+          lang={language}
+          className="flex gap-3 px-4 py-3 text-sm font-medium"
+        >
           <CheckIcon
             aria-hidden="true"
             className="mt-0.5 size-4 shrink-0 text-green-600"

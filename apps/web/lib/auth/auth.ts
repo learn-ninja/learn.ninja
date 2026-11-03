@@ -31,7 +31,7 @@ import {
 } from "./handles"
 import { authStorageFromEnv } from "./storage"
 
-// Better Auth, as plans/accounts-v2.md describes: GitHub (website only) and a six-digit email code
+// Better Auth: GitHub (website only) and a six-digit email code
 // (website and terminal), API keys for the terminal, sessions cached in a cookie and kept in Redis.
 // Users live in our Postgres through the Drizzle adapter (packages/db has the tables). It is also
 // the OAuth 2.1 server chat apps log in through (`mcp`, below): the MCP server at /mcp answers a

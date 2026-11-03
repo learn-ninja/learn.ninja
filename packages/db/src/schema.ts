@@ -14,7 +14,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core"
 
-// The tables, as plans/accounts-v2.md lists them. Ownership, team, and visibility columns exist from
+// The tables. Ownership, team, and visibility columns exist from
 // the start so later phases never migrate live data. After changing this file, run
 // `npm run generate -w @workspace/db` and commit the new migration.
 

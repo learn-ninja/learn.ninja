@@ -4,7 +4,7 @@
 // the slug the checker derives from it, which the redundancy and duplicate rules compare and the
 // lesson_tag table indexes, so "JavaScript" and "JS" count as one tag. Free tags drift into variants
 // within weeks (Stack Overflow's lesson), so the key folds spelling and maps known variants through
-// the synonym table below. plans/subjects-and-tags.md says why.
+// the synonym table below.
 
 /**
  * A label as the lesson keeps it: letters (any script), digits, spaces, and - + # . & / ' between

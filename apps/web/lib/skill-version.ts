@@ -1,9 +1,10 @@
-// The skill's version lives in the installed CLI (packages/cli/src/cli.ts, SKILL_VERSION). Guides and
-// checker rules reach every install through `learn sync` and /api/validate, so these only change when
-// the CLI itself does.
+import { SKILL_VERSION } from "@workspace/cli/version"
 
-/** The current CLI version. Bump it with SKILL_VERSION when the CLI or the installed SKILL.md changes. */
-export const LATEST_SKILL_VERSION = "0.19.0"
+// The skill's version lives in the CLI (packages/cli/src/version.ts), so the latest version served
+// here is always the one this repo builds. Guides and checker rules reach every install through
+// `learn sync` and /api/validate, so it only changes when the CLI itself does.
+
+export { SKILL_VERSION }
 
 /** The oldest CLI the served guides still work with. Raise it when a guide relies on new CLI behavior; `sync` stops below it. */
 export const MIN_SKILL_VERSION = "0.9.0"
@@ -23,9 +24,9 @@ export function compareVersions(a: string, b: string): number {
 /** What the API tells a CLI about its version: whether a newer skill exists, and how to get it. */
 export function skillInfo(version?: string | null) {
   const updateAvailable =
-    Boolean(version) && compareVersions(version!, LATEST_SKILL_VERSION) < 0
+    Boolean(version) && compareVersions(version!, SKILL_VERSION) < 0
   return {
-    latest: LATEST_SKILL_VERSION,
+    latest: SKILL_VERSION,
     updateAvailable,
     ...(updateAvailable ? { updateCommand: SKILL_UPDATE_COMMAND } : {}),
   }

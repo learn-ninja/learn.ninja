@@ -1,6 +1,6 @@
 import { skillBundle } from "@/lib/skill-files"
 import {
-  LATEST_SKILL_VERSION,
+  SKILL_VERSION,
   MIN_SKILL_VERSION,
   SKILL_UPDATE_COMMAND,
 } from "@/lib/skill-version"
@@ -14,7 +14,7 @@ export function GET() {
   const { hash, files } = skillBundle()
   return Response.json({
     ok: true,
-    version: LATEST_SKILL_VERSION,
+    version: SKILL_VERSION,
     minVersion: MIN_SKILL_VERSION,
     updateCommand: SKILL_UPDATE_COMMAND,
     hash,

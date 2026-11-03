@@ -80,6 +80,7 @@ const nextConfig: NextConfig = {
   env: { NEXT_PUBLIC_VISUALS_CSS: visualsCssUrl() },
   transpilePackages: [
     "@workspace/ui",
+    "@workspace/cli",
     "@workspace/player",
     "@workspace/spec",
     "@workspace/db",
@@ -130,8 +131,6 @@ const nextConfig: NextConfig = {
     ),
     "/lessons/[slug]": PREPARE_FILES,
     "/docs/[[...slug]]": PREPARE_FILES,
-    // The site's link preview card reads the agent logos from public/ (lib/og.tsx).
-    "/opengraph-image": ["./public/agents/*.svg"],
   },
   async rewrites() {
     return {

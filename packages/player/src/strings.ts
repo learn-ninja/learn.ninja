@@ -343,6 +343,11 @@ export function stringsFor(lang: string): Strings {
 
 export { loadLanguage, useStrings } from "./language"
 
+/** The direction a language is written in: right to left for Arabic, Hebrew, Persian, and Urdu. */
+export function directionOf(lang: string): "ltr" | "rtl" {
+  return /^(ar|he|fa|ur)\b/i.test(lang) ? "rtl" : "ltr"
+}
+
 /** React Aria's locale for a UI language (its strings are keyed by full locale, Arabic as ar-AE). */
 export function ariaLocaleFor(lang: string): string {
   return uiLanguageFor(lang)?.aria ?? "en-US"

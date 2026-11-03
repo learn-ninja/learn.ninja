@@ -7,6 +7,7 @@ export const SITE = {
   tagline: "Vibe learn anything with your agent",
   description:
     "Give your AI agent an article, notes, docs, a transcript, or code. It writes one short, interactive lesson and gives you a link to share. Free, no account.",
+  /** The source code (Apache-2.0), linked from the footer, the docs, and the legal pages. */
   repo: "https://github.com/learn-ninja/learn.ninja",
   /** The contact named on the Privacy and Terms pages. */
   maker: "@cmicpace",

@@ -79,10 +79,6 @@ export const BronzeAgeCollapse: Story = {
   name: "Bronze Age collapse",
   args: { lesson: lessons.bronze },
 }
-/** Under a day left: the lesson menu counts the link's time in hours instead of days. */
-export const ExpiresSoon: Story = {
-  args: { lesson: lessons.buttons, expiresAt: Date.now() + 14 * HOUR },
-}
 // The player reads its preferences on mount, so these stories save a choice before it renders.
 const withPrefs = (prefs: object) => [
   () =>
@@ -92,6 +88,115 @@ const withPrefs = (prefs: object) => [
     ),
 ]
 
+/** A lesson written in Arabic: the button hierarchy lesson, short, with a scenario to close. */
+const arabic: Lesson = {
+  ...lessons.buttons,
+  title: "تسلسل الأزرار",
+  summary: "تعلّم كيف تخبر الأزرار الأساسية والثانوية الناس بما يفعلونه بعد ذلك.",
+  objective: "امنح كل شاشة إجراءً أساسياً واحداً واضحاً، ورتّب الباقي حسب أهميته.",
+  language: "ar",
+  tags: ["الأزرار", "واجهة المستخدم"],
+  hook: {
+    id: "hook",
+    type: "choice",
+    prompt: "أي شريط أدوات يوضّح ما يجب فعله بعد ذلك؟",
+    options: [
+      { id: "a", text: "ثلاثة أزرار ممتلئة: نشر، معاينة، إلغاء." },
+      { id: "b", text: "زر نشر ممتلئ، ومعاينة محدّدة، وإلغاء نصّي." },
+    ],
+    correct: ["b"],
+    multiple: false,
+    explanation: "عندما يبرز زر واحد، يعرف الناس الإجراء الرئيسي من النظرة الأولى.",
+  },
+  katas: [
+    {
+      id: "c1",
+      type: "concept",
+      title: "إجراء أساسي واحد في كل شاشة",
+      body: "**الزر الأساسي** هو الإجراء الذي تريد أن يقوم به الناس أكثر من غيره. امنح كل شاشة زراً أساسياً واحداً فقط. إذا كان كل شيء أساسياً، فلا شيء أساسي.\n- الأساسي: ممتلئ بلون العلامة.\n- الثانوي: محدّد بإطار.\n- الثالثي: نص فقط.",
+    },
+    {
+      id: "p1",
+      type: "choice",
+      prompt: "في صفحة الدفع، أي إجراء يجب أن يكون أساسياً؟",
+      options: [
+        { id: "a", text: "إتمام الطلب" },
+        {
+          id: "b",
+          text: "متابعة التسوق",
+          feedback: "مفيد، لكنه يبعد الناس عن إتمام الشراء.",
+        },
+        {
+          id: "c",
+          text: "تطبيق رمز الخصم",
+          feedback: "يحتاجه بعض الناس فقط، فلا ينبغي أن ينافس الإجراء الرئيسي.",
+        },
+      ],
+      correct: ["a"],
+      multiple: false,
+      hint: "ما الشيء الوحيد الذي وُجدت هذه الصفحة لمساعدة الناس على فعله؟",
+      explanation: "وُجدت صفحة الدفع لإتمام الشراء، لذا فإن **إتمام الطلب** هو الإجراء الأساسي.",
+    },
+  ],
+  challenge: {
+    id: "ch",
+    type: "scenario",
+    prompt: "أي خطة ستختار؟",
+    situation:
+      "في صفحة الإعدادات ثلاثة إجراءات: **حفظ التغييرات**، و**استعادة الافتراضي**، و**حذف الحساب**. المستخدمون يضغطون على الحذف بالخطأ.",
+    options: [
+      {
+        id: "a",
+        quality: "best",
+        text: "الحفظ أساسي، والاستعادة ثانوية، والحذف نص أحمر بعيد عنهما",
+        outcome: "الإجراء الرئيسي واضح، والخطير يصعب الضغط عليه بالخطأ.",
+      },
+      {
+        id: "b",
+        quality: "okay",
+        text: "الحفظ أساسي، والاستعادة والحذف زران ثانويان متجاوران",
+        outcome: "الإجراء الرئيسي واضح، لكن الحذف يبدو آمناً مثل الاستعادة.",
+      },
+      {
+        id: "c",
+        quality: "poor",
+        text: "الثلاثة أزرار أساسية ليسهل العثور على كل منها",
+        outcome: "لا شيء يبرز، والحذف مغرٍ مثل الحفظ.",
+      },
+    ],
+    hint: "فكّر في الأهمية والخطر معاً.",
+    explanation:
+      "التسلسل يُظهر الأهمية، والإجراءات الخطرة تحتاج أيضاً إلى مسافة ولون تحذيري.",
+  },
+  wrapup: {
+    takeaways: [
+      "امنح كل شاشة إجراءً أساسياً واحداً.",
+      "أبقِ الإجراءات الخطرة مميزة وبعيدة عن الإجراء الرئيسي.",
+    ],
+    next: "الإجراءات الخطرة ونوافذ التأكيد",
+  },
+}
+
+/**
+ * An Arabic lesson under the English interface (the default while UI_TRANSLATIONS is off): the
+ * lesson's text and katas read right to left, while the header, footer, and tray stay left to right.
+ * Leave the toolbar's language on English.
+ */
+export const ArabicLesson: Story = {
+  name: "Arabic lesson, English interface",
+  args: { lesson: arabic, startAt: "c1" },
+}
+/** The Arabic lesson's scenario, briefed by the ninja right to left under the English interface. */
+export const ArabicScenario: Story = {
+  name: "Arabic lesson: scenario brief",
+  args: { lesson: arabic, startAt: "ch" },
+  loaders: withPrefs({ ninja: "casual" }),
+}
+
+/** Under a day left: the lesson menu counts the link's time in hours instead of days. */
+export const ExpiresSoon: Story = {
+  args: { lesson: lessons.buttons, expiresAt: Date.now() + 14 * HOUR },
+}
 /** The tray of buttons under the lesson closes with the notch; Enter still runs the main action. */
 export const TrayClosed: Story = {
   args: { lesson: lessons.buttons },

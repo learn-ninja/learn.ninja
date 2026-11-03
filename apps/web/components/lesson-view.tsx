@@ -152,15 +152,13 @@ export function LessonView({
         {...props}
         uiLanguage={props.uiLanguage ?? urlLanguage}
         menuItems={menuItems}
-        headerAccount={
-          <div className="flex items-center gap-1">
-            <FeedbackButton
-              lessonId={lessonId}
-              onReport={canReport ? () => setReportOpen(true) : undefined}
-            />
-            <LessonAccount account={account} streak={lantern} />
-          </div>
+        headerActions={
+          <FeedbackButton
+            lessonId={lessonId}
+            onReport={canReport ? () => setReportOpen(true) : undefined}
+          />
         }
+        headerAccount={<LessonAccount account={account} streak={lantern} />}
         phoneAccount={
           account ? <AccountMenuItems account={account} /> : undefined
         }

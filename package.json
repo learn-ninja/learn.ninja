@@ -1,6 +1,7 @@
 {
   "name": "learn",
   "version": "0.0.1",
+  "license": "Apache-2.0",
   "private": true,
   "scripts": {
     "build": "turbo build",
@@ -34,6 +35,9 @@
     "packages/*"
   ],
   "overrides": {
-    "mdast-util-to-markdown": "2.1.2"
+    "mdast-util-to-markdown": "2.1.2",
+    "@joshwooding/vite-plugin-react-docgen-typescript": {
+      "glob": "^14.0.2"
+    }
   }
 }

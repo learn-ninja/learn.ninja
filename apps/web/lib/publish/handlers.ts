@@ -43,7 +43,7 @@ export {
 
 export {
   compareVersions,
-  LATEST_SKILL_VERSION,
+  SKILL_VERSION,
   SKILL_UPDATE_COMMAND,
 } from "../skill-version"
 

@@ -1,9 +1,9 @@
 import { SITE } from "@/lib/site"
 
-// Log-in codes go out through Resend (RESEND_API_KEY) as sensei@learn.ninja, which is a real inbox
-// in the learn.ninja Google Workspace, so replies reach a person. Without the key, the code is
-// printed to the server console instead, so development needs no account; a production build
-// without the key refuses to send, since its logs would otherwise hold every user's code.
+// Log-in codes go out through Resend (RESEND_API_KEY) as sensei@learn.ninja, which is a real inbox,
+// so replies reach a person. Without the key, the code is printed to the server console instead, so
+// development needs no account; a production build without the key refuses to send, since its logs
+// would otherwise hold every user's code.
 
 export const DEFAULT_FROM = `${SITE.name} <sensei@learn.ninja>`
 

@@ -1,0 +1,38 @@
+name: Translation
+description: Translate the player's interface into a language, or fix a translation.
+labels: ["translation"]
+body:
+  - type: markdown
+    attributes:
+      value: The player's strings live in `packages/player/src/locales/`, one file per language. To see a language, open any lesson with `?ui=` and its code, such as `?ui=ar`.
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      placeholder: Portuguese (Brazil), pt-BR
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change
+      options:
+        - A new language
+        - Fix or improve an existing translation
+        - A right-to-left layout problem
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: For a fix, the string, what it says now, and what it should say. For a layout problem, a screenshot.
+    validations:
+      required: true
+  - type: checkboxes
+    id: speaker
+    attributes:
+      label: About you
+      options:
+        - label: I'm a native or fluent speaker of this language
+        - label: I'd like to open the pull request myself

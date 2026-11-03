@@ -12,12 +12,14 @@ import type { AccountInfo } from "@/lib/auth/account-info"
 import { sendFinishes } from "@/lib/explore/finishes"
 
 import { ButtonLink } from "./button-link"
+import { GitHubStars } from "./github-stars"
 import { Wordmark } from "./wordmark"
 
 /**
  * The bar at the top of every page. Visitors get Explore · Docs · Log in and a wordmark that
  * links home; once logged in, Explore is home, so the wordmark goes there and the links fold
- * into the account menu behind the profile picture (which also opens on hover). `start` adds
+ * into the account menu behind the profile picture (which also opens on hover). The GitHub link
+ * with its star count leads the links on wider screens. `start` adds
  * page-specific controls before the wordmark (the docs menu), `action` a button after it (copy
  * prompt). `feedback` adds the bug button at the start of the links, for the app's own pages
  * (not the marketing pages or the docs). `streak` puts the logged-in learner's lantern before the picture. `account` is what a
@@ -56,6 +58,7 @@ export function SiteHeader({
         {action}
         <nav aria-label="Site" className="ms-auto flex items-center gap-1">
           {feedback ? <FeedbackButton /> : null}
+          <GitHubStars className="max-sm:hidden" />
           {visitor ? (
             <>
               <ButtonLink href="/explore" variant="ghost" size="sm">

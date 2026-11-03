@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security issue
+    url: https://github.com/learn-ninja/learn.ninja/security/advisories/new
+    about: Report vulnerabilities privately, never in a public issue.
+  - name: Read the docs
+    url: https://learn.ninja/docs
+    about: How to install the skill, connect a chat app, and write lessons.
