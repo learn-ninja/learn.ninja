@@ -127,82 +127,55 @@ function Letter({ picture }: { picture: string | null }) {
   return (
     <section
       id="note"
-      className="mx-auto flex w-full max-w-2xl scroll-mt-16 flex-col gap-8 px-4 pt-24 sm:px-6 sm:pt-32"
+      className="mx-auto flex w-full max-w-2xl scroll-mt-16 flex-col gap-10 px-4 pt-24 sm:px-6 sm:pt-32"
     >
-      <p className={EYEBROW}>A note from Colin</p>
-      <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
-        The expensive part of great learning just disappeared. Now it&apos;s
-        our move.
-      </h2>
-      <div className="flex flex-col gap-5 text-base leading-relaxed text-pretty text-foreground/85 sm:text-lg sm:leading-relaxed">
-        <p>
-          Hi, I&apos;m Colin. For the last seven years I&apos;ve been building
-          Uxcel, an interactive design-education platform that grew to half a
-          million learners and is used by Fortune 500 teams all over the world.
-          I&apos;ve seen up close what Duolingo, Brilliant, and Mimo already
-          know: people learn when a lesson is short, hands-on, and gives you
-          instant feedback. Not from a wall of text, not from a recording of
-          someone talking.
-        </p>
-        <p>
-          I&apos;ve also seen the cost. Making one lesson that good takes a
-          writer, a designer, an engineer, and weeks. That&apos;s why
-          interactive learning has stayed behind a subscription, and why it
-          only exists for the subjects a company can sell.
-        </p>
-        <p>
-          Agents change the arithmetic. Your agent can already read anything
-          you give it: an article, your notes, a codebase, a transcript.{" "}
-          {SITE.name} teaches it to turn that into a lesson that plays like
-          Duolingo, in any language, on your phone, with a link you can send to
-          anyone. The lesson is written on your side, so there&apos;s nothing
-          for us to charge for. No account, no ads, no paywall. Just the
-          lessons.
-        </p>
-        <p>
-          That&apos;s the bet: if the expensive part is gone, best-in-class
-          interactive learning can be free, for any subject, in every language.
-          But no one company can build that, and no one person should. A lesson
-          is only as good as its weakest part: the way a kata gives feedback,
-          the visual that makes an idea click, the translation that reads like
-          it was written by a native speaker, the examples that teach the agent
-          what good looks like. Each of those is its own craft. {SITE.name} is
-          at its best as the sum of all of them, with each part built by the
-          people who know it best, and the code is open under Apache-2.0 so
-          that&apos;s exactly how it can be built.
-        </p>
-        <p>
-          So here&apos;s where you come in. If you know a subject, the examples
-          need lessons about it, and so does the agent that learns from them.
-          If you care about how a question lands, the katas need sharper
-          feedback, hints, and visuals. If you speak a language, the player
-          speaks it too, and no native speaker has checked it yet. If you build
-          things, the biggest open question is what a rich lesson looks like
-          when an agent writes it: maps, chess, molecules, code you can run,
-          scenarios that branch. Pick the part that&apos;s yours.
-        </p>
-        <p>
-          Read the guide, find a small task, and send a pull request. I answer
-          every one.
-        </p>
+      <div className="flex flex-col gap-4 text-center">
+        <p className={EYEBROW}>A note from Colin</p>
+        <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+          The expensive part of great learning just disappeared.
+        </h2>
       </div>
-      <div className="flex items-center gap-3.5 pt-2">
-        <UserAvatar image={picture} handle="Colin" size="signature" />
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold">Colin Pace</span>
-          <span className="text-sm text-muted-foreground">
-            Co-founder, Uxcel and {SITE.name} ·{" "}
-            <a
-              href={SITE.makerUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-sm outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <bdi dir="ltr">{SITE.maker}</bdi>
-            </a>
-          </span>
-        </div>
-      </div>
+      {/* A sheet of paper on the dark page: its own colors (site.css), the one light surface here. */}
+      <article className="mission-paper flex flex-col gap-5 rounded-sm px-6 py-8 text-base leading-relaxed text-pretty sm:px-12 sm:py-12 sm:text-lg sm:leading-relaxed">
+        <p>
+          Hi, I&apos;m Colin. For seven years I&apos;ve been building Uxcel, an
+          interactive design-education platform that grew to half a million
+          learners and Fortune 500 teams around the world. It taught me what
+          Duolingo, Brilliant, and Mimo know: people learn from short,
+          hands-on lessons that answer back.
+        </p>
+        <p>
+          It also taught me the cost. One great lesson takes a writer, a
+          designer, an engineer, and weeks. So interactive learning stays behind
+          a subscription, and only for the subjects a company can sell.
+        </p>
+        <p>
+          Agents change that. Your agent writes the lesson on your side, so
+          there&apos;s nothing for us to charge for. What&apos;s left is making
+          every part of a lesson great: the katas, the visuals, the
+          translations, the examples the agent learns from. No one company can
+          do all of that. {SITE.name} is at its best as the sum of its parts,
+          each built by the people who know it best.
+        </p>
+        <p>Pick the part that&apos;s yours. I answer every pull request.</p>
+        <footer className="mission-paper-rule mt-4 flex items-center gap-3.5 border-t pt-6">
+          <UserAvatar image={picture} handle="Colin" size="signature" />
+          <div className="flex flex-col text-sm leading-normal">
+            <span className="font-semibold">Colin Pace</span>
+            <span className="mission-paper-muted">
+              Co-founder, Uxcel and {SITE.name} ·{" "}
+              <a
+                href={SITE.makerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-sm underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <bdi dir="ltr">{SITE.maker}</bdi>
+              </a>
+            </span>
+          </div>
+        </footer>
+      </article>
     </section>
   )
 }
