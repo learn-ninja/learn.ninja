@@ -6,6 +6,7 @@ import {
   BookOpenIcon,
   BugIcon,
   CompassIcon,
+  FlagIcon,
   LogOutIcon,
   MenuIcon,
   SettingsIcon,
@@ -33,7 +34,7 @@ const ROW =
  * The header's menu on phones, where its links don't fit beside the wordmark: a button at the end
  * of the header that opens a drawer from the same side (a menu icon for visitors, the profile
  * picture once logged in). A visitor's drawer holds the header's
- * links (Explore, Docs) and Log in; a logged-in learner's holds what the profile picture's menu
+ * links (Docs, Mission) and Log in; a logged-in learner's holds what the profile picture's menu
  * holds on wider screens (Explore, their profile, settings, the docs in a new tab) and Log out.
  * On the app's pages (`feedback`) both get the bug report too; the GitHub link stays in the
  * header. Following a link or opening the bug report closes it. The trigger only shows below
@@ -112,12 +113,12 @@ export function SiteMenu({
             )}
           </SheetTitle>
           <nav aria-label="Site" className="flex flex-col gap-1">
-            <Row href="/explore" onPress={close}>
-              <CompassIcon />
-              Explore
-            </Row>
             {user ? (
               <>
+                <Row href="/explore" onPress={close}>
+                  <CompassIcon />
+                  Explore
+                </Row>
                 {user.handle ? (
                   <Row href={`/u/${user.handle}`} onPress={close}>
                     <UserRoundIcon />
@@ -136,10 +137,16 @@ export function SiteMenu({
                 </Row>
               </>
             ) : (
-              <Row href="/docs" onPress={close}>
-                <BookOpenIcon />
-                Docs
-              </Row>
+              <>
+                <Row href="/docs" onPress={close}>
+                  <BookOpenIcon />
+                  Docs
+                </Row>
+                <Row href="/mission" onPress={close}>
+                  <FlagIcon />
+                  Mission
+                </Row>
+              </>
             )}
             {feedback ? (
               <Button

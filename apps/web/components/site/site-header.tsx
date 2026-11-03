@@ -15,8 +15,8 @@ import { SiteMenu } from "./site-menu"
 import { Wordmark } from "./wordmark"
 
 /**
- * The bar at the top of every page. Visitors get Explore · Docs · Log in and a wordmark that
- * links home; once logged in, Explore is home, so the wordmark goes there and the links fold
+ * The bar at the top of every page. Visitors get Docs · Mission · Log in and a wordmark that
+ * links home (Explore is a click away on the home page and in the footer); once logged in, Explore is home, so the wordmark goes there and the links fold
  * into the account menu behind the profile picture (which also opens on hover). On the marketing
  * pages and the docs, the GitHub link with its star count leads the links on wider screens. `start` adds
  * page-specific controls before the wordmark (the docs menu), `action` a button after it (copy
@@ -66,20 +66,20 @@ export function SiteHeader({
           {visitor ? (
             <>
               <ButtonLink
-                href="/explore"
-                variant="ghost"
-                size="sm"
-                className="max-sm:hidden"
-              >
-                Explore
-              </ButtonLink>
-              <ButtonLink
                 href="/docs"
                 variant="ghost"
                 size="sm"
                 className="max-sm:hidden"
               >
                 Docs
+              </ButtonLink>
+              <ButtonLink
+                href="/mission"
+                variant="ghost"
+                size="sm"
+                className="max-sm:hidden"
+              >
+                Mission
               </ButtonLink>
               <AccountLink account={account} className="max-sm:hidden" />
             </>

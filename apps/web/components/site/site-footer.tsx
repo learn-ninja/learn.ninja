@@ -16,6 +16,7 @@ const COLUMNS: {
   {
     title: "Product",
     links: [
+      { href: "/explore", label: "Explore" },
       { href: "/docs", label: "Docs" },
       { href: "/docs#install", label: "Install" },
     ],
