@@ -11,7 +11,7 @@ export function Faq() {
   return (
     <section
       id="faq"
-      className="mx-auto flex w-full max-w-3xl scroll-mt-20 flex-col gap-10 px-4 pb-20 sm:px-6 sm:pb-28"
+      className="mx-auto flex w-full max-w-3xl scroll-mt-20 flex-col gap-10 px-4 py-20 sm:px-6 sm:py-28"
     >
       <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">FAQ</h2>
       <Accordion>

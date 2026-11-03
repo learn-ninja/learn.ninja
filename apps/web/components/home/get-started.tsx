@@ -16,7 +16,7 @@ export function GetStarted() {
   const guide = GUIDES[setup]
 
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-4 sm:px-6">
+    <section className="mx-auto flex w-full max-w-3xl flex-col items-start gap-6 px-4 py-20 sm:px-6 sm:py-28">
       <div className="flex flex-col gap-2">
         <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
           Get started

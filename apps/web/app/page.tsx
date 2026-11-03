@@ -4,6 +4,7 @@ import { Faq } from "@/components/home/faq"
 import { GetStarted } from "@/components/home/get-started"
 import { Hero } from "@/components/home/hero"
 import { MadeThisWeek } from "@/components/home/made-this-week"
+import { SectionDivider } from "@/components/home/section-divider"
 import { SetupBar } from "@/components/home/setup-bar"
 import { SiteFooter } from "@/components/site/site-footer"
 import { JsonLd } from "@/components/site/json-ld"
@@ -26,8 +27,11 @@ export default function HomePage() {
       <main className="flex-1">
         <Hero />
         <MadeThisWeek />
+        <SectionDivider />
         <Faq />
+        <SectionDivider />
         <GetStarted />
+        <SectionDivider />
       </main>
       <SiteFooter className="max-w-3xl" />
       <SetupBar />
