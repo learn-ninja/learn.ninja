@@ -58,8 +58,8 @@ const ICONS: Record<AreaIcon, LucideIcon> = {
   agents: BotIcon,
 }
 
-const EYEBROW =
-  "text-xs font-medium tracking-widest text-muted-foreground uppercase"
+// Matches the player's ScreenLabel above each kata
+const EYEBROW = "font-mono text-sm text-muted-foreground"
 
 export default async function MissionPage() {
   const people = await loadContributors()
