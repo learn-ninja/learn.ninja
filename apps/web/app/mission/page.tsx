@@ -158,12 +158,12 @@ function Letter({ picture }: { picture: string | null }) {
           each built by the people who know it best.
         </p>
         <p>Pick the part that&apos;s yours. I answer every pull request.</p>
-        <footer className="mission-paper-rule mt-4 flex items-center gap-3.5 border-t pt-6">
+        <footer className="mt-4 flex items-center gap-3.5">
           <UserAvatar image={picture} handle="Colin" size="signature" />
           <div className="flex flex-col text-sm leading-normal">
             <span className="font-semibold">Colin Pace</span>
             <span className="mission-paper-muted">
-              Co-founder, Uxcel and {SITE.name} ·{" "}
+              Founder, {SITE.name} ·{" "}
               <a
                 href={SITE.makerUrl}
                 target="_blank"
