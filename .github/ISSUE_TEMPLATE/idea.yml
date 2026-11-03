@@ -1,0 +1,42 @@
+name: Idea
+description: Suggest a feature or a change. Format changes, new kata types, and agent round trips start here as a proposal.
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: Some changes need a proposal before any code; [CONTRIBUTING.md](https://github.com/learn-ninja/learn.ninja/blob/main/CONTRIBUTING.md#proposal-first) lists them. A maintainer replies within a week.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What's hard or missing today, and who runs into it (learners, people making lessons, agents)?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What you'd change. For a new kata type or a format change, include an example of the lesson JSON.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Lesson player
+        - Visuals
+        - Sounds and motion
+        - Teaching guide or examples
+        - Lesson format or a new kata type
+        - The skill, the learn command, or MCP
+        - The website or docs
+        - Something else
+    validations:
+      required: true
+  - type: checkboxes
+    id: build
+    attributes:
+      label: Building it
+      options:
+        - label: I'd like to build this myself

@@ -1,7 +1,7 @@
 // The subjects a lesson can belong to: one required pick from a fixed list, chosen by the agent at
 // write time and refused by the checker otherwise. The list is short and wide on purpose (no
 // "Other"), slugs never change once shipped, and the player translates the names. The scope notes
-// are what the format reference shows the agent. plans/subjects-and-tags.md says why.
+// are what the format reference shows the agent.
 
 export const SUBJECTS = [
   "programming",

@@ -1,0 +1,19 @@
+learn.ninja
+Copyright 2026 Uxcel Inc
+
+This product includes software developed at Uxcel Inc (https://learn.ninja).
+
+The code in this repository is licensed under the Apache License, Version 2.0 (see LICENSE).
+The example lessons in examples/ and the documentation in docs/ are licensed under the Creative
+Commons Attribution 4.0 International license (see LICENSE-CONTENT).
+
+"learn.ninja", the learn.ninja logo, the files in brand/, and the ninja character are trademarks
+of Uxcel Inc. Neither license grants permission to use them; see TRADEMARK.md.
+
+Third-party packages are listed in package-lock.json and keep their own licenses. The vendored
+shadcn skill in .claude/skills/shadcn is MIT-licensed by shadcn. The map visual's country shapes
+are derived from Natural Earth (public domain) through world-atlas.
+
+The ninja's voice clips (apps/web/public/voice/) and the sound effect in apps/web/public/sfx/ were
+generated with ElevenLabs under a paid plan, whose terms give the subscriber the output and a
+commercial license to it; they are distributed here under the Apache License, Version 2.0.

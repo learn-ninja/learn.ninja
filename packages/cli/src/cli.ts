@@ -9,6 +9,10 @@ import {
   type Issue,
 } from "@workspace/spec"
 
+import { SKILL_VERSION } from "./version"
+
+export { SKILL_VERSION }
+
 // The command the lesson skill runs: sync the guides, validate a lesson file, publish it, or update
 // it; and log in, so published lessons are kept in an account instead of expiring (`keep` moves
 // the ones published before logging in).
@@ -18,7 +22,6 @@ import {
 // the current guides into .learn/skill/ (text only, never code), and `validate` checks the lesson on the
 // server. The copies that came with the install are the fallback when the server can't be reached.
 
-export const SKILL_VERSION = "0.19.0"
 export const DEFAULT_API_URL = "https://learn.ninja"
 /** Where `sync` puts the guides, relative to the current folder. */
 export const SYNC_DIR = ".learn/skill"

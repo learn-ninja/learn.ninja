@@ -14,7 +14,7 @@ import {
   compareVersions,
   expireLessons,
   isCronRequest,
-  LATEST_SKILL_VERSION,
+  SKILL_VERSION,
   publishLesson,
   reissueClaimToken,
   updateLesson,
@@ -86,7 +86,7 @@ describe("links and tokens", () => {
   it("compares skill versions", () => {
     expect(compareVersions("0.1.0", "0.2.0")).toBeLessThan(0)
     expect(compareVersions("1.0.0", "0.9.9")).toBeGreaterThan(0)
-    expect(compareVersions(LATEST_SKILL_VERSION, LATEST_SKILL_VERSION)).toBe(0)
+    expect(compareVersions(SKILL_VERSION, SKILL_VERSION)).toBe(0)
   })
 })
 
@@ -112,7 +112,7 @@ describe("publishing", () => {
 
   it("publishes a valid lesson with a link, an edit token, and a 7-day expiry", async () => {
     const reply = await publishLesson(
-      { text: buttons, client: "1.2.3.4", skillVersion: LATEST_SKILL_VERSION },
+      { text: buttons, client: "1.2.3.4", skillVersion: SKILL_VERSION },
       deps
     )
     expect(reply.status).toBe(201)
@@ -128,7 +128,7 @@ describe("publishing", () => {
       expiresAt: new Date(now + LESSON_TTL_SECONDS * 1000).toISOString(),
       owner: null,
       visibility: "unlisted",
-      skill: { latest: LATEST_SKILL_VERSION, updateAvailable: false },
+      skill: { latest: SKILL_VERSION, updateAvailable: false },
     })
     expect(reply.body.claimUrl).toBe(
       `https://learn.test/keep/${reply.body.claimToken}`

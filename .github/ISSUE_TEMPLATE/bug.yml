@@ -1,0 +1,50 @@
+name: Bug
+description: Something on learn.ninja, in the player, or in the skill doesn't work as it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting it. Security issues go through [private reporting](https://github.com/learn-ninja/learn.ninja/security/advisories/new) instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: The lesson or page where it happened, if there is one.
+      placeholder: https://learn.ninja/l/…
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the lesson
+        2. Answer the second question
+        3. …
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options:
+        - The website or a lesson in the browser
+        - The skill or the learn command (in an agent)
+        - The MCP server (in a chat app)
+        - Running the repo locally
+        - Somewhere else
+    validations:
+      required: true
+  - type: input
+    id: setup
+    attributes:
+      label: Browser, device, or agent
+      placeholder: Safari on iPhone 15, or Claude Code 2.1 on macOS
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, console errors, or the lesson file.

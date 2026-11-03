@@ -174,7 +174,7 @@ const APPS: ConnectedApp[] = [
 const KEYS: KeySummary[] = [
   {
     id: "k1",
-    name: "learn CLI on colins-mac",
+    name: "learn CLI on my-laptop",
     start: "learn_ab12",
     createdAt: new Date(Date.now() - 3 * 864e5).toISOString(),
     lastUsedAt: new Date().toISOString(),

@@ -122,6 +122,7 @@ import { playSound, preloadSounds } from "./sound"
 import { StreakScreen, type DayStreak } from "./streak"
 import {
   ariaLocaleFor,
+  directionOf,
   UI_TRANSLATIONS,
   useStrings,
   type NinjaLevel,
@@ -177,6 +178,8 @@ export interface LessonPlayerProps {
    * picture, or a way to sign up.
    */
   headerAccount?: React.ReactNode
+  /** The app's own buttons before Share (and the gear), on phones too: the bug button. */
+  headerActions?: React.ReactNode
   /** The account's entries for the phone menu, for what `headerAccount` leaves out on phones. */
   phoneAccount?: React.ReactNode
   /** The app's color theme. Pass both to show the theme setting in the header. */
@@ -253,6 +256,7 @@ function LessonInLanguage({
   shareUrl,
   menuItems,
   headerAccount,
+  headerActions,
   phoneAccount,
   theme,
   onThemeChange,
@@ -302,7 +306,7 @@ function LessonInLanguage({
     return () => window.clearTimeout(timer)
   }, [prefsLoaded, ui])
   const locale = ariaLocaleFor(ui)
-  const dir = /^(ar|he|fa|ur)\b/i.test(ui) ? "rtl" : "ltr"
+  const dir = directionOf(ui)
   const dark = useIsDark()
   const appSettings = {
     theme,
@@ -376,6 +380,7 @@ function LessonInLanguage({
                   <AppSettings {...appSettings} />
                 ) : undefined
               }
+              actions={headerActions}
               account={headerAccount}
               phoneMenu={
                 <>
@@ -804,6 +809,7 @@ function Player({
   soundOn,
   onShortcuts,
   headerSettings,
+  actions,
   account,
   phoneMenu,
   trayOpen,
@@ -828,6 +834,8 @@ function Player({
   onShortcuts: () => void
   /** The app's settings, shown in the header. */
   headerSettings?: React.ReactNode
+  /** The app's own buttons, before Share. */
+  actions?: React.ReactNode
   /** The app's account controls, last in the header. */
   account?: React.ReactNode
   /** The end of the header's menu on phones: the settings and links that have no room there. */
@@ -1202,6 +1210,7 @@ function Player({
           homeHref={homeHref}
           shareUrl={shareUrl}
           settings={headerSettings}
+          actions={actions}
           account={account}
           menuItems={menuItems}
           phoneMenu={phoneMenu}
@@ -1600,10 +1609,18 @@ export function Screen({
         <div className="flex flex-col items-center gap-5 text-center">
           <NinjaSlot show={ninja} gap="-mb-5" />
           <div className="flex w-full flex-col gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+            <h1
+              dir={directionOf(lesson.language)}
+              lang={lesson.language}
+              className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl"
+            >
               <SmokeWords text={lesson.title} step={50} />
             </h1>
-            <p className="vanish-fade text-base font-medium text-pretty text-muted-foreground">
+            <p
+              dir={directionOf(lesson.language)}
+              lang={lesson.language}
+              className="vanish-fade text-base font-medium text-pretty text-muted-foreground"
+            >
               {lesson.summary}
             </p>
           </div>
@@ -1621,10 +1638,10 @@ export function Screen({
     case "concept":
       return (
         // Styled like a question (no card of its own), so the screens read as one lesson.
-        <>
+        <LessonContent language={lesson.language}>
           {label ? <ScreenLabel text={label} className="-mb-4" /> : null}
           <ConceptKata kata={item.kata} />
-        </>
+        </LessonContent>
       )
     case "fix":
       return (
@@ -1646,19 +1663,47 @@ export function Screen({
       )
     case "question":
       return (
-        <QuestionScreen
-          item={item}
-          state={state.question!}
-          dispatch={dispatch}
-          label={label}
-          inBubble={inBubble}
-          brief={brief}
-          paths={paths}
-          lang={lesson.language}
-          storyMode={inBubble && ninja}
-        />
+        <LessonContent language={lesson.language}>
+          <QuestionScreen
+            item={item}
+            state={state.question!}
+            dispatch={dispatch}
+            label={label}
+            inBubble={inBubble}
+            brief={brief}
+            paths={paths}
+            lang={lesson.language}
+            storyMode={inBubble && ninja}
+          />
+        </LessonContent>
       )
   }
+}
+
+/**
+ * A kata's screen, in the lesson's language and direction rather than the interface's: an Arabic
+ * lesson reads right to left under the English interface, while the header, footer, and tray keep
+ * the interface's direction. The player's `dir` (sort's arrow keys, the map) and React Aria's follow.
+ */
+function LessonContent({
+  language,
+  children,
+}: {
+  language: string
+  children: React.ReactNode
+}) {
+  const player = usePlayer()
+  const dir = directionOf(language)
+  const value = React.useMemo(() => ({ ...player, dir }), [player, dir])
+  return (
+    <DirectionProvider direction={dir}>
+      <PlayerProvider value={value}>
+        <div dir={dir} lang={language} className="contents">
+          {children}
+        </div>
+      </PlayerProvider>
+    </DirectionProvider>
+  )
 }
 
 /** The quiet label above the warm-up, so the first question reads as a guess. Later screens go without. */
@@ -1963,7 +2008,10 @@ function WrapUp({
         />
       </div>
       <div className="flex flex-col gap-8">
-        <Takeaways items={lesson.wrapup.takeaways} />
+        <Takeaways
+          items={lesson.wrapup.takeaways}
+          language={lesson.language}
+        />
         <KeepLearning lesson={lesson} />
       </div>
     </div>

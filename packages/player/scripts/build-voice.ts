@@ -20,7 +20,7 @@ import { FOOTER_LINES } from "../src/footer-lines"
 import { en } from "../src/locales/voices/en"
 import type { VoiceClips } from "../src/voices"
 
-/** "learn.ninja ninja" in Colin's ElevenLabs account: deep and husky, with a Japanese accent. */
+/** "learn.ninja ninja" in the maintainers' ElevenLabs account: deep and husky, with a Japanese accent. */
 const VOICE = "WWVG27H1yLMxNlCOoavQ"
 const MODEL = "eleven_v3"
 /** Mono speech: 96 kbps keeps the rasp without making the clips heavy. */

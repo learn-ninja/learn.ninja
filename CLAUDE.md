@@ -2,9 +2,7 @@
 
 # learn.ninja
 
-An LLM turns any input into one short, interactive lesson (Duolingo/Brilliant-style), and this app plays it from a shared link. The product is **learn.ninja**, always lowercase (also at the start of a sentence), live at https://learn.ninja; it's free and needs no account. Built mainly by one person with Claude Code; open-source-ready (license not chosen yet, so don't add one).
-
-Planning doc (decisions, lesson spec, tech stack, test lessons): https://claude.ai/code/artifact/d4d46b87-0964-4396-bb26-70d0e1b1eb49
+An LLM turns any input into one short, interactive lesson (Duolingo/Brilliant-style), and this app plays it from a shared link. The product is **learn.ninja**, always lowercase (also at the start of a sentence), live at https://learn.ninja; it's free and needs no account. Built mainly with Claude Code. Open source: Apache-2.0 for the code (`LICENSE`, `NOTICE`), CC-BY-4.0 for `examples/` and `docs/` (`LICENSE-CONTENT`); the name, logo, `brand/` and the ninja are Uxcel Inc's trademarks (`TRADEMARK.md`). Maintainers' private notes go in a git-ignored `CLAUDE.local.md`.
 
 ## Layout
 
@@ -70,7 +68,7 @@ A lesson is made of **katas**, one per screen: `concept` katas (theory) and ques
 - Storage goes through `LessonStore` (`apps/web/lib/publish/store.ts`): Postgres through Drizzle, with the schema and migrations in `packages/db`. Neon (`DATABASE_URL`, migrated by the web app's build) in production; PGlite in `apps/web/.data/pglite` in development and in memory in tests, migrated on first use. After changing `packages/db/src/schema.ts`, run `npm run generate -w @workspace/db` and commit the migration. Upstash Redis is only for rate limits.
 - Lessons expire 7 days after publishing; updates keep the expiry. `/api/cron/expire` deletes expired rows daily (Vercel Cron, `CRON_SECRET`). Edit tokens are only stored hashed.
 - `prepareLesson()` runs at publish time: KaTeX, Shiki, and Tailwind utilities for the lesson's HTML. The result is stored with the lesson.
-- Guide, example, and checker changes need no version bump: they go live on deploy through `sync` and `/api/validate`. Bump `LATEST_SKILL_VERSION` (`apps/web/lib/skill-version.ts`) and `SKILL_VERSION` (`packages/cli/src/cli.ts`) together only when the CLI or the installed `SKILL.md` changes; older installs are then told to run `npx skills add https://learn.ninja -g`. Raise `MIN_SKILL_VERSION` only when a guide relies on new CLI behavior: `sync` refuses to run below it.
+- Guide, example, and checker changes need no version bump: they go live on deploy through `sync` and `/api/validate`. Bump `SKILL_VERSION` (`packages/cli/src/version.ts`, which `apps/web` imports as the latest version) only when the CLI or the installed `SKILL.md` changes; older installs are then told to run `npx skills add https://learn.ninja -g`. Raise `MIN_SKILL_VERSION` only when a guide relies on new CLI behavior: `sync` refuses to run below it.
 
 ## Storybook
 

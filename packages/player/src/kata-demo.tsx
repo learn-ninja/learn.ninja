@@ -21,6 +21,7 @@ import { emptyPrepared, type Prepared } from "./prepared"
 import { seeded } from "./random"
 import {
   ariaLocaleFor,
+  directionOf,
   UI_TRANSLATIONS,
   useStrings,
   type TextSize,
@@ -65,7 +66,7 @@ function Demo({
   const kata = findKata(lesson, kataId)
   const ui = UI_TRANSLATIONS ? lesson.language : "en"
   const t = useStrings(ui)
-  const dir = /^(ar|he|fa|ur)\b/i.test(ui) ? "rtl" : "ltr"
+  const dir = directionOf(ui)
   const [state, dispatch] = React.useReducer(
     (s: State, a: Action) =>
       // Continue would move past the only item: start the kata over instead.

@@ -19,12 +19,18 @@ export function RichText({
   lang,
   className,
   inline = false,
+  block = false,
 }: {
   text: string
   lang?: string
   className?: string
   /** The text is a piece of a sentence (a streamed word), so code keeps its chip even when it's all there is. */
   inline?: boolean
+  /**
+   * The text fills a paragraph or list item that takes its direction itself (dir="auto"). The span
+   * then has none of its own: dir="auto" skips children with their own dir, so it couldn't see the text.
+   */
+  block?: boolean
 }) {
   const { prepared } = usePlayer()
   const nodes: React.ReactNode[] = []
@@ -78,7 +84,7 @@ export function RichText({
   if (last < text.length) nodes.push(text.slice(last))
   // dir="auto": lesson text takes its own direction, so English stays left to right inside an Arabic interface.
   return (
-    <span lang={lang} dir="auto" className={className}>
+    <span lang={lang} dir={block ? undefined : "auto"} className={className}>
       {nodes}
     </span>
   )
@@ -98,7 +104,7 @@ export function RichBlocks({
         if (block.kind === "paragraph")
           return (
             <p key={i} dir="auto">
-              <RichText text={block.text} />
+              <RichText text={block.text} block />
             </p>
           )
         const List = block.ordered ? "ol" : "ul"
@@ -114,7 +120,7 @@ export function RichBlocks({
           >
             {block.items.map((item, j) => (
               <li key={j} className="ps-1">
-                <RichText text={item} />
+                <RichText text={item} block />
               </li>
             ))}
           </List>
