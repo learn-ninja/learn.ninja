@@ -19,6 +19,7 @@ import { LinkButton } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { UserAvatar } from "@/components/account/user-avatar"
+import { MissionNinja, MissionSmoke } from "@/components/mission/hero-ninja"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { GitHubLogo, XLogo } from "@/components/site/social-icons"
@@ -83,9 +84,9 @@ export default async function MissionPage() {
 function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <div aria-hidden="true" className="mission-grid absolute inset-0" />
-      <div aria-hidden="true" className="mission-glow absolute inset-0" />
-      <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-7 px-4 pt-20 pb-20 text-center sm:px-6 sm:pt-28 sm:pb-24">
+      <div className="relative isolate mx-auto flex max-w-4xl flex-col items-center gap-7 px-4 pt-16 pb-20 text-center sm:px-6 sm:pt-20 sm:pb-24">
+        <MissionSmoke />
+        <MissionNinja />
         <Badge variant="outline" className="h-7 gap-1.5 px-3 text-sm">
           <GitHubLogo />
           Open source · Apache-2.0
