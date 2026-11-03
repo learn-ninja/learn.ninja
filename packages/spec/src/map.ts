@@ -10,6 +10,7 @@ export const MAP_REGIONS = {
   europe: [-25, 34, 45, 71],
   asia: [25, -11, 150, 60],
   "middle-east": [25, 12, 63, 42],
+  "central-asia": [46, 34, 88, 56],
   "south-asia": [60, 5, 98, 38],
   "east-asia": [95, 18, 146, 54],
   "southeast-asia": [92, -11, 142, 24],

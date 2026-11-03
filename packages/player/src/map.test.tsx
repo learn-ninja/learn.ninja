@@ -61,6 +61,46 @@ describe("WorldMap", () => {
     }
   })
 
+  it("draws Central Asia at its intended scale with accurate country sizes", () => {
+    const svg = draw({
+      region: "central-asia",
+      alt: "Central Asia.",
+      countries: [
+        { code: "KZ", label: "Kazakhstan" },
+        { code: "UZ", label: "Uzbekistan" },
+        { code: "AF", label: "Afghanistan" },
+      ],
+      points: [{ lat: 41.3, lon: 69.3, label: "Tashkent" }],
+    })
+
+    expect(svg).toMatch(/viewBox="0 0 480 \d+"/)
+    expect(labels(svg)).toEqual([
+      "Tashkent",
+      "Kazakhstan",
+      "Uzbekistan",
+      "Afghanistan",
+    ])
+    expect(svg.match(/class="fill-chart-2\/70"/g)).toHaveLength(3)
+
+    const topology = data as unknown as Topology<{
+      countries: GeometryCollection
+    }>
+    const shapes = feature(topology, topology.objects.countries)
+      .features as Feature<Polygon | MultiPolygon>[]
+    const drawn = measureDrawnSizes("central-asia", shapes)
+    expect(drawn).toEqual(DRAWN_SIZES["central-asia"])
+    expect(drawn).toMatchObject({
+      AF: expect.any(Number),
+      KZ: expect.any(Number),
+      UZ: expect.any(Number),
+    })
+    expect(drawn.AF).toBeGreaterThan(24)
+    expect(drawn.KZ).toBeGreaterThan(24)
+    expect(drawn.UZ).toBeGreaterThan(24)
+    expect(drawn.TR).toBeLessThan(24)
+    expect(drawn.PK).toBeGreaterThan(24)
+  })
+
   it("makes a region's land and borders once, for every map of it", () => {
     const outlines = outlinesFor("europe")
     expect(outlinesFor("europe")).toBe(outlines)
