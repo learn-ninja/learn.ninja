@@ -54,7 +54,7 @@ export function AccountLink({
   return (
     <ButtonLink
       href="/login"
-      variant="ghost"
+      variant="outline"
       size="sm"
       className={cn(className, account === undefined && "invisible")}
       aria-hidden={account === undefined || undefined}
