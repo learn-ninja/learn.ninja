@@ -6,7 +6,8 @@ import { SectionDivider } from "./section-divider"
 
 // Proof, from the product itself: the newest lessons people kept and shared on Explore, as the
 // link-preview cards their links unfurl into (the same card lib/og.tsx draws), scattered in two
-// staggered rows that run past the page's column and fade at the window's edges. Drawn as HTML, not
+// staggered rows that run past the page's column and fade at the window's edges; on phones and
+// tablets the rows drift slowly, opposite ways, and loop (lesson-cards.css). Drawn as HTML, not
 // the card images, so the words are text and the page doesn't load ten PNGs. The heading keeps
 // the column; only the cards leave it.
 
