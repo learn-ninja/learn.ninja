@@ -61,6 +61,7 @@ import { API_BASE_URL } from "@/lib/config"
 import { feedbackFor } from "@/lib/feedback"
 import { result as resultHaptic, tap as tapHaptic } from "@/lib/haptics"
 import { reducer, start, type AppAction } from "@/lib/play"
+import { settled } from "@/lib/screen-guard"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
 import { shareChallenge } from "@/lib/share-sheet"
@@ -290,7 +291,13 @@ function Player({ data }: { data: LoadedLesson }) {
     [ninja, vanishing, streak, streakScreen, sfx, onShare]
   )
 
+  // When this screen came up: a quick second tap of Continue lands on nothing (screen-guard.ts).
+  const shownAt = useRef(0)
+  useLayoutEffect(() => {
+    shownAt.current = Date.now()
+  }, [state.index, state.run])
   const next = () => {
+    if (!settled(shownAt.current, Date.now())) return
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     if (item.kind === "intro") {
       if (sfx) playEffect("vanish")
