@@ -47,7 +47,8 @@ beforeAll(async () => {
   // The token verifier fetches the signing keys over HTTP; in tests, learn.test is this instance.
   vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url
-    if (url.startsWith(SITE)) return auth.handler(new Request(url, init))
+    if (url === SITE || url.startsWith(SITE + "/"))
+      return auth.handler(new Request(url, init))
     return realFetch(input, init)
   })
 }, 30_000)

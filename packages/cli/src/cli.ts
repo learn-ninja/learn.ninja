@@ -107,6 +107,13 @@ Logged in (learn login, or $LEARN_API_KEY), every lesson you publish is saved to
 expires, and goes straight to Explore: unpublish it from your profile. Anonymous lessons last 7 days;
 \`login\` and \`keep\` save the ones published from this folder the same way.`
 
+/** The URL without its trailing slashes ("https://learn.ninja//" → "https://learn.ninja"). */
+function withoutTrailingSlash(url: string): string {
+  let out = url
+  while (out.endsWith("/")) out = out.slice(0, -1)
+  return out
+}
+
 export async function run(argv: string[], io: Io): Promise<number> {
   const flags = new Set(argv.filter((a) => a.startsWith("--")))
   // Options that take a value: their value isn't a positional argument.
@@ -121,11 +128,9 @@ export async function run(argv: string[], io: Io): Promise<number> {
     })
   )
   const args = argv.filter((a, i) => !a.startsWith("--") && !valued.has(i))
-  const api = (
-    option("--api") ??
-    io.env.LEARN_API_URL ??
-    DEFAULT_API_URL
-  ).replace(/\/+$/, "")
+  const api = withoutTrailingSlash(
+    option("--api") ?? io.env.LEARN_API_URL ?? DEFAULT_API_URL
+  )
   const json = flags.has("--json")
   const [command, file] = args
 

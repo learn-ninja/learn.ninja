@@ -56,6 +56,11 @@ const bundle = (over: Partial<Record<string, unknown>> = {}) => ({
   ...manifest(over),
   files: GUIDES,
 })
+
+/** `text` as a regular expression that matches it literally. */
+const escapeRegExp = (text: string) =>
+  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
 const valid = { status: 200, body: { ok: true, spec: "0.9" } }
 
 /** A server with current guides and a checker that accepts everything; tests override routes. */
@@ -284,7 +289,7 @@ describe("learn sync", () => {
     expect(await run(["sync"], t.io)).toBe(1)
     expect(t.err.join("\n")).toMatch(
       new RegExp(
-        `skill \\(${SKILL_VERSION.replace(/\./g, "\\.")}\\) is too old.*\\nnpx skills add https://learn\\.ninja -g`
+        `skill \\(${escapeRegExp(SKILL_VERSION)}\\) is too old.*\\nnpx skills add https://learn\\.ninja -g`
       )
     )
     expect(t.methods()).toEqual(["GET /api/skill/version"])
