@@ -407,12 +407,14 @@ describe("themed", () => {
     expect(svg).toContain('<b click="x()" class="k">a</b>')
   })
 
-  it("strips javascript: links, and keeps the rest", () => {
+  it("strips javascript:, vbscript:, and data: links, and keeps the rest", () => {
     const svg = themed(
       '<svg><a href=" JavaScript:x()">a</a><a xlink:href="java\tscript:x()">b</a>' +
-        '<set attributeName="href" to="javascript:x()"/><a href="https://learn.ninja">c</a></svg>'
+        '<set attributeName="href" to="javascript:x()"/><a href="VBScript:x()">d</a>' +
+        '<a href=" data:text/html,x">e</a><image href="data:image/svg+xml,x"/>' +
+        '<a href="https://learn.ninja">c</a></svg>'
     )
-    expect(svg).not.toMatch(/script:/i)
+    expect(svg).not.toMatch(/script:|data:/i)
     expect(svg).toContain('<a href="https://learn.ninja">c</a>')
   })
 

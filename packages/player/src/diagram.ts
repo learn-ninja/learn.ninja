@@ -574,17 +574,24 @@ const DOCTYPE = 10
 const localName = (name: string) =>
   name.slice(name.lastIndexOf(":") + 1).toLowerCase()
 
-/** True for a `javascript:` URL as a browser reads one: any case, spaces and control characters ignored. */
-const isScriptUrl = (value: string) =>
-  [...value]
+/**
+ * URL schemes an attribute may not use: two that run script, and `data:`, which can carry a whole
+ * page. D2 writes none of them in an attribute (its fonts are `data:` URLs inside CSS, untouched).
+ */
+const BLOCKED_SCHEMES = ["javascript:", "vbscript:", "data:"]
+
+/** True for a URL with a blocked scheme as a browser reads one: any case, spaces and control characters ignored. */
+const isScriptUrl = (value: string) => {
+  const url = [...value]
     .filter((c) => c > " ")
     .join("")
     .toLowerCase()
-    .startsWith("javascript:")
+  return BLOCKED_SCHEMES.some((scheme) => url.startsWith(scheme))
+}
 
 /**
  * The drawing with nothing left that could run code: no `script` elements, no event-handler
- * attributes (`on…`), and no `javascript:` URLs. It's parsed and written back out rather than
+ * attributes (`on…`), and no `javascript:`, `vbscript:`, or `data:` URLs. It's parsed and written back out rather than
  * matched with regexes, which miss `</script\t bar>`, `<scr<script>ipt>`, or `on\nclick=`.
  * Parsed as XML, which D2 writes, so its CDATA styles survive. The browser reads the result as
  * HTML, so whatever the two parsers could read differently goes too: comments (HTML ends one at
