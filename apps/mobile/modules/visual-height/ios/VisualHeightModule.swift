@@ -6,7 +6,9 @@ import WebKit
 // the page's own scripts and nothing else) and every navigation but its own load blocked, as the
 // visible WebView's are. Once it has loaded, the app reads the body's height, as the web player
 // reads its frame's, with one expression run in WebKit's isolated client world: the page can't see
-// or reach it, and no script is added to the page. The web view is thrown away after the read.
+// or reach it, and no script is added to the page. For a hotspot kata the same read also reports
+// where each [data-hotspot] element sits, so the app can lay its own buttons over the parts. The
+// web view is thrown away after the read.
 public class VisualHeightModule: Module {
   public func definition() -> ModuleDefinition {
     Name("VisualHeight")
@@ -16,8 +18,44 @@ public class VisualHeightModule: Module {
         promise.resolve(nil)
         return
       }
-      Measurement(html: html, baseUrl: base, width: width, promise: promise).start()
+      Measurement(html: html, baseUrl: base, width: width, read: .height, promise: promise).start()
     }.runOnQueue(.main)
+
+    AsyncFunction("measureSpots") { (html: String, baseUrl: String, width: Double, promise: Promise) in
+      guard let base = URL(string: baseUrl), width > 0 else {
+        promise.resolve(nil)
+        return
+      }
+      Measurement(html: html, baseUrl: base, width: width, read: .spots, promise: promise).start()
+    }.runOnQueue(.main)
+  }
+}
+
+/** What a measurement reads once the document has laid out. */
+private enum Read {
+  /** The body's height, as a number. */
+  case height
+  /** The body's height and each hotspot part's box: { height, spots: [{ id, label, top, left, width, height }] }. */
+  case spots
+
+  var expression: String {
+    switch self {
+    case .height:
+      return "return document.body.getBoundingClientRect().height"
+    case .spots:
+      return """
+        const spots = Array.from(document.querySelectorAll('[data-hotspot]')).map((el) => {
+          const r = el.getBoundingClientRect()
+          const id = el.getAttribute('data-hotspot')
+          return {
+            id,
+            label: el.getAttribute('aria-label') || (el.textContent || '').trim() || id,
+            top: r.top, left: r.left, width: r.width, height: r.height,
+          }
+        })
+        return { height: document.body.getBoundingClientRect().height, spots }
+        """
+    }
   }
 }
 
@@ -30,15 +68,17 @@ private final class Measurement: NSObject, WKNavigationDelegate {
   private let html: String
   private let baseUrl: URL
   private let width: Double
+  private let read: Read
   private let promise: Promise
   private var webView: WKWebView?
   private var loaded = false
   private var done = false
 
-  init(html: String, baseUrl: URL, width: Double, promise: Promise) {
+  init(html: String, baseUrl: URL, width: Double, read: Read, promise: Promise) {
     self.html = html
     self.baseUrl = baseUrl
     self.width = width
+    self.read = read
     self.promise = promise
   }
 
@@ -80,15 +120,25 @@ private final class Measurement: NSObject, WKNavigationDelegate {
 
   func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
     webView.callAsyncJavaScript(
-      "return document.body.getBoundingClientRect().height",
+      read.expression,
       arguments: [:],
       in: nil,
       in: .defaultClient
     ) { [weak self] result in
-      if case .success(let value) = result, let height = value as? Double {
-        self?.finish(height)
-      } else {
-        self?.finish(nil)
+      guard let self else { return }
+      guard case .success(let value) = result else {
+        self.finish(nil)
+        return
+      }
+      switch self.read {
+      case .height:
+        self.finish(value as? Double)
+      case .spots:
+        if let dict = value as? [String: Any], let height = dict["height"] as? Double, height > 0 {
+          self.finish(dict)
+        } else {
+          self.finish(nil)
+        }
       }
     }
   }
@@ -109,10 +159,16 @@ private final class Measurement: NSObject, WKNavigationDelegate {
     finish(nil)
   }
 
-  private func finish(_ height: Double?) {
+  private func finish(_ value: Any?) {
     if done { return }
     done = true
-    if let height, height > 0 { promise.resolve(height) } else { promise.resolve(nil) }
+    if let height = value as? Double {
+      promise.resolve(height > 0 ? height : nil)
+    } else if let dict = value as? [String: Any] {
+      promise.resolve(dict)
+    } else {
+      promise.resolve(nil)
+    }
     webView?.navigationDelegate = nil
     webView?.stopLoading()
     webView?.removeFromSuperview()

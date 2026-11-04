@@ -2,11 +2,15 @@
 
 import * as React from "react"
 
-import type { Answer } from "@workspace/player-core/check"
-import type { ChatVisual, QuestionKata } from "@workspace/spec"
+import type { ChatVisual } from "@workspace/spec"
 import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
 import { cn } from "@workspace/ui/lib/utils"
 
+import {
+  initials,
+  scenarioTurns,
+  type ChatTurn,
+} from "@workspace/player-core/chat"
 import { usePlayer } from "./context"
 import { visualWindow } from "./controls"
 import { calm } from "./motion"
@@ -20,48 +24,8 @@ import { RichText } from "./rich-text"
 // said, then the other person's reply (the pick's outcome). The reply takes its time: the pick
 // settles, the other person types a while, and the reply takes the dots' place.
 
-export interface ChatTurn {
-  /** Who says it; left out, it's the learner's own line. */
-  who?: string
-  text: string
-  /** A turn added after checking: it slides in, and a reply waits behind typing dots first. */
-  added?: "pick" | "reply"
-}
-
-/**
- * The turns a scenario's pick adds to its chat: the learner's line, then the other person's reply
- * (the option's outcome). Nothing until the answer has been checked; once revealed, the best path.
- */
-export function scenarioTurns(
-  kata: QuestionKata,
-  answer: Answer,
-  phase: "answering" | "feedback" | "revealed"
-): ChatTurn[] {
-  if (kata.type !== "scenario" || kata.visual?.kind !== "chat") return []
-  if (phase === "answering") return []
-  const picked =
-    phase === "revealed"
-      ? kata.options.find((o) => o.quality === "best")
-      : kata.options.find(
-          (o) => answer.kind === "select" && answer.ids[0] === o.id
-        )
-  if (!picked) return []
-  const last = kata.visual.turns[kata.visual.turns.length - 1]!
-  return [
-    { text: picked.text, added: "pick" },
-    { who: last.who, text: picked.outcome, added: "reply" },
-  ]
-}
-
-/** The initials on a speaker's avatar: the first letter of their first two words. */
-export function initials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => [...w][0]!.toUpperCase())
-    .join("")
-}
+// The turns and the initials are shared with the app (player-core/chat.ts).
+export { initials, scenarioTurns, type ChatTurn }
 
 // The reply's timing, in ms: the pick lands, a beat, the other person starts typing, types for a
 // while, then the reply takes the dots' place. The bubbles ease in over ENTER each.

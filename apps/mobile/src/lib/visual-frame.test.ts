@@ -175,16 +175,25 @@ describe("the native measurement of an HTML visual", () => {
     )
   })
 
-  it("reads the height with one expression in WebKit's isolated world, after the load", () => {
+  it("reads the height, or the height and the hotspot boxes, with one expression in WebKit's isolated world, after the load", () => {
     const calls = [...swift.matchAll(/callAsyncJavaScript\(([\s\S]*?)\)\s*\{/g)]
     expect(calls).toHaveLength(1)
-    expect(calls[0]![1]).toContain(
-      '"return document.body.getBoundingClientRect().height"'
-    )
+    expect(calls[0]![1]).toContain("read.expression")
     expect(calls[0]![1]).toContain("in: .defaultClient")
     expect(swift.indexOf("callAsyncJavaScript")).toBeGreaterThan(
       swift.indexOf("didFinish navigation")
     )
+    // The two reads: the body's height, and the same plus each [data-hotspot] element's box.
+    expect(swift).toContain(
+      '"return document.body.getBoundingClientRect().height"'
+    )
+    expect(swift).toContain("document.querySelectorAll('[data-hotspot]')")
+    expect(swift).toContain(
+      "return { height: document.body.getBoundingClientRect().height, spots }"
+    )
+    // Both reads leave the page's scripts off and load the document the same way.
+    expect(swift.match(/allowsContentJavaScript = false/g)).toHaveLength(1)
+    expect(swift.match(/loadHTMLString/g)).toHaveLength(1)
   })
 
   it("lets the document load once, as itself, and blocks every other navigation", () => {

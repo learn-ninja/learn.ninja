@@ -32,16 +32,22 @@ import {
 import { cn } from "@workspace/ui/lib/utils"
 
 import {
-  checkAnswer,
   isReady,
   POOL,
-  retryAnswer,
-  solution,
   solutionMarks,
   type Answer,
   type CheckResult,
   type Mark,
 } from "@workspace/player-core/check"
+import {
+  earnedMoment,
+  explanationShown,
+  hintOffered,
+  missMessage,
+  reducer,
+  start,
+  type Action,
+} from "@workspace/player-core/reducer"
 import {
   freshQuestion,
   wordBank,
@@ -75,8 +81,6 @@ import { BRAND } from "./logo"
 import { OrderKata } from "./order"
 import { SortKata } from "./sort"
 import {
-  buildSequence,
-  outcomeFor,
   progressAt,
   questionAt,
   runFor,
@@ -84,7 +88,6 @@ import {
   summarize,
   type Item,
   type Outcome,
-  type Role,
   type Run,
 } from "@workspace/player-core/flow"
 import {
@@ -105,7 +108,6 @@ import {
   resumeScript,
   saveProgress,
 } from "./progress"
-import { seeded } from "@workspace/player-core/random"
 import { plainText, RichText } from "./rich-text"
 import {
   AppSettings,
@@ -134,7 +136,7 @@ import {
   type TextSize,
   type Theme,
 } from "@workspace/player-core/strings"
-import { scenarioTurns } from "./chat"
+import { scenarioTurns } from "@workspace/player-core/chat"
 import { ScreenLabel } from "./screen-label"
 import { Visual } from "./visuals"
 import {
@@ -460,64 +462,17 @@ function LessonInLanguage({
 
 // ---------- state ----------
 
-// The State types and freshQuestion live in @workspace/player-core/state; the reducer is here.
-export { freshQuestion, wordBank, type QuestionState, type State }
-
-function start(lesson: Lesson, startAt?: string, run = 0): State {
-  const items = buildSequence(lesson)
-  // A demo opens on one kata; its shuffle is seeded so the server and the browser agree.
-  const at = startAt
-    ? items.findIndex((i) => "kata" in i && i.kata.id === startAt)
-    : -1
-  const index = at < 0 ? 0 : at
-  return {
-    items,
-    index,
-    results: {},
-    mistakes: [],
-    fixed: [],
-    inFix: false,
-    fixQueued: false,
-    question: at < 0 ? null : freshQuestion(items[index], seeded(startAt!)),
-    run,
-  }
-}
-
-/**
- * What a correct answer earns beyond praise: the lesson's last question, three first-try answers in
- * a row, or a comeback (a retry that landed, a fix-round question, or the question after a miss
- * that was revealed).
- * The hook is a guess, so it earns nothing.
- */
-export function earnedMoment(
-  state: State,
-  item: Extract<Item, { kind: "question" }>
-): Moment | null {
-  const s = state.question
-  if (!s || item.role === "hook") return null
-  const later = state.items
-    .slice(state.index + 1)
-    .some((i) => i.kind === "question")
-  if (!later && state.mistakes.length === 0) return "last"
-  if (s.attempts > 0 || item.role === "fix") return "comeback"
-  // Scored questions so far, in play order, ending with this one.
-  const outcomes = state.items
-    .slice(0, state.index + 1)
-    .flatMap((i) =>
-      i.kind === "question" && i.role !== "hook"
-        ? [state.results[i.kata.id]]
-        : []
-    )
-  let streak = 0
-  for (let i = outcomes.length - 1; i >= 0; i--) {
-    if (outcomes[i] !== "first") break
-    streak++
-  }
-  if (streak > 0 && streak % 3 === 0) return "streak"
-  // A second-try success already had its comeback; only a real miss earns one on the next question.
-  const previous = outcomes[outcomes.length - 2]
-  if (previous === "missed") return "comeback"
-  return null
+// The State types, freshQuestion, and the reducer live in @workspace/player-core; the web and the
+// app run the same one. Re-exported here for the tests and demos that import them from the player.
+export {
+  earnedMoment,
+  freshQuestion,
+  hintOffered,
+  reducer,
+  wordBank,
+  type Action,
+  type QuestionState,
+  type State,
 }
 
 /**
@@ -547,192 +502,6 @@ function sameFeedback(a: State, b: State): boolean {
     a.question?.attempts === b.question?.attempts &&
     a.question?.phase === b.question?.phase
   )
-}
-
-export type Action =
-  | { type: "next" }
-  | { type: "restart"; lesson: Lesson }
-  /** Progress saved in the browser, loaded after mounting. */
-  | { type: "resume"; state: State }
-  | { type: "answer"; answer: Answer }
-  | { type: "why" }
-  /** Hint while answering: toggles the hint under the answers. It's free, so the score doesn't change. */
-  | { type: "hint" }
-  | { type: "briefed" }
-  | { type: "rebrief" }
-  | { type: "check" }
-  /** A wrong pair in a match: it isn't kept, but the kata no longer counts as right first time. */
-  | { type: "slip" }
-  | { type: "retry" }
-  | { type: "startFix" }
-
-export function reducer(state: State, action: Action): State {
-  const item = state.items[state.index]
-  switch (action.type) {
-    case "restart":
-      return start(action.lesson, undefined, state.run + 1)
-    case "resume":
-      return action.state
-    case "next": {
-      let index = state.index + 1
-      if (
-        state.items[index]?.kind === "fix" &&
-        state.mistakes.length === 0 &&
-        !state.fixQueued
-      )
-        index++
-      const nextItem = state.items[index]
-      return {
-        ...state,
-        index,
-        inFix: state.inFix || nextItem?.kind === "fix",
-        question: freshQuestion(nextItem),
-      }
-    }
-    case "startFix": {
-      const retries: Item[] = state.mistakes.map((kata) => ({
-        kind: "question",
-        kata,
-        role: "fix",
-      }))
-      const items = [
-        ...state.items.slice(0, state.index + 1),
-        ...retries,
-        ...state.items.slice(state.index + 1),
-      ]
-      const index = state.index + 1
-      return {
-        ...state,
-        items,
-        index,
-        mistakes: [],
-        fixQueued: true,
-        question: freshQuestion(items[index]),
-      }
-    }
-    case "answer":
-      // A change to the answer clears the marks kept from the last check.
-      return state.question
-        ? {
-            ...state,
-            question: {
-              ...state.question,
-              answer: action.answer,
-              result: null,
-            },
-          }
-        : state
-    case "why":
-      return state.question
-        ? { ...state, question: { ...state.question, whyOpen: true } }
-        : state
-    case "hint":
-      return state.question?.phase === "answering" &&
-        item?.kind === "question" &&
-        hintOffered(item, state.question)
-        ? {
-            ...state,
-            question: {
-              ...state.question,
-              hintOpen: !state.question.hintOpen,
-            },
-          }
-        : state
-    case "briefed":
-      return state.question
-        ? { ...state, question: { ...state.question, briefed: true } }
-        : state
-    case "rebrief":
-      // Only while answering: the brief comes back, then the same question.
-      return state.question?.phase === "answering"
-        ? {
-            ...state,
-            question: {
-              ...state.question,
-              briefed: false,
-              briefs: state.question.briefs + 1,
-            },
-          }
-        : state
-    case "retry": {
-      // The last check's marks stay until the answer changes, so the learner can see what to fix.
-      if (!state.question || item?.kind !== "question") return state
-      const s = state.question
-      // A scenario rewinds to the decision: its marks clear and the missed pick is crossed out.
-      const rewind = item.kata.type === "scenario"
-      return {
-        ...state,
-        question: {
-          ...s,
-          phase: "answering",
-          answer: retryAnswer(item.kata, s.answer),
-          // A miss opens the hint under the answers for the second try (Hint toggles it any time).
-          hintOpen: Boolean(item.kata.hint),
-          ...(rewind
-            ? {
-                result: null,
-                tried: [
-                  ...s.tried,
-                  ...(s.answer.kind === "select" ? s.answer.ids : []),
-                ],
-              }
-            : null),
-        },
-      }
-    }
-    case "slip":
-      return state.question?.phase === "answering" &&
-        state.question.attempts === 0
-        ? { ...state, question: { ...state.question, attempts: 1 } }
-        : state
-    case "check": {
-      if (!state.question || item?.kind !== "question") return state
-      const { kata, role } = item
-      const s = state.question
-      const result = checkAnswer(kata, s.answer)
-      if (role === "hook")
-        return { ...state, question: { ...s, result, phase: "revealed" } }
-      if (result.correct) {
-        const results =
-          role === "fix" || kata.id in state.results
-            ? state.results
-            : {
-                ...state.results,
-                [kata.id]: outcomeFor(s.attempts),
-              }
-        return {
-          ...state,
-          results,
-          fixed: role === "fix" ? [...state.fixed, kata.id] : state.fixed,
-          question: { ...s, result, phase: "feedback" },
-        }
-      }
-      const attempts = s.attempts + 1
-      if (attempts < 2)
-        return {
-          ...state,
-          question: { ...s, attempts, result, phase: "feedback" },
-        }
-      const results =
-        role === "fix"
-          ? state.results
-          : { ...state.results, [kata.id]: "missed" as const }
-      const mistakes =
-        role === "fix" ? state.mistakes : [...state.mistakes, kata]
-      return {
-        ...state,
-        results,
-        mistakes,
-        question: {
-          ...s,
-          attempts,
-          result,
-          phase: "revealed",
-          answer: solution(kata),
-        },
-      }
-    }
-  }
 }
 
 // ---------- player ----------
@@ -1693,27 +1462,6 @@ function MetaLine({ minutes, level }: { minutes: string; level: string }) {
   )
 }
 
-/**
- * Whether the Hint button (and H) is offered: while answering a question with a hint, before
- * checking. Not on the hook, the warm-up guess, and not during a scenario's brief.
- */
-export function hintOffered(
-  item: Extract<Item, { kind: "question" }>,
-  s: QuestionState
-): boolean {
-  return (
-    item.role !== "hook" &&
-    Boolean(item.kata.hint) &&
-    s.phase === "answering" &&
-    s.briefed
-  )
-}
-
-/** The explanation opens after "Why?", and by itself once a missed answer is revealed (not for the hook's guess). */
-function explanationShown(s: QuestionState, role: Role): boolean {
-  return s.whyOpen || (s.phase === "revealed" && role !== "hook")
-}
-
 /** A scenario's brief while it's being told: `skip` counts presses of Skip, `onTold` ends it. */
 interface BriefProps {
   key: string
@@ -1965,10 +1713,7 @@ function WrapUp({
         />
       </div>
       <div className="flex flex-col gap-8">
-        <Takeaways
-          items={lesson.wrapup.takeaways}
-          language={lesson.language}
-        />
+        <Takeaways items={lesson.wrapup.takeaways} language={lesson.language} />
         <KeepLearning lesson={lesson} />
       </div>
     </div>
@@ -2687,21 +2432,4 @@ function TrayNotch({
       </Button>
     </div>
   )
-}
-
-function missMessage(r: CheckResult, t: Strings): string {
-  switch (r.missKey) {
-    case "sort":
-      return t.miss.sort(r.count ?? 0)
-    case "match":
-      return t.miss.match(r.count ?? 0)
-    case "missOne":
-    case "hotspot":
-    case "hotspotLine":
-    case "order":
-    case "blank":
-      return t.miss[r.missKey]
-    default:
-      return ""
-  }
 }

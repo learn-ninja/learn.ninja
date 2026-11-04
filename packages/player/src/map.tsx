@@ -16,8 +16,8 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
 import { countryName } from "@workspace/player-core/country-names"
-import data from "./map-data.json"
-import { frameFor } from "./map-frame"
+import data from "@workspace/player-core/map-data.json"
+import { frameFor } from "@workspace/player-core/map-frame"
 import type { HotspotControl } from "./visuals"
 
 // A world or regional map drawn as SVG in the browser from Natural Earth's countries (public

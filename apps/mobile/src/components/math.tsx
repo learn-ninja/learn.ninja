@@ -4,6 +4,7 @@ import { SvgXml } from "react-native-svg"
 import { MATH_SCALE, type MathSvg } from "@workspace/player-core/prepared"
 
 import { Text } from "@/components/ui/text"
+import { cn } from "@/lib/utils"
 import { colors } from "../../tokens"
 
 /**
@@ -71,18 +72,23 @@ export function MathBlock({
   tex,
   math,
   fontSize,
+  plain = false,
 }: {
   tex: string
   math?: MathSvg
   /** text-xl at the player's text size, in points. */
   fontSize: number
+  /** No window of its own: it sits on a surface that already frames it. */
+  plain?: boolean
 }) {
   const em = fontSize * MATH_SCALE
   return (
     <ScrollView
       horizontal
-      className="rounded-xl border border-border bg-muted/40"
-      contentContainerClassName="min-w-full justify-center px-4 py-6"
+      className={cn(
+        !plain && "min-h-72 rounded-xl border border-border bg-muted/40"
+      )}
+      contentContainerClassName="min-w-full items-center justify-center px-4 py-6"
       showsHorizontalScrollIndicator={false}
     >
       {math ? (

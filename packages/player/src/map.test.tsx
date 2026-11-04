@@ -17,8 +17,8 @@ import {
 
 import type { Mark } from "@workspace/player-core/check"
 import WorldMap, { nearestSmall, outlinesFor, spotsFor } from "./map"
-import data from "./map-data.json"
-import { measureDrawnSizes } from "./map-frame"
+import data from "@workspace/player-core/map-data.json"
+import { measureDrawnSizes } from "@workspace/player-core/map-frame"
 
 // The map's shapes and the checker's table of countries are built together by scripts/build-map.ts;
 // they have to agree, or a code the checker accepts would shade nothing.

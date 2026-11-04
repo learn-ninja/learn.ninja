@@ -28,7 +28,7 @@ An LLM turns any input into one short, interactive lesson (Duolingo/Brilliant-st
 - `npm run storybook`: Storybook at http://localhost:6006 (theme and language switches in the toolbar)
 - `npm run skill:build -w @workspace/cli`: rebuild `skills/learn` (bundled CLI, schema, examples) after changing the spec, CLI, or examples; a test fails if it's stale
 - `npm run schema -w @workspace/spec`: re-export `packages/spec/schema/lesson.schema.json` after changing the spec (a test fails if it's stale)
-- `npm run map -w @workspace/player`: rebuild the map visual's country shapes (`packages/player/src/map-data.json`) and the checker's table of countries (`packages/spec/src/countries.ts`) from Natural Earth via world-atlas
+- `npm run map -w @workspace/player`: rebuild the map visual's country shapes (`packages/player-core/src/map-data.json`) and the checker's table of countries (`packages/spec/src/countries.ts`) from Natural Earth via world-atlas
 - `npm run voice -w @workspace/player`: speak the ninja's English lines (`packages/player-core/src/locales/voices/en.ts`) with his ElevenLabs voice into `apps/web/public/voice/en/` and `packages/player-core/src/voice-clips.json`, after changing them (a test fails if a clip is missing); only new lines cost credits, and it reads `ELEVENLABS_API_KEY` from `apps/web/.env.local`
 - `npm run favicon -w web`: rebuild `apps/web/app/favicon.ico` from `app/icon.svg` after changing the icon
 - `npm run smoke -w web`: rebuild the intro smoke's textures (`packages/ui/src/styles/smoke.css`) after changing the recipe in `apps/web/scripts/build-smoke.mjs`; they live in the stylesheet so the smoke is there on the first paint

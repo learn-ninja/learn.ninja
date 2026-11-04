@@ -80,9 +80,7 @@ export function progressAt(
   if (item.kind === "wrap") return 100
   const fixAt = items.findIndex((i) => i.kind === "fix")
   const missed = (i: Item) =>
-    i.kind === "question" &&
-    i.role !== "fix" &&
-    results[i.kata.id] === "missed"
+    i.kind === "question" && i.role !== "fix" && results[i.kata.id] === "missed"
   const passed = items
     .slice(1, Math.min(index, fixAt))
     .filter((i) => !missed(i))

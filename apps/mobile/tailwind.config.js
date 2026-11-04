@@ -9,6 +9,26 @@ const {
 
 const px = (n) => `${n}px`
 
+/** An rgba() or hex color at a fraction of its own opacity: the web's `bg-input/30`. */
+const alpha = (color, opacity) => {
+  const m = /^rgba\((\d+), (\d+), (\d+), ([\d.]+)\)$/.exec(color)
+  if (m) return `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${Number(m[4]) * opacity})`
+  const n = parseInt(color.slice(1), 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${opacity})`
+}
+
+/**
+ * The tints the player's controls use, which the web gets from Tailwind 4's opacity modifiers on
+ * the tokens (`bg-input/30`): a control's surface and its pressed state, an empty slot, and the
+ * faint tile over a part in use.
+ */
+const tints = {
+  surface: alpha(colors.input, 0.3),
+  "surface-active": alpha(colors.input, 0.5),
+  slot: alpha(colors.input, 0.1),
+  tile: alpha(colors.foreground, 0.05),
+}
+
 /** Tailwind's text sizes as [size, { lineHeight }], scaled. */
 const sizes = (scale, prefix = "") =>
   Object.fromEntries(
@@ -36,7 +56,7 @@ module.exports = {
   // Dark-only for now: the tokens are the dark theme, so there is no dark: variant to switch.
   theme: {
     extend: {
-      colors,
+      colors: { ...colors, ...tints },
       borderRadius: Object.fromEntries(
         Object.entries(radius).map(([k, v]) => [k, px(v)])
       ),
