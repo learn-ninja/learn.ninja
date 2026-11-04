@@ -1,13 +1,12 @@
 import { withCharts } from "@workspace/player/charts"
-import { prepareLesson } from "@workspace/player/prepare"
 
+import { preparedBundled } from "@/lib/bundled-lessons"
 import {
   deleteLesson,
   renameLesson,
   setVisibility,
 } from "@/lib/explore/handlers"
 import { exploreDepsFor } from "@/lib/explore/request"
-import { getLesson, LESSON_SLUGS } from "@/lib/lessons"
 import { updateLesson } from "@/lib/publish/handlers"
 import { getRateLimiter } from "@/lib/publish/rate-limit"
 import { readLesson } from "@/lib/publish/read"
@@ -26,13 +25,6 @@ import { getLessonStore } from "@/lib/publish/store"
 
 type Params = { params: Promise<{ id: string }> }
 
-// A bundled lesson is prepared once per server, as its prerendered page is once per build.
-const bundled = new Map<string, ReturnType<typeof prepareBundled>>()
-async function prepareBundled(slug: string) {
-  const lesson = getLesson(slug)!
-  return { lesson, prepared: await prepareLesson(lesson) }
-}
-
 export async function GET(req: Request, { params }: Params) {
   const param = (await params).id
   return respond(async () =>
@@ -42,11 +34,7 @@ export async function GET(req: Request, { params }: Params) {
         store: await getLessonStore(),
         limiter: getRateLimiter("read"),
         withCharts,
-        bundled: async (slug) => {
-          if (!LESSON_SLUGS.includes(slug)) return null
-          if (!bundled.has(slug)) bundled.set(slug, prepareBundled(slug))
-          return bundled.get(slug)!
-        },
+        bundled: async (slug) => preparedBundled(slug),
       }
     )
   )

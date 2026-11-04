@@ -1,10 +1,9 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
-import { prepareLesson } from "@workspace/player/prepare"
-
 import { LessonView } from "@/components/lesson-view"
 import { JsonLd } from "@/components/site/json-ld"
+import { preparedBundled } from "@/lib/bundled-lessons"
 import { lessonJsonLd } from "@/lib/json-ld"
 import { getLesson, LESSON_SLUGS } from "@/lib/lessons"
 import { shareMetadata } from "@/lib/metadata"
@@ -31,9 +30,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function LessonPage({ params }: Props) {
   const { slug } = await params
-  const lesson = getLesson(slug)
-  if (!lesson) notFound()
-  const prepared = await prepareLesson(lesson)
+  const bundled = await preparedBundled(slug)
+  if (!bundled) notFound()
+  const { lesson, prepared } = bundled
   return (
     <div className="h-svh">
       <JsonLd data={lessonJsonLd({ lesson, path: `/lessons/${slug}` })} />
