@@ -4,10 +4,11 @@ import { everyVisual, type ChartVisual } from "@workspace/spec"
 
 import { Visual } from "../visuals"
 import { lessons, PlayerFrame } from "./fixtures"
+import { chartSamples } from "./visual-kit"
 
-// Every chart type, as drawn on the server from the example lessons: a scatter from correlation vs
-// causation and a function chart from compound interest. Charts are plain SVG in theme tokens, so
-// switch the toolbar's theme to check both.
+// Every chart type, drawn on the server from example lessons and hand-written chartSamples
+// (prepared by stories:prepare). Charts are plain SVG in theme tokens, so switch the toolbar's
+// theme to check both.
 
 const charts = Object.values(lessons).flatMap((lesson) =>
   everyVisual(lesson).flatMap(({ visual, path }) =>
@@ -15,15 +16,16 @@ const charts = Object.values(lessons).flatMap((lesson) =>
   )
 )
 const chartOf = (type: ChartVisual["type"]) =>
-  charts.find((c) => c.chart.type === type)!.chart
+  charts.find((c) => c.chart.type === type)?.chart ??
+  chartSamples.find((c) => c.chart.type === type)!.chart
 
 const meta = {
   title: "Player/Charts",
   component: Visual,
   argTypes: { visual: { control: false } },
   decorators: [
-    (Story) => (
-      <PlayerFrame>
+    (Story, { globals }) => (
+      <PlayerFrame ui={globals.ui}>
         <div className="mx-auto max-w-2xl p-8">
           <Story />
         </div>
@@ -42,6 +44,16 @@ export const Function: Story = {
 
 export const Scatter: Story = {
   args: { visual: chartOf("scatter") },
+}
+
+/** Monthly shop sales: category labels stay in calendar order, with a zero baseline. */
+export const Bar: Story = {
+  args: { visual: chartOf("bar") },
+}
+
+/** Three cities' illustrative monthly temperatures, with each series named at its end. */
+export const Line: Story = {
+  args: { visual: chartOf("line") },
 }
 
 /** Every chart in the example lessons, with where it comes from. */

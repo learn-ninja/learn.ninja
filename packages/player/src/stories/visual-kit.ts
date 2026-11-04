@@ -193,8 +193,8 @@ Owner <-> Animal: has {source-arrowhead.shape: diamond; target-arrowhead.shape: 
 ]
 
 /**
- * Function charts with marked points, which the example lessons don't have: a curve's roots, and
- * a coordinate plane with points only. prepare-examples.ts draws them for the stories.
+ * Charts the example lessons don't have: function charts with marked points, bars, and lines.
+ * prepare-examples.ts draws them for the stories.
  */
 export const chartSamples: { name: string; chart: ChartVisual }[] = [
   {
@@ -224,6 +224,54 @@ export const chartSamples: { name: string; chart: ChartVisual }[] = [
         { x: 2, y: 3, label: "A" },
         { x: -3, y: 1, label: "B" },
         { x: 1, y: -2, label: "C" },
+      ],
+    },
+  },
+  {
+    name: "Monthly sales",
+    chart: {
+      kind: "chart",
+      type: "bar",
+      alt: "Illustrative shop sales rise from 120 items in January to 240 in June, with a small dip in March.",
+      x: { label: "Month" },
+      y: { label: "Items sold" },
+      data: [
+        { x: "Jan", y: 120 },
+        { x: "Feb", y: 150 },
+        { x: "Mar", y: 140 },
+        { x: "Apr", y: 180 },
+        { x: "May", y: 210 },
+        { x: "Jun", y: 240 },
+      ],
+    },
+  },
+  {
+    name: "City temperatures",
+    chart: {
+      kind: "chart",
+      type: "line",
+      alt: "Illustrative temperatures rise from January to June in Oslo, Rome, and Cairo. Cairo stays warmest and Oslo coolest.",
+      x: { label: "Month" },
+      y: { label: "Temperature (°C)" },
+      data: [
+        { x: "Jan", y: 0, series: "Oslo" },
+        { x: "Feb", y: 2, series: "Oslo" },
+        { x: "Mar", y: 6, series: "Oslo" },
+        { x: "Apr", y: 11, series: "Oslo" },
+        { x: "May", y: 16, series: "Oslo" },
+        { x: "Jun", y: 20, series: "Oslo" },
+        { x: "Jan", y: 8, series: "Rome" },
+        { x: "Feb", y: 9, series: "Rome" },
+        { x: "Mar", y: 12, series: "Rome" },
+        { x: "Apr", y: 15, series: "Rome" },
+        { x: "May", y: 20, series: "Rome" },
+        { x: "Jun", y: 24, series: "Rome" },
+        { x: "Jan", y: 14, series: "Cairo" },
+        { x: "Feb", y: 16, series: "Cairo" },
+        { x: "Mar", y: 19, series: "Cairo" },
+        { x: "Apr", y: 23, series: "Cairo" },
+        { x: "May", y: 27, series: "Cairo" },
+        { x: "Jun", y: 30, series: "Cairo" },
       ],
     },
   },
