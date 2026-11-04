@@ -6,7 +6,7 @@ const p = plural("ar")
 
 export const ar: Translation = {
   start: "ابدأ الدرس",
-  check: "تحقّق من الإجابة",
+  check: "تحقّق",
   continue: "متابعة",
   tryAgain: "حاول مرة أخرى",
   why: "لماذا؟",

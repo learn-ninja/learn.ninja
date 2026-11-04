@@ -221,9 +221,9 @@ const script = async (a: Act<S>) => {
   a.mark("payoff")
 }
 
-/** The tray's button: Check answer, then Try again after a miss, then Continue. */
+/** The tray's button: Check, then Try again after a miss, then Continue. */
 const BUTTON = {
-  check: "Check answer",
+  check: "Check",
   retry: "Try again",
   next: "Continue",
 } as const

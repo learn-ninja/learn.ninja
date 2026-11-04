@@ -20,6 +20,7 @@ import {
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { Toggle } from "@workspace/ui/components/toggle"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { DirectionProvider } from "@workspace/ui/components/direction"
 import { toast, Toaster } from "@workspace/ui/components/sonner"
@@ -554,7 +555,7 @@ export type Action =
   | { type: "resume"; state: State }
   | { type: "answer"; answer: Answer }
   | { type: "why" }
-  /** Hint while answering: the hint opens before checking. It's free, so the score doesn't change. */
+  /** Hint while answering: toggles the hint under the answers. It's free, so the score doesn't change. */
   | { type: "hint" }
   | { type: "briefed" }
   | { type: "rebrief" }
@@ -630,7 +631,10 @@ export function reducer(state: State, action: Action): State {
         hintOffered(item, state.question)
         ? {
             ...state,
-            question: { ...state.question, hintOpen: true, hintAsked: true },
+            question: {
+              ...state.question,
+              hintOpen: !state.question.hintOpen,
+            },
           }
         : state
     case "briefed":
@@ -661,10 +665,8 @@ export function reducer(state: State, action: Action): State {
           ...s,
           phase: "answering",
           answer: retryAnswer(item.kata, s.answer),
-          // A miss opens the hint for the second try (Hint opens it sooner). Its feedback already
-          // said it, so the bubble starts clear.
+          // A miss opens the hint under the answers for the second try (Hint toggles it any time).
           hintOpen: Boolean(item.kata.hint),
-          hintAsked: false,
           ...(rewind
             ? {
                 result: null,
@@ -969,7 +971,7 @@ function Player({
     state.question?.phase === "feedback" &&
     state.question.result?.correct === true
   toggleWhy.current = canWhy ? () => setWhyOpen((open) => !open) : null
-  // H opens the hint while the Hint button is offered; it only opens, as the button goes once pressed.
+  // H toggles the hint while the Hint button is offered.
   askHint.current =
     item.kind === "question" &&
     state.question &&
@@ -1046,7 +1048,7 @@ function Player({
   // question on a short screen): scroll them up clear of it, into the room the screen leaves below.
   // The note under the answers always clears it, which also brings it up from below the fold, and
   // Why? adding the explanation note runs this again, and so does Hint's note while answering.
-  const hintNote = q?.phase === "answering" && q.hintAsked
+  const hintNote = q?.phase === "answering" && q.hintOpen
   React.useEffect(() => {
     if (!hintNote && (!q?.result || q.phase === "answering")) return
     const id = window.setTimeout(() => {
@@ -1705,8 +1707,8 @@ function ScreenLabel({
 }
 
 /**
- * Whether the Hint button (and H) is offered: while answering a question with a hint that isn't open
- * yet, before checking. Not on the hook, the warm-up guess, and not during a scenario's brief.
+ * Whether the Hint button (and H) is offered: while answering a question with a hint, before
+ * checking. Not on the hook, the warm-up guess, and not during a scenario's brief.
  */
 export function hintOffered(
   item: Extract<Item, { kind: "question" }>,
@@ -1716,8 +1718,7 @@ export function hintOffered(
     item.role !== "hook" &&
     Boolean(item.kata.hint) &&
     s.phase === "answering" &&
-    s.briefed &&
-    !s.hintOpen
+    s.briefed
   )
 }
 
@@ -2188,6 +2189,8 @@ export function ActionArea({
   // In the player the bubble says only the ninja's line; the message is a note under the answers,
   // amber for a hint, a miss, or where a wrong pick led, green for the explanation or a right pick's outcome.
   let noteTone: "good" | "warn" = "warn"
+  // The hint while answering, under the answers on every screen size (phones have no card for it).
+  let hintNote: string | null = null
   const helpButton = (label: string, onPress: () => void) => (
     <Button
       variant="outline"
@@ -2257,24 +2260,22 @@ export function ActionArea({
         onPress: () => dispatch({ type: "check" }),
         isDisabled: !isReady(kata, s.answer),
       }
-      // Try again clears the bubble: the miss already said the hint. After a scenario's rewind
-      // the miss said its outcome, so the hint comes now. Hint says it the way a miss would: his
-      // bubble and the note under the answers (the tray's card on phones). A lone demo shows it
-      // under the answers instead (QuestionScreen).
-      if (
-        inBubble &&
-        kata.hint &&
-        (s.hintAsked || (story && s.tried.length > 0))
-      ) {
-        title = t.hint
-        message = kata.hint
-      }
-      // Hint sits beside Check until it's pressed; then focus moves on to Check.
+      // The hint is a quiet note under the answers, not his line: Hint toggles it, and a miss opens
+      // it for the retry (Try again clears the bubble, so the note is what remains of the hint). A
+      // lone demo shows it as an alert instead (QuestionScreen).
+      if (inBubble && kata.hint && s.hintOpen) hintNote = kata.hint
       if (hintOffered(item, s))
-        secondary = helpButton(t.hint, () => {
-          dispatch({ type: "hint" })
-          primaryRef.current?.focus()
-        })
+        secondary = (
+          <Toggle
+            variant="outline"
+            size={tray ? "lg" : "sm"}
+            className={cn(tray && [TRAY_BUTTON, TRAY_GHOST, PHONE_BAR])}
+            isSelected={s.hintOpen}
+            onChange={() => dispatch({ type: "hint" })}
+          >
+            {t.hint}
+          </Toggle>
+        )
     } else if (role === "hook" && r) {
       // The hook is a guess, so a miss still moves on, but both get the colors a checked answer would.
       // A wrong guess also says what it got wrong: the misconception is what the lesson starts from.
@@ -2417,16 +2418,8 @@ export function ActionArea({
     const has = Boolean(title)
     if (has && !hadFeedback.current) {
       const button = primaryRef.current
-      if (button && button.closest("[inert]") === null) {
-        button.focus()
-        // A disabled Check (Hint pressed before answering) can't take it: if focus fell to the page
-        // with the Hint button, keep it in the lesson.
-        if (
-          document.activeElement !== button &&
-          document.activeElement === document.body
-        )
-          onFocusLost?.()
-      } else onFocusLost?.()
+      if (button && button.closest("[inert]") === null) button.focus()
+      else onFocusLost?.()
     }
     hadFeedback.current = has
   }, [title, onFocusLost])
@@ -2523,6 +2516,16 @@ export function ActionArea({
           )}
         >
           <Note tone={noteTone} text={note} />
+        </div>
+      ) : null}
+      {hintNote ? (
+        <div
+          key="hint"
+          data-feedback-note
+          data-text-size={textSize}
+          className="-mt-2 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1"
+        >
+          <Note tone="neutral" text={hintNote} />
         </div>
       ) : null}
       <p aria-live="polite" className="sr-only">

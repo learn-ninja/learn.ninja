@@ -6,7 +6,7 @@ const p = plural("hi")
 
 export const hi: Translation = {
   start: "पाठ शुरू करें",
-  check: "उत्तर जाँचें",
+  check: "जाँचें",
   continue: "आगे बढ़ें",
   tryAgain: "फिर से कोशिश करें",
   why: "क्यों?",

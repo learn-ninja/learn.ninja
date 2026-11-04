@@ -227,8 +227,8 @@ export const HintOffered: Story = {
   args: { lesson: lessons.correlation, startAt: "p1" },
 }
 /**
- * Hint pressed: the hint shows where a miss would show it, the ninja's bubble with the note under the
- * answers, and the button goes. It's free: the kata can still be right first time.
+ * Hint pressed: the hint is a quiet note under the answers (he says nothing), and the button stays
+ * pressed so another press hides it. It's free: the kata can still be right first time.
  */
 export const HintOpen: Story = {
   name: "Hint: open",
@@ -241,7 +241,7 @@ export const HintOfferedPhone: Story = {
   args: { lesson: lessons.correlation, startAt: "p1" },
   globals: PHONE,
 }
-/** On a phone, the hint opens as the tray's card above Check, as a miss's feedback does. */
+/** On a phone, the hint is the same note under the answers, and the two buttons share the bar. */
 export const HintOpenPhone: Story = {
   name: "Hint: open, phone",
   args: { lesson: lessons.correlation, startAt: "p1" },

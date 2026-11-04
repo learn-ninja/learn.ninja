@@ -6,7 +6,7 @@ const p = plural("he")
 
 export const he: Translation = {
   start: "התחלת השיעור",
-  check: "בדיקת התשובה",
+  check: "בדיקה",
   continue: "המשך",
   tryAgain: "נסו שוב",
   why: "למה?",

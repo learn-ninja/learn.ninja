@@ -2,7 +2,7 @@ import type { Translation } from "../strings"
 
 export const vi: Translation = {
   start: "Bắt đầu bài học",
-  check: "Kiểm tra đáp án",
+  check: "Kiểm tra",
   continue: "Tiếp tục",
   tryAgain: "Thử lại",
   why: "Vì sao?",

@@ -40,7 +40,7 @@ test("a bundled lesson plays", async ({ page }) => {
   await page.goto("/lessons/compound-interest")
   await page.getByRole("button", { name: "Start lesson" }).click()
   await page.getByText("$1,700").click()
-  await page.getByRole("button", { name: "Check answer" }).click()
+  await page.getByRole("button", { name: "Check" }).click()
   await expect(
     page.getByText(oneOf(ninja.sensei.hookMiss)).first()
   ).toBeVisible()

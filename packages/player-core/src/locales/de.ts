@@ -6,7 +6,7 @@ const p = plural("de")
 
 export const de: Translation = {
   start: "Lektion starten",
-  check: "Antwort prüfen",
+  check: "Prüfen",
   continue: "Weiter",
   tryAgain: "Noch mal versuchen",
   why: "Warum?",

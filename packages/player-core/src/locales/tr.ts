@@ -6,7 +6,7 @@ const p = plural("tr")
 
 export const tr: Translation = {
   start: "Derse başla",
-  check: "Cevabı kontrol et",
+  check: "Kontrol et",
   continue: "Devam",
   tryAgain: "Tekrar dene",
   why: "Neden?",

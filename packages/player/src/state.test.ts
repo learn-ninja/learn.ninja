@@ -5,7 +5,11 @@ import { describe, expect, it } from "vitest"
 import type { Lesson, QuestionKata } from "@workspace/spec"
 
 import { chipsInGaps } from "./katas"
-import { buildSequence, type Item, type Outcome } from "@workspace/player-core/flow"
+import {
+  buildSequence,
+  type Item,
+  type Outcome,
+} from "@workspace/player-core/flow"
 import {
   earnedMoment,
   freshQuestion,
@@ -312,14 +316,14 @@ describe("hint", () => {
     },
   }
 
-  it("opens on demand while answering, and stays free", () => {
+  it("toggles on demand while answering, and stays free", () => {
     let state = reducer(stateFor(hinted), { type: "hint" })
     expect(state.question).toMatchObject({
       hintOpen: true,
-      hintAsked: true,
       attempts: 0,
       phase: "answering",
     })
+    expect(reducer(state, { type: "hint" }).question?.hintOpen).toBe(false)
     state = reducer(reducer(state, right), { type: "check" })
     expect(state.results).toEqual({ s: "first" })
   })
@@ -336,8 +340,9 @@ describe("hint", () => {
     expect(reducer(checked, { type: "hint" })).toBe(checked)
   })
 
-  it("is already open after a miss, so Try again doesn't say it twice", () => {
+  it("opens for the retry after a miss, even if it was toggled off", () => {
     let state = reducer(stateFor(hinted), { type: "hint" })
+    state = reducer(state, { type: "hint" })
     state = reducer(state, {
       type: "answer",
       answer: {
@@ -346,7 +351,7 @@ describe("hint", () => {
       },
     })
     state = reducer(reducer(state, { type: "check" }), { type: "retry" })
-    expect(state.question).toMatchObject({ hintOpen: true, hintAsked: false })
+    expect(state.question).toMatchObject({ hintOpen: true })
   })
 })
 

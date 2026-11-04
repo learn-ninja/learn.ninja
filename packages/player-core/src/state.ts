@@ -1,11 +1,6 @@
 import { matchesBlank, type QuestionKata } from "@workspace/spec"
 
-import {
-  initialAnswer,
-  shuffle,
-  type Answer,
-  type CheckResult,
-} from "./check"
+import { initialAnswer, shuffle, type Answer, type CheckResult } from "./check"
 import type { Item, Outcome } from "./flow"
 
 // The player's state, shared by the web and native players: where the learner is in the lesson
@@ -16,13 +11,8 @@ export type Phase = "answering" | "feedback" | "revealed"
 export interface QuestionState {
   answer: Answer
   attempts: number
-  /** The hint is open: the learner pressed Hint, or tried again after a miss. */
+  /** The hint is showing under the answers: Hint toggles it, and a miss opens it for the retry. */
   hintOpen: boolean
-  /**
-   * The learner pressed Hint while answering, so the player says the hint now. After a miss the
-   * hint comes with the miss's feedback instead, and Try again clears it.
-   */
-  hintAsked: boolean
   /** The explanation is open under the answer: after "Why?", or once the answer is revealed. */
   whyOpen: boolean
   result: CheckResult | null
@@ -66,7 +56,6 @@ export function freshQuestion(
     answer: initialAnswer(kata, random),
     attempts: 0,
     hintOpen: false,
-    hintAsked: false,
     whyOpen: false,
     result: null,
     phase: "answering",
