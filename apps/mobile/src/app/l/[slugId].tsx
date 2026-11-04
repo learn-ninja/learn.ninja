@@ -5,6 +5,7 @@ import { ActivityIndicator, ScrollView, View } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { buildSequence } from "@workspace/player-core/flow"
+import { stringsFor } from "@workspace/player-core/strings"
 
 import { ConceptKata, KataPlaceholder } from "@/components/katas"
 import { Button } from "@/components/ui/button"
@@ -76,6 +77,8 @@ function Player({ data }: { data: LoadedLesson }) {
   )
   const kata = katas[index]
   const done = index >= katas.length
+  // The player's own words, in the lesson's language (loaded with the lesson, in fetchLesson).
+  const t = stringsFor(data.lesson.language)
 
   const next = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -89,11 +92,16 @@ function Player({ data }: { data: LoadedLesson }) {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="mx-auto w-full max-w-2xl gap-4 p-6"
       >
-        <Text className="text-xs font-medium text-muted-foreground">
-          {done ? "Done" : `Kata ${index + 1} of ${katas.length}`}
-        </Text>
+        {done ? null : (
+          <Text
+            className="text-xs font-medium text-muted-foreground"
+            accessibilityLabel={`${t.progress}: ${index + 1} / ${katas.length}`}
+          >
+            {`${index + 1} / ${katas.length}`}
+          </Text>
+        )}
         {done ? (
-          <Text className="text-lg font-semibold">That&apos;s the lesson.</Text>
+          <Text className="text-lg font-semibold">{t.done}</Text>
         ) : kata?.type === "concept" ? (
           <ConceptKata
             kata={kata}
@@ -114,7 +122,7 @@ function Player({ data }: { data: LoadedLesson }) {
           onPress={next}
           disabled={done}
         >
-          <Text>Continue</Text>
+          <Text>{t.continue}</Text>
         </Button>
       </View>
     </View>

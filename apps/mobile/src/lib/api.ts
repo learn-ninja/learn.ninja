@@ -1,4 +1,5 @@
 import { emptyPrepared, type Prepared } from "@workspace/player-core/prepared"
+import { loadLanguage } from "@workspace/player-core/strings"
 import { validateLesson, type Lesson } from "@workspace/spec"
 
 import { API_BASE_URL } from "./config"
@@ -49,11 +50,14 @@ export async function fetchLesson(
   const checked = validateLesson(body.lesson)
   if (!checked.ok)
     throw new LessonError("This lesson doesn't fit the lesson format.", 422)
-  // Without it the visuals still show, unstyled by Basecoat, so the lesson plays on.
-  const baseCss = await loadVisualsCss(
-    body.visualsCssUrl ?? "/lesson-visuals.css",
-    base
-  ).catch(() => "")
+  const [baseCss] = await Promise.all([
+    // Without it the visuals still show, unstyled by Basecoat, so the lesson plays on.
+    loadVisualsCss(body.visualsCssUrl ?? "/lesson-visuals.css", base).catch(
+      () => ""
+    ),
+    // The player's strings in the lesson's language, so stringsFor() has them; English if it fails.
+    loadLanguage(checked.lesson.language).catch(() => null),
+  ])
   return {
     id: body.id ?? param,
     baseCss,
