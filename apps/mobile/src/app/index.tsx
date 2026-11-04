@@ -1,19 +1,40 @@
 import { Link } from "expo-router"
-import { ScrollView, View } from "react-native"
+import { useEffect, useState } from "react"
+import { ActivityIndicator, ScrollView, View } from "react-native"
 
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
+import { fetchTestLessons, type TestLesson } from "@/lib/api"
 
-// Phase 0: the bundled test lessons from examples/, which the web app serves at
-// GET /api/lessons/{slug} without a database. Explore and shared links come later.
-const TEST_LESSONS = [
-  { slug: "button-hierarchy", title: "Button hierarchy" },
-  { slug: "map-vs-foreach", title: "map vs forEach" },
-  { slug: "compound-interest", title: "Compound interest" },
-  { slug: "spanish-greetings", title: "Spanish greetings" },
-] as const
+// Phase 0: the test lessons the web app bundles (examples/), listed by GET /api/lessons and
+// opened from GET /api/lessons/{slug} without a database. Explore and shared links come later.
+
+type Load =
+  | { state: "loading" }
+  | { state: "error"; message: string }
+  | { state: "ready"; lessons: TestLesson[] }
 
 export default function Home() {
+  const [load, setLoad] = useState<Load>({ state: "loading" })
+
+  useEffect(() => {
+    let live = true
+    fetchTestLessons()
+      .then((lessons) => live && setLoad({ state: "ready", lessons }))
+      .catch(
+        (e: unknown) =>
+          live &&
+          setLoad({
+            state: "error",
+            message:
+              e instanceof Error ? e.message : "The lessons didn't load.",
+          })
+      )
+    return () => {
+      live = false
+    }
+  }, [])
+
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
@@ -26,19 +47,25 @@ export default function Home() {
           far.
         </Text>
       </View>
-      <View className="gap-3">
-        {TEST_LESSONS.map((l) => (
-          <Link
-            key={l.slug}
-            href={{ pathname: "/l/[slugId]", params: { slugId: l.slug } }}
-            asChild
-          >
-            <Button variant="outline" size="lg" className="justify-start">
-              <Text>{l.title}</Text>
-            </Button>
-          </Link>
-        ))}
-      </View>
+      {load.state === "loading" ? (
+        <ActivityIndicator />
+      ) : load.state === "error" ? (
+        <Text className="text-sm text-muted-foreground">{load.message}</Text>
+      ) : (
+        <View className="gap-3">
+          {load.lessons.map((l) => (
+            <Link
+              key={l.slug}
+              href={{ pathname: "/l/[slugId]", params: { slugId: l.slug } }}
+              asChild
+            >
+              <Button variant="outline" size="lg" className="justify-start">
+                <Text numberOfLines={1}>{l.title}</Text>
+              </Button>
+            </Link>
+          ))}
+        </View>
+      )}
     </ScrollView>
   )
 }

@@ -65,3 +65,28 @@ export async function fetchLesson(
     prepared: body.prepared ?? emptyPrepared,
   }
 }
+
+export interface TestLesson {
+  slug: string
+  title: string
+  summary: string
+}
+
+/** The test lessons the web app bundles (examples/), from GET /api/lessons. */
+export async function fetchTestLessons(
+  base = API_BASE_URL
+): Promise<TestLesson[]> {
+  const res = await fetch(`${base}/api/lessons`, {
+    headers: { accept: "application/json" },
+  })
+  const body = (await res.json().catch(() => null)) as {
+    ok?: boolean
+    lessons?: TestLesson[]
+  } | null
+  if (!res.ok || !body?.ok || !Array.isArray(body.lessons))
+    throw new LessonError(
+      `The lessons didn't load (${res.status}).`,
+      res.status
+    )
+  return body.lessons
+}

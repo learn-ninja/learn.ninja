@@ -42,6 +42,14 @@ GET /api/lessons/{id}
 
 Returns `200` with `{ "ok": true, "id": "…", "path": "/l/…", "lesson": { … }, "prepared": { … }, "visualsCssUrl": "/lesson-visuals.css?v=…", "expiresAt": …, "updatedAt": … }`: the lesson as stored (upgraded to the current spec) and what was prepared for it at publish time (formulas, code tokens, charts, diagrams, molecules, and the visuals' CSS), for a player that isn't the web page. `visualsCssUrl` is the stylesheet every HTML visual loads first (Basecoat and the theme), with a hash of its content, so a player can fetch it once per version. `{id}` is the lesson's id or the whole `{slug}-{id}` part of its link. The slug of a bundled test lesson (like `button-hierarchy`, played at `/lessons/button-hierarchy`) works too, with `expiresAt: null`. A lesson that doesn't exist, has expired, or was hidden after a report is `404 not_found`. No authentication.
 
+## List the test lessons
+
+```http
+GET /api/lessons
+```
+
+Returns `{ "ok": true, "lessons": [{ "slug": "button-hierarchy", "title": "…", "summary": "…" }, …] }`: the test lessons bundled with the site (played at `/lessons/{slug}`), each readable at `GET /api/lessons/{slug}`. No authentication.
+
 ## Update a lesson
 
 ```http
