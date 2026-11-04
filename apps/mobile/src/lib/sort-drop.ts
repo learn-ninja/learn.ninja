@@ -24,10 +24,22 @@ export function moveItem(
   return next
 }
 
-/** The bin a point (in the kata's own coordinates) is over, or -1. */
-export function binAt(bins: (Box | undefined)[], x: number, y: number): number {
+/**
+ * The bin a point (in the kata's own coordinates) is over, or -1. Each bin's box is laid out in
+ * the bins' own row, which sits at `row` in the kata (below the deck), so it's moved there first.
+ */
+export function binAt(
+  bins: (Box | undefined)[],
+  x: number,
+  y: number,
+  row: { x: number; y: number } = { x: 0, y: 0 }
+): number {
   return bins.findIndex(
     (b) =>
-      b && x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height
+      b &&
+      x >= row.x + b.x &&
+      x <= row.x + b.x + b.width &&
+      y >= row.y + b.y &&
+      y <= row.y + b.y + b.height
   )
 }
