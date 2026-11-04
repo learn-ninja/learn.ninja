@@ -141,7 +141,7 @@ export function BlankKata({
                 "px-3 py-1",
                 // An outlined slot holds its place, so the other chips don't move.
                 gone &&
-                  cn(slotStyles, "border-dashed bg-transparent shadow-none")
+                  cn(slotStyles, "border-dashed bg-transparent")
               )}
               style={gone ? { backgroundColor: "transparent" } : undefined}
             >
@@ -184,7 +184,7 @@ function Gap({
       accessibilityLabel={label}
       selected={waiting}
       className={cn(
-        "mx-1 h-7 items-center justify-center rounded-none border-0 border-b-2 bg-transparent shadow-none",
+        "mx-1 h-7 items-center justify-center rounded-none border-0 border-b-2 bg-transparent",
         waiting ? "border-foreground" : "border-muted-foreground/40"
       )}
       style={{ width: Math.max(width, 40), backgroundColor: "transparent" }}

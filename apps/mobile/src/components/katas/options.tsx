@@ -158,7 +158,7 @@ function OptionRow({
       className={cn(
         "min-h-12 w-full flex-row items-center gap-2 rounded-lg px-4 py-3",
         // Rewound: a dashed outline on nothing, its text struck through.
-        tried && "border-dashed bg-transparent shadow-none"
+        tried && "border-dashed bg-transparent"
       )}
     >
       <View className="min-w-0 flex-1 gap-2">
@@ -238,7 +238,9 @@ function OptionCard({
         <View
           className={cn(
             "-m-px min-h-28 justify-center rounded-xl border bg-background px-1 py-5",
-            !o.text && "-mb-px"
+            // Without a caption the panel is the card: it fills it when a taller card beside it
+            // stretches the row, rather than leaving a band of the card's own fill below.
+            !o.text && "-mb-px grow"
           )}
           style={{ borderColor: border }}
         >

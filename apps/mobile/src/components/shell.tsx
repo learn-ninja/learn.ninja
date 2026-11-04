@@ -59,17 +59,7 @@ export function LessonHeader({
     // Above the lesson, so the progress details can open over it.
     <View className="z-10" style={{ paddingTop: insets.top }}>
       <View className="h-14 flex-row items-center gap-3 px-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          // The web's icon-sm (32px) with the phone's larger tap area around it.
-          className="h-8 w-8"
-          hitSlop={6}
-          onPress={onClose}
-          accessibilityLabel={t.home}
-        >
-          <CloseIcon />
-        </Button>
+        <CloseButton onPress={onClose} label={t.home} />
         {showProgress ? (
           <LessonProgress
             value={progress}
@@ -89,6 +79,50 @@ export function LessonHeader({
         )}
         {/* Balances the close button, so the bar sits in the middle as the web's does. */}
         {end ?? <View className="h-8 w-8" />}
+      </View>
+    </View>
+  )
+}
+
+/** The way home: the web's logo button, a close mark in the app since the lesson is pushed over home. */
+export function CloseButton({
+  onPress,
+  label,
+}: {
+  onPress: () => void
+  label: string
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      // The web's icon-sm (32px) with the phone's larger tap area around it.
+      className="h-8 w-8"
+      hitSlop={6}
+      onPress={onPress}
+      accessibilityLabel={label}
+    >
+      <CloseIcon />
+    </Button>
+  )
+}
+
+/**
+ * The header while a lesson loads or after it failed: only the way home, at the header's place,
+ * so a lesson that never arrives can still be left.
+ */
+export function BareHeader({
+  onClose,
+  label,
+}: {
+  onClose: () => void
+  label: string
+}) {
+  const insets = useSafeAreaInsets()
+  return (
+    <View style={{ paddingTop: insets.top }}>
+      <View className="h-14 flex-row items-center px-4">
+        <CloseButton onPress={onClose} label={label} />
       </View>
     </View>
   )
@@ -346,7 +380,9 @@ export function TrayButton({
       variant={variant}
       size="lg"
       className={cn(
-        "h-12 flex-1 rounded-full px-4",
+        // 48 points at the default text size, and taller with a larger one (Dynamic Type), so
+        // its label is never cut off.
+        "h-auto min-h-12 flex-1 rounded-full px-4 py-2",
         pressed && "bg-surface-active"
       )}
       onPress={onPress}

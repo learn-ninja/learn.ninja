@@ -43,17 +43,25 @@ import { Aura, useIntroVanish } from "@/components/smoke"
 import { SoundToggle } from "@/components/sound-toggle"
 import { StageContext } from "@/components/stage-context"
 import {
+  BareHeader,
   LessonHeader,
   LessonTray,
   TrayButton,
   TrayFeedback,
 } from "@/components/shell"
+import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
-import { fetchLesson, sendToApi, type LoadedLesson } from "@/lib/api"
+import {
+  fetchLesson,
+  LessonError,
+  sendToApi,
+  type LoadedLesson,
+} from "@/lib/api"
 import { API_BASE_URL } from "@/lib/config"
 import { feedbackFor } from "@/lib/feedback"
 import { result as resultHaptic, tap as tapHaptic } from "@/lib/haptics"
 import { reducer, start, type AppAction } from "@/lib/play"
+import { settled } from "@/lib/screen-guard"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
 import { shareChallenge } from "@/lib/share-sheet"
@@ -64,7 +72,9 @@ import { useStreak } from "@/lib/use-streak"
 import { useNinjaVoice } from "@/lib/use-voice"
 import { effectsOn, speaks } from "@/lib/voice"
 import { visualDocument } from "@/lib/visual-frame"
+import { cn } from "@/lib/utils"
 import { measureAhead } from "@/lib/visual-height"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 // A lesson at /l/{slug}-{id}, the same path as on the web, or /l/{slug} for a bundled test lesson.
 // It plays from the intro to the wrap-up in the shell the web draws on a phone: every kata, with
@@ -72,15 +82,25 @@ import { measureAhead } from "@/lib/visual-height"
 
 type Load =
   | { state: "loading" }
-  | { state: "error"; message: string }
+  /** `retry`: asking again could help (no connection, a server error), unlike a lesson that's gone. */
+  | { state: "error"; message: string; retry: boolean }
   | { state: "ready"; data: LoadedLesson }
+
+/** Back to where the lesson was opened from, or home when it was opened by a link. */
+function closeLesson() {
+  if (router.canGoBack()) router.back()
+  else router.replace("/")
+}
 
 export default function LessonRoute() {
   const { slugId } = useLocalSearchParams<{ slugId: string }>()
   const [load, setLoad] = useState<Load>({ state: "loading" })
+  // Try again after a failed load asks for the lesson once more.
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let live = true
+    setLoad({ state: "loading" })
     fetchLesson(slugId)
       .then((data) => live && setLoad({ state: "ready", data }))
       .catch(
@@ -89,25 +109,36 @@ export default function LessonRoute() {
           setLoad({
             state: "error",
             message: e instanceof Error ? e.message : "The lesson didn't load.",
+            retry: !(e instanceof LessonError) || e.status >= 500,
           })
       )
     return () => {
       live = false
     }
-  }, [slugId])
+  }, [slugId, attempt])
 
+  // Before the lesson (and its language) is known, the player's words are English.
+  const t = stringsFor("en")
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      {load.state !== "ready" ? (
+        <BareHeader onClose={closeLesson} label={t.home} />
+      ) : null}
       {load.state === "loading" ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
         </View>
       ) : load.state === "error" ? (
-        <View className="flex-1 items-center justify-center p-6">
+        <View className="flex-1 items-center justify-center gap-4 p-6">
           <Text className="text-center text-sm text-muted-foreground">
             {load.message}
           </Text>
+          {load.retry ? (
+            <Button variant="outline" onPress={() => setAttempt((n) => n + 1)}>
+              <Text>{t.tryAgain}</Text>
+            </Button>
+          ) : null}
         </View>
       ) : (
         <Player data={load.data} />
@@ -260,7 +291,13 @@ function Player({ data }: { data: LoadedLesson }) {
     [ninja, vanishing, streak, streakScreen, sfx, onShare]
   )
 
+  // When this screen came up: a quick second tap of Continue lands on nothing (screen-guard.ts).
+  const shownAt = useRef(0)
+  useLayoutEffect(() => {
+    shownAt.current = Date.now()
+  }, [state.index, state.run])
   const next = () => {
+    if (!settled(shownAt.current, Date.now())) return
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     if (item.kind === "intro") {
       if (sfx) playEffect("vanish")
@@ -276,7 +313,7 @@ function Player({ data }: { data: LoadedLesson }) {
       dispatch(action)
     }
   }
-  const close = () => (router.canGoBack() ? router.back() : router.replace("/"))
+  const close = closeLesson
 
   // Each new screen starts at the top (the wrap-up after the streak screen too).
   useLayoutEffect(() => {
@@ -284,6 +321,10 @@ function Player({ data }: { data: LoadedLesson }) {
   }, [state.index, streakScreen])
 
   const whyLabel = feedback.why?.everyPath ? t.everyPath : t.why
+  // On a phone the tray holds only the screen's actions, and the wrap-up has none there (its
+  // actions are in its own boxes), so the web hides it; the streak screen before it keeps its Continue.
+  const trayShown = item.kind !== "wrap" || streakScreen
+  const insets = useSafeAreaInsets()
 
   return (
     <View className="flex-1 bg-background">
@@ -314,17 +355,27 @@ function Player({ data }: { data: LoadedLesson }) {
           ref={scrollRef}
           // The header and tray already keep clear of the notch and the home bar.
           contentInsetAdjustmentBehavior="never"
-          className="flex-1 border-y border-border"
+          className={cn(
+            "flex-1 border-border",
+            trayShown ? "border-y" : "border-t"
+          )}
           contentContainerClassName={
             item.kind === "intro" || item.kind === "wrap"
               ? "grow justify-center px-4 py-16"
               : "px-4 py-6"
+          }
+          // Without the tray, the end of the wrap-up keeps clear of the home bar.
+          contentContainerStyle={
+            trayShown ? undefined : { paddingBottom: 64 + insets.bottom }
           }
         >
           <Animated.View style={style} className="mx-auto w-full max-w-2xl">
             <LessonContext value={lessonContext}>
               <StageContext value={stage}>
                 <LessonScreen
+                  // Each screen is its own: two katas of a kind in a row (an order after an order,
+                  // two sorts in the fix round) mustn't share what the first one kept.
+                  key={`${state.run}:${state.index}`}
                   data={data}
                   item={item}
                   state={state}
@@ -338,50 +389,52 @@ function Player({ data }: { data: LoadedLesson }) {
           </Animated.View>
         </ScrollView>
       </View>
-      <LessonTray
-        tone={feedback.title || feedback.message ? feedback.tone : undefined}
-        feedback={
-          <TrayFeedback
-            title={feedback.title}
-            message={feedback.message}
-            why={
-              feedback.why
-                ? {
-                    label: whyLabel,
-                    open: feedback.why.open,
-                    onPress: () => setWhyOpen((open) => !open),
-                  }
-                : null
-            }
-          />
-        }
-      >
-        {streakScreen ? (
-          // Phase 3: the streak screen's Continue goes on to the wrap-up itself.
-          <TrayButton
-            label={t.continue}
-            onPress={() => {
-              tapHaptic()
-              leaveStreak()
-            }}
-          />
-        ) : feedback.primary ? (
-          <TrayButton
-            label={feedback.primary.label}
-            variant={feedback.primary.variant}
-            disabled={feedback.primary.disabled}
-            onPress={() => run(feedback.primary!.action)}
-          />
-        ) : null}
-        {feedback.hint ? (
-          <TrayButton
-            label={t.hint}
-            variant="outline"
-            pressed={feedback.hint.open}
-            onPress={() => run({ type: "hint" })}
-          />
-        ) : null}
-      </LessonTray>
+      {trayShown ? (
+        <LessonTray
+          tone={feedback.title || feedback.message ? feedback.tone : undefined}
+          feedback={
+            <TrayFeedback
+              title={feedback.title}
+              message={feedback.message}
+              why={
+                feedback.why
+                  ? {
+                      label: whyLabel,
+                      open: feedback.why.open,
+                      onPress: () => setWhyOpen((open) => !open),
+                    }
+                  : null
+              }
+            />
+          }
+        >
+          {streakScreen ? (
+            // Phase 3: the streak screen's Continue goes on to the wrap-up itself.
+            <TrayButton
+              label={t.continue}
+              onPress={() => {
+                tapHaptic()
+                leaveStreak()
+              }}
+            />
+          ) : feedback.primary ? (
+            <TrayButton
+              label={feedback.primary.label}
+              variant={feedback.primary.variant}
+              disabled={feedback.primary.disabled}
+              onPress={() => run(feedback.primary!.action)}
+            />
+          ) : null}
+          {feedback.hint ? (
+            <TrayButton
+              label={t.hint}
+              variant="outline"
+              pressed={feedback.hint.open}
+              onPress={() => run({ type: "hint" })}
+            />
+          ) : null}
+        </LessonTray>
+      ) : null}
     </View>
   )
 }

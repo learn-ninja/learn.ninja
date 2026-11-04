@@ -52,9 +52,12 @@ export function SortKata({
     // Shakes once per set of wrong marks.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wrong])
-  // Where the bins and the card sit in the kata, for a drop.
+  // Where the bins and the card sit, for a drop. Each is laid out in its own parent, so the deck
+  // and the bins' row are kept too, to bring both into the kata's coordinates.
   const bins = useRef<(Box | undefined)[]>([])
   const card = useRef<Box | undefined>(undefined)
+  const deck = useRef<Box | undefined>(undefined)
+  const row = useRef<Box | undefined>(undefined)
 
   const groups = kata.type === "sort" ? kata.groups : []
   const items = kata.type === "sort" ? kata.items : []
@@ -87,7 +90,12 @@ export function SortKata({
   return (
     <Animated.View className="gap-4" style={shakeStyle}>
       {current && !locked ? (
-        <View className="gap-2">
+        <View
+          className="gap-2"
+          onLayout={(e) => {
+            deck.current = e.nativeEvent.layout
+          }}
+        >
           <Text className="text-center text-xs font-medium text-muted-foreground tabular-nums">
             {t.sortCount(sorted + 1, rows.length)}
           </Text>
@@ -109,10 +117,13 @@ export function SortKata({
               text={items[index.get(current)!]!.text}
               onDrop={(x, y) => {
                 const c = card.current
+                const d = deck.current
+                const r = row.current
                 const lane = binAt(
                   bins.current,
-                  (c?.x ?? 0) + x,
-                  (c?.y ?? 0) + y
+                  (d?.x ?? 0) + (c?.x ?? 0) + x,
+                  (d?.y ?? 0) + (c?.y ?? 0) + y,
+                  { x: r?.x ?? 0, y: r?.y ?? 0 }
                 )
                 if (lane >= 0) place(current, lane)
                 return lane >= 0
@@ -121,7 +132,12 @@ export function SortKata({
           </View>
         </View>
       ) : null}
-      <View className={cn("gap-2", n === 2 && "flex-row")}>
+      <View
+        className={cn("gap-2", n === 2 && "flex-row")}
+        onLayout={(e) => {
+          row.current = e.nativeEvent.layout
+        }}
+      >
         {groups.map((g, i) => {
           const placed = zones[g.id] ?? []
           return (

@@ -13,6 +13,7 @@ import Animated, {
 } from "react-native-reanimated"
 
 import { Text } from "@/components/ui/text"
+import { smokeWords } from "@/lib/smoke-words"
 import { cn } from "@/lib/utils"
 
 // The smoke on the intro, after the web's (Aura, SmokeWords, and the vanish classes in
@@ -220,7 +221,7 @@ export function SmokeWords({
   rtl?: boolean
   className?: string
 }) {
-  const words = text.split(/\s+/).filter(Boolean)
+  const words = smokeWords(text)
   return (
     <View
       className="flex-row flex-wrap justify-center"
@@ -232,7 +233,7 @@ export function SmokeWords({
       {words.map((word, i) => (
         <SmokeWord
           key={i}
-          word={i < words.length - 1 ? `${word} ` : word}
+          word={word}
           delay={Math.min(i * step, 360)}
           mirror={i % 2 === 1}
           dir={rtl ? -1 : 1}
