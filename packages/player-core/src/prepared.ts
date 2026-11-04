@@ -55,7 +55,7 @@ export const mathKey = (tex: string, display: boolean) =>
 export const codeKey = (language: string, code: string) =>
   `${language}\n${code}`
 /** Text hashed with FNV-1a, as hex. */
-const hash = (text: string) => {
+export const hash = (text: string) => {
   let h = 0x811c9dc5
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i)

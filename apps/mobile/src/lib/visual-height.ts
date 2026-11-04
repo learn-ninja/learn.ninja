@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useWindowDimensions } from "react-native"
+
+import { hash } from "@workspace/player-core/prepared"
 
 import { measureVisual } from "../../modules/visual-height"
 
@@ -24,21 +26,42 @@ export function frameWidth(windowWidth: number): number {
   return Math.min(windowWidth - 2 * GUTTER, COLUMN) - 2 * BORDER
 }
 
+/**
+ * A document at a width, as a short key: a document inlines the visuals' whole stylesheet, so it's
+ * hashed (with its length, against collisions) rather than kept as the key itself.
+ */
+const keyFor = (width: number, doc: string) =>
+  `${width}:${doc.length}:${hash(doc)}`
+
+/** How many heights are kept; the oldest go first. */
+const KEEP = 200
+
+function remember<T>(map: Map<string, T>, key: string, value: T) {
+  map.delete(key)
+  map.set(key, value)
+  if (map.size > KEEP) map.delete(map.keys().next().value!)
+}
+
+/** Measurements by keyFor(), in flight or done. */
 const known = new Map<string, Promise<number | null>>()
+/** Heights already measured, by keyFor(), so a frame can open at its height without waiting. */
+const settled = new Map<string, number>()
 
 /** The document's height at `width`, capped; measured once per width and document. */
-export function measureOnce(
+function measureOnce(
   doc: string,
   baseUrl: string,
-  width: number
+  width: number,
+  key = keyFor(width, doc)
 ): Promise<number | null> {
-  const key = `${width}:${doc}`
   let height = known.get(key)
   if (!height) {
-    height = measureVisual(doc, baseUrl, width).then((h) =>
-      h ? Math.min(MAX_VISUAL_HEIGHT, Math.ceil(h)) : null
-    )
-    known.set(key, height)
+    height = measureVisual(doc, baseUrl, width).then((h) => {
+      const capped = h ? Math.min(MAX_VISUAL_HEIGHT, Math.ceil(h)) : null
+      if (capped) remember(settled, key, capped)
+      return capped
+    })
+    remember(known, key, height)
     // A failed measurement isn't kept: the next showing tries again.
     void height.then((h) => {
       if (h === null && known.get(key) === height) known.delete(key)
@@ -56,14 +79,8 @@ export function measureAhead(
   baseUrl: string,
   windowWidth: number
 ) {
-  const width = frameWidth(windowWidth)
-  void measureOnce(doc, baseUrl, width).then((height) => {
-    if (height) settled.set(`${width}:${doc}`, height)
-  })
+  void measureOnce(doc, baseUrl, frameWidth(windowWidth))
 }
-
-/** A height measured before, without waiting. */
-const settled = new Map<string, number>()
 
 /**
  * The frame's height for a document: its own when it declares one, else the measured height (null
@@ -76,7 +93,7 @@ export function useVisualHeight(
 ): number | null {
   const { width: windowWidth } = useWindowDimensions()
   const width = frameWidth(windowWidth)
-  const key = `${width}:${doc}`
+  const key = useMemo(() => keyFor(width, doc), [width, doc])
   const [measured, setMeasured] = useState<{
     key: string
     height: number | null
@@ -84,8 +101,7 @@ export function useVisualHeight(
   useEffect(() => {
     if (declared) return
     let live = true
-    void measureOnce(doc, baseUrl, width).then((height) => {
-      if (height) settled.set(key, height)
+    void measureOnce(doc, baseUrl, width, key).then((height) => {
       if (live) setMeasured({ key, height: height ?? DEFAULT_VISUAL_HEIGHT })
     })
     return () => {
