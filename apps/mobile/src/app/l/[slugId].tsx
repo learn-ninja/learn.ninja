@@ -26,6 +26,11 @@ import Animated, {
 } from "react-native-reanimated"
 
 import { progressAt, questionAt } from "@workspace/player-core/flow"
+import {
+  fingerprint,
+  loadProgress,
+  saveProgress,
+} from "@workspace/player-core/progress"
 import type { State } from "@workspace/player-core/state"
 import { stringsFor } from "@workspace/player-core/strings"
 
@@ -33,9 +38,11 @@ import { LessonContext } from "@/components/lesson-context"
 import { LessonScreen } from "@/components/screens"
 import { LessonHeader, LessonTray, TrayButton } from "@/components/shell"
 import { Text } from "@/components/ui/text"
-import { fetchLesson, type LoadedLesson } from "@/lib/api"
+import { fetchLesson, sendToApi, type LoadedLesson } from "@/lib/api"
 import { API_BASE_URL } from "@/lib/config"
 import { reducer, start } from "@/lib/play"
+import { deviceStorage } from "@/lib/progress-storage"
+import { createProgressSync } from "@/lib/progress-sync"
 import { visualDocument } from "@/lib/visual-frame"
 import { measureAhead } from "@/lib/visual-height"
 
@@ -94,7 +101,30 @@ const SLIDE = 96
 
 function Player({ data }: { data: LoadedLesson }) {
   const { lesson } = data
-  const [state, dispatch] = useReducer(reducer(lesson), lesson, (l) => start(l))
+  // Progress is kept per lesson under the web's key for it (lessons/{slug} or l/{slug}-{id}), and
+  // only while the lesson's content stays the same (its fingerprint): reopening the lesson lands on
+  // the kata the learner left, as a reload does on the web.
+  const key = data.path.replace(/^\//, "")
+  const print = useMemo(() => fingerprint(lesson), [lesson])
+  const [state, dispatch] = useReducer(
+    reducer(lesson),
+    lesson,
+    (l) => loadProgress(deviceStorage, key, l, print) ?? start(l)
+  )
+  useEffect(() => {
+    saveProgress(deviceStorage, key, lesson, state, print)
+    // The lesson is covered by its fingerprint.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, print, state])
+  // A published lesson also tells the server how far the learner got, as the web's page does.
+  const sync = useMemo(
+    () =>
+      data.path.startsWith("/l/")
+        ? createProgressSync(data.id, sendToApi)
+        : null,
+    [data.path, data.id]
+  )
+  useEffect(() => sync?.update(state), [sync, state])
 
   // The next screen's HTML visual is measured while this one is read, so it opens at its height.
   const { width: windowWidth } = useWindowDimensions()

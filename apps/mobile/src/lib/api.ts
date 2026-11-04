@@ -7,10 +7,13 @@ import { loadLanguage } from "@workspace/player-core/strings"
 import { validateLesson, type Lesson } from "@workspace/spec"
 
 import { API_BASE_URL } from "./config"
+import type { Send } from "./progress-sync"
 import { loadVisualsCss } from "./visuals-css"
 
 export interface LoadedLesson {
   id: string
+  /** Where the web plays it: /l/{slug}-{id} for a published lesson, /lessons/{slug} for a bundled one. */
+  path: string
   lesson: Lesson
   prepared: Prepared
   /** The lesson's formulas drawn as SVG, keyed like prepared.math. */
@@ -43,6 +46,7 @@ export async function fetchLesson(
   const body = (await res.json().catch(() => null)) as {
     ok?: boolean
     id?: string
+    path?: string
     lesson?: unknown
     prepared?: Prepared
     mathSvg?: Record<string, MathSvg>
@@ -67,11 +71,22 @@ export async function fetchLesson(
   ])
   return {
     id: body.id ?? param,
+    path: body.path ?? `/l/${param}`,
     baseCss,
     lesson: checked.lesson,
     prepared: body.prepared ?? emptyPrepared,
     mathSvg: body.mathSvg ?? {},
   }
+}
+
+/** A request to the API on the learner's behalf, for progress-sync.ts. */
+export const sendToApi: Send = async (path, { method, body }) => {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers: { "content-type": "application/json" },
+    body,
+  })
+  return { status: res.status }
 }
 
 export interface TestLesson {
