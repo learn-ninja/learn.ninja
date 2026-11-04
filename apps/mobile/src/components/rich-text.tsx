@@ -53,7 +53,9 @@ export function RichText({
     } else if (code !== undefined) {
       nodes.push(
         <Text key={key++} className="bg-muted font-mono">
-          {` ${code} `}
+          {/* Padded with no-break spaces: a plain one let the line break inside the chip, leaving
+              its fill behind as an empty box at the end of the line. */}
+          {` ${code} `}
         </Text>
       )
     } else if (bold !== undefined) {
