@@ -63,7 +63,7 @@ Mechanics of each type:
 - **order:** 3–6 items written in the correct order (the player shuffles them). Use `alsoAccept` if another order is genuinely right too.
 - **match:** 3–5 pairs.
 - **blank:** fill gaps in a sentence, formula, or code from word chips. Each gap's `choices` include the right answer plus 1–2 believable decoys. Use `numeric` for a number gap. Accents always count, so a chip that differs only by its accent (_si_ for _sí_) is a fair decoy; one that differs only by case isn't, unless the kata is `caseSensitive`.
-- **scenario:** a short situation and 2–4 options, each with a `quality` (`best`, `okay`, `poor`) and an `outcome` that shows the consequence. When the decision is what to say to someone, put their last line in a `chat` visual and write the outcomes as their replies (see Visuals).
+- **scenario:** a situation with some build-up, and 2–4 options, each with a `quality` (`best`, `okay`, `poor`) and an `outcome` that shows the consequence. Write the `situation` as a short story in two to four sentences: set the scene (where the learner is, who's there), say what's at stake, and end on the moment that calls for a decision ("Two days before the review, a VP stops by your desk."). The ninja tells it one sentence at a time before the question, so a single sentence is a story with one beat; the checker rejects it. When the decision is what to say to someone, put their last line in a `chat` visual and write the outcomes as their replies (see Visuals).
 
 ## 4. Feedback that teaches
 

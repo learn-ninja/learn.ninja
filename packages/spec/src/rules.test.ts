@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import { loadExample } from "./test-helpers"
 import { matchesBlank } from "./basics"
-import { bareCode, positionalReference } from "./rules"
+import { bareCode, positionalReference, sentenceCount } from "./rules"
 import { SUBJECTS } from "./subjects"
 import { validateLesson } from "./validate"
 
@@ -1435,6 +1435,37 @@ describe("teaching rules", () => {
     const l = buttons()
     l.challenge.options[0].quality = "okay"
     expectIssue(l, { path: "challenge.options", message: /"quality": "best"/ })
+  })
+
+  it("wants a scenario's situation built up over at least two sentences", () => {
+    const l = buttons()
+    l.challenge.situation =
+      "A settings page has three actions: **Save changes**, **Reset to defaults**, and **Delete account**."
+    expectIssue(l, { path: "challenge.situation", message: /two to four/ })
+    l.challenge.situation =
+      "You're reviewing the settings page before it ships. It has three actions, and right now they all look the same."
+    expect(validateLesson(l).ok).toBe(true)
+  })
+
+  it("counts sentences by their ending marks", () => {
+    expect(sentenceCount("A VP asks for a feature.")).toBe(1)
+    expect(
+      sentenceCount("A VP asks for a feature. The review is in two days.")
+    ).toBe(2)
+    expect(
+      sentenceCount(
+        "Monday standup. A colleague has a study she's excited about, and a campaign idea to go with it."
+      )
+    ).toBe(2)
+    expect(
+      sentenceCount("Three actions: **Save**, **Reset**, and **Delete**.")
+    ).toBe(1)
+    expect(sentenceCount("It costs 3.5 million. Is that fine?")).toBe(2)
+    expect(sentenceCount('She said "Go." Then she left')).toBe(2)
+    expect(sentenceCount("会議は月曜日です。彼女は提案を持っています。")).toBe(
+      2
+    )
+    expect(sentenceCount("A sentence that trails off")).toBe(1)
   })
 })
 

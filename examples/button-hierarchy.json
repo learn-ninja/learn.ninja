@@ -226,7 +226,7 @@
     "id": "ch",
     "type": "scenario",
     "prompt": "Which plan would you go with?",
-    "situation": "A settings page has three actions: **Save changes**, **Reset to defaults**, and **Delete account**.",
+    "situation": "You're reviewing the settings page before it ships. It has three actions: **Save changes**, **Reset to defaults**, and **Delete account**. Right now all three look the same, and the designer wants a call by the end of the day.",
     "options": [
       {
         "id": "a",

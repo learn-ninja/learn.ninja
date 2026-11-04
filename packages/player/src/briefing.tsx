@@ -5,6 +5,7 @@ import * as React from "react"
 import { reducedMotion } from "./ninja"
 import { TOKEN } from "@workspace/player-core/plain-text"
 import { plainText, RichText } from "./rich-text"
+import { ScreenLabel } from "./screen-label"
 
 /**
  * A scenario's situation as the beats the ninja tells it in: one per sentence, and a colon that
@@ -145,9 +146,7 @@ export function Briefing({
           } as React.CSSProperties
         }
       >
-        {label ? (
-          <p className="mb-2 font-mono text-sm text-muted-foreground">{label}</p>
-        ) : null}
+        {label ? <ScreenLabel text={label} className="mb-2" /> : null}
         {units.map((beat, b) => (
           <p key={b}>
             {b === 0 ? <Caret at="start" /> : null}
