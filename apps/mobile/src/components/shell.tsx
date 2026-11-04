@@ -49,7 +49,8 @@ export function LessonHeader({
 }) {
   const insets = useSafeAreaInsets()
   return (
-    <View style={{ paddingTop: insets.top }}>
+    // Above the lesson, so the progress details can open over it.
+    <View className="z-10" style={{ paddingTop: insets.top }}>
       <View className="h-14 flex-row items-center gap-3 px-4">
         <Button
           variant="ghost"

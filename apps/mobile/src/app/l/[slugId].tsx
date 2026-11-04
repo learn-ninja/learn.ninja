@@ -139,10 +139,12 @@ function Player({ data }: { data: LoadedLesson }) {
       {/* The window: on a phone, edge to edge between two hairlines. */}
       <ScrollView
         ref={scrollRef}
+        // The header and tray already keep clear of the notch and the home bar.
+        contentInsetAdjustmentBehavior="never"
         className="flex-1 border-y border-border"
         contentContainerClassName={
           item.kind === "intro" || item.kind === "wrap"
-            ? "min-h-full justify-center px-4 py-16"
+            ? "grow justify-center px-4 py-16"
             : "px-4 py-6"
         }
       >
