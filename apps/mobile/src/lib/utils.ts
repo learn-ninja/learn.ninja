@@ -3,12 +3,19 @@ import { extendTailwindMerge } from "tailwind-merge"
 
 import { fontSize } from "../../tokens"
 
-// tailwind.config.js adds lesson-sm and the rest beside Tailwind's text sizes; without telling
-// tailwind-merge, it takes text-lesson-sm for a color and drops the text's own color.
+// tailwind.config.js adds lesson-sm, lesson-sm-relaxed, and the rest beside Tailwind's text sizes;
+// without telling tailwind-merge, it takes them for colors and drops the text's own color.
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {
-      "font-size": [{ text: Object.keys(fontSize).map((k) => `lesson-${k}`) }],
+      "font-size": [
+        {
+          text: Object.keys(fontSize).flatMap((k) => [
+            `lesson-${k}`,
+            `lesson-${k}-relaxed`,
+          ]),
+        },
+      ],
     },
   },
 })

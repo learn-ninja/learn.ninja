@@ -1,5 +1,11 @@
 // NativeWind (Tailwind 3) config. Every value comes from tokens.ts, the app's one design file.
-const { colors, radius, fontSize, LESSON_TEXT_SCALE } = require("./tokens.ts")
+const {
+  colors,
+  radius,
+  fontSize,
+  LESSON_TEXT_SCALE,
+  LEADING_RELAXED,
+} = require("./tokens.ts")
 
 const px = (n) => `${n}px`
 
@@ -11,6 +17,17 @@ const sizes = (scale, prefix = "") =>
       [px(size * scale), { lineHeight: px(line * scale) }],
     ])
   )
+
+/** The lesson sizes with leading-relaxed (the web's text-sm leading-relaxed in a concept body). */
+const relaxed = Object.fromEntries(
+  Object.entries(fontSize).map(([k, [size]]) => {
+    const scaled = size * LESSON_TEXT_SCALE
+    return [
+      `lesson-${k}-relaxed`,
+      [px(scaled), { lineHeight: px(scaled * LEADING_RELAXED) }],
+    ]
+  })
+)
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -25,7 +42,11 @@ module.exports = {
       ),
       // text-sm and the rest, plus lesson-sm and the rest: the same scale inside lesson content,
       // where the web's medium text size multiplies it (data-text-size in globals.css).
-      fontSize: { ...sizes(1), ...sizes(LESSON_TEXT_SCALE, "lesson-") },
+      fontSize: {
+        ...sizes(1),
+        ...sizes(LESSON_TEXT_SCALE, "lesson-"),
+        ...relaxed,
+      },
     },
   },
   plugins: [],

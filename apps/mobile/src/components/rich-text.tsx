@@ -14,8 +14,8 @@ import { fontSize, LESSON_TEXT_SCALE } from "../../tokens"
 // The spec's rich-text subset as native Text runs: **bold**, *italic*, `code`, and \( formulas \),
 // with a concept body's paragraphs and lists. The web's version is packages/player/src/rich-text.tsx.
 
-/** Lesson body text: the web's text-sm leading-relaxed (1.625) at the player's medium text size. */
-const BODY = "text-lesson-sm leading-[25.6px]"
+/** Lesson body text: the web's text-sm leading-relaxed at the player's medium text size. */
+const BODY = "text-lesson-sm-relaxed"
 /** BODY's font size, in points, for the formulas set in it. */
 const BODY_SIZE = fontSize.sm[0] * LESSON_TEXT_SCALE
 

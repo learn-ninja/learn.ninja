@@ -58,5 +58,8 @@ export const fontSize = {
  */
 export const LESSON_TEXT_SCALE = 1.125
 
+/** Tailwind's leading-relaxed: lesson body text's line height, as a multiple of its size. */
+export const LEADING_RELAXED = 1.625
+
 /** Tailwind's 4pt spacing step, kept so class names mean the same on both players. */
 export const SPACING_UNIT = 4
