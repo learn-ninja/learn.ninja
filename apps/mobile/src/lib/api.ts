@@ -1,4 +1,4 @@
-import type { Prepared } from "@workspace/player-core/prepared"
+import { emptyPrepared, type Prepared } from "@workspace/player-core/prepared"
 import { validateLesson, type Lesson } from "@workspace/spec"
 
 import { API_BASE_URL } from "./config"
@@ -58,10 +58,6 @@ export async function fetchLesson(
     id: body.id ?? param,
     baseCss,
     lesson: checked.lesson,
-    prepared: body.prepared ?? {
-      math: {},
-      code: {},
-      visualsCss: "",
-    },
+    prepared: body.prepared ?? emptyPrepared,
   }
 }
