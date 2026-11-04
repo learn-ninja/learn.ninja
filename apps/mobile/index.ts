@@ -28,12 +28,8 @@ import "@formatjs/intl-pluralrules/locale-data/zh.js"
 
 import { LogBox } from "react-native"
 
-// Two development warnings from code we don't change here (a deprecation inside a dependency, and
-// player-core's strings and language modules importing each other); the toast would sit over the
-// lesson's tray.
-LogBox.ignoreLogs([
-  "ImageBackground is deprecated",
-  "Require cycle: ../../packages/player-core/src/strings.ts",
-])
+// A development warning from a deprecation inside a dependency, not ours; its toast would sit over
+// the lesson's tray.
+LogBox.ignoreLogs(["ImageBackground is deprecated"])
 
 import "expo-router/entry"
