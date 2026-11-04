@@ -16,6 +16,7 @@ export const pt: Translation = {
   everyPath: "Todos os caminhos",
   replayBrief: "Rever a situação",
   tried: "Tentado",
+  you: "Você",
   picked: (parts) => `Escolhido: ${parts}`,
   hookNote: "Esta primeira é um aquecimento. Ela não conta na sua pontuação.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),

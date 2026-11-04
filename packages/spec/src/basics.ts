@@ -14,6 +14,8 @@ export const LIMITS = {
   mapGroups: 3,
   /** Numbered ticks on a number line, so the numbers stay readable on a phone. */
   numberLineTicks: 21,
+  /** People besides the learner in one chat visual. */
+  chatSpeakers: 3,
   concepts: { min: 1, max: 4 },
   /** Question katas after each concept kata. */
   practicePerConcept: { min: 2, max: 4 },

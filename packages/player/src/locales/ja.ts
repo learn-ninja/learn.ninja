@@ -12,6 +12,7 @@ export const ja: Translation = {
   everyPath: "すべての道",
   replayBrief: "状況をもう一度",
   tried: "試した",
+  you: "あなた",
   picked: (parts) => `選択中: ${parts}`,
   hookNote: "最初の問題はウォームアップです。スコアには入りません。",
   minutes: (n) => `${n}分`,

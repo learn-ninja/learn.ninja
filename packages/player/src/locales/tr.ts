@@ -16,6 +16,7 @@ export const tr: Translation = {
   everyPath: "Tüm yollar",
   replayBrief: "Durumu tekrar göster",
   tried: "Denendi",
+  you: "Sen",
   picked: (parts) => `Seçilen: ${parts}`,
   hookNote: "Bu ilk soru bir ısınma. Puanına sayılmaz.",
   minutes: (n) => p(n, { one: "# dk", other: "# dk" }),

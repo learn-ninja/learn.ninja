@@ -16,6 +16,7 @@ export const uk: Translation = {
   everyPath: "Усі шляхи",
   replayBrief: "Повторити ситуацію",
   tried: "Уже пробували",
+  you: "Ви",
   picked: (parts) => `Вибрано: ${parts}`,
   hookNote: "Перше запитання — розминка. Воно не впливає на результат.",
   minutes: (n) => p(n, { one: "# хв", other: "# хв" }),

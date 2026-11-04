@@ -22,6 +22,8 @@ export type Strings = {
   replayBrief: string
   /** A scenario option already picked and rewound. */
   tried: string
+  /** The learner, as the speaker of their own lines in a chat visual (read out, not shown). */
+  you: string
   /** Under a hotspot's visual: the parts picked, by name. */
   picked: (parts: string) => string
   hookNote: string

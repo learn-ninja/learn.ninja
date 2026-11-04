@@ -325,31 +325,41 @@
     "id": "ch",
     "type": "scenario",
     "prompt": "What do you say?",
-    "situation": "A colleague shares a hypothetical study of 10,000 adults: people who drink one or two cups of coffee a day live longer than non-drinkers. She wants to tell customers that coffee extends life.",
+    "situation": "Monday standup. A colleague has a hypothetical study she is excited about, and a campaign idea to go with it.",
+    "visual": {
+      "kind": "chat",
+      "alt": "Priya shares a study of 10,000 adults where coffee drinkers live longer, and asks to tell customers that coffee extends life.",
+      "turns": [
+        {
+          "who": "Priya",
+          "text": "Found a study of 10,000 adults: one or two cups of coffee a day, and they live longer than non-drinkers. Can we tell customers coffee extends life?"
+        }
+      ]
+    },
     "options": [
       {
         "id": "a",
         "quality": "best",
-        "text": "Ask who the non-drinkers are: people who quit coffee for their health would drag that group down.",
-        "outcome": "You've named a confounder and reverse causation in one go. Next, look for studies that follow healthy people over time."
+        "text": "Who are the non-drinkers, though? People who quit coffee for their health would drag that group down.",
+        "outcome": "Huh, I had not thought about who is in that group. Let me look for a study that follows healthy people over time instead."
       },
       {
         "id": "b",
         "quality": "okay",
-        "text": "Ask for a bigger study first, since 10,000 adults is too few to settle a question like this.",
-        "outcome": "A bigger sample gives the same biased answer with more precision. Size doesn't fix confounding."
+        "text": "Can we find a bigger study first? 10,000 adults feels too few to settle something like this.",
+        "outcome": "Sure, I will look for a bigger one. Though if the two groups are different kinds of people, more of them will not change that, will it?"
       },
       {
         "id": "c",
         "quality": "poor",
-        "text": "Go ahead: 10,000 people is strong evidence, and studies that size rarely turn out wrong.",
-        "outcome": "Strong evidence of a correlation, not of a cause. If sick people avoid coffee, the claim is backwards."
+        "text": "Go for it. 10,000 people is strong evidence, and studies that size rarely turn out wrong.",
+        "outcome": "Perfect, I will draft the campaign today. If 10,000 people say so, legal cannot argue."
       },
       {
         "id": "d",
         "quality": "poor",
-        "text": "Dismiss it: correlation never means anything, so a study like this tells us nothing about coffee.",
-        "outcome": "Too far the other way. A correlation is a reason to look closer, and some real causal findings start exactly here."
+        "text": "Correlation never means anything. A study like this tells us nothing about coffee.",
+        "outcome": "So we just ignore it? Then why does anyone run studies like this at all?"
       }
     ],
     "explanation": "The correlation could be confounded (health, income), reversed (illness reduces coffee drinking), or real. Only evidence with time order, randomization, or a natural experiment can tell which."

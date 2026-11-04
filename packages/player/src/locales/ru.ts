@@ -16,6 +16,7 @@ export const ru: Translation = {
   everyPath: "Все пути",
   replayBrief: "Повторить ситуацию",
   tried: "Уже пробовали",
+  you: "Вы",
   picked: (parts) => `Выбрано: ${parts}`,
   hookNote: "Первый вопрос — разминка. Он не влияет на результат.",
   minutes: (n) => p(n, { one: "# мин", other: "# мин" }),

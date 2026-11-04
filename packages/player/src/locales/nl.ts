@@ -16,6 +16,7 @@ export const nl: Translation = {
   everyPath: "Alle paden",
   replayBrief: "Situatie opnieuw",
   tried: "Geprobeerd",
+  you: "Jij",
   picked: (parts) => `Gekozen: ${parts}`,
   hookNote:
     "Deze eerste vraag is een opwarmer. Hij telt niet mee voor je score.",

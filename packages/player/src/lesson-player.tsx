@@ -130,6 +130,7 @@ import {
   type TextSize,
   type Theme,
 } from "./strings"
+import { scenarioTurns } from "./chat"
 import { Visual } from "./visuals"
 import {
   ChallengeNote,
@@ -1860,14 +1861,17 @@ function QuestionScreen({
     kata.type === "scenario"
       ? kata.options.filter((o) => o.quality === "best").map((o) => o.id)
       : []
+  // A scenario with a chat plays the pick and its outcome as the next two turns (chat.tsx).
+  const chatty = kata.type === "scenario" && kata.visual?.kind === "chat"
   // In the player a pick's outcome is in the note under the answers, so rows show outcomes only
-  // for Every path. A lone demo shows them under the picked row and, once revealed, the best one.
+  // for Every path. A lone demo shows them under the picked row and, once revealed, the best one;
+  // with a chat, the chat shows them instead.
   const showOutcomes =
     kata.type !== "scenario"
       ? []
       : paths
         ? kata.options.map((o) => o.id)
-        : !state.result
+        : !state.result || chatty
           ? []
           : [
               ...(!inBubble && state.answer.kind === "select"
@@ -1915,7 +1919,12 @@ function QuestionScreen({
         <RichText text={kata.prompt} />
       </h2>
       {kata.visual && kata.type !== "hotspot" ? (
-        <Visual visual={kata.visual} />
+        <div className={at(290).className} style={at(290).style}>
+          <Visual
+            visual={kata.visual}
+            turns={scenarioTurns(kata, state.answer, state.phase)}
+          />
+        </div>
       ) : null}
       {kata.type === "choice" ||
       kata.type === "compare" ||
@@ -2273,7 +2282,12 @@ export function ActionArea({
     const missText = (res: CheckResult) =>
       res.feedback ?? (res.missKey ? missMessage(res, t) : null)
     // In the player a scenario is a story: the ninja says what each pick led to, a miss rewinds.
+    // With a chat, the pick's outcome is the other person's reply in it, so he only gives the verdict.
     const story = inBubble && kata.type === "scenario"
+    const outcome = (res: CheckResult) =>
+      kata.type === "scenario" && kata.visual?.kind === "chat"
+        ? null
+        : (res.feedback ?? null)
     if (s.phase === "answering") {
       // Until every sort item is in a group, Check says how many are left instead.
       const unsorted =
@@ -2303,7 +2317,7 @@ export function ActionArea({
       title = say(earnedMoment(state, item) ?? "praise")
       explanation = kata.explanation
       // What the pick led to; with Every path open the rows show every outcome, so he says why.
-      if (story) message = why?.open ? kata.explanation : (r.feedback ?? null)
+      if (story) message = why?.open ? kata.explanation : outcome(r)
       else if (inBubble && why?.open) message = kata.explanation
       noteTone = "good"
       primary = { ...primary, variant: "success" }
@@ -2311,7 +2325,7 @@ export function ActionArea({
       // What the pick led to, then back to the decision.
       tone = "warn"
       title = say(r.partial ? "close" : "nudge")
-      message = r.feedback ?? null
+      message = outcome(r)
       primary = {
         label: t.rewind,
         onPress: onRewind ?? (() => dispatch({ type: "retry" })),

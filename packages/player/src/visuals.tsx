@@ -13,6 +13,7 @@ import type {
 import { Selectable } from "@workspace/ui/components/selectable"
 import { cn } from "@workspace/ui/lib/utils"
 
+import { ChatBlock, type ChatTurn } from "./chat"
 import type { Mark } from "./check"
 import { useIsDark, usePlayer } from "./context"
 import { markStyles } from "./controls"
@@ -40,11 +41,14 @@ export interface HotspotControl {
 export function Visual({
   visual,
   hotspots,
+  turns,
   label,
   plain = false,
 }: {
   visual: VisualSpec
   hotspots?: HotspotControl
+  /** On a chat, turns the player adds after the lesson's own: a scenario's pick and its reply. */
+  turns?: ChatTurn[]
   label?: string
   /** No box of its own: the visual sits on a surface that already frames it, like an option card's panel. */
   plain?: boolean
@@ -97,6 +101,10 @@ export function Visual({
     )
   if (visual.kind === "molecule")
     return <MoleculeBlock molecule={visual} label={label} plain={plain} />
+  if (visual.kind === "chat")
+    return (
+      <ChatBlock chat={visual} extra={turns} label={label} plain={plain} />
+    )
   return <ChartBlock chart={visual} label={label} plain={plain} />
 }
 

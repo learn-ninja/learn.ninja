@@ -12,6 +12,7 @@ export const vi: Translation = {
   everyPath: "Mọi hướng đi",
   replayBrief: "Xem lại tình huống",
   tried: "Đã thử",
+  you: "Bạn",
   picked: (parts) => `Đã chọn: ${parts}`,
   hookNote: "Câu đầu tiên này là khởi động. Nó không tính vào điểm của bạn.",
   minutes: (n) => `${n} phút`,

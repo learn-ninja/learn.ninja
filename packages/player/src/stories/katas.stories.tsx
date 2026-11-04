@@ -24,6 +24,7 @@ import {
 import { RichText } from "../rich-text"
 import { OrderKata } from "../order"
 import { SortKata } from "../sort"
+import { scenarioTurns } from "../chat"
 import { Visual } from "../visuals"
 import { lessons, PlayerFrame } from "./fixtures"
 
@@ -97,10 +98,17 @@ function Question({
   const props = { kata, answer, setAnswer, marks, locked: mode !== "idle" }
   const optionIds =
     "options" in kata ? (kata.options as { id: string }[]).map((o) => o.id) : []
+  // A chat scenario shows the pick's outcome as a reply in the chat, not under the row.
+  const chatty = kata.type === "scenario" && kata.visual?.kind === "chat"
   const showOutcomes =
-    kata.type === "scenario" && mode !== "idle" && answer.kind === "select"
+    kata.type === "scenario" &&
+    mode !== "idle" &&
+    answer.kind === "select" &&
+    !chatty
       ? answer.ids
       : []
+  const phase =
+    mode === "idle" ? "answering" : mode === "revealed" ? "revealed" : "feedback"
 
   return (
     <>
@@ -113,7 +121,10 @@ function Question({
         </div>
       ) : null}
       {kata.visual && kata.type !== "hotspot" ? (
-        <Visual visual={kata.visual} />
+        <Visual
+          visual={kata.visual}
+          turns={scenarioTurns(kata, answer, phase)}
+        />
       ) : null}
       {kata.type === "choice" ||
       kata.type === "compare" ||
@@ -423,4 +434,11 @@ export const BlankCode: Story = {
 }
 export const Scenario: Story = {
   args: { kata: buttons.challenge, wrong: { kind: "select", ids: ["b"] } },
+}
+export const ScenarioChat: Story = {
+  name: "Scenario, chat",
+  args: {
+    kata: lessons.correlation.challenge,
+    wrong: { kind: "select", ids: ["b"] },
+  },
 }

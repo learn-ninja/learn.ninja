@@ -16,6 +16,7 @@ export const fr: Translation = {
   everyPath: "Tous les chemins",
   replayBrief: "Revoir la situation",
   tried: "Essayé",
+  you: "Vous",
   picked: (parts) => `Choisi : ${parts}`,
   hookNote:
     "Cette première question est un échauffement. Elle ne compte pas dans ton score.",

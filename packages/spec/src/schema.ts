@@ -338,6 +338,29 @@ export const moleculeVisual = z
   })
   .meta({ id: "MoleculeVisual" })
 
+/**
+ * A conversation as chat bubbles, drawn by the player: what someone said, for lessons about what
+ * people say to each other. On a scenario, the learner's pick and its outcome join it as the next
+ * two turns.
+ */
+export const chatVisual = z
+  .strictObject({
+    kind: z.literal("chat"),
+    /** One sentence saying what the exchange is, for screen readers. Required (rules.ts). */
+    alt: z.string().min(1).max(200).optional(),
+    turns: z
+      .array(
+        z.strictObject({
+          /** Who says it, as shown by their bubble. Left out, it's the learner's own line, on the other side. */
+          who: z.string().min(1).max(24).optional(),
+          text: richText.max(240),
+        })
+      )
+      .min(1)
+      .max(8),
+  })
+  .meta({ id: "ChatVisual" })
+
 export const visual = z
   .discriminatedUnion("kind", [
     htmlVisual,
@@ -351,6 +374,7 @@ export const visual = z
     chessVisual,
     mapVisual,
     moleculeVisual,
+    chatVisual,
   ])
   .meta({ id: "Visual" })
 
@@ -628,3 +652,4 @@ export type ClockVisual = z.infer<typeof clockVisual>
 export type ChessVisual = z.infer<typeof chessVisual>
 export type MapVisual = z.infer<typeof mapVisual>
 export type MoleculeVisual = z.infer<typeof moleculeVisual>
+export type ChatVisual = z.infer<typeof chatVisual>

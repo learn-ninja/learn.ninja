@@ -16,6 +16,7 @@ export const ar: Translation = {
   everyPath: "كل المسارات",
   replayBrief: "أعد عرض الموقف",
   tried: "جرّبته",
+  you: "أنت",
   picked: (parts) => `المختار: ${parts}`,
   hookNote: "هذا سؤال تمهيدي، ولا يُحتسب في نتيجتك.",
   minutes: (n) => `${n} دقائق`,
