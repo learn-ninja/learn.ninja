@@ -1,57 +1,29 @@
-import { buildSequence } from "@workspace/player-core/flow"
-import { freshQuestion, type State } from "@workspace/player-core/state"
+import {
+  reducer as sharedReducer,
+  start as sharedStart,
+  type Action,
+} from "@workspace/player-core/reducer"
+import type { State } from "@workspace/player-core/state"
 import type { Lesson } from "@workspace/spec"
 
-// The app's lesson state: player-core's State, moved by the same rules as the web's reducer
-// (packages/player/src/lesson-player.tsx). Phase 1 plays concepts only, so question katas are
-// stepped past without an answer; checking, the fix round, and the score come with phase 2.
+// The app's lesson state: player-core's State, moved by the reducer the web runs too
+// (packages/player-core/src/reducer.ts): answers, checking, retries, the reveal, the hint and the
+// explanation, a scenario's brief, the fix round, and the score. The app binds the lesson once, so
+// Restart needs no lesson of its own.
 
-export type Action =
-  | { type: "next" }
-  | { type: "restart" }
-  /** Progress kept on the device, loaded as the lesson opens. */
-  | { type: "resume"; state: State }
+export type { Action }
 
 /** The lesson from its intro. */
 export function start(lesson: Lesson, run = 0): State {
-  return {
-    items: buildSequence(lesson),
-    index: 0,
-    results: {},
-    mistakes: [],
-    fixed: [],
-    inFix: false,
-    fixQueued: false,
-    question: null,
-    run,
-  }
+  return sharedStart(lesson, undefined, run)
 }
 
+export type AppAction = Exclude<Action, { type: "restart" }> | { type: "restart" }
+
 export function reducer(lesson: Lesson) {
-  return (state: State, action: Action): State => {
-    switch (action.type) {
-      case "restart":
-        return start(lesson, state.run + 1)
-      case "resume":
-        return action.state
-      case "next": {
-        if (state.index >= state.items.length - 1) return state
-        let index = state.index + 1
-        // As on the web: with nothing to fix, the fix round's screen is skipped.
-        if (
-          state.items[index]?.kind === "fix" &&
-          state.mistakes.length === 0 &&
-          !state.fixQueued
-        )
-          index++
-        const item = state.items[index]
-        return {
-          ...state,
-          index,
-          inFix: state.inFix || item?.kind === "fix",
-          question: freshQuestion(item),
-        }
-      }
-    }
-  }
+  return (state: State, action: AppAction): State =>
+    sharedReducer(
+      state,
+      action.type === "restart" ? { type: "restart", lesson } : action
+    )
 }
