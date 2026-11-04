@@ -90,3 +90,26 @@ export function wordBank(kata: Extract<QuestionKata, { type: "blank" }>) {
     return Array<string>(Math.max(1, needed)).fill(word)
   })
 }
+
+/**
+ * Which bank chip sits in each gap of a blank kata. A word listed twice in the bank (two gaps
+ * accept it) has two chips, used in gap order, so each placed word has a chip of its own to slide
+ * from and back to.
+ */
+export function chipsInGaps(
+  gapIds: string[],
+  values: Record<string, string>,
+  bank: string[]
+): Record<string, number> {
+  const taken = new Set<number>()
+  const at: Record<string, number> = {}
+  for (const id of gapIds) {
+    const word = values[id]
+    if (!word) continue
+    const i = bank.findIndex((w, j) => w === word && !taken.has(j))
+    if (i < 0) continue
+    taken.add(i)
+    at[id] = i
+  }
+  return at
+}

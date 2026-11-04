@@ -2,11 +2,7 @@ import { readFileSync } from "node:fs"
 
 import { describe, expect, it } from "vitest"
 
-import {
-  validateLesson,
-  type Lesson,
-  type QuestionKata,
-} from "@workspace/spec"
+import { validateLesson, type Lesson, type QuestionKata } from "@workspace/spec"
 
 import {
   checkAnswer,
@@ -71,9 +67,7 @@ describe("every question in every example", () => {
     allQuestions.map((s) => [s.id + ":" + s.type, s] as [string, QuestionKata])
   )("%s: the starting answer isn't already correct", (_, kata) => {
     const start = initialAnswer(kata, () => 0.42)
-    expect(isReady(kata, start) && checkAnswer(kata, start).correct).toBe(
-      false
-    )
+    expect(isReady(kata, start) && checkAnswer(kata, start).correct).toBe(false)
   })
 })
 

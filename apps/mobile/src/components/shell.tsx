@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react"
 import { Pressable, View } from "react-native"
 import Animated, {
   FadeIn,
+  FadeInDown,
   FadeOut,
   useAnimatedStyle,
   useSharedValue,
@@ -13,9 +14,12 @@ import Svg, { Path } from "react-native-svg"
 import type { QuestionCount } from "@workspace/player-core/flow"
 import type { Strings } from "@workspace/player-core/strings"
 
+import { RichText } from "@/components/rich-text"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
-import { colors } from "../../tokens"
+import { mix } from "@/lib/color"
+import { cn } from "@/lib/utils"
+import { colors, fontSize, LESSON_TEXT_SCALE } from "../../tokens"
 
 // The frame around every lesson screen, as the web draws it on a phone (packages/player/src/shell.tsx
 // and the tray in lesson-player.tsx): a header with the way home, the lesson's title on the intro
@@ -212,16 +216,110 @@ export function formatElapsed(seconds: number): string {
 /**
  * The tray at the foot of the screen: on a phone it's as dark as the lesson, with the screen's
  * buttons across its width at a thumb-sized height (the web's PHONE_BAR), clear of the home bar.
+ * After a check the feedback sits in it above the buttons, and the whole tray takes the
+ * feedback's tone (the web's PHONE_TRAY_TONE): a tint of green or yellow with a line of the color
+ * along its top edge, or the popover's grey when the answer is revealed.
  */
-export function LessonTray({ children }: { children: ReactNode }) {
+export function LessonTray({
+  tone,
+  children,
+  feedback,
+}: {
+  /** The feedback's tone, or none while there's no feedback. */
+  tone?: Tone
+  children: ReactNode
+  feedback?: ReactNode
+}) {
   const insets = useSafeAreaInsets()
+  const look = tone ? TRAY_TONES[tone] : null
   return (
     <View
-      className="flex-row gap-2 border-t border-transparent px-4 pt-4"
-      style={{ paddingBottom: Math.max(16, insets.bottom) }}
+      className="gap-3 border-t border-transparent p-4"
+      style={{
+        paddingBottom: Math.max(16, insets.bottom),
+        backgroundColor: look?.background ?? colors.background,
+        borderTopColor: look?.edge ?? "transparent",
+      }}
     >
-      {children}
+      {feedback}
+      <View className="flex-row items-center gap-2">{children}</View>
     </View>
+  )
+}
+
+export type Tone = "neutral" | "good" | "warn"
+
+/** The tray's colors by tone: the tone mixed 10% into the page, with a line of the tone on top. */
+const TRAY_TONES: Record<Tone, { background: string; edge: string }> = {
+  good: {
+    background: mix(colors.feedback.good, 10, colors.background),
+    edge: colors.feedback.good,
+  },
+  warn: {
+    background: mix(colors.feedback.warn, 10, colors.background),
+    edge: colors.feedback.warn,
+  },
+  neutral: { background: colors.popover.DEFAULT, edge: colors.border },
+}
+
+/**
+ * The feedback card in the tray: the ninja's line in bold, the note under it one line per
+ * paragraph (a line added later, like the explanation after Why?, fades up), and Why? at its end
+ * so Continue keeps the full width.
+ */
+export function TrayFeedback({
+  title,
+  message,
+  why,
+}: {
+  title: string | null
+  message: string | null
+  why?: { label: string; open: boolean; onPress: () => void } | null
+}) {
+  if (!title && !message) return null
+  const size = fontSize.sm[0] * LESSON_TEXT_SCALE
+  return (
+    <Animated.View
+      entering={FadeInDown.duration(200)}
+      className="flex-row items-start gap-3"
+      accessibilityLiveRegion="polite"
+    >
+      <View className="min-w-0 flex-1">
+        {title ? (
+          <RichText
+            text={title}
+            size={size}
+            className="text-lesson-sm font-semibold"
+          />
+        ) : null}
+        {message ? (
+          <Animated.View key={message} entering={FadeInDown.duration(300)}>
+            {message
+              .split("\n")
+              .filter((line) => line.trim())
+              .map((line, i) => (
+                <RichText
+                  key={i}
+                  text={line}
+                  size={size}
+                  className={cn("text-lesson-sm", (title || i > 0) && "mt-1")}
+                />
+              ))}
+          </Animated.View>
+        ) : null}
+      </View>
+      {why ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-my-1 -me-2 shrink-0"
+          accessibilityState={{ expanded: why.open }}
+          onPress={why.onPress}
+        >
+          <Text className="text-sm">{why.label}</Text>
+        </Button>
+      ) : null}
+    </Animated.View>
   )
 }
 
@@ -230,17 +328,29 @@ export function TrayButton({
   label,
   onPress,
   disabled,
+  variant = "default",
+  pressed,
 }: {
   label: string
   onPress: () => void
   disabled?: boolean
+  variant?: "default" | "success" | "warning" | "outline"
+  /** For a toggle (Hint): shown pressed while it's open, a shade off the tray. */
+  pressed?: boolean
 }) {
   return (
     <Button
+      variant={variant}
       size="lg"
-      className="h-12 flex-1 rounded-full px-4"
+      className={cn(
+        "h-12 flex-1 rounded-full px-4",
+        pressed && "bg-surface-active"
+      )}
       onPress={onPress}
       disabled={disabled}
+      accessibilityState={
+        pressed === undefined ? undefined : { selected: pressed }
+      }
     >
       <Text className="text-base">{label}</Text>
     </Button>
