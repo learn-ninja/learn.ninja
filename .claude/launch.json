@@ -60,6 +60,17 @@
         "cd spikes/stageshow && npx vite playground --config playground/vite.config.ts --port 5177 --strictPort"
       ],
       "port": 5177
+    },
+    {
+      "name": "mobile",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start",
+        "-w",
+        "mobile"
+      ],
+      "port": 8081
     }
   ]
 }

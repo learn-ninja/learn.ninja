@@ -6,9 +6,9 @@ import type { Kata, Lesson } from "@workspace/spec"
 import { DirectionProvider } from "@workspace/ui/components/direction"
 import { cn } from "@workspace/ui/lib/utils"
 
-import type { Answer } from "./check"
+import type { Answer } from "@workspace/player-core/check"
 import { PlayerProvider } from "./context"
-import type { Item } from "./flow"
+import type { Item } from "@workspace/player-core/flow"
 import {
   ActionArea,
   freshQuestion,
@@ -17,15 +17,15 @@ import {
   type Action,
   type State,
 } from "./lesson-player"
-import { emptyPrepared, type Prepared } from "./prepared"
-import { seeded } from "./random"
+import { emptyPrepared, type Prepared } from "@workspace/player-core/prepared"
+import { seeded } from "@workspace/player-core/random"
 import {
   ariaLocaleFor,
   directionOf,
   UI_TRANSLATIONS,
   useStrings,
   type TextSize,
-} from "./strings"
+} from "@workspace/player-core/strings"
 
 export interface KataDemoProps {
   lesson: Lesson

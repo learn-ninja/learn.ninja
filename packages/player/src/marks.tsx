@@ -1,4 +1,4 @@
-import type { Mark } from "./check"
+import type { Mark } from "@workspace/player-core/check"
 import { usePlayer } from "./context"
 
 // After checking, answers are marked by color and an icon, which screen readers don't get: the

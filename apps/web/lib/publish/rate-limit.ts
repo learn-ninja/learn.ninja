@@ -18,6 +18,8 @@ export const FEEDBACK_LIMIT = { requests: 10, windowSeconds: 60 * 60 }
 export const VIEW_LIMIT = { requests: 120, windowSeconds: 60 * 60 }
 /** Profile picture uploads per user: each one is decoded and resized on the server. */
 export const AVATAR_LIMIT = { requests: 20, windowSeconds: 60 * 60 }
+/** Lessons read as JSON per client (the app): like views, a learner opens a few an hour. */
+export const READ_LIMIT = { requests: 300, windowSeconds: 60 * 60 }
 
 const LIMITS = {
   publish: PUBLISH_LIMIT,
@@ -27,6 +29,7 @@ const LIMITS = {
   feedback: FEEDBACK_LIMIT,
   view: VIEW_LIMIT,
   avatar: AVATAR_LIMIT,
+  read: READ_LIMIT,
 }
 export type LimitName = keyof typeof LIMITS
 

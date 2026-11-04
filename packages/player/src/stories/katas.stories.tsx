@@ -11,7 +11,7 @@ import {
   solutionMarks,
   type Answer,
   type Mark,
-} from "../check"
+} from "@workspace/player-core/check"
 import {
   BlankKata,
   ConceptKata,

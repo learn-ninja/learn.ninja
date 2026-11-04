@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import type { Lesson, QuestionKata } from "@workspace/spec"
 
 import { chipsInGaps } from "./katas"
-import { buildSequence, type Item, type Outcome } from "./flow"
+import { buildSequence, type Item, type Outcome } from "@workspace/player-core/flow"
 import {
   earnedMoment,
   freshQuestion,

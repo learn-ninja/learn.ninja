@@ -100,7 +100,7 @@ Phones get a focused player, not the desktop frame squeezed down. Everything is 
 
 ## Copy
 
-- All player text lives in `packages/player/src/strings.ts` with English and Arabic. Never hard-code UI strings in components.
+- All player text lives in `packages/player-core/src/strings.ts` with English and Arabic. Never hard-code UI strings in components.
 - Keep it short and plain: "Check", "Try again", "Link copied". No exclamation marks in system text, except for celebrating a correct answer.
 
 ## Before calling a UI change done

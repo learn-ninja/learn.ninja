@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { Lesson } from "@workspace/spec"
 
-import { buildSequence } from "./flow"
+import { buildSequence } from "@workspace/player-core/flow"
 import { reducer, type State } from "./lesson-player"
 import {
   browserStorage,
@@ -14,7 +14,7 @@ import {
   savedProgress,
   saveProgress,
 } from "./progress"
-import { UI_TRANSLATIONS } from "./strings"
+import { UI_TRANSLATIONS } from "@workspace/player-core/strings"
 
 // Progress saved in the browser: a reload lands on the same screen, a changed lesson starts over.
 

@@ -3,9 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
 import { PlayerProvider } from "./context"
-import { emptyPrepared } from "./prepared"
+import { emptyPrepared } from "@workspace/player-core/prepared"
 import { MarkText } from "./marks"
-import { stringsFor } from "./strings"
+import { stringsFor } from "@workspace/player-core/strings"
 
 // Checked answers are marked by color and an icon; screen readers get the same result as words.
 

@@ -1,3 +1,4 @@
+import { bundledLessonList } from "@/lib/lessons"
 import { publishLesson } from "@/lib/publish/handlers"
 import { actorFor, clientKey, depsFor } from "@/lib/publish/request"
 import { respond } from "@/lib/publish/respond"
@@ -5,6 +6,12 @@ import { respond } from "@/lib/publish/respond"
 // POST /api/lessons: publish a lesson file. Returns its link and a secret edit token. Anonymous
 // lessons also get a claim token and last 7 days; with a session cookie or x-api-key, the lesson
 // belongs to that account and never expires.
+// GET /api/lessons: the bundled test lessons (examples/), for the app's home until it has Explore.
+// Each opens at GET /api/lessons/{slug}.
+
+export function GET() {
+  return Response.json({ ok: true, lessons: bundledLessonList() })
+}
 
 export async function POST(req: Request) {
   return respond(async () => {

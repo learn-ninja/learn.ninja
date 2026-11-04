@@ -8,7 +8,7 @@ import spanishGreetings from "../../../examples/spanish-greetings.json"
 import { validateLesson, type Lesson } from "@workspace/spec"
 
 import { LessonPlayer } from "./lesson-player"
-import { stringsFor } from "./strings"
+import { stringsFor } from "@workspace/player-core/strings"
 
 // The player's keys, played in a browser-like page: Enter runs the main action from wherever focus
 // is, never undoes work in a kata, and the number keys pick in every kata that has things to pick.

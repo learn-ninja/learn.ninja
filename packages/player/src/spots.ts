@@ -1,4 +1,4 @@
-import type { Mark } from "./check"
+import type { Mark } from "@workspace/player-core/check"
 
 // How a hotspot's parts look, drawn inside the visual's frame: the tile has to sit behind a part's
 // own ink, which the buttons laid over the frame can't do. Those take the taps (see HtmlFrame); the

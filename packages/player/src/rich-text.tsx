@@ -6,13 +6,13 @@ import { textBlocks } from "@workspace/spec"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
-import { TOKEN } from "./plain-text"
-import { mathKey } from "./prepared"
+import { TOKEN } from "@workspace/player-core/plain-text"
+import { mathKey } from "@workspace/player-core/prepared"
 
 // Renders the spec's rich-text subset: **bold**, *italic*, `code`, and \( formulas \).
 // A $ is always a plain dollar sign. A concept body also has paragraphs and lists (RichBlocks).
 
-export { plainText } from "./plain-text"
+export { plainText } from "@workspace/player-core/plain-text"
 
 export function RichText({
   text,

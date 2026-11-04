@@ -1,6 +1,6 @@
-// Speaks the ninja's English lines (src/locales/voices/en.ts and src/footer-lines.ts) with his
+// Speaks the ninja's English lines (player-core/src/locales/voices/en.ts and src/footer-lines.ts) with his
 // ElevenLabs voice: one mp3 per line in apps/web/public/voice/en/, named by a hash of the voice,
-// model, and text, and the tables they're looked up in (src/voice-clips.json for the player,
+// model, and text, and the tables they're looked up in (player-core/src/voice-clips.json for the player,
 // src/footer-clips.json for the site's footer). Only new or changed lines cost credits; clips for
 // lines that are gone are deleted. Run it after changing the English lines:
 // `npm run voice -w @workspace/player`. It reads ELEVENLABS_API_KEY from apps/web/.env.local.
@@ -17,8 +17,8 @@ import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import { FOOTER_LINES } from "../src/footer-lines"
-import { en } from "../src/locales/voices/en"
-import type { VoiceClips } from "../src/voices"
+import { en } from "@workspace/player-core/locales/voices/en"
+import type { VoiceClips } from "@workspace/player-core/voices"
 
 /** "learn.ninja ninja" in the maintainers' ElevenLabs account: deep and husky, with a Japanese accent. */
 const VOICE = "WWVG27H1yLMxNlCOoavQ"
@@ -29,7 +29,7 @@ const FORMAT = "mp3_44100_96"
 const AT_ONCE = 3
 
 const here = fileURLToPath(new URL(".", import.meta.url))
-const manifestPath = join(here, "../src/voice-clips.json")
+const manifestPath = join(here, "../../player-core/src/voice-clips.json")
 const footerManifestPath = join(here, "../src/footer-clips.json")
 const dir = join(here, "../../../apps/web/public/voice/en")
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { en } from "./locales/en"
+import { en } from "@workspace/player-core/locales/en"
 import { timeLeft } from "./time"
 
 // The lesson menu's expiry note: days from 24 hours up, hours below.

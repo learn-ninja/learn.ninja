@@ -11,7 +11,7 @@ These are trademarks of Uxcel Inc, and neither license grants any rights to them
 - **The files in [`brand/`](brand)**: the share images, icons, and banners.
 - **The ninja**: the character as a whole, with his look, his name, his voice, and his lines.
 
-The ninja's art (`packages/player/src/ninja.tsx`), lines (`packages/player/src/locales/voices/`), and voice clips (`apps/web/public/voice/`, `packages/player/src/voice-clips.json`) ship with the player under Apache-2.0, so contributors can improve him and a fork runs as it is. The license covers the files; the character stays our brand.
+The ninja's art (`packages/player/src/ninja.tsx`), lines (`packages/player-core/src/locales/voices/`), and voice clips (`apps/web/public/voice/`, `packages/player-core/src/voice-clips.json`) ship with the player under Apache-2.0, so contributors can improve him and a fork runs as it is. The license covers the files; the character stays our brand.
 
 ## What you can do
 

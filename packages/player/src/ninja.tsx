@@ -4,7 +4,7 @@ import * as React from "react"
 
 import { cn } from "@workspace/ui/lib/utils"
 
-import type { NinjaLevel } from "./strings"
+import type { NinjaLevel } from "@workspace/player-core/strings"
 
 // The ninja: the logo as a character. He is the same mark as the header logo with two extra eye
 // layers (happy arcs, sad arcs) that stay hidden until a mood class asks for them. Everything he

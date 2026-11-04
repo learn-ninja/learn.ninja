@@ -6,7 +6,7 @@ import { Button } from "@workspace/ui/components/button"
 
 import { Briefing } from "../briefing"
 import { usePlayer } from "../context"
-import { directionOf } from "../strings"
+import { directionOf } from "@workspace/player-core/strings"
 import { lessons, PlayerFrame } from "./fixtures"
 
 function situation({ challenge }: Lesson): string {

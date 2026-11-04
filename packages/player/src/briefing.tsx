@@ -3,7 +3,7 @@
 import * as React from "react"
 
 import { reducedMotion } from "./ninja"
-import { TOKEN } from "./plain-text"
+import { TOKEN } from "@workspace/player-core/plain-text"
 import { plainText, RichText } from "./rich-text"
 
 /**

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import type { Answer } from "./check"
+import type { Answer } from "@workspace/player-core/check"
 import type { ChatVisual, QuestionKata } from "@workspace/spec"
 import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
 import { cn } from "@workspace/ui/lib/utils"

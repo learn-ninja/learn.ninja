@@ -3,6 +3,7 @@
 // the player look the same. Each lesson's Tailwind utilities are compiled separately by prepareLesson().
 
 import { execFileSync } from "node:child_process"
+import { createRequire } from "node:module"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -73,10 +74,16 @@ html, body { background: transparent; color: var(--foreground); font-family: Int
 
 const inputPath = join(outDir, "lesson-visuals.css")
 writeFileSync(inputPath, input)
+// The Tailwind 4 CLI by its own path: `npx @tailwindcss/cli` runs whichever `tailwindcss` bin npm
+// hoisted, and that's Tailwind 3 since the app (apps/mobile) needs it for NativeWind.
+const tailwindCli = join(
+  dirname(createRequire(import.meta.url).resolve("@tailwindcss/cli/package.json")),
+  "dist/index.mjs"
+)
 execFileSync(
-  "npx",
+  process.execPath,
   [
-    "@tailwindcss/cli",
+    tailwindCli,
     "-i",
     inputPath,
     "-o",

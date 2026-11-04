@@ -13,11 +13,13 @@ import type {
 import { Selectable } from "@workspace/ui/components/selectable"
 import { cn } from "@workspace/ui/lib/utils"
 
+import type { Mark } from "@workspace/player-core/check"
+
 import { ChatBlock, type ChatTurn } from "./chat"
-import type { Mark } from "./check"
 import { useIsDark, usePlayer } from "./context"
 import { markStyles } from "./controls"
-import { countryName } from "./country-names"
+import { countryName } from "@workspace/player-core/country-names"
+import { inStyle, VISUAL_CSP } from "@workspace/player-core/visual-frame"
 import { Clock, Fractions, NumberLine } from "./figures"
 import { shortcutBlocked } from "./keys"
 import {
@@ -27,7 +29,7 @@ import {
   mathKey,
   moleculeKey,
   type CodeLines,
-} from "./prepared"
+} from "@workspace/player-core/prepared"
 import { markSpots, SPOT_CSS } from "./spots"
 
 /** Hotspot wiring for interactive visuals: which regions are selected or marked, and what a tap does. */
@@ -119,13 +121,7 @@ export const VISUAL_SANDBOX = "allow-same-origin"
 /** The tallest an HTML visual's frame grows, in pixels. */
 const MAX_VISUAL_HEIGHT = 2400
 
-/**
- * The frame's own Content-Security-Policy, first in its head. The lesson page's header policy only
- * covers a page loaded from a lesson URL, not one reached by an in-app link, so the frame carries
- * one too: same-origin styles, images, and fonts, and nothing else.
- */
-export const VISUAL_CSP =
-  "default-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
+export { VISUAL_CSP }
 
 /**
  * The heights HTML visuals measured at, by frame width and document. A frame seen before, or drawn
@@ -134,8 +130,6 @@ export const VISUAL_CSP =
  */
 const knownHeights = new Map<string, number>()
 
-/** Keeps CSS inside its <style>: "</" would otherwise end the tag and inject markup. A CSS "\/" still means "/". */
-const inStyle = (css: string) => css.replace(/<\//g, "<\\/")
 
 function HtmlFrame({
   html,

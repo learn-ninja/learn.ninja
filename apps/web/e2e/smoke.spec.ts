@@ -3,7 +3,7 @@ import path from "node:path"
 
 import { expect, test } from "@playwright/test"
 
-import { en as ninja } from "../../../packages/player/src/locales/voices/en"
+import { en as ninja } from "../../../packages/player-core/src/locales/voices/en"
 
 // The paths a visitor, a learner, and an agent take, end to end.
 

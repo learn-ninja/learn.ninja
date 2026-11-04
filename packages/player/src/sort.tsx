@@ -8,7 +8,7 @@ import { Kbd } from "@workspace/ui/components/kbd"
 import { cn } from "@workspace/ui/lib/utils"
 
 import type { QuestionKataProps } from "./katas"
-import { POOL } from "./check"
+import { POOL } from "@workspace/player-core/check"
 import { usePlayer } from "./context"
 import {
   controlPadding,
