@@ -215,6 +215,9 @@ export function VisualFrame({
       onLongPress={interactive ? () => setReveal(true) : undefined}
       onPressOut={interactive ? () => setReveal(false) : undefined}
       className={cn(
+        // As wide as its place: a WebView has no width of its own, so in a parent that centers
+        // its children (an order tile) the stage would shrink to nothing.
+        "w-full",
         !plain && "min-h-72 justify-center overflow-hidden",
         // A hotspot's visual sits on a filled stage, with no frame around it; the rest in a
         // window on the page's own surface, with room above and below.
