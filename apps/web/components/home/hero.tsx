@@ -7,7 +7,7 @@ import { useSetup } from "@/lib/use-setup"
 
 import { HeroDemo } from "./hero-demo"
 import { RotatingWord } from "./rotating-word"
-import { SetupAgents } from "./setup-picker"
+import { SetupAgents, SetupPicker } from "./setup-picker"
 
 const TOPICS = ["design", "coding", "data", "math", "science", "history"]
 
@@ -17,6 +17,8 @@ export function Hero() {
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-24 px-4 py-20 sm:px-6 sm:py-28">
       <div className="flex w-full flex-col items-start gap-6">
+        {/* The header has no room for the CLI/MCP toggle on phones, so it sits here. */}
+        <SetupPicker className="sm:hidden" />
         <SetupAgents />
         <h1 className="font-mono text-3xl font-semibold tracking-tight sm:text-5xl sm:leading-[1.05]">
           Vibe learn <span className="sr-only">anything</span>

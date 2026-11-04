@@ -15,8 +15,8 @@ import { SiteMenu } from "./site-menu"
 import { Wordmark } from "./wordmark"
 
 /**
- * The bar at the top of every page. Visitors get Explore · Docs · Log in and a wordmark that
- * links home; once logged in, Explore is home, so the wordmark goes there and the links fold
+ * The bar at the top of every page. Visitors get Docs · Mission · Log in and a wordmark that
+ * links home (Explore is a click away on the home page and in the footer); once logged in, Explore is home, so the wordmark goes there and the links fold
  * into the account menu behind the profile picture (which also opens on hover). On the marketing
  * pages and the docs, the GitHub link with its star count leads the links on wider screens. `start` adds
  * page-specific controls before the wordmark (the docs menu), `action` a button after it (copy
@@ -26,7 +26,7 @@ import { Wordmark } from "./wordmark"
  * leave it out and the marker cookie decides after hydration. Until then the visitor's links are
  * kept but invisible, so the header doesn't shift for the many visitors who aren't logged in.
  * On phones the links, the bug button, and the picture's menu fold into one drawer behind a menu
- * button at the end (`SiteMenu`); the wordmark, the docs menu, the GitHub link, and the lantern stay.
+ * button at the end (`SiteMenu`, the profile picture once logged in); the wordmark, the docs menu, the GitHub link, and the lantern stay.
  * Logged in, it sends the lessons this browser finished while logged out (lib/explore/finishes).
  */
 export function SiteHeader({
@@ -66,20 +66,20 @@ export function SiteHeader({
           {visitor ? (
             <>
               <ButtonLink
-                href="/explore"
-                variant="ghost"
-                size="sm"
-                className="max-sm:hidden"
-              >
-                Explore
-              </ButtonLink>
-              <ButtonLink
                 href="/docs"
                 variant="ghost"
                 size="sm"
                 className="max-sm:hidden"
               >
                 Docs
+              </ButtonLink>
+              <ButtonLink
+                href="/mission"
+                variant="ghost"
+                size="sm"
+                className="max-sm:hidden"
+              >
+                Mission
               </ButtonLink>
               <AccountLink account={account} className="max-sm:hidden" />
             </>

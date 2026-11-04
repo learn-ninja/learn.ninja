@@ -15,6 +15,7 @@ const COLUMNS: {
   {
     title: "Product",
     links: [
+      { href: "/explore", label: "Explore" },
       { href: "/docs", label: "Docs" },
       { href: "/docs#install", label: "Install" },
     ],
@@ -24,7 +25,7 @@ const COLUMNS: {
     links: [
       { href: "/docs/reference/api", label: "API" },
       { href: "/llms.txt", label: "llms.txt" },
-      { href: "/contributors", label: "Contributors" },
+      { href: "/mission", label: "Mission" },
       { href: SITE.repo, label: "GitHub", external: true },
     ],
   },
@@ -47,9 +48,16 @@ const SMALL_LINK_CLASS =
 /**
  * The bottom of every page, on the page background: the ninja on his own row, the name, tagline,
  * and social links level with the link columns under him, and the legal row last. `className`
- * sets its width to match the page (`max-w-*`).
+ * sets its width to match the page (`max-w-*`). `greeting` swaps the ninja's first line for the
+ * page's own (the mission page's send-off).
  */
-export function SiteFooter({ className }: { className?: string }) {
+export function SiteFooter({
+  className,
+  greeting,
+}: {
+  className?: string
+  greeting?: string
+}) {
   return (
     <footer
       className={cn(
@@ -58,7 +66,7 @@ export function SiteFooter({ className }: { className?: string }) {
       )}
     >
       <div className="flex flex-col gap-6">
-        <FooterNinja />
+        <FooterNinja greeting={greeting} />
         <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium">

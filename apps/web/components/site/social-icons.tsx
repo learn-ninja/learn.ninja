@@ -1,4 +1,4 @@
-/** Brand marks for the footer and the contributors page, drawn in the current text color. */
+/** Brand marks for the footer and the mission page, drawn in the current text color. */
 
 export function XLogo() {
   return (
