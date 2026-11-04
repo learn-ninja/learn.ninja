@@ -85,7 +85,10 @@ function Player({ data }: { data: LoadedLesson }) {
   return (
     <View className="flex-1">
       <Stack.Screen options={{ title: data.lesson.title }} />
-      <ScrollView contentContainerClassName="mx-auto w-full max-w-2xl gap-4 p-6">
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="mx-auto w-full max-w-2xl gap-4 p-6"
+      >
         <Text className="text-xs font-medium text-muted-foreground">
           {done ? "Done" : `Kata ${index + 1} of ${katas.length}`}
         </Text>

@@ -1,5 +1,6 @@
 // From React Native Reusables (https://reactnativereusables.com, MIT), NativeWind flavor; the shape
-// follows Nova as the web does (rounded-lg buttons).
+// follows Nova as the web does (rounded-lg buttons); the outline variant drops its shadow, which a
+// translucent fill can't cast on iOS (and which doesn't show on the dark background).
 
 import { TextClassContext } from "@/components/ui/text"
 import { cn } from "@/lib/utils"
@@ -27,7 +28,7 @@ const buttonVariants = cva(
           })
         ),
         outline: cn(
-          "border border-border bg-background shadow-sm shadow-black/5 active:bg-accent dark:border-input dark:bg-input/30 dark:active:bg-input/50",
+          "border border-border bg-background active:bg-accent dark:border-input dark:bg-input/30 dark:active:bg-input/50",
           Platform.select({
             web: "hover:bg-accent dark:hover:bg-input/50",
           })

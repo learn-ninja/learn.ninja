@@ -15,7 +15,10 @@ const TEST_LESSONS = [
 
 export default function Home() {
   return (
-    <ScrollView contentContainerClassName="mx-auto w-full max-w-lg gap-6 p-6">
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="mx-auto w-full max-w-lg gap-6 p-6"
+    >
       <View className="gap-2">
         <Text className="text-2xl font-semibold">Test lessons</Text>
         <Text className="text-sm text-muted-foreground">
