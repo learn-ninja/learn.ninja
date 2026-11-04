@@ -64,7 +64,9 @@ import { useStreak } from "@/lib/use-streak"
 import { useNinjaVoice } from "@/lib/use-voice"
 import { effectsOn, speaks } from "@/lib/voice"
 import { visualDocument } from "@/lib/visual-frame"
+import { cn } from "@/lib/utils"
 import { measureAhead } from "@/lib/visual-height"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 // A lesson at /l/{slug}-{id}, the same path as on the web, or /l/{slug} for a bundled test lesson.
 // It plays from the intro to the wrap-up in the shell the web draws on a phone: every kata, with
@@ -284,6 +286,10 @@ function Player({ data }: { data: LoadedLesson }) {
   }, [state.index, streakScreen])
 
   const whyLabel = feedback.why?.everyPath ? t.everyPath : t.why
+  // On a phone the tray holds only the screen's actions, and the wrap-up has none there (its
+  // actions are in its own boxes), so the web hides it; the streak screen before it keeps its Continue.
+  const trayShown = item.kind !== "wrap" || streakScreen
+  const insets = useSafeAreaInsets()
 
   return (
     <View className="flex-1 bg-background">
@@ -314,11 +320,18 @@ function Player({ data }: { data: LoadedLesson }) {
           ref={scrollRef}
           // The header and tray already keep clear of the notch and the home bar.
           contentInsetAdjustmentBehavior="never"
-          className="flex-1 border-y border-border"
+          className={cn(
+            "flex-1 border-border",
+            trayShown ? "border-y" : "border-t"
+          )}
           contentContainerClassName={
             item.kind === "intro" || item.kind === "wrap"
               ? "grow justify-center px-4 py-16"
               : "px-4 py-6"
+          }
+          // Without the tray, the end of the wrap-up keeps clear of the home bar.
+          contentContainerStyle={
+            trayShown ? undefined : { paddingBottom: 64 + insets.bottom }
           }
         >
           <Animated.View style={style} className="mx-auto w-full max-w-2xl">
@@ -338,50 +351,52 @@ function Player({ data }: { data: LoadedLesson }) {
           </Animated.View>
         </ScrollView>
       </View>
-      <LessonTray
-        tone={feedback.title || feedback.message ? feedback.tone : undefined}
-        feedback={
-          <TrayFeedback
-            title={feedback.title}
-            message={feedback.message}
-            why={
-              feedback.why
-                ? {
-                    label: whyLabel,
-                    open: feedback.why.open,
-                    onPress: () => setWhyOpen((open) => !open),
-                  }
-                : null
-            }
-          />
-        }
-      >
-        {streakScreen ? (
-          // Phase 3: the streak screen's Continue goes on to the wrap-up itself.
-          <TrayButton
-            label={t.continue}
-            onPress={() => {
-              tapHaptic()
-              leaveStreak()
-            }}
-          />
-        ) : feedback.primary ? (
-          <TrayButton
-            label={feedback.primary.label}
-            variant={feedback.primary.variant}
-            disabled={feedback.primary.disabled}
-            onPress={() => run(feedback.primary!.action)}
-          />
-        ) : null}
-        {feedback.hint ? (
-          <TrayButton
-            label={t.hint}
-            variant="outline"
-            pressed={feedback.hint.open}
-            onPress={() => run({ type: "hint" })}
-          />
-        ) : null}
-      </LessonTray>
+      {trayShown ? (
+        <LessonTray
+          tone={feedback.title || feedback.message ? feedback.tone : undefined}
+          feedback={
+            <TrayFeedback
+              title={feedback.title}
+              message={feedback.message}
+              why={
+                feedback.why
+                  ? {
+                      label: whyLabel,
+                      open: feedback.why.open,
+                      onPress: () => setWhyOpen((open) => !open),
+                    }
+                  : null
+              }
+            />
+          }
+        >
+          {streakScreen ? (
+            // Phase 3: the streak screen's Continue goes on to the wrap-up itself.
+            <TrayButton
+              label={t.continue}
+              onPress={() => {
+                tapHaptic()
+                leaveStreak()
+              }}
+            />
+          ) : feedback.primary ? (
+            <TrayButton
+              label={feedback.primary.label}
+              variant={feedback.primary.variant}
+              disabled={feedback.primary.disabled}
+              onPress={() => run(feedback.primary!.action)}
+            />
+          ) : null}
+          {feedback.hint ? (
+            <TrayButton
+              label={t.hint}
+              variant="outline"
+              pressed={feedback.hint.open}
+              onPress={() => run({ type: "hint" })}
+            />
+          ) : null}
+        </LessonTray>
+      ) : null}
     </View>
   )
 }
