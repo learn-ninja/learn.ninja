@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type ReactNode } from "react"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { Pressable, View } from "react-native"
 import Animated, {
   Easing,
@@ -434,21 +434,38 @@ export function StreakScreen({
   const reduced = useReducedMotion()
   const [lit, setLit] = useState(false)
   const [emptied, setEmptied] = useState(false)
+  // It lights once, with its heavy tap; the Sound setting changing on this screen doesn't light it again.
+  const litAt = useRef<number | null>(null)
   useEffect(() => {
-    if (sound) preloadEffects(["lantern", "flame"])
     const delay = reduced ? 0 : LIGHT_DELAY
-    const sounds: Sound[] = []
     const ids = [
       setTimeout(() => {
+        litAt.current = Date.now()
         setLit(true)
         milestone()
-        if (sound) sounds.push(playEffect("lantern"))
       }, delay),
-      setTimeout(() => {
-        if (sound) sounds.push(playEffect("flame", { loop: true }))
-      }, delay + FLAME_DELAY),
       setTimeout(() => setEmptied(true), delay + EMPTY_DELAY),
     ]
+    return () => ids.forEach(clearTimeout)
+  }, [reduced])
+  // What's heard follows the setting: the lighting and then the flame, or (turned on once it's lit)
+  // just the flame; turned off, the flame fades.
+  useEffect(() => {
+    if (!sound) return
+    preloadEffects(["lantern", "flame"])
+    const sounds: Sound[] = []
+    const ids: ReturnType<typeof setTimeout>[] = []
+    if (litAt.current !== null) sounds.push(playEffect("flame", { loop: true }))
+    else {
+      const delay = reduced ? 0 : LIGHT_DELAY
+      ids.push(
+        setTimeout(() => sounds.push(playEffect("lantern")), delay),
+        setTimeout(
+          () => sounds.push(playEffect("flame", { loop: true })),
+          delay + FLAME_DELAY
+        )
+      )
+    }
     return () => {
       ids.forEach(clearTimeout)
       sounds.forEach((s) => s.stop(FLAME_FADE))
