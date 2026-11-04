@@ -17,7 +17,7 @@ import type { Mark } from "@workspace/player-core/check"
 
 import { ChatBlock, type ChatTurn } from "./chat"
 import { useIsDark, usePlayer } from "./context"
-import { markStyles } from "./controls"
+import { markStyles, visualWindow } from "./controls"
 import { countryName } from "@workspace/player-core/country-names"
 import { inStyle, VISUAL_CSP } from "@workspace/player-core/visual-frame"
 import { Clock, Fractions, NumberLine } from "./figures"
@@ -104,9 +104,7 @@ export function Visual({
   if (visual.kind === "molecule")
     return <MoleculeBlock molecule={visual} label={label} plain={plain} />
   if (visual.kind === "chat")
-    return (
-      <ChatBlock chat={visual} extra={turns} label={label} plain={plain} />
-    )
+    return <ChatBlock chat={visual} extra={turns} label={label} plain={plain} />
   return <ChartBlock chart={visual} label={label} plain={plain} />
 }
 
@@ -129,7 +127,6 @@ export { VISUAL_CSP }
  * and jumping once it has loaded and been measured.
  */
 const knownHeights = new Map<string, number>()
-
 
 function HtmlFrame({
   html,
@@ -326,6 +323,8 @@ function HtmlFrame({
       onPointerLeave={interactive ? letGo : undefined}
       className={cn(
         "visual-stage",
+        // Its own window: at least the shared minimum tall, with a short visual in the middle.
+        !plain && [visualWindow, "flex flex-col justify-center"],
         interactive
           ? // A hotspot's visual sits on a filled stage: no frame around it, so nothing boxes it twice.
             !plain &&
@@ -464,7 +463,10 @@ function CodeBlock({
       dir="ltr"
       className={cn(
         "overflow-x-auto text-start",
-        !plain && "rounded-xl border bg-muted/40"
+        !plain && [
+          visualWindow,
+          "flex flex-col justify-center rounded-xl border bg-muted/40",
+        ]
       )}
     >
       {/* On phones a long line wraps under its own start instead of scrolling, so every line (and
@@ -561,7 +563,10 @@ function ChartBlock({
       dir="ltr"
       className={cn(
         "flex justify-center overflow-hidden [&_svg]:h-auto [&_svg]:max-w-full",
-        !plain && "rounded-xl border bg-background px-4 py-6"
+        !plain && [
+          visualWindow,
+          "items-center rounded-xl border bg-background px-4 py-6",
+        ]
       )}
     >
       {svg ? (
@@ -604,7 +609,12 @@ function DiagramBlock({
     <div
       role="img"
       aria-label={diagram.alt ?? label ?? t.visual}
-      className={cn(!plain && "rounded-xl border bg-background")}
+      className={cn(
+        !plain && [
+          visualWindow,
+          "flex items-center justify-center rounded-xl border bg-background",
+        ]
+      )}
     >
       <p className="px-4 py-6 text-center text-sm text-muted-foreground">
         {diagram.alt ?? label ?? t.visual}
@@ -677,10 +687,13 @@ function TappableStage({
       dir="ltr"
       className={cn(
         "flex justify-center",
-        !plain &&
-          (hotspots
+        !plain && [
+          visualWindow,
+          "items-center",
+          hotspots
             ? "rounded-2xl bg-muted px-4 py-6 dark:bg-input/30"
-            : "rounded-xl border bg-background px-4 py-6")
+            : "rounded-xl border bg-background px-4 py-6",
+        ]
       )}
     >
       {children}
@@ -739,7 +752,10 @@ function FigureBlock({
       dir="ltr"
       className={cn(
         "flex justify-center",
-        !plain && "rounded-xl border bg-background px-4 py-6"
+        !plain && [
+          visualWindow,
+          "items-center rounded-xl border bg-background px-4 py-6",
+        ]
       )}
     >
       <div className={cn("w-full", width)}>
@@ -816,7 +832,10 @@ function MoleculeBlock({
       dir="ltr"
       className={cn(
         "flex justify-center [&_svg]:h-auto [&_svg]:max-w-full",
-        !plain && "rounded-xl border bg-background px-4 py-6"
+        !plain && [
+          visualWindow,
+          "items-center rounded-xl border bg-background px-4 py-6",
+        ]
       )}
     >
       {svg ? (
@@ -841,7 +860,7 @@ function MathBlock({ tex, plain }: { tex: string; plain: boolean }) {
       dir="ltr"
       className={cn(
         "flex justify-center overflow-x-auto px-4 py-6 text-xl [&_.katex-display]:m-0!",
-        !plain && "rounded-xl border bg-muted/40"
+        !plain && [visualWindow, "items-center rounded-xl border bg-muted/40"]
       )}
     >
       {html ? (

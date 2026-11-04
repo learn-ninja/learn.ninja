@@ -19,7 +19,7 @@ Copied `device-pair` for the layout (a window pinned top-left and off the bottom
 
 ## Simplifications to know about
 
-- Tapping the right option turns it green at once. The real player needs "Check answer" in the tray at the bottom of the screen, which the crop hides; the tray with its feedback line and Continue is not drawn.
+- Tapping the right option turns it green at once. The real player needs "Check" in the tray at the bottom of the screen, which the crop hides; the tray with its feedback line and Continue is not drawn.
 - The link is written without `https://` so it fits the column in one line. The agent prints the full URL.
 - The three steps ("Wrote 7 katas", "Checked", "Published") paraphrase what the skill's CLI prints.
 - The `ls` lines above the command are context, so the opening frame isn't an empty terminal.

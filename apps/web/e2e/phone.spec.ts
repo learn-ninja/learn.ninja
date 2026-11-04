@@ -28,10 +28,10 @@ const ACTIONS = [
   "Start",
   "Try again",
   "Rewind",
-  "Check answer",
+  "Check",
 ]
 /** Check's name while sort items wait for a group ("2 left to sort"). */
-const CHECK = /^(Check answer|\d+ left to sort)$/
+const CHECK = /^(Check|\d+ left to sort)$/
 
 for (const slug of slugs) {
   test(`${slug} plays on a phone`, async ({ page }) => {
@@ -49,7 +49,7 @@ for (const slug of slugs) {
       )
         break
       const action = await nextAction(page)
-      if (action === "Check answer") {
+      if (action === "Check") {
         const check = page.getByRole("button", { name: CHECK })
         if (await check.isDisabled()) await answer(page)
         // A finished match checks itself; anything else waits for Check.
@@ -70,7 +70,7 @@ async function nextAction(page: Page): Promise<string> {
     if (await button.isVisible()) return name
   }
   if (await page.getByRole("button", { name: CHECK }).isVisible())
-    return "Check answer"
+    return "Check"
   throw new Error("No action button in the tray")
 }
 

@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@workspace/ui/components/avatar"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
+import { visualWindow } from "./controls"
 import { calm } from "./motion"
 import { Ninja } from "./ninja"
 import { RichText } from "./rich-text"
@@ -106,7 +107,10 @@ export function ChatBlock({
     <div
       className={cn(
         "flex justify-center",
-        !plain && "rounded-xl border bg-background px-4 py-4"
+        !plain && [
+          visualWindow,
+          "items-center rounded-xl border bg-background px-4 py-4",
+        ]
       )}
     >
       {/* A transcript to a screen reader: each line read with who said it. */}

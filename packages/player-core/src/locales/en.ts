@@ -8,7 +8,7 @@ const p = plural("en")
 
 export const en: Strings = {
   start: "Start lesson",
-  check: "Check answer",
+  check: "Check",
   continue: "Continue",
   tryAgain: "Try again",
   why: "Why?",

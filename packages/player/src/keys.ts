@@ -1,4 +1,4 @@
-// The lesson's shortcuts (number keys, ?, D, W) listen on the window, so they stay out of the way
+// The lesson's shortcuts (number keys, ?, D, W, H) listen on the window, so they stay out of the way
 // of anything else that takes keys: a field being typed in, an open menu or dialog, or a widget
 // with keys of its own.
 
@@ -18,7 +18,7 @@ export function shortcutBlocked(e: KeyboardEvent): boolean {
 }
 
 /**
- * Where Enter goes. The lesson's main action (Start, Check answer, Continue, Try again) takes it
+ * Where Enter goes. The lesson's main action (Start, Check, Continue, Try again) takes it
  * almost everywhere, so a click on Sound, the notch, or a menu doesn't leave Enter pressing that
  * control again. Space still presses whatever has focus.
  *
