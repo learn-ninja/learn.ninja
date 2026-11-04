@@ -1,4 +1,4 @@
-import { ScrollView, Text as RNText, View } from "react-native"
+import { Platform, ScrollView, Text as RNText, View } from "react-native"
 
 import {
   codeKey,
@@ -10,6 +10,9 @@ import { colors } from "../../tokens"
 
 // A code visual from the Shiki tokens prepared at publish time: each token a styled Text run, in
 // the dark theme's colors (--shiki-dark), since the app is dark-only for now.
+
+/** Menlo is iOS-only; Android names its monospace face generically. */
+const MONO = Platform.select({ ios: "Menlo", default: "monospace" })
 
 function tokenStyle(token: CodeToken) {
   const style = token.style ?? {}
@@ -39,7 +42,7 @@ export function CodeBlock({
     <View className="rounded-xl border border-border bg-card">
       <ScrollView horizontal contentContainerClassName="p-4">
         <RNText
-          style={{ fontFamily: "Menlo", fontSize: 13, lineHeight: 20 }}
+          style={{ fontFamily: MONO, fontSize: 13, lineHeight: 20 }}
           accessibilityLabel={code}
         >
           {lines.map((line, i) => (
