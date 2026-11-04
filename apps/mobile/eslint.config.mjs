@@ -12,6 +12,9 @@ export default [
       parserOptions: { babelOptions: { configFile: false, babelrc: false } },
     },
   },
-  // The Metro, Babel, and Tailwind configs are CommonJS run by Node.
-  { files: ["*.js"], languageOptions: { globals: globals.node } },
+  // The Metro, Babel, and Tailwind configs and the scripts run in Node.
+  {
+    files: ["*.js", "scripts/**/*.mjs"],
+    languageOptions: { globals: globals.node },
+  },
 ]

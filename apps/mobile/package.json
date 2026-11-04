@@ -10,7 +10,8 @@
     "android": "expo run:android",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "tokens": "node scripts/build-tokens.mjs"
   },
   "dependencies": {
     "@rn-primitives/slot": "^1.5.2",
