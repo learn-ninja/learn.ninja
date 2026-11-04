@@ -6,21 +6,17 @@ import { describe, expect, it } from "vitest"
 import { themeSvg } from "./svg-theme"
 import { colors } from "../../tokens"
 
-// The SVG the server draws for the stories, prepared by packages/player/scripts/prepare-examples.ts.
-const prepared = JSON.parse(
+// Drawings the server made for the example lessons (packages/player/scripts/prepare-examples.ts
+// writes them for the stories; these are copies, since that file is generated and not committed).
+const fixture = (name: string) =>
   readFileSync(
-    fileURLToPath(
-      new URL(
-        "../../../../packages/player/src/stories/prepared.generated.json",
-        import.meta.url
-      ).href
-    ),
+    fileURLToPath(new URL(`./fixtures/${name}.svg`, import.meta.url).href),
     "utf8"
   )
-) as {
-  charts: Record<string, string>
-  diagrams: Record<string, string>
-  molecules: Record<string, string>
+const prepared = {
+  charts: { chart: fixture("chart") },
+  diagrams: { diagram: fixture("diagram") },
+  molecules: { molecule: fixture("molecule") },
 }
 const first = (map: Record<string, string>) => Object.values(map)[0]!
 
