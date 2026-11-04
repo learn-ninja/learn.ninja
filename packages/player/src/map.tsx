@@ -15,7 +15,7 @@ import { Selectable } from "@workspace/ui/components/selectable"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
-import { countryName } from "./country-names"
+import { countryName } from "@workspace/player-core/country-names"
 import data from "./map-data.json"
 import { frameFor } from "./map-frame"
 import type { HotspotControl } from "./visuals"

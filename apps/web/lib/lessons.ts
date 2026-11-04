@@ -33,3 +33,15 @@ export function getLesson(slug: string): Lesson | null {
   }
   return result.lesson
 }
+
+/** The bundled lessons as a list: slug, title, and summary, in the order above. */
+export function bundledLessonList(): {
+  slug: string
+  title: string
+  summary: string
+}[] {
+  return LESSON_SLUGS.map((slug) => {
+    const lesson = getLesson(slug)!
+    return { slug, title: lesson.title, summary: lesson.summary }
+  })
+}

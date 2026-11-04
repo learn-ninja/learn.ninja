@@ -11,7 +11,7 @@ import { everyVisual, type Issue, type Lesson } from "@workspace/spec"
 
 import { renderChart } from "./chart"
 import { chartsIn } from "./charts"
-import { checkFunctionCharts } from "./curve"
+import { checkFunctionCharts } from "@workspace/player-core/curve"
 import { checkDiagram, renderDiagram } from "./diagram"
 import { iconExists, parseIconClass, suggestIcons } from "./icons"
 import { checkMolecule, renderMolecule } from "./molecule"
@@ -23,7 +23,7 @@ import {
   mathKey,
   moleculeKey,
   type Prepared,
-} from "./prepared"
+} from "@workspace/player-core/prepared"
 import { visualClasses, visualsCssFor } from "./visual-css"
 
 // Server-only: renders formulas with KaTeX, highlights code with Shiki, draws charts with Observable

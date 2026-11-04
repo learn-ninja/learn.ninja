@@ -18,9 +18,9 @@ import { cn } from "@workspace/ui/lib/utils"
 import { challengeLink, challengeResult } from "./challenge"
 import { usePlayer } from "./context"
 import { useCreatorControls } from "./creator"
-import { scoredQuestions, type Outcome, type Summary } from "./flow"
+import { scoredQuestions, type Outcome, type Summary } from "@workspace/player-core/flow"
 import { RichText } from "./rich-text"
-import { directionOf, NEXT_KINDS, type NextKind } from "./strings"
+import { directionOf, NEXT_KINDS, type NextKind } from "@workspace/player-core/strings"
 
 // The wrap-up's pieces, laid out by WrapUp (lesson-player.tsx) in one narrow column: the run bar
 // and the challenge's result under the score, a row of actions with one filled, then the

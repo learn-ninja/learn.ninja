@@ -3,7 +3,7 @@ import "server-only"
 import type { ChartVisual, Lesson } from "@workspace/spec"
 
 import { renderChart } from "./chart"
-import { chartKey, type Prepared } from "./prepared"
+import { chartKey, type Prepared } from "@workspace/player-core/prepared"
 
 // Charts drawn on the server, apart from the rest of the preparer: a published lesson's page calls
 // withCharts on every view, and importing it from prepare.ts would load KaTeX, Shiki, D2, and

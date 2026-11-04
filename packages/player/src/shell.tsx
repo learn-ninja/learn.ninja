@@ -52,7 +52,7 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
 import { CreatorMenuItems, CreatorShare, useCreatorControls } from "./creator"
-import type { QuestionCount } from "./flow"
+import type { QuestionCount } from "@workspace/player-core/flow"
 import { BRAND, LearnLogo } from "./logo"
 import { Ninja, type NinjaMood } from "./ninja"
 import { RichBlocks } from "./rich-text"
@@ -65,8 +65,8 @@ import {
   type Strings,
   type TextSize,
   type Theme,
-} from "./strings"
-import { hasVoice } from "./voices"
+} from "@workspace/player-core/strings"
+import { hasVoice } from "@workspace/player-core/voices"
 
 // The frame around every lesson screen: header (home, title menu, progress, Share), the player's
 // settings at the end of the tray, footer (credit and app settings), and the Theory panel. Layout

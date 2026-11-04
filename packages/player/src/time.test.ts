@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { shortTimeAgo, timeAgo } from "./time"
-import { UI_LANGUAGES } from "./strings"
+import { UI_LANGUAGES } from "@workspace/player-core/strings"
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE

@@ -9,7 +9,7 @@ The [mission page](https://learn.ninja/mission) groups these nine areas the same
 | Area | Examples | Touches | Review path |
 | --- | --- | --- | --- |
 | Subjects | Example lessons for subjects we don't cover, reports of bad published lessons | `examples/` | Pull request |
-| Languages | Check the player's interface as a native speaker, fix right-to-left issues | `player/src/locales` | Pull request |
+| Languages | Check the player's interface as a native speaker, fix right-to-left issues | `player-core/src/locales` | Pull request |
 | Katas | Sharper feedback, hints, and visuals in the kata types; question-first teaching in the guide | `player`, `skills/learn` | Pull request; new kata types are proposal first |
 | Rich lessons | Visuals the player renders (maps, charts, chess, molecules), sounds, motion, haptics, a richer summary screen | `player`, sometimes `spec` | Pull request; a proposal if the format changes |
 | Tutor | Explain-my-answer and Socratic hints inside a lesson | `player`, `cli`, `skills/learn` | Proposal first |
@@ -48,7 +48,7 @@ To propose something, open an issue with the **Idea** form: the problem, who has
 
 ### Translations
 
-The player's interface is English-only on the site for now (`UI_TRANSLATIONS` in `packages/player/src/strings.ts`) until people who speak each language have tested it. Every language's strings live in `packages/player/src/locales/`. To check one, open any lesson with `?ui=` and the language code, such as `?ui=ar`. Lessons themselves can already be written in any language.
+The player's interface is English-only on the site for now (`UI_TRANSLATIONS` in `packages/player-core/src/strings.ts`) until people who speak each language have tested it. Every language's strings live in `packages/player-core/src/locales/`. To check one, open any lesson with `?ui=` and the language code, such as `?ui=ar`. Lessons themselves can already be written in any language.
 
 ## Code written with agents
 

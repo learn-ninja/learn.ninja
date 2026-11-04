@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { ChartVisual } from "@workspace/spec"
 
 import { renderChart } from "./chart"
-import { chartKey } from "./prepared"
+import { chartKey } from "@workspace/player-core/prepared"
 
 // Charts are drawn on the server into SVG that carries only theme tokens, so one drawing serves
 // light and dark and the frame runs no script.

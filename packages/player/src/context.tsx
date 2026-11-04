@@ -2,10 +2,10 @@
 
 import * as React from "react"
 
-import { emptyPrepared, type Prepared } from "./prepared"
+import { emptyPrepared, type Prepared } from "@workspace/player-core/prepared"
 import type { Challenge } from "./challenge"
 import type { DayStreak } from "./streak"
-import { stringsFor, type NextKind, type Strings } from "./strings"
+import { stringsFor, type NextKind, type Strings } from "@workspace/player-core/strings"
 
 interface PlayerContextValue {
   prepared: Prepared

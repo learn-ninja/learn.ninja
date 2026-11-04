@@ -5,17 +5,17 @@ export { LessonPlayer, type LessonPlayerProps } from "./lesson-player"
 export type { LessonCreator, LessonLike, NextPrompt } from "./context"
 export { parseChallenge, type Challenge } from "./challenge"
 export { KataDemo, type KataDemoProps } from "./kata-demo"
-export type { Answer } from "./check"
-export type { Prepared } from "./prepared"
+export type { Answer } from "@workspace/player-core/check"
+export type { Prepared } from "@workspace/player-core/prepared"
 export {
   stringsFor,
   UI_LANGUAGES,
   type NextKind,
   type Strings,
   type Theme,
-} from "./strings"
+} from "@workspace/player-core/strings"
 export { timeAgo, shortTimeAgo, exactTime, TimeAgo, timeLeft } from "./time"
-export { plainText } from "./plain-text"
+export { plainText } from "@workspace/player-core/plain-text"
 export { BRAND, LearnLogo } from "./logo"
 export { savedProgress } from "./progress"
 export {

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import buttonHierarchy from "../../../examples/button-hierarchy.json"
 import { validateLesson, type Lesson } from "@workspace/spec"
 
-import { buildSequence } from "./flow"
+import { buildSequence } from "@workspace/player-core/flow"
 import { LessonPlayer, type State } from "./lesson-player"
 import { saveProgress } from "./progress"
 

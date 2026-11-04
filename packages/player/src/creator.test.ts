@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { changesPrompt } from "./creator"
-import { stringsFor } from "./strings"
+import { stringsFor } from "@workspace/player-core/strings"
 
 // The prompt Make changes copies for the maker to paste into their chat.
 

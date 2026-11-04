@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { EyeIcon } from "lucide-react"
 
-import { stringsFor } from "@workspace/player/strings"
+import { stringsFor } from "@workspace/player-core/strings"
 import { TimeAgo, timeLeft } from "@workspace/player/time"
 import { Badge } from "@workspace/ui/components/badge"
 import { cn } from "@workspace/ui/lib/utils"

@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { stringsFor } from "./strings"
+import { stringsFor } from "@workspace/player-core/strings"
 
 // How long ago a lesson was published. On screen it's the short form feeds use: "33m", "3h",
 // "2d" for the first week, then the date ("Oct 14", with the year once it isn't this year's).

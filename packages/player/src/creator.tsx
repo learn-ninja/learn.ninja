@@ -38,7 +38,7 @@ import {
 import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
-import { LESSON_CHANGES, type LessonChange, type Strings } from "./strings"
+import { LESSON_CHANGES, type LessonChange, type Strings } from "@workspace/player-core/strings"
 
 type Status = "private" | "published" | "hidden"
 

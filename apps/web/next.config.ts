@@ -6,7 +6,7 @@ import optimizeLocales from "@react-aria/optimize-locales-plugin"
 import { createMDX } from "fumadocs-mdx/next"
 
 // Languages whose built-in React Aria strings we ship: one per player language (UI_LANGUAGES in
-// packages/player/src/strings.ts). React Aria keys them by full locale, Arabic as ar-AE: a code it
+// packages/player-core/src/strings.ts). React Aria keys them by full locale, Arabic as ar-AE: a code it
 // doesn't know (e.g. ar-EG) silently strips that language's strings.
 const LOCALES = [
   "en-US",
@@ -69,7 +69,11 @@ function visualsCssUrl(): string {
 }
 
 /** Files prepareLesson() and the diagram check read at runtime (see outputFileTracingIncludes). */
+// Tailwind 4 is the web's own copy (apps/web/node_modules): the root's is NativeWind's Tailwind 3
+// for apps/mobile. visual-css.ts walks up from the working directory to the first with theme.css.
 const PREPARE_FILES = [
+  "./node_modules/tailwindcss/*.css",
+  "./node_modules/tailwindcss/package.json",
   "../../node_modules/tailwindcss/*.css",
   "../../node_modules/tailwindcss/package.json",
   "../../node_modules/@terrastruct/d2/package.json",
@@ -82,6 +86,7 @@ const nextConfig: NextConfig = {
     "@workspace/ui",
     "@workspace/cli",
     "@workspace/player",
+    "@workspace/player-core",
     "@workspace/spec",
     "@workspace/db",
   ],

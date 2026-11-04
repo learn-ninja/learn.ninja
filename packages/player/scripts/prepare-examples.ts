@@ -11,9 +11,9 @@ import { renderChart } from "../src/chart"
 import { renderDiagram } from "../src/diagram"
 import { renderMolecule } from "../src/molecule"
 import { prepareLesson } from "../src/prepare"
-import { chartKey, diagramKey, moleculeKey } from "../src/prepared"
+import { chartKey, diagramKey, moleculeKey } from "@workspace/player-core/prepared"
 import { visualClasses, visualsCssFor } from "../src/visual-css"
-import type { Prepared } from "../src/prepared"
+import type { Prepared } from "@workspace/player-core/prepared"
 import {
   chartSamples,
   diagramSamples,
