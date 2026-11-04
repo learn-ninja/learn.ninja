@@ -65,7 +65,6 @@ Not done:
 - **Sync needs sign-in** (phase 4): the progress and complete endpoints answer 401 without a session, so the app sends one request, gets 401, and stops for the session. Nothing reaches a profile until the app signs in.
 - **The lesson menu and settings** (phase 4): no Share, Restart, text size, sound, or language in the header yet; the wrap-up offers Restart lesson in the tray until phase 3 brings its own.
 - **Visual height on Android**: the measuring module is iOS only, so Android keeps the 240-point default.
-- **Fast Refresh** can leave a screen blank mid-transition while developing; a reload brings it back. Not seen in normal play.
 - Running against a local server: start it with `npm run dev` (its `predev` builds `public/lesson-visuals.css`; without it visuals lose Basecoat and their text is dark on dark), and point the app elsewhere than port 3000 with `EXPO_PUBLIC_API_BASE_URL`.
 
 ## The user experience rule
