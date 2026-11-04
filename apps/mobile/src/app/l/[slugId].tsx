@@ -208,6 +208,10 @@ function Player({ data }: { data: LoadedLesson }) {
     resultHaptic(checked)
   }, [checked, checkedKey])
   // Phase 3: he says the line heading the feedback, once per check (not a resumed one).
+  // His body for the question feedback: on a phone the web shows him only in a screen's slot (the
+  // intro, the wrap-up), so the tray shows his line without him. To show him reacting there, render
+  // <Ninja size={40} level={ninja} cue={{ kind: cueKindFor(state, item), key: checkedKey }} />
+  // (src/components/ninja.tsx, cueKindFor from @workspace/player-core/ninja) beside TrayFeedback.
   useNinjaVoice({
     line: feedback.title,
     key: checkedKey,

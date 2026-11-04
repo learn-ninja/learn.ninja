@@ -187,8 +187,13 @@ export const Ninja = forwardRef<
   const enterOpacity = useSharedValue((entrance || appear) && !reduced ? 0 : 1)
   const ex = useSharedValue(0)
   const ey = useSharedValue(0)
-  const eyeSx = [useSharedValue(1), useSharedValue(1)] as const
-  const eyeSy = [useSharedValue(1), useSharedValue(1)] as const
+  const sx0 = useSharedValue(1)
+  const sx1 = useSharedValue(1)
+  const sy0 = useSharedValue(1)
+  const sy1 = useSharedValue(1)
+  // Stable, so the callbacks and his idle life aren't set up again on every render.
+  const eyeSx = useMemo(() => [sx0, sx1] as const, [sx0, sx1])
+  const eyeSy = useMemo(() => [sy0, sy1] as const, [sy0, sy1])
   const open = useSharedValue(1)
   const happy = useSharedValue(0)
   const sad = useSharedValue(0)
