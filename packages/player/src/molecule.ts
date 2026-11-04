@@ -36,7 +36,9 @@ function parseError(error: unknown, text: string): string {
  * like "[H]" to the end). An atom that already has a number keeps it.
  */
 const markBracketed = (smiles: string) =>
-  smiles.replace(/\[([^\]:]*)\]/g, "[$1:1]")
+  // `[` is excluded too: a bracket atom never contains one, and letting a match run past the next
+  // `[` made "[9[9[9…" backtrack quadratically.
+  smiles.replace(/\[([^\][:]*)\]/g, "[$1:1]")
 
 /** Reads a SMILES, laid out the same way every time. */
 function readSmiles(

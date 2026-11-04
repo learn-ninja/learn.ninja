@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { exampleFiles, loadExample } from "./test-helpers"
-import { canUpgrade, upgradeLesson } from "./upgrade"
+import { canUpgrade, splitTopic, upgradeLesson } from "./upgrade"
 import { validateLesson } from "./validate"
 
 /** An example lesson written the spec 0.2 way: loops of a concept and its practice. */
@@ -165,6 +165,41 @@ describe("upgradeLesson", () => {
     expect(upgraded.subject).toBe("languages")
     expect(upgraded.tags).toBeUndefined()
     expectOnlyTagsMissing(upgraded)
+  })
+
+  it("splits a topic on &, commas, and, and a spaced slash", () => {
+    expect(splitTopic("Git & Claude Code")).toEqual(["Git", "Claude Code"])
+    expect(splitTopic("Git&GitHub")).toEqual(["Git", "GitHub"])
+    expect(splitTopic("Git,  GitHub\tand CI/CD")).toEqual([
+      "Git",
+      "GitHub",
+      "CI/CD",
+    ])
+    expect(splitTopic("Typography  /  color")).toEqual(["Typography", "color"])
+    expect(splitTopic("Rock AND roll")).toEqual(["Rock", "roll"])
+    expect(splitTopic("CI/CD")).toEqual(["CI/CD"])
+    expect(splitTopic("Sandbox")).toEqual(["Sandbox"])
+  })
+
+  it("splits a topic of many spaces in linear time", { timeout: 1000 }, () => {
+    expect(splitTopic(" ".repeat(200_000))).toEqual([])
+    expect(splitTopic("a" + " ".repeat(200_000) + "b")).toEqual(["a b"])
+  })
+
+  it("ignores an over-long topic instead of splitting it into tags", () => {
+    const {
+      subject: _subject,
+      tags: _tags,
+      ...rest
+    } = loadExample("button-hierarchy.json")
+    const topic = "Git & " + " ".repeat(500) + "Beekeeping"
+    const upgraded = upgradeLesson({ ...rest, spec: "0.5", topic }) as Record<
+      string,
+      unknown
+    >
+    expect(upgraded.subject).toBe("life")
+    expect(upgraded.tags).toBeUndefined()
+    expect("topic" in upgraded).toBe(false)
   })
 
   it("gives a 0.5 lesson without a topic the widest subject", () => {

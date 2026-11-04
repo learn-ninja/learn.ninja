@@ -139,6 +139,15 @@ describe("tags", () => {
     expect(normalizeTag("A/B testing")).toBe("a-b-testing")
   })
 
+  it(
+    "normalizes a label of many hyphens in linear time",
+    { timeout: 1000 },
+    () => {
+      expect(normalizeTag("-".repeat(200_000))).toBe("")
+      expect(normalizeTag("--Git--" + "-".repeat(200_000))).toBe("git")
+    }
+  )
+
   it("tidy a label without touching its casing", () => {
     expect(normalizeLabel("  Claude  Code ")).toBe("Claude Code")
     expect(normalizeLabel("#Git")).toBe("Git")
