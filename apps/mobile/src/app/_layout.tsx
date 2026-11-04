@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler"
 
 import { colors } from "../../tokens"
 
-// Dark is the brand, and the app is dark-only for now (app.json's userInterfaceStyle), as the site is.
+// Dark is the brand, and the app is dark-only for now (app.config.ts's userInterfaceStyle), as the site is.
 const theme = {
   ...DarkTheme,
   colors: {
