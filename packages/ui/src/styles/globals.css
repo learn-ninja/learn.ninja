@@ -110,6 +110,10 @@
 }
 
 .dark {
+  /* Native controls and scrollbars go dark, and a lesson visual's transparent frame stays transparent:
+     its document is dark too (Basecoat sets it), and a frame whose scheme differs from the page's is
+     painted opaque. */
+  color-scheme: dark;
   /* A step up from black (neutral-950), so the page isn't a void; cards and popovers sit a step above it. */
   --background: oklch(0.18 0 0);
   --foreground: oklch(0.985 0 0);
