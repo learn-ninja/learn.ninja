@@ -8,12 +8,31 @@ import {
   VISUAL_WEBVIEW_PROPS,
   visualDocument,
 } from "@/lib/visual-frame"
+import { DEFAULT_VISUAL_HEIGHT, useVisualHeight } from "@/lib/visual-height"
 import { colors } from "../../tokens"
 
-/** How tall an HTML visual is without a height of its own. */
-// TODO(phase 1): size the frame to its content. With scripts off the page can't report its
-// height, so this needs a native measurement (or a height the server works out at publish time).
-const DEFAULT_HEIGHT = 240
+/** The document an HTML visual is drawn from, and the base URL it's loaded at. */
+export function useVisualSource({
+  html,
+  css,
+  height,
+  baseCss,
+  visualsCss,
+}: {
+  html: string
+  css?: string
+  height?: number
+  baseCss: string
+  visualsCss: string
+}) {
+  return useMemo(
+    () => ({
+      html: visualDocument({ html, css, height, baseCss, visualsCss }),
+      baseUrl: `${API_BASE_URL}/`,
+    }),
+    [html, css, height, baseCss, visualsCss]
+  )
+}
 
 export function VisualFrame({
   html,
@@ -30,13 +49,9 @@ export function VisualFrame({
   baseCss: string
   visualsCss: string
 }) {
-  const source = useMemo(
-    () => ({
-      html: visualDocument({ html, css, baseCss, visualsCss }),
-      baseUrl: `${API_BASE_URL}/`,
-    }),
-    [html, css, baseCss, visualsCss]
-  )
+  const source = useVisualSource({ html, css, height, baseCss, visualsCss })
+  // Its own height, or its content's (measured natively, with scripts off), capped as on the web.
+  const measured = useVisualHeight(source.html, source.baseUrl, height)
   // A new guard per document: the loads it allows are that document's.
   const guard = useMemo(() => navigationGuard(source.baseUrl), [source])
   // WebView<P> types its props as WebViewProps & P; the default P (undefined) makes them never.
@@ -44,23 +59,26 @@ export function VisualFrame({
   return (
     <View
       className="overflow-hidden rounded-xl border border-border bg-background"
-      style={{ height: height ?? DEFAULT_HEIGHT }}
+      style={{ height: (measured ?? DEFAULT_VISUAL_HEIGHT) + 2 }}
       accessible
       accessibilityRole="image"
       accessibilityLabel={alt}
     >
-      <WebView
-        {...VISUAL_WEBVIEW_PROPS}
-        ref={ref}
-        source={source}
-        onShouldStartLoadWithRequest={guard}
-        // iOS kills a WebView's content process under memory pressure, which leaves it blank;
-        // load the same document again.
-        onContentProcessDidTerminate={() => ref.current?.reload()}
-        style={{ backgroundColor: colors.background }}
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      />
+      {/* Drawn once its height is known, so it doesn't open at one size and jump to another. */}
+      {measured === null ? null : (
+        <WebView
+          {...VISUAL_WEBVIEW_PROPS}
+          ref={ref}
+          source={source}
+          onShouldStartLoadWithRequest={guard}
+          // iOS kills a WebView's content process under memory pressure, which leaves it blank;
+          // load the same document again.
+          onContentProcessDidTerminate={() => ref.current?.reload()}
+          style={{ backgroundColor: colors.background }}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
+      )}
     </View>
   )
 }

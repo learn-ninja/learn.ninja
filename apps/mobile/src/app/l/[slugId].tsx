@@ -9,7 +9,13 @@ import {
   useState,
   type ComponentRef,
 } from "react"
-import { ActivityIndicator, I18nManager, ScrollView, View } from "react-native"
+import {
+  ActivityIndicator,
+  I18nManager,
+  ScrollView,
+  useWindowDimensions,
+  View,
+} from "react-native"
 import Animated, {
   Easing,
   runOnJS,
@@ -28,7 +34,10 @@ import { LessonScreen } from "@/components/screens"
 import { LessonHeader, LessonTray, TrayButton } from "@/components/shell"
 import { Text } from "@/components/ui/text"
 import { fetchLesson, type LoadedLesson } from "@/lib/api"
+import { API_BASE_URL } from "@/lib/config"
 import { reducer, start } from "@/lib/play"
+import { visualDocument } from "@/lib/visual-frame"
+import { measureAhead } from "@/lib/visual-height"
 
 // A lesson at /l/{slug}-{id}, the same path as on the web, or /l/{slug} for a bundled test lesson.
 // It plays from the intro to the wrap-up in the shell the web draws on a phone; question katas show
@@ -86,6 +95,24 @@ const SLIDE = 96
 function Player({ data }: { data: LoadedLesson }) {
   const { lesson } = data
   const [state, dispatch] = useReducer(reducer(lesson), lesson, (l) => start(l))
+
+  // The next screen's HTML visual is measured while this one is read, so it opens at its height.
+  const { width: windowWidth } = useWindowDimensions()
+  const ahead = state.items[state.index + 1]
+  const aheadVisual = ahead?.kind === "concept" ? ahead.kata.visual : undefined
+  useEffect(() => {
+    if (aheadVisual?.kind !== "html" || aheadVisual.height) return
+    measureAhead(
+      visualDocument({
+        html: aheadVisual.html,
+        css: aheadVisual.css,
+        baseCss: data.baseCss,
+        visualsCss: data.prepared.visualsCss,
+      }),
+      `${API_BASE_URL}/`,
+      windowWidth
+    )
+  }, [aheadVisual, data.baseCss, data.prepared.visualsCss, windowWidth])
   const item = state.items[state.index]!
   // The player's own words, in the lesson's language (loaded with the lesson, in fetchLesson).
   const t = stringsFor(lesson.language)
