@@ -43,13 +43,20 @@ import { Aura, useIntroVanish } from "@/components/smoke"
 import { SoundToggle } from "@/components/sound-toggle"
 import { StageContext } from "@/components/stage-context"
 import {
+  BareHeader,
   LessonHeader,
   LessonTray,
   TrayButton,
   TrayFeedback,
 } from "@/components/shell"
+import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
-import { fetchLesson, sendToApi, type LoadedLesson } from "@/lib/api"
+import {
+  fetchLesson,
+  LessonError,
+  sendToApi,
+  type LoadedLesson,
+} from "@/lib/api"
 import { API_BASE_URL } from "@/lib/config"
 import { feedbackFor } from "@/lib/feedback"
 import { result as resultHaptic, tap as tapHaptic } from "@/lib/haptics"
@@ -74,15 +81,25 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 type Load =
   | { state: "loading" }
-  | { state: "error"; message: string }
+  /** `retry`: asking again could help (no connection, a server error), unlike a lesson that's gone. */
+  | { state: "error"; message: string; retry: boolean }
   | { state: "ready"; data: LoadedLesson }
+
+/** Back to where the lesson was opened from, or home when it was opened by a link. */
+function closeLesson() {
+  if (router.canGoBack()) router.back()
+  else router.replace("/")
+}
 
 export default function LessonRoute() {
   const { slugId } = useLocalSearchParams<{ slugId: string }>()
   const [load, setLoad] = useState<Load>({ state: "loading" })
+  // Try again after a failed load asks for the lesson once more.
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let live = true
+    setLoad({ state: "loading" })
     fetchLesson(slugId)
       .then((data) => live && setLoad({ state: "ready", data }))
       .catch(
@@ -91,25 +108,36 @@ export default function LessonRoute() {
           setLoad({
             state: "error",
             message: e instanceof Error ? e.message : "The lesson didn't load.",
+            retry: !(e instanceof LessonError) || e.status >= 500,
           })
       )
     return () => {
       live = false
     }
-  }, [slugId])
+  }, [slugId, attempt])
 
+  // Before the lesson (and its language) is known, the player's words are English.
+  const t = stringsFor("en")
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      {load.state !== "ready" ? (
+        <BareHeader onClose={closeLesson} label={t.home} />
+      ) : null}
       {load.state === "loading" ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
         </View>
       ) : load.state === "error" ? (
-        <View className="flex-1 items-center justify-center p-6">
+        <View className="flex-1 items-center justify-center gap-4 p-6">
           <Text className="text-center text-sm text-muted-foreground">
             {load.message}
           </Text>
+          {load.retry ? (
+            <Button variant="outline" onPress={() => setAttempt((n) => n + 1)}>
+              <Text>{t.tryAgain}</Text>
+            </Button>
+          ) : null}
         </View>
       ) : (
         <Player data={load.data} />
@@ -278,7 +306,7 @@ function Player({ data }: { data: LoadedLesson }) {
       dispatch(action)
     }
   }
-  const close = () => (router.canGoBack() ? router.back() : router.replace("/"))
+  const close = closeLesson
 
   // Each new screen starts at the top (the wrap-up after the streak screen too).
   useLayoutEffect(() => {
