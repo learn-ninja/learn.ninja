@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "license": "Apache-2.0",
   "private": true,
-  "main": "expo-router/entry",
+  "main": "./index.ts",
   "scripts": {
     "start": "expo start",
     "ios": "expo run:ios",
@@ -14,6 +14,9 @@
     "tokens": "node scripts/build-tokens.mjs"
   },
   "dependencies": {
+    "@formatjs/intl-getcanonicallocales": "^3.3.0",
+    "@formatjs/intl-locale": "^5.4.2",
+    "@formatjs/intl-pluralrules": "^7.0.2",
     "@rn-primitives/slot": "^1.5.2",
     "@workspace/player-core": "^0.0.0",
     "@workspace/spec": "^0.0.0",
