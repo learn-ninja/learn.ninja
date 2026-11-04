@@ -544,9 +544,12 @@ describe("/mcp/{key}, the personal URL", () => {
     const publish = tools.find(
       (t: { name: string }) => t.name === "publish_lesson"
     )
-    // A new email account gets a random handle, like "quiet-kitsune".
-    expect(publish.description).toMatch(/saved to @[a-z]+-[a-z]+ /)
-    expect(publish.description).not.toContain("7 days")
+    // The descriptions are the same logged in: a client (and the connector directory) reads the
+    // tool list once and keeps it, so a handle or a logged-in wording in it would go stale or leak.
+    const loggedOut = (await rpc("tools/list", {})).tools
+    expect(tools).toEqual(loggedOut)
+    expect(JSON.stringify(tools)).not.toMatch(/@[a-z]+-[a-z]+/)
+    expect(publish.description).toContain("7 days")
 
     const published = await personal(key).call("publish_lesson", {
       lesson: buttons,

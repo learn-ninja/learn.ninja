@@ -223,19 +223,13 @@ function registerTools(server: McpServer, deps: McpDeps) {
       )
   )
 
-  const owned = actor
-    ? `Lessons are saved to ${actor.handle ? `@${actor.handle}` : "the user's account"} (this connection is theirs) and published in Explore right away. ${actor.handle ? `They unpublish one from their profile, learn.ninja/u/${actor.handle}` : "They unpublish one from their profile once they pick a handle at learn.ninja/settings"}.`
-    : null
-
   server.registerTool(
     "publish_lesson",
     {
       title: "Publish a lesson",
       _meta: OPTIONAL_AUTH,
-      description: `Checks and publishes a lesson, and returns its link (\`url\`). If the check fails, nothing is published: the reply lists the issues and a \`draftId\`, so the fixes can be sent as \`patches\` against the draft instead of the whole lesson. The reply's \`id\`${actor ? "" : " and `editToken`"} let \`update_lesson\` change the lesson later. ${
-        owned ??
-        `Published anonymously, the link lasts 7 days; \`keep_lesson\` saves it to the user's account, and \`claimUrl\` is a link that does the same from a browser. The guide's steps cover what follows publishing.`
-      }`,
+      description:
+        "Checks and publishes a lesson, and returns its link (`url`). If the check fails, nothing is published: the reply lists the issues and a `draftId`, so the fixes can be sent as `patches` against the draft instead of the whole lesson. The reply's `id` and `editToken` let `update_lesson` change the lesson later. Published anonymously, the link lasts 7 days; `keep_lesson` saves it to the user's account, and `claimUrl` is a link that does the same from a browser. Once the app is logged in, every lesson is saved to the user's account and published in Explore as it's published: the reply names the account (`owner`) and carries no `editToken`. The guide's steps cover what follows publishing.",
       inputSchema: z.object(lessonInput),
       annotations: {
         title: "Publish a lesson",
@@ -289,9 +283,8 @@ function registerTools(server: McpServer, deps: McpDeps) {
     {
       title: "Keep a lesson in an account",
       _meta: NEEDS_AUTH,
-      description: actor
-        ? `Saves a lesson that was published anonymously (in another chat, or before the user logged in) to ${actor.handle ? `@${actor.handle}` : "the user's account"}, given its \`id\` and \`editToken\`; it's published in Explore. Lessons published here are already saved, so it's rarely needed.`
-        : `Saves a published lesson to the user's learn.ninja account, given the \`id\` and \`editToken\` from \`publish_lesson\`: it stops expiring and is published in Explore. For when the user asks to keep a lesson. It needs the user logged in; this app asks them to, once, then retries the call. The reply names the account (\`owner.handle\`, \`visibility\`), and a lesson already in an account answers \`already_claimed\`.`,
+      description:
+        "Saves a published lesson to the user's learn.ninja account, given the `id` and `editToken` from `publish_lesson`: it stops expiring and is published in Explore. For when the user asks to keep a lesson. It needs the user logged in; this app asks them to, once, then retries the call. The reply names the account (`owner.handle`, `visibility`), and a lesson already in an account answers `already_claimed`. A lesson published while the app was logged in is already saved, so it doesn't need keeping.",
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z
@@ -334,20 +327,15 @@ function registerTools(server: McpServer, deps: McpDeps) {
     {
       title: "Update a published lesson",
       _meta: OPTIONAL_AUTH,
-      description: `Replaces a published lesson with a new version at the same link. Pass the \`id\`${
-        actor
-          ? " (the end of the lesson's URL); a lesson in the user's account needs no `editToken`, one published elsewhere does"
-          : " and `editToken` that `publish_lesson` returned"
-      }, and either \`patches\` alone (applied to the published lesson: the quickest way to change a few things), the whole \`lesson\`, or a \`draftId\` with \`patches\`. If the check fails, it returns the issues and a \`draftId\` to patch.`,
+      description:
+        "Replaces a published lesson with a new version at the same link. Pass the `id` and `editToken` that `publish_lesson` returned (a lesson in the user's account needs no `editToken` once the app is logged in), and either `patches` alone (applied to the published lesson: the quickest way to change a few things), the whole `lesson`, or a `draftId` with `patches`. If the check fails, it returns the issues and a `draftId` to patch.",
       inputSchema: z.object({
         id: z.string().describe("The lesson's id, from `publish_lesson`."),
         editToken: z
           .string()
           .optional()
           .describe(
-            actor
-              ? "The secret edit token, for a lesson that isn't in the user's account."
-              : "The secret edit token, from `publish_lesson`."
+            "The secret edit token, from `publish_lesson`; not needed for a lesson in the user's account."
           ),
         ...lessonInput,
       }),
