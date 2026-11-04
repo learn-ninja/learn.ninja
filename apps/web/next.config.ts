@@ -69,7 +69,11 @@ function visualsCssUrl(): string {
 }
 
 /** Files prepareLesson() and the diagram check read at runtime (see outputFileTracingIncludes). */
+// Tailwind 4 is the web's own copy (apps/web/node_modules): the root's is NativeWind's Tailwind 3
+// for apps/mobile. visual-css.ts walks up from the working directory to the first with theme.css.
 const PREPARE_FILES = [
+  "./node_modules/tailwindcss/*.css",
+  "./node_modules/tailwindcss/package.json",
   "../../node_modules/tailwindcss/*.css",
   "../../node_modules/tailwindcss/package.json",
   "../../node_modules/@terrastruct/d2/package.json",
