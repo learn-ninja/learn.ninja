@@ -48,7 +48,7 @@ describe("syncing progress to the server", () => {
     sync.update(at(2))
     sync.update(at(2))
     sync.update(at(3))
-    await Promise.resolve()
+    await vi.waitFor(() => expect(sent).toHaveLength(3))
     expect(sent).toEqual([
       {
         path: "/api/lessons/abc/progress",
@@ -92,5 +92,31 @@ describe("syncing progress to the server", () => {
     sync.update(at(6))
     await new Promise((r) => setTimeout(r, 10))
     expect(sent).toHaveLength(1)
+  })
+
+  it("sends each request only after the one before it lands, so a slow one can't overtake", async () => {
+    const started: string[] = []
+    const pending: (() => void)[] = []
+    // Every request hangs until the test lets it land.
+    const slow: Send = (path, init) => {
+      started.push(`${init.method} ${path} ${init.body}`)
+      return new Promise((resolve) =>
+        pending.push(() => resolve({ status: 200 }))
+      )
+    }
+    const sync = createProgressSync("abc", slow)
+    sync.update(at(1))
+    sync.update(at(2))
+    sync.update(at(6))
+    await vi.waitFor(() => expect(started).toHaveLength(1))
+    await new Promise((r) => setTimeout(r, 10))
+    // The second progress and the finish wait for the first.
+    expect(started).toHaveLength(1)
+    pending.shift()!()
+    await vi.waitFor(() => expect(started).toHaveLength(2))
+    expect(started[1]).toContain('"done":1')
+    pending.shift()!()
+    await vi.waitFor(() => expect(started).toHaveLength(3))
+    expect(started[2]).toMatch(/^POST \/api\/lessons\/abc\/complete/)
   })
 })

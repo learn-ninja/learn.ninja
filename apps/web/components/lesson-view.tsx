@@ -91,7 +91,8 @@ export function LessonView({
   const [url, setUrl] = React.useState("")
   // A challenge in the link: the server reads it for /l/ pages; prerendered pages read it here.
   const [linkChallenge, setLinkChallenge] = React.useState<Challenge>()
-  // The last progress sent, which the finish waits for.
+  // The requests to the server, one after another: each waits for the one before it, so a slow
+  // progress can't land after a higher one, or after the finish and mark the lesson in progress.
   const sentProgress = React.useRef<Promise<unknown>>(Promise.resolve())
   React.useEffect(() => {
     // Lessons this browser finished logged out, now that it's logged in.
@@ -220,15 +221,14 @@ export function LessonView({
         onProgress={
           lessonId && recordCompletion
             ? (progress) => {
-                sentProgress.current = fetch(
-                  `/api/lessons/${lessonId}/progress`,
-                  {
+                sentProgress.current = sentProgress.current.then(() =>
+                  fetch(`/api/lessons/${lessonId}/progress`, {
                     method: "PUT",
                     keepalive: true,
                     headers: { "content-type": "application/json" },
                     body: JSON.stringify(progress),
-                  }
-                ).catch(() => {})
+                  }).catch(() => {})
+                )
               }
             : undefined
         }
@@ -238,8 +238,7 @@ export function LessonView({
             : recordCompletion
               ? () => {
                   if (props.streak) setLantern(props.streak)
-                  // After the last progress lands, or that would mark the lesson in progress again.
-                  void sentProgress.current.then(() =>
+                  sentProgress.current = sentProgress.current.then(() =>
                     fetch(`/api/lessons/${lessonId}/complete`, {
                       method: "POST",
                       keepalive: true,

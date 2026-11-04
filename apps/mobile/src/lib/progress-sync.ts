@@ -20,7 +20,12 @@ let signedOut = false
 export function createProgressSync(id: string, send: Send) {
   let sentDone: number | undefined
   let completedRun: number | undefined
+  // Every request waits for the one before it, so they land in the order they were made: a slow
+  // progress can't arrive after a higher one, or after the finish and mark the lesson in progress.
   let last: Promise<unknown> = Promise.resolve()
+  const queue = (request: () => Promise<unknown>) => {
+    last = last.then(request)
+  }
 
   const post = (path: string, method: "PUT" | "POST", body: unknown) => {
     if (signedOut) return Promise.resolve()
@@ -42,8 +47,7 @@ export function createProgressSync(id: string, send: Send) {
       if (item.kind === "wrap") {
         if (completedRun === state.run) return
         completedRun = state.run
-        // After the last progress lands, or that would mark the lesson in progress again.
-        last = last.then(() =>
+        queue(() =>
           post("complete", "POST", {
             tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
           })
@@ -54,7 +58,7 @@ export function createProgressSync(id: string, send: Send) {
       // The fix round is past every kata: nothing new to say until the finish does.
       if (progress.done >= progress.total || progress.done === sentDone) return
       sentDone = progress.done
-      last = post("progress", "PUT", progress)
+      queue(() => post("progress", "PUT", progress))
     },
   }
 }
