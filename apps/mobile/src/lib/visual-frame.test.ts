@@ -12,8 +12,11 @@ import {
 // pinned here, as packages/player/src/visuals.test.ts pins the web's iframe.
 
 const BASE = "http://localhost:3000/"
-const doc = (visual: { html: string; css?: string }, visualsCss = "") =>
-  visualDocument({ ...visual, visualsCss })
+const doc = (
+  visual: { html: string; css?: string },
+  visualsCss = "",
+  baseCss = ""
+) => visualDocument({ ...visual, visualsCss, baseCss })
 
 describe("HTML visual WebView", () => {
   it("runs no scripts and opens no windows", () => {
@@ -97,7 +100,7 @@ describe("HTML visual WebView", () => {
     expect(VISUAL_CSP).toContain("style-src 'self' 'unsafe-inline'")
     expect(VISUAL_CSP).not.toMatch(/https?:|\*|script-src/)
     const d = doc({ html: "<b>Hi</b>" })
-    const head = d.slice(0, d.indexOf("<link"))
+    const head = d.slice(0, d.indexOf("<style"))
     expect(head).toContain(
       `<meta http-equiv="Content-Security-Policy" content="${VISUAL_CSP}">`
     )
@@ -110,7 +113,21 @@ describe("HTML visual WebView", () => {
     const d = doc({ html: "<b>Hi</b>" })
     expect(d).toMatch(/^<!doctype html><html dir="auto" class="dark">/)
     expect(d).not.toMatch(/<script/i)
+    // Nothing is fetched: both stylesheets are inline.
+    expect(d).not.toMatch(/<link|@import|url\(/i)
     expect(d).toContain("<body><b>Hi</b></body></html>")
+  })
+
+  it("inlines the shared stylesheet before the lesson's own CSS, each kept inside its tag", () => {
+    const d = doc(
+      { html: "<b>Hi</b>" },
+      ".p-4{padding:1rem}",
+      ".btn{color:red}</style><b>x</b>"
+    )
+    expect(d.indexOf(".btn{color:red}")).toBeLessThan(
+      d.indexOf(".p-4{padding:1rem}")
+    )
+    expect(d).toContain("<style>.btn{color:red}<\\/style><b>x<\\/b></style>")
   })
 
   it("inlines the prepared CSS and keeps it, and the lesson's CSS, inside their style tags", () => {

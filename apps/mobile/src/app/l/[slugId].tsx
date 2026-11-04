@@ -95,7 +95,11 @@ function Player({ data }: { data: LoadedLesson }) {
         {done ? (
           <Text className="text-lg font-semibold">That&apos;s the lesson.</Text>
         ) : kata?.type === "concept" ? (
-          <ConceptKata kata={kata} prepared={data.prepared} />
+          <ConceptKata
+            kata={kata}
+            prepared={data.prepared}
+            baseCss={data.baseCss}
+          />
         ) : kata ? (
           <KataPlaceholder kata={kata} />
         ) : null}

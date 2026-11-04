@@ -20,20 +20,22 @@ export function VisualFrame({
   css,
   alt,
   height,
+  baseCss,
   visualsCss,
 }: {
   html: string
   css?: string
   alt?: string
   height?: number
+  baseCss: string
   visualsCss: string
 }) {
   const source = useMemo(
     () => ({
-      html: visualDocument({ html, css, visualsCss }),
+      html: visualDocument({ html, css, baseCss, visualsCss }),
       baseUrl: `${API_BASE_URL}/`,
     }),
-    [html, css, visualsCss]
+    [html, css, baseCss, visualsCss]
   )
   // A new guard per document: the loads it allows are that document's.
   const guard = useMemo(() => navigationGuard(source.baseUrl), [source])

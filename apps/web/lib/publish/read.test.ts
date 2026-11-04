@@ -37,6 +37,7 @@ beforeEach(() => {
   read = {
     store,
     limiter: new MemoryRateLimiter(100),
+    visualsCssUrl: "/lesson-visuals.css?v=abc123",
     bundled: async (slug) =>
       slug === "button-hierarchy"
         ? {
@@ -64,6 +65,7 @@ describe("reading a lesson", () => {
         path: `/l/button-hierarchy-${id}`,
         lesson: { title: expect.any(String) },
         prepared: { visualsCss: expect.any(String) },
+        visualsCssUrl: "/lesson-visuals.css?v=abc123",
         expiresAt: now + 7 * 24 * 3600 * 1000,
       })
     }

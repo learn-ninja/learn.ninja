@@ -3,19 +3,23 @@ import type { WebViewNavigation, WebViewProps } from "react-native-webview"
 import { inStyle, VISUAL_CSP } from "@workspace/player-core/visual-frame"
 
 // A lesson's HTML visual in the app: LLM-written HTML in a WebView with scripts off, every
-// navigation blocked, and the same Content-Security-Policy as the web's sandboxed frame. The
-// document is loaded with the API's origin as its base URL, so 'self' in that policy is the web
-// app: the visuals' stylesheet (/lesson-visuals.css, Basecoat and the theme) loads from there and
-// nothing else does. visual-frame.test.ts pins all of it; loosen nothing here without a proposal.
+// navigation blocked, and the same Content-Security-Policy as the web's sandboxed frame. Its
+// stylesheets are inlined: the visuals' shared one (Basecoat and the theme, fetched once per
+// session by visuals-css.ts) and the lesson's prepared utilities. The document is loaded with the
+// API's origin as its base URL, so 'self' in that policy is the web app and nothing else.
+// visual-frame.test.ts pins all of it; loosen nothing here without a proposal.
 
 /** The visual's whole document. The policy is the first thing in its head. */
 export function visualDocument({
   html,
   css,
+  baseCss,
   visualsCss,
 }: {
   html: string
   css?: string
+  /** The visuals' shared stylesheet (/lesson-visuals.css), inlined. */
+  baseCss: string
   /** The lesson's prepared Tailwind utilities (Prepared.visualsCss). */
   visualsCss: string
 }): string {
@@ -23,7 +27,7 @@ export function visualDocument({
     `<!doctype html><html dir="auto" class="dark"><head><meta charset="utf-8">` +
     `<meta http-equiv="Content-Security-Policy" content="${VISUAL_CSP}">` +
     `<meta name="viewport" content="width=device-width, initial-scale=1">` +
-    `<link rel="stylesheet" href="/lesson-visuals.css">` +
+    `<style>${inStyle(baseCss)}</style>` +
     `<style>${inStyle(visualsCss)}</style>` +
     `<style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box;min-height:100vh}${inStyle(css ?? "")}</style>` +
     `</head><body>${html}</body></html>`

@@ -18,6 +18,8 @@ export interface ReadDeps {
   bundled: (
     slug: string
   ) => Promise<{ lesson: Lesson; prepared: Prepared } | null>
+  /** The visuals' shared stylesheet (Basecoat and the theme), versioned: /lesson-visuals.css?v={hash}. */
+  visualsCssUrl: string
   /** Charts drawn at read time for lessons stored before their charts were prepared. */
   withCharts?: (lesson: Lesson, prepared: Prepared) => Prepared
 }
@@ -29,6 +31,11 @@ export interface LessonReply {
   path: string
   lesson: Lesson
   prepared: Prepared
+  /**
+   * The stylesheet every HTML visual loads before the lesson's own prepared CSS, with a hash of
+   * its content, so a player can fetch it once and keep it until it changes.
+   */
+  visualsCssUrl: string
   /** Milliseconds since the epoch; null for lessons that don't expire (owned, or bundled). */
   expiresAt: number | null
   updatedAt: number | null
@@ -66,6 +73,7 @@ export async function readLesson(
       path: `/lessons/${req.param}`,
       lesson: bundled.lesson,
       prepared: bundled.prepared,
+      visualsCssUrl: deps.visualsCssUrl,
       expiresAt: null,
       updatedAt: null,
     }
@@ -86,6 +94,7 @@ export async function readLesson(
     prepared: deps.withCharts
       ? deps.withCharts(lesson, record.prepared)
       : record.prepared,
+    visualsCssUrl: deps.visualsCssUrl,
     expiresAt: record.expiresAt,
     updatedAt: record.updatedAt ?? null,
   }

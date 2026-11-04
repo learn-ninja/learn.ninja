@@ -40,7 +40,7 @@ When the checker tidied something that didn't stop the publish, the reply also h
 GET /api/lessons/{id}
 ```
 
-Returns `200` with `{ "ok": true, "id": "…", "path": "/l/…", "lesson": { … }, "prepared": { … }, "expiresAt": …, "updatedAt": … }`: the lesson as stored (upgraded to the current spec) and what was prepared for it at publish time (formulas, code tokens, charts, diagrams, molecules, and the visuals' CSS), for a player that isn't the web page. `{id}` is the lesson's id or the whole `{slug}-{id}` part of its link. The slug of a bundled test lesson (like `button-hierarchy`, played at `/lessons/button-hierarchy`) works too, with `expiresAt: null`. A lesson that doesn't exist, has expired, or was hidden after a report is `404 not_found`. No authentication.
+Returns `200` with `{ "ok": true, "id": "…", "path": "/l/…", "lesson": { … }, "prepared": { … }, "visualsCssUrl": "/lesson-visuals.css?v=…", "expiresAt": …, "updatedAt": … }`: the lesson as stored (upgraded to the current spec) and what was prepared for it at publish time (formulas, code tokens, charts, diagrams, molecules, and the visuals' CSS), for a player that isn't the web page. `visualsCssUrl` is the stylesheet every HTML visual loads first (Basecoat and the theme), with a hash of its content, so a player can fetch it once per version. `{id}` is the lesson's id or the whole `{slug}-{id}` part of its link. The slug of a bundled test lesson (like `button-hierarchy`, played at `/lessons/button-hierarchy`) works too, with `expiresAt: null`. A lesson that doesn't exist, has expired, or was hidden after a report is `404 not_found`. No authentication.
 
 ## Update a lesson
 

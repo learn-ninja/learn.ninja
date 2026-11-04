@@ -16,15 +16,22 @@ import { VisualFrame } from "@/components/visual-frame"
 export function ConceptKata({
   kata,
   prepared,
+  baseCss,
 }: {
   kata: ConceptKataData
   prepared: Prepared
+  /** The visuals' shared stylesheet. */
+  baseCss: string
 }) {
   return (
     <View className="gap-4">
       <Text className="text-lg font-semibold">{kata.title}</Text>
       {kata.visual ? (
-        <LessonVisual visual={kata.visual} prepared={prepared} />
+        <LessonVisual
+          visual={kata.visual}
+          prepared={prepared}
+          baseCss={baseCss}
+        />
       ) : null}
       <RichBlocks text={kata.body} />
     </View>
@@ -34,9 +41,11 @@ export function ConceptKata({
 function LessonVisual({
   visual,
   prepared,
+  baseCss,
 }: {
   visual: Visual
   prepared: Prepared
+  baseCss: string
 }) {
   if (visual.kind === "html")
     return (
@@ -45,6 +54,7 @@ function LessonVisual({
         css={visual.css}
         alt={visual.alt}
         height={visual.height}
+        baseCss={baseCss}
         visualsCss={prepared.visualsCss}
       />
     )

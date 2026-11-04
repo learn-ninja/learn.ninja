@@ -34,6 +34,8 @@ export async function GET(req: Request, { params }: Params) {
         store: await getLessonStore(),
         limiter: getRateLimiter("read"),
         withCharts,
+        visualsCssUrl:
+          process.env.NEXT_PUBLIC_VISUALS_CSS ?? "/lesson-visuals.css",
         bundled: async (slug) => preparedBundled(slug),
       }
     )
