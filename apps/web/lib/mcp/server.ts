@@ -342,7 +342,9 @@ function registerTools(server: McpServer, deps: McpDeps) {
       annotations: {
         title: "Update a published lesson",
         readOnlyHint: false,
-        destructiveHint: false,
+        // It overwrites the published lesson, with no history to go back to, so Claude asks every
+        // time: the directory's review criteria want the hint on anything that modifies data.
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: true,
       },

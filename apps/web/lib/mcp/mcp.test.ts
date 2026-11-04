@@ -171,6 +171,15 @@ describe("tools", () => {
       if (!tool.annotations.readOnlyHint)
         expect(tool.annotations).toHaveProperty("destructiveHint")
     }
+    // The one tool that overwrites existing data says so; the others only add (a lesson, a draft,
+    // an owner), so Claude may stop asking for them once the user allows them.
+    const destructive = tools
+      .filter(
+        (t: { annotations: { destructiveHint?: boolean } }) =>
+          t.annotations.destructiveHint
+      )
+      .map((t: { name: string }) => t.name)
+    expect(destructive).toEqual(["update_lesson"])
   })
 
   it("completes a listen for tool-list changes at once, instead of holding the stream open", async () => {
@@ -194,7 +203,10 @@ describe("tools", () => {
           notifications: { toolsListChanged: true },
           _meta: {
             "io.modelcontextprotocol/protocolVersion": "2026-07-28",
-            "io.modelcontextprotocol/clientInfo": { name: "test", version: "0" },
+            "io.modelcontextprotocol/clientInfo": {
+              name: "test",
+              version: "0",
+            },
             "io.modelcontextprotocol/clientCapabilities": {},
           },
         },
@@ -205,7 +217,10 @@ describe("tools", () => {
     const text = await Promise.race([
       res.text(),
       new Promise<string>((_, reject) =>
-        setTimeout(() => reject(new Error("the listen stream stayed open")), 5_000)
+        setTimeout(
+          () => reject(new Error("the listen stream stayed open")),
+          5_000
+        )
       ),
     ])
     const messages = text
