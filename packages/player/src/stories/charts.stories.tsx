@@ -16,8 +16,16 @@ const charts = Object.values(lessons).flatMap((lesson) =>
   )
 )
 const chartOf = (type: ChartVisual["type"]) =>
-  charts.find((c) => c.chart.type === type)?.chart ??
-  chartSamples.find((c) => c.chart.type === type)!.chart
+  charts.find((c) => c.chart.type === type)!.chart
+const sample = (name: string) =>
+  chartSamples.find((s) => s.name === name)!.chart
+const everyChart = [
+  ...charts,
+  ...chartSamples.map(({ name, chart }) => ({
+    chart,
+    path: `sample: ${name}`,
+  })),
+]
 
 const meta = {
   title: "Player/Charts",
@@ -48,20 +56,20 @@ export const Scatter: Story = {
 
 /** Monthly shop sales: category labels stay in calendar order, with a zero baseline. */
 export const Bar: Story = {
-  args: { visual: chartOf("bar") },
+  args: { visual: sample("Monthly sales") },
 }
 
 /** Three cities' illustrative monthly temperatures, with each series named at its end. */
 export const Line: Story = {
-  args: { visual: chartOf("line") },
+  args: { visual: sample("City temperatures") },
 }
 
-/** Every chart in the example lessons, with where it comes from. */
+/** Every chart in the example lessons and the hand-written samples, with where it comes from. */
 export const AllCharts: Story = {
   args: { visual: chartOf("scatter") },
   render: () => (
     <div className="flex flex-col gap-8">
-      {charts.map(({ chart, path }) => (
+      {everyChart.map(({ chart, path }) => (
         <figure key={path} className="flex flex-col gap-2">
           <Visual visual={chart} plain={false} />
           <figcaption className="text-sm text-muted-foreground">
