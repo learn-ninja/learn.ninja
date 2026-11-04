@@ -34,6 +34,14 @@ Keep `editToken` private: it's the way to update the lesson, and it's shown once
 
 When the checker tidied something that didn't stop the publish, the reply also has `notes`: an array of `{ "path": "tags[0]", "message": "Kept the tag \" Git\" as \"Git\"." }`, the same shape as `issues`. Today that's a tag label it trimmed, whose whitespace it collapsed, or whose leading `#` it dropped. The field is absent when there's nothing to say. Updating and validating reply with it the same way.
 
+## Read a lesson
+
+```http
+GET /api/lessons/{id}
+```
+
+Returns `200` with `{ "ok": true, "id": "…", "path": "/l/…", "lesson": { … }, "prepared": { … }, "expiresAt": …, "updatedAt": … }`: the lesson as stored (upgraded to the current spec) and what was prepared for it at publish time (formulas, code tokens, charts, diagrams, molecules, and the visuals' CSS), for a player that isn't the web page. `{id}` is the lesson's id or the whole `{slug}-{id}` part of its link. The slug of a bundled test lesson (like `button-hierarchy`, played at `/lessons/button-hierarchy`) works too, with `expiresAt: null`. A lesson that doesn't exist, has expired, or was hidden after a report is `404 not_found`. No authentication.
+
 ## Update a lesson
 
 ```http
@@ -158,11 +166,12 @@ Errors return `"ok": false` with an `error` code and a `message`.
 | 422    | `invalid_handle`   | The handle breaks the rules or is reserved                  |
 | 422    | `invalid_visibility` | Visibility must be `public` or `unlisted`                 |
 | 422    | `unsupported_spec` | The lesson's `spec` version isn't supported                 |
-| 429    | `rate_limited`     | Too many publishes or reports from one place; try later     |
+| 429    | `rate_limited`     | Too many publishes, reports, or reads from one place; try later |
 
 ## Limits
 
 - 20 publishes or updates an hour from one place.
 - 5 log-in codes an hour to one email address, 3 a minute from one place; each code works for 5 minutes and three tries.
 - 5 reports an hour from one place.
+- 300 lesson reads (`GET /api/lessons/{id}`) an hour from one place.
 - Anonymous lessons expire 7 days after they're first published. Owned lessons never expire.

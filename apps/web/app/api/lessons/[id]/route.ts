@@ -1,13 +1,22 @@
+import { withCharts } from "@workspace/player/charts"
+import { prepareLesson } from "@workspace/player/prepare"
+
 import {
   deleteLesson,
   renameLesson,
   setVisibility,
 } from "@/lib/explore/handlers"
 import { exploreDepsFor } from "@/lib/explore/request"
+import { getLesson, LESSON_SLUGS } from "@/lib/lessons"
 import { updateLesson } from "@/lib/publish/handlers"
+import { getRateLimiter } from "@/lib/publish/rate-limit"
+import { readLesson } from "@/lib/publish/read"
 import { actorFor, clientKey, depsFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
+import { getLessonStore } from "@/lib/publish/store"
 
+// GET /api/lessons/{id}: the lesson and its prepared output as JSON, for the app (lib/publish/read.ts).
+// {id} is a lesson id, its "{slug}-{id}" link segment, or a bundled test lesson's slug.
 // PUT /api/lessons/{id}: replace a published lesson, keeping its link and expiry.
 // Needs the edit token from publishing (Authorization: Bearer <token>), or the owner's session or
 // x-api-key, so a lesson in your account updates from any folder or machine.
@@ -16,6 +25,32 @@ import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
 // DELETE /api/lessons/{id}: delete it for good. Owner only.
 
 type Params = { params: Promise<{ id: string }> }
+
+// A bundled lesson is prepared once per server, as its prerendered page is once per build.
+const bundled = new Map<string, ReturnType<typeof prepareBundled>>()
+async function prepareBundled(slug: string) {
+  const lesson = getLesson(slug)!
+  return { lesson, prepared: await prepareLesson(lesson) }
+}
+
+export async function GET(req: Request, { params }: Params) {
+  const param = (await params).id
+  return respond(async () =>
+    readLesson(
+      { param, client: clientKey(req) },
+      {
+        store: await getLessonStore(),
+        limiter: getRateLimiter("read"),
+        withCharts,
+        bundled: async (slug) => {
+          if (!LESSON_SLUGS.includes(slug)) return null
+          if (!bundled.has(slug)) bundled.set(slug, prepareBundled(slug))
+          return bundled.get(slug)!
+        },
+      }
+    )
+  )
+}
 
 export async function PUT(req: Request, { params }: Params) {
   const auth = req.headers.get("authorization")
