@@ -5,7 +5,12 @@ import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor.js"
 import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html.js"
 import { AllPackages } from "mathjax-full/js/input/tex/AllPackages.js"
 
-import type { MathSvg, Prepared } from "@workspace/player-core/prepared"
+import {
+  mathKey,
+  parseMathKey,
+  type MathSvg,
+  type Prepared,
+} from "@workspace/player-core/prepared"
 
 // The lesson's formulas drawn as SVG for the app, which has no HTML to show KaTeX's output in.
 // MathJax draws each one from its LaTeX (the key of prepared.math) with the same Computer Modern
@@ -46,7 +51,7 @@ const KEEP = 5000
 
 /** One formula as SVG, or null when MathJax can't read it (the app shows its source instead). */
 export function drawMath(tex: string, display: boolean): MathSvg | null {
-  const key = `${display ? "d" : "i"}:${tex}`
+  const key = mathKey(tex, display)
   if (drawn.has(key)) return drawn.get(key)!
   const svg = draw(tex, display)
   if (drawn.size >= KEEP) drawn.delete(drawn.keys().next().value!)
@@ -88,7 +93,8 @@ const round = (n: number) => Math.round(n * 1000) / 1000
 export function drawLessonMath(prepared: Prepared): Record<string, MathSvg> {
   const out: Record<string, MathSvg> = {}
   for (const key of Object.keys(prepared.math)) {
-    const svg = drawMath(key.slice(2), key.startsWith("d:"))
+    const formula = parseMathKey(key)
+    const svg = formula && drawMath(formula.tex, formula.display)
     if (svg) out[key] = svg
   }
   return out

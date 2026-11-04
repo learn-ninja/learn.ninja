@@ -48,6 +48,15 @@ export const emptyPrepared: Prepared = {
 
 export const mathKey = (tex: string, display: boolean) =>
   `${display ? "d" : "i"}:${tex}`
+/** A mathKey() read back: the formula and whether it's a display one; null for any other key. */
+export function parseMathKey(
+  key: string
+): { tex: string; display: boolean } | null {
+  const kind = key.slice(0, 2)
+  return kind === "d:" || kind === "i:"
+    ? { tex: key.slice(2), display: kind === "d:" }
+    : null
+}
 /**
  * A code block's key: the language, a newline, then the code. A newline can't appear in a language
  * name, so the key is unambiguous; a NUL can't be stored (Postgres jsonb rejects it).
