@@ -163,7 +163,7 @@
     "id": "ch",
     "type": "scenario",
     "prompt": "What do you say in code review?",
-    "situation": "A teammate wrote this, and the returned array is never used.",
+    "situation": "You're reviewing a teammate's pull request before the release. One line sends a welcome email to every new user. It works and the tests pass, but the array it returns is never used anywhere.",
     "visual": {
       "kind": "code",
       "language": "javascript",

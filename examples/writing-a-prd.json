@@ -177,7 +177,7 @@
     "id": "ch",
     "type": "scenario",
     "prompt": "What do you do?",
-    "situation": "Two days before the PRD review, a VP asks you to add team sharing to saved searches.",
+    "situation": "The PRD review is in two days, and the saved-searches PRD is finally stable: goals agreed, requirements estimated, launch date set. Then a VP stops by your desk. They'd like team sharing added to saved searches, in this version.",
     "options": [
       {
         "id": "a",

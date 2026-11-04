@@ -118,6 +118,17 @@ const BARE_CODE: RegExp[] = [
  * A piece of code (a command, flag, call, file name, path, or tag) written outside backticks,
  * or null. Text already in backticks or formulas is ignored.
  */
+/**
+ * How many sentences a text has, by its ending marks: `.`, `!`, `?`, or `…` before a space or the
+ * end (closing quotes and brackets may follow), or a CJK full stop. A decimal point, a colon, and
+ * a comma don't end one; a text that trails off without a mark still counts its last sentence.
+ */
+export function sentenceCount(text: string): number {
+  const enders = text.match(/[.!?…]["'”’)\]]*(?=\s|$)|[。！？]/g) ?? []
+  const openTail = /[.!?…。！？]["'”’)\]]*\s*$/.test(text) ? 0 : 1
+  return enders.length + openTail
+}
+
 export function bareCode(text: string): string | null {
   const plain = text
     .replace(/`[^`]*`/g, " ")
@@ -1164,6 +1175,14 @@ function checkKataReferences(
           "teaching",
           `${path}.options`,
           `A scenario needs at least one option with "quality": "best".`
+        )
+      // The ninja tells the situation one sentence at a time before the question, so a single
+      // sentence is a story with one beat: nothing builds up to the decision.
+      if (sentenceCount(kata.situation) < 2)
+        add(
+          "teaching",
+          `${path}.situation`,
+          `A scenario's "situation" is one sentence. Build it up in two to four: set the scene, say what's at stake, and end on the moment that calls for a decision.`
         )
       sameLooking(kata.options, `${path}.options`, "Option", add)
       break

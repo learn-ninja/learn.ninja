@@ -137,6 +137,7 @@ import {
   type Theme,
 } from "@workspace/player-core/strings"
 import { scenarioTurns } from "@workspace/player-core/chat"
+import { ScreenLabel } from "./screen-label"
 import { Visual } from "./visuals"
 import {
   ChallengeNote,
@@ -1439,20 +1440,6 @@ function MetaLine({ minutes, level }: { minutes: string; level: string }) {
           {fact}
         </span>
       ))}
-    </p>
-  )
-}
-
-function ScreenLabel({
-  text,
-  className,
-}: {
-  text: string
-  className?: string
-}) {
-  return (
-    <p className={cn("font-mono text-sm text-muted-foreground", className)}>
-      {text}
     </p>
   )
 }

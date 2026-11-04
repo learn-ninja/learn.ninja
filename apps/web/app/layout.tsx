@@ -18,6 +18,11 @@ const inter = Inter({
 const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
+  // Real monospace fallbacks. next/font's own fallback for a mono font is Arial scaled up by a
+  // third to match Geist Mono's widths, so until the font loads (or if it never does) a mono
+  // label like the player's eyebrows showed as oversized sans.
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
 })
 
 export const metadata: Metadata = {
