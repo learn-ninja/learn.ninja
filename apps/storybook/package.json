@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@workspace/typescript-config": "^0.0.0",
+    "tailwindcss": "^4.3.4",
     "typescript": "^5.9.3"
   }
 }
