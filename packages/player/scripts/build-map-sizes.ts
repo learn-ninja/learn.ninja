@@ -1,7 +1,7 @@
 // Measures every country on every region's map, as the player draws it, for the checker: which
 // countries a map hotspot can take as answers, and whether each is large enough to tap. Run by
 // `npm run map -w @workspace/player` after build-map.ts, and again after changing how a region is
-// framed (src/map-frame.ts) or a region's box.
+// framed (packages/player-core/src/map-frame.ts) or a region's box.
 
 import { writeFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
@@ -12,8 +12,8 @@ import type { GeometryCollection, Topology } from "topojson-specification"
 
 import { MAP_REGION_NAMES } from "@workspace/spec"
 
-import data from "../src/map-data.json" with { type: "json" }
-import { measureDrawnSizes } from "../src/map-frame"
+import data from "@workspace/player-core/map-data.json" with { type: "json" }
+import { measureDrawnSizes } from "@workspace/player-core/map-frame"
 
 const topology = data as unknown as Topology<{ countries: GeometryCollection }>
 const shapes = feature(topology, topology.objects.countries)
