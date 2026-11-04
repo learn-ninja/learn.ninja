@@ -371,5 +371,59 @@ describe("themed", () => {
     )
     expect(svg).not.toContain("onclick")
     expect(svg).not.toContain("<script")
+    expect(svg).toContain("<b>a</b>")
+  })
+
+  it.each([
+    [
+      "an end tag with junk in it",
+      "<svg><script>x()</script\t\n bar><g/></svg>",
+    ],
+    [
+      "a script inside a script",
+      "<svg><scr<script>ipt>x()</scr</script>ipt><g/></svg>",
+    ],
+    [
+      "any case",
+      "<svg><SCRIPT>x()</SCRIPT><svg:script>x()</svg:script><g/></svg>",
+    ],
+    [
+      "an HTML label",
+      '<svg><foreignObject><div xmlns="http://www.w3.org/1999/xhtml"><script>x()</script></div></foreignObject></svg>',
+    ],
+  ])("strips a script written as %s", (_, input) => {
+    const svg = themed(input)
+    expect(svg).not.toMatch(/<[^>]*script/i)
+    expect(svg).not.toContain("x()")
+  })
+
+  it("strips event handlers however they're spelled", () => {
+    const svg = themed(
+      '<svg><b on\nclick="x()" ONLOAD="y()" onfocus = \'z()\' xlink:onclick="w()" class="k">a</b></svg>'
+    )
+    expect(svg).not.toMatch(/\son/i)
+    // A line break ends a name, so `on\nclick` is two attributes (as a browser reads it too): `on`
+    // goes, and `click` is no handler.
+    expect(svg).toContain('<b click="x()" class="k">a</b>')
+  })
+
+  it("strips javascript: links, and keeps the rest", () => {
+    const svg = themed(
+      '<svg><a href=" JavaScript:x()">a</a><a xlink:href="java\tscript:x()">b</a>' +
+        '<set attributeName="href" to="javascript:x()"/><a href="https://learn.ninja">c</a></svg>'
+    )
+    expect(svg).not.toMatch(/script:/i)
+    expect(svg).toContain('<a href="https://learn.ninja">c</a>')
+  })
+
+  it("drops what an HTML parser would read differently", () => {
+    const svg = themed(
+      "<svg><!-- a --!><script>x()</script> --><g><![CDATA[</g><script>x()</script>]]></g>" +
+        "<style><![CDATA[.a>b{fill:red}]]></style></svg>"
+    )
+    expect(svg).not.toContain("<!--")
+    expect(svg).not.toMatch(/<script/i)
+    // A CDATA that holds no markup, like D2's styles, is kept as it was.
+    expect(svg).toContain("<style><![CDATA[.a>b{fill:red}]]></style>")
   })
 })

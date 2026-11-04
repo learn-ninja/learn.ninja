@@ -1,6 +1,7 @@
 import "server-only"
 
 import { D2 } from "@terrastruct/d2"
+import { DOMParser } from "linkedom"
 
 import {
   ICON_SETS,
@@ -535,7 +536,7 @@ const RTL_LETTER = /[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufeff]/
  * and an English diagram under an Arabic interface would otherwise move its punctuation.
  */
 export function themed(svg: string, direction: "ltr" | "rtl" = "ltr"): string {
-  return (
+  return withoutScripts(
     svg
       // The color classes: .d2-123 .fill-B6{fill:#F7F8FE;} -> {fill:var(--d2-B6);}
       .replace(
@@ -556,7 +557,72 @@ export function themed(svg: string, direction: "ltr" | "rtl" = "ltr"): string {
         (_, before: string, w: string, h: string, after: string) =>
           `<svg ${before}viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" direction="${direction}" style="max-width:100%;height:auto"${after}><style>${THEME_CSS}</style>`
       )
-      .replace(/<script\b[\s\S]*?<\/script\s*>/gi, "")
-      .replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
   )
+}
+
+/** An element or attribute name as D2 writes them; anything else is dropped rather than echoed. */
+const XML_NAME = /^[A-Za-z_][\w:.-]*$/
+
+// Node types, as numbers: Node isn't a global on the server.
+const ELEMENT = 1
+const CDATA = 4
+const PROCESSING_INSTRUCTION = 7
+const COMMENT = 8
+const DOCTYPE = 10
+
+/** A name without its namespace prefix, lowercased: `xlink:href` → `href`, `SCRIPT` → `script`. */
+const localName = (name: string) =>
+  name.slice(name.lastIndexOf(":") + 1).toLowerCase()
+
+/** True for a `javascript:` URL as a browser reads one: any case, spaces and control characters ignored. */
+const isScriptUrl = (value: string) =>
+  [...value]
+    .filter((c) => c > " ")
+    .join("")
+    .toLowerCase()
+    .startsWith("javascript:")
+
+/**
+ * The drawing with nothing left that could run code: no `script` elements, no event-handler
+ * attributes (`on…`), and no `javascript:` URLs. It's parsed and written back out rather than
+ * matched with regexes, which miss `</script\t bar>`, `<scr<script>ipt>`, or `on\nclick=`.
+ * Parsed as XML, which D2 writes, so its CDATA styles survive. The browser reads the result as
+ * HTML, so whatever the two parsers could read differently goes too: comments (HTML ends one at
+ * `--!>`), CDATA holding a `<`, and names D2 never writes. The third layer of three: the checker
+ * rejects HTML in labels, and the frame runs no scripts. linkedom only runs here, at publish time.
+ */
+function withoutScripts(svg: string): string {
+  const doc = new DOMParser().parseFromString(
+    svg,
+    "image/svg+xml"
+  ) as unknown as XMLDocument
+  const root = doc.documentElement
+  if (!root) return ""
+  const elements: Element[] = [root]
+  for (let el = elements.pop(); el; el = elements.pop()) {
+    for (const { name, value } of [...el.attributes]) {
+      if (
+        !XML_NAME.test(name) ||
+        name.toLowerCase().startsWith("on") ||
+        localName(name).startsWith("on") ||
+        isScriptUrl(value)
+      )
+        el.removeAttribute(name)
+    }
+    for (const child of [...el.childNodes]) {
+      if (child.nodeType === ELEMENT) {
+        const name = (child as Element).tagName
+        if (!XML_NAME.test(name) || localName(name) === "script") child.remove()
+        else elements.push(child as Element)
+      } else if (
+        child.nodeType === COMMENT ||
+        child.nodeType === PROCESSING_INSTRUCTION ||
+        child.nodeType === DOCTYPE
+      )
+        child.remove()
+      else if (child.nodeType === CDATA && child.nodeValue?.includes("<"))
+        child.replaceWith(doc.createTextNode(child.nodeValue))
+    }
+  }
+  return root.outerHTML
 }
