@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { describe, expect, it } from "vitest"
 
 import { VISUAL_CSP } from "@workspace/player-core/visual-frame"
@@ -142,5 +145,52 @@ describe("HTML visual WebView", () => {
     expect(d).not.toContain('</style><meta http-equiv="refresh"')
     expect(d).toContain('<\\/style><meta http-equiv="refresh"')
     expect(d).toContain("<body><b>Hi</b></body></html>")
+  })
+
+  it("fills its frame only when it declares a height; otherwise it keeps its natural size, to be measured", () => {
+    expect(doc({ html: "x" })).not.toContain("min-height")
+    expect(
+      visualDocument({ html: "x", height: 200, baseCss: "", visualsCss: "" })
+    ).toContain("min-height:100vh")
+  })
+})
+
+describe("the native measurement of an HTML visual", () => {
+  const swift = readFileSync(
+    join(__dirname, "../../modules/visual-height/ios/VisualHeightModule.swift"),
+    "utf8"
+  )
+
+  it("lays the document out with the page's scripts off, and adds none to it", () => {
+    expect(swift).toContain(
+      "config.defaultWebpagePreferences.allowsContentJavaScript = false"
+    )
+    expect(swift).toContain(
+      "config.preferences.javaScriptCanOpenWindowsAutomatically = false"
+    )
+    expect(swift).toContain("config.websiteDataStore = .nonPersistent()")
+    // Nothing joins the page: no user scripts, no messages back from it.
+    expect(swift).not.toMatch(
+      /WKUserScript|addScriptMessageHandler|userContentController|evaluateJavaScript/
+    )
+  })
+
+  it("reads the height with one expression in WebKit's isolated world, after the load", () => {
+    const calls = [...swift.matchAll(/callAsyncJavaScript\(([\s\S]*?)\)\s*\{/g)]
+    expect(calls).toHaveLength(1)
+    expect(calls[0]![1]).toContain(
+      '"return document.body.getBoundingClientRect().height"'
+    )
+    expect(calls[0]![1]).toContain("in: .defaultClient")
+    expect(swift.indexOf("callAsyncJavaScript")).toBeGreaterThan(
+      swift.indexOf("didFinish navigation")
+    )
+  })
+
+  it("lets the document load once, as itself, and blocks every other navigation", () => {
+    expect(swift).toContain("decisionHandler(own ? .allow : .cancel)")
+    expect(swift).toMatch(/let own = !loaded\s/)
+    expect(swift).toContain("navigationAction.navigationType == .other")
+    expect(swift).toContain("navigationAction.targetFrame?.isMainFrame == true")
   })
 })

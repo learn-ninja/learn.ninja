@@ -3,12 +3,8 @@ import { use } from "react"
 import { LOADERS } from "./locales"
 import { en } from "./locales/en"
 import { en as enVoices } from "./locales/voices/en"
-import {
-  uiLanguageFor,
-  type Strings,
-  type Translation,
-  type UiLanguage,
-} from "./strings"
+import type { Strings, Translation } from "./strings"
+import { uiLanguageFor, type UiLanguage } from "./ui-languages"
 import type { Voices } from "./voices"
 
 // The player's languages. English is built in; every other one is a chunk of its own, loaded when a

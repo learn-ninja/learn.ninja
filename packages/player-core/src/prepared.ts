@@ -20,6 +20,23 @@ export interface Prepared {
   molecules?: Record<string, string>
 }
 
+/**
+ * A formula drawn as SVG for the app (GET /api/lessons/{id} adds them, keyed like `math`). Sizes are
+ * in em of the formula's font: KaTeX's, which the web sets 1.21 times the surrounding text.
+ */
+export interface MathSvg {
+  /** A whole <svg> with a viewBox and paths in currentColor, and no size of its own. */
+  svg: string
+  width: number
+  /** How far it reaches above the baseline. */
+  ascent: number
+  /** How far it reaches below the baseline. */
+  descent: number
+}
+
+/** KaTeX's formula size, relative to the text around it (`.katex { font-size: 1.21em }`). */
+export const MATH_SCALE = 1.21
+
 export const emptyPrepared: Prepared = {
   math: {},
   code: {},
@@ -31,6 +48,15 @@ export const emptyPrepared: Prepared = {
 
 export const mathKey = (tex: string, display: boolean) =>
   `${display ? "d" : "i"}:${tex}`
+/** A mathKey() read back: the formula and whether it's a display one; null for any other key. */
+export function parseMathKey(
+  key: string
+): { tex: string; display: boolean } | null {
+  const kind = key.slice(0, 2)
+  return kind === "d:" || kind === "i:"
+    ? { tex: key.slice(2), display: kind === "d:" }
+    : null
+}
 /**
  * A code block's key: the language, a newline, then the code. A newline can't appear in a language
  * name, so the key is unambiguous; a NUL can't be stored (Postgres jsonb rejects it).
@@ -38,7 +64,7 @@ export const mathKey = (tex: string, display: boolean) =>
 export const codeKey = (language: string, code: string) =>
   `${language}\n${code}`
 /** Text hashed with FNV-1a, as hex. */
-const hash = (text: string) => {
+export const hash = (text: string) => {
   let h = 0x811c9dc5
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i)

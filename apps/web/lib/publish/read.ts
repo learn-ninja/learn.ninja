@@ -1,4 +1,4 @@
-import type { Prepared } from "@workspace/player-core/prepared"
+import type { MathSvg, Prepared } from "@workspace/player-core/prepared"
 import { upgradeLesson, type Lesson } from "@workspace/spec"
 
 import type { Reply } from "./handlers"
@@ -22,6 +22,8 @@ export interface ReadDeps {
   visualsCssUrl: string
   /** Charts drawn at read time for lessons stored before their charts were prepared. */
   withCharts?: (lesson: Lesson, prepared: Prepared) => Prepared
+  /** The lesson's formulas drawn as SVG, for a player that can't show KaTeX's HTML (math-svg.ts). */
+  drawMath?: (prepared: Prepared) => Record<string, MathSvg>
 }
 
 export interface LessonReply {
@@ -31,6 +33,8 @@ export interface LessonReply {
   path: string
   lesson: Lesson
   prepared: Prepared
+  /** The formulas in `prepared.math`, drawn as SVG by the same keys; one MathJax can't read is left out. */
+  mathSvg: Record<string, MathSvg>
   /**
    * The stylesheet every HTML visual loads before the lesson's own prepared CSS, with a hash of
    * its content, so a player can fetch it once and keep it until it changes.
@@ -73,6 +77,7 @@ export async function readLesson(
       path: `/lessons/${req.param}`,
       lesson: bundled.lesson,
       prepared: bundled.prepared,
+      mathSvg: deps.drawMath?.(bundled.prepared) ?? {},
       visualsCssUrl: deps.visualsCssUrl,
       expiresAt: null,
       updatedAt: null,
@@ -86,14 +91,16 @@ export async function readLesson(
   if (!record || record.hidden) return NOT_FOUND
   // Lessons published before spec 0.3 may still be live.
   const lesson = upgradeLesson(record.lesson) as Lesson
+  const prepared = deps.withCharts
+    ? deps.withCharts(lesson, record.prepared)
+    : record.prepared
   const body: LessonReply = {
     ok: true,
     id: record.id,
     path: `/l/${record.slug}-${record.id}`,
     lesson,
-    prepared: deps.withCharts
-      ? deps.withCharts(lesson, record.prepared)
-      : record.prepared,
+    prepared,
+    mathSvg: deps.drawMath?.(prepared) ?? {},
     visualsCssUrl: deps.visualsCssUrl,
     expiresAt: record.expiresAt,
     updatedAt: record.updatedAt ?? null,

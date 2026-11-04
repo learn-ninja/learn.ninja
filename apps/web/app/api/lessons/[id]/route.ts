@@ -9,6 +9,7 @@ import {
 import { exploreDepsFor } from "@/lib/explore/request"
 import { updateLesson } from "@/lib/publish/handlers"
 import { getRateLimiter } from "@/lib/publish/rate-limit"
+import { drawLessonMath } from "@/lib/publish/math-svg"
 import { readLesson } from "@/lib/publish/read"
 import { actorFor, clientKey, depsFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
@@ -34,6 +35,7 @@ export async function GET(req: Request, { params }: Params) {
         store: await getLessonStore(),
         limiter: getRateLimiter("read"),
         withCharts,
+        drawMath: drawLessonMath,
         visualsCssUrl:
           process.env.NEXT_PUBLIC_VISUALS_CSS ?? "/lesson-visuals.css",
         bundled: async (slug) => preparedBundled(slug),

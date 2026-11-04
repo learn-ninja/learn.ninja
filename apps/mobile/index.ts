@@ -26,4 +26,10 @@ import "@formatjs/intl-pluralrules/locale-data/ja.js"
 import "@formatjs/intl-pluralrules/locale-data/ko.js"
 import "@formatjs/intl-pluralrules/locale-data/zh.js"
 
+import { LogBox } from "react-native"
+
+// A development warning from a deprecation inside a dependency, not ours; its toast would sit over
+// the lesson's tray.
+LogBox.ignoreLogs(["ImageBackground is deprecated"])
+
 import "expo-router/entry"

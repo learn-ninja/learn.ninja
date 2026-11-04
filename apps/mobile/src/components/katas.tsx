@@ -1,6 +1,6 @@
 import { View } from "react-native"
 
-import type { Prepared } from "@workspace/player-core/prepared"
+import { mathKey, type Prepared } from "@workspace/player-core/prepared"
 import type {
   ConceptKata as ConceptKataData,
   Kata,
@@ -8,9 +8,12 @@ import type {
 } from "@workspace/spec"
 
 import { CodeBlock } from "@/components/code-block"
+import { useLesson } from "@/components/lesson-context"
+import { MathBlock } from "@/components/math"
 import { RichBlocks } from "@/components/rich-text"
 import { Text } from "@/components/ui/text"
 import { VisualFrame } from "@/components/visual-frame"
+import { fontSize, LESSON_TEXT_SCALE } from "../../tokens"
 
 /** A concept kata: its title, its visual if it has one, and its body, as the web lays them out. */
 export function ConceptKata({
@@ -23,9 +26,12 @@ export function ConceptKata({
   /** The visuals' shared stylesheet. */
   baseCss: string
 }) {
+  // The web's spacing: 12 points between the title and the body, 24 when a visual sits between.
   return (
-    <View className="gap-4">
-      <Text className="text-lg font-semibold">{kata.title}</Text>
+    <View className={kata.visual ? "gap-6" : "gap-3"}>
+      <Text className="text-lesson-lg font-semibold" accessibilityRole="header">
+        {kata.title}
+      </Text>
       {kata.visual ? (
         <LessonVisual
           visual={kata.visual}
@@ -47,6 +53,15 @@ function LessonVisual({
   prepared: Prepared
   baseCss: string
 }) {
+  const { mathSvg } = useLesson()
+  if (visual.kind === "math")
+    return (
+      <MathBlock
+        tex={visual.tex}
+        math={mathSvg[mathKey(visual.tex, true)]}
+        fontSize={fontSize.xl[0] * LESSON_TEXT_SCALE}
+      />
+    )
   if (visual.kind === "html")
     return (
       <VisualFrame
