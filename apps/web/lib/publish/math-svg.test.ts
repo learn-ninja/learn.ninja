@@ -41,4 +41,25 @@ describe("formulas drawn for the app", () => {
       [mathKey("x^2", false), mathKey("\\sum_i i", true)].sort()
     )
   })
+
+  it("keeps a formula's definitions to itself, so no other formula or lesson changes", () => {
+    const fraction = drawMath("\\frac{1}{2}", false)!.svg
+    // A lesson that redefines \frac (and draws it) before another lesson draws its own fraction.
+    const first = drawLessonMath({
+      ...emptyPrepared,
+      math: {
+        [mathKey("\\def\\frac#1#2{#1/#2} \\frac{3}{4}", false)]:
+          "<span>…</span>",
+        [mathKey("\\frac{3}{4}", false)]: "<span>…</span>",
+      },
+    })
+    const second = drawLessonMath({
+      ...emptyPrepared,
+      math: { [mathKey("\\frac{1}{2}", false)]: "<span>…</span>" },
+    })
+    // The redefinition draws as a slash in its own formula only, as KaTeX does on the web.
+    expect(first[mathKey("\\frac{3}{4}", false)]!.svg).toContain("<rect")
+    expect(second[mathKey("\\frac{1}{2}", false)]!.svg).toBe(fraction)
+    expect(fraction).toContain("<rect")
+  })
 })

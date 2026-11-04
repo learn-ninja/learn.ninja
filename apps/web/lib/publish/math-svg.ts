@@ -12,14 +12,23 @@ import type { MathSvg, Prepared } from "@workspace/player-core/prepared"
 // metrics KaTeX uses, as paths in em, so the app can set it in a line of text at the right size and
 // baseline. Drawn when the lesson is read, not stored: older lessons get them too, and a formula
 // drawn once is kept in memory for the next read.
+//
+// Each formula is drawn in a document of its own, as KaTeX renders each with its own macros on the
+// web: MathJax keeps \newcommand, \def, and \let for the life of a document, so a shared one would
+// let one formula (or one lesson) change how every later one draws, and the cache would keep the
+// result. A fresh document costs about two milliseconds.
 
 const adaptor = liteAdaptor()
 RegisterHTMLHandler(adaptor)
-const document = mathjax.document("", {
-  InputJax: new TeX({ packages: AllPackages }),
-  // Every glyph as its own path: no <use> references for the app's SVG renderer to resolve.
-  OutputJax: new SVG({ fontCache: "none" }),
-})
+// Every glyph as its own path: no <use> references for the app's SVG renderer to resolve.
+const output = new SVG({ fontCache: "none" })
+
+/** A document for one formula: no definitions from any other. */
+const freshDocument = () =>
+  mathjax.document("", {
+    InputJax: new TeX({ packages: AllPackages }),
+    OutputJax: output,
+  })
 
 /** Drawn formulas by mathKey(), kept across reads; the oldest go first past the cap. */
 const drawn = new Map<string, MathSvg | null>()
@@ -37,7 +46,7 @@ export function drawMath(tex: string, display: boolean): MathSvg | null {
 
 function draw(tex: string, display: boolean): MathSvg | null {
   try {
-    const html = adaptor.outerHTML(document.convert(tex, { display }))
+    const html = adaptor.outerHTML(freshDocument().convert(tex, { display }))
     // A TeX error comes back drawn in red (merror, or an unknown command as red text); the app
     // shows the source instead.
     if (/data-mjx-error|data-mml-node="merror"|fill="red"/.test(html))
