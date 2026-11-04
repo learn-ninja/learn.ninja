@@ -1,7 +1,16 @@
 // NativeWind (Tailwind 3) config. Every value comes from tokens.ts, the app's one design file.
-const { colors, radius, fontSize } = require("./tokens.ts")
+const { colors, radius, fontSize, LESSON_TEXT_SCALE } = require("./tokens.ts")
 
 const px = (n) => `${n}px`
+
+/** Tailwind's text sizes as [size, { lineHeight }], scaled. */
+const sizes = (scale, prefix = "") =>
+  Object.fromEntries(
+    Object.entries(fontSize).map(([k, [size, line]]) => [
+      prefix + k,
+      [px(size * scale), { lineHeight: px(line * scale) }],
+    ])
+  )
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -14,12 +23,9 @@ module.exports = {
       borderRadius: Object.fromEntries(
         Object.entries(radius).map(([k, v]) => [k, px(v)])
       ),
-      fontSize: Object.fromEntries(
-        Object.entries(fontSize).map(([k, [size, line]]) => [
-          k,
-          [px(size), { lineHeight: px(line) }],
-        ])
-      ),
+      // text-sm and the rest, plus lesson-sm and the rest: the same scale inside lesson content,
+      // where the web's medium text size multiplies it (data-text-size in globals.css).
+      fontSize: { ...sizes(1), ...sizes(LESSON_TEXT_SCALE, "lesson-") },
     },
   },
   plugins: [],

@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils"
 // The spec's rich-text subset as native Text runs: **bold**, *italic*, `code`, and \( formulas \),
 // with a concept body's paragraphs and lists. The web's version is packages/player/src/rich-text.tsx.
 
+/** Lesson body text: the web's text-sm leading-relaxed (1.625) at the player's medium text size. */
+const BODY = "text-lesson-sm leading-[25.6px]"
+
 /** One paragraph's inline runs. */
 export function RichText({
   text,
@@ -53,21 +56,28 @@ export function RichText({
     last = m.index + m[0].length
   }
   if (last < text.length) nodes.push(text.slice(last))
-  return <Text className={cn("text-sm leading-6", className)}>{nodes}</Text>
+  return <Text className={cn(BODY, className)}>{nodes}</Text>
 }
 
-/** A concept body: paragraphs and lists. */
+/** A concept body: paragraphs and lists, spaced as the web's (gap-2 between blocks, gap-1 between items). */
 export function RichBlocks({ text }: { text: string }) {
   return (
-    <View className="gap-3">
+    <View className="gap-2">
       {textBlocks(text).map((block, i) =>
         block.kind === "paragraph" ? (
           <RichText key={i} text={block.text} />
         ) : (
-          <View key={i} className="gap-1.5">
+          <View key={i} className="gap-1">
             {block.items.map((item, j) => (
-              <View key={j} className="flex-row gap-2">
-                <Text className="w-5 text-sm leading-6 text-muted-foreground">
+              // The marker hangs in the list's 20-point indent, as a CSS list-item's does.
+              <View key={j} className="flex-row">
+                <Text
+                  className={cn(
+                    BODY,
+                    "w-6 pe-1 text-end text-muted-foreground"
+                  )}
+                  aria-hidden
+                >
                   {block.ordered ? `${block.start + j}.` : "•"}
                 </Text>
                 <View className="flex-1">

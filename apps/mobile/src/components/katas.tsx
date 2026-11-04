@@ -23,9 +23,12 @@ export function ConceptKata({
   /** The visuals' shared stylesheet. */
   baseCss: string
 }) {
+  // The web's spacing: 12 points between the title and the body, 24 when a visual sits between.
   return (
-    <View className="gap-4">
-      <Text className="text-lg font-semibold">{kata.title}</Text>
+    <View className={kata.visual ? "gap-6" : "gap-3"}>
+      <Text className="text-lesson-lg font-semibold" accessibilityRole="header">
+        {kata.title}
+      </Text>
       {kata.visual ? (
         <LessonVisual
           visual={kata.visual}

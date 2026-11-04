@@ -52,5 +52,11 @@ export const fontSize = {
   "4xl": [36, 40],
 } as const
 
+/**
+ * How much lesson content's text is scaled at the player's default (medium) text size, as the web
+ * scales it inside data-text-size. tailwind.config.js adds lesson-sm and the rest at this scale.
+ */
+export const LESSON_TEXT_SCALE = 1.125
+
 /** Tailwind's 4pt spacing step, kept so class names mean the same on both players. */
 export const SPACING_UNIT = 4
