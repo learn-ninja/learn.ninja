@@ -19,6 +19,8 @@ const chartOf = (type: ChartVisual["type"]) =>
   charts.find((c) => c.chart.type === type)!.chart
 const sample = (name: string) =>
   chartSamples.find((s) => s.name === name)!.chart
+// Charts on option and item cards are drawn at the compact size.
+const onCard = (path: string) => /\.(options|items)\[/.test(path)
 const everyChart = [
   ...charts,
   ...chartSamples.map(({ name, chart }) => ({
@@ -71,7 +73,7 @@ export const AllCharts: Story = {
     <div className="flex flex-col gap-8">
       {everyChart.map(({ chart, path }) => (
         <figure key={path} className="flex flex-col gap-2">
-          <Visual visual={chart} plain={false} />
+          <Visual visual={chart} plain={onCard(path)} />
           <figcaption className="text-sm text-muted-foreground">
             {chart.type}: {path}
           </figcaption>
