@@ -85,6 +85,15 @@ describe("theming a server-drawn SVG for react-native-svg", () => {
     expect(out.color).toBe(colors.foreground)
   })
 
+  it("removes a stylesheet or foreign object however it nests or self-closes", () => {
+    const out = themeSvg(
+      `<svg width="10" height="10"><style>a{}<style>b{}</style></style><foreignObject/><foreignObject><div/></foreignObject><rect/></svg>`
+    )!
+    expect(out.xml).not.toContain("<style")
+    expect(out.xml).not.toContain("foreignObject")
+    expect(out.xml).toContain("<rect/>")
+  })
+
   it("drops the halo stroke a label can't paint under its fill", () => {
     const out = themeSvg(
       `<svg width="10" height="10"><text fill="#fff" stroke="#000" stroke-width="3" paint-order="stroke">A</text></svg>`

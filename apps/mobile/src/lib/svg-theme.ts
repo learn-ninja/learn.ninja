@@ -116,6 +116,23 @@ function inlineClassColors(svg: string): string {
   )
 }
 
+/** The XML without the named elements and their contents, however they nest. */
+function withoutElements(xml: string, names: string[]): string {
+  let out = xml
+  for (const name of names) {
+    const element = new RegExp(
+      `<${name}\\b[^>]*>[\\s\\S]*?<\\/${name}\\s*>|<${name}\\b[^>]*\\/>`,
+      "g"
+    )
+    for (;;) {
+      const next = out.replace(element, "")
+      if (next === out) break
+      out = next
+    }
+  }
+  return out
+}
+
 /** The root `<svg>` tag's attributes, as a map. */
 function rootAttributes(svg: string): Record<string, string> {
   const open = /<svg\b([^>]*)>/.exec(svg)
@@ -158,13 +175,10 @@ export function themeSvg(svg: string): ThemedSvg | null {
 
   let xml = inlineClassColors(svg)
   xml = resolveMixes(resolveVars(xml, vars))
-  // The stylesheets (D2's fonts among them) and anything the app can't draw.
-  xml = xml
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/g, "")
-    .replace(/<foreignObject\b[^>]*>[\s\S]*?<\/foreignObject>/g, "")
-    .replace(/<foreignObject\b[^>]*\/>/g, "")
-    .replace(/<title\b[^>]*>[\s\S]*?<\/title>/g, "")
-    .replace(/<desc\b[^>]*>[\s\S]*?<\/desc>/g, "")
+  // The stylesheets (D2's fonts among them) and anything the app can't draw. This isn't a
+  // sanitizer (react-native-svg draws no HTML and runs nothing, and the server already strips
+  // scripts), but each element is removed until none is left, so a nested one can't survive.
+  xml = withoutElements(xml, ["style", "foreignObject", "title", "desc"])
   // The web shows text in the page's font; the app in the system's.
   xml = xml.replace(/\sfont-family="[^"]*"/g, "")
   // em lengths (a chart's tick labels sit 0.32em down) in the root's font size.
