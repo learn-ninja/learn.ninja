@@ -43,8 +43,7 @@ export default function Home() {
       <View className="gap-2">
         <Text className="text-2xl font-semibold">Test lessons</Text>
         <Text className="text-sm text-muted-foreground">
-          Played from the web app&apos;s API. Only concept katas are ported so
-          far.
+          Played from the web app&apos;s API, every kata and visual included.
         </Text>
       </View>
       {load.state === "loading" ? (

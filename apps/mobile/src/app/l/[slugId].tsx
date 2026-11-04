@@ -34,21 +34,30 @@ import {
 import type { State } from "@workspace/player-core/state"
 import { stringsFor } from "@workspace/player-core/strings"
 
+import { createLinePicker } from "@workspace/player-core/voices"
+
 import { LessonContext } from "@/components/lesson-context"
 import { LessonScreen } from "@/components/screens"
-import { LessonHeader, LessonTray, TrayButton } from "@/components/shell"
+import {
+  LessonHeader,
+  LessonTray,
+  TrayButton,
+  TrayFeedback,
+} from "@/components/shell"
 import { Text } from "@/components/ui/text"
 import { fetchLesson, sendToApi, type LoadedLesson } from "@/lib/api"
 import { API_BASE_URL } from "@/lib/config"
-import { reducer, start } from "@/lib/play"
+import { feedbackFor } from "@/lib/feedback"
+import { result as resultHaptic } from "@/lib/haptics"
+import { reducer, start, type AppAction } from "@/lib/play"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
 import { visualDocument } from "@/lib/visual-frame"
 import { measureAhead } from "@/lib/visual-height"
 
 // A lesson at /l/{slug}-{id}, the same path as on the web, or /l/{slug} for a bundled test lesson.
-// It plays from the intro to the wrap-up in the shell the web draws on a phone; question katas show
-// a placeholder until phase 2 ports them.
+// It plays from the intro to the wrap-up in the shell the web draws on a phone: every kata, with
+// the feedback in the tray.
 
 type Load =
   | { state: "loading" }
@@ -147,9 +156,40 @@ function Player({ data }: { data: LoadedLesson }) {
   // The player's own words, in the lesson's language (loaded with the lesson, in fetchLesson).
   const t = stringsFor(lesson.language)
   const lessonContext = useMemo(
-    () => ({ mathSvg: data.mathSvg }),
-    [data.mathSvg]
+    () => ({
+      prepared: data.prepared,
+      mathSvg: data.mathSvg,
+      baseCss: data.baseCss,
+      lang: lesson.language,
+    }),
+    [data.prepared, data.mathSvg, data.baseCss, lesson.language]
   )
+  // One line picker for the whole run, so the ninja's lines don't repeat; a replay reseeds it.
+  const pickLine = useMemo(
+    () => createLinePicker(`${lesson.title}:${state.run}`),
+    [lesson.title, state.run]
+  )
+  // After a right answer, Why? adds the explanation to the feedback; each screen starts closed.
+  const [whyOpen, setWhyOpen] = useState(false)
+  useEffect(() => setWhyOpen(false), [state.index])
+  const feedback = feedbackFor({
+    item,
+    state,
+    t,
+    lang: lesson.language,
+    pickLine,
+    whyOpen,
+  })
+  // The system's success or error tap as an answer is checked (not a resumed one).
+  const q = state.question
+  const checked = q?.result && q.phase !== "answering" ? q.result.correct : null
+  const checkedKey = `${state.run}:${state.index}:${q?.attempts ?? 0}:${q?.phase ?? ""}`
+  const lastHaptic = useRef<string | null>(checkedKey)
+  useEffect(() => {
+    if (checked === null || lastHaptic.current === checkedKey) return
+    lastHaptic.current = checkedKey
+    resultHaptic(checked)
+  }, [checked, checkedKey])
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null)
 
   // The clock starts when the learner leaves the intro and stops at the wrap-up.
@@ -167,6 +207,15 @@ function Player({ data }: { data: LoadedLesson }) {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     leave(item.kind === "concept", () => dispatch({ type: "next" }))
   }
+  /** The tray's main action: a move to the next screen leaves this one first. */
+  const run = (action: AppAction) => {
+    if (action.type === "next") next()
+    else {
+      if (action.type !== "check")
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+      dispatch(action)
+    }
+  }
   const close = () => (router.canGoBack() ? router.back() : router.replace("/"))
 
   // Each new screen starts at the top.
@@ -174,13 +223,7 @@ function Player({ data }: { data: LoadedLesson }) {
     scrollRef.current?.scrollTo({ y: 0, animated: false })
   }, [state.index])
 
-  const primary =
-    item.kind === "intro"
-      ? { label: t.start, onPress: next }
-      : item.kind === "wrap"
-        ? // The wrap-up's own actions come with it in phase 3; until then it offers a replay.
-          { label: t.restart, onPress: () => dispatch({ type: "restart" }) }
-        : { label: t.continue, onPress: next }
+  const whyLabel = feedback.why?.everyPath ? t.everyPath : t.why
 
   return (
     <View className="flex-1 bg-background">
@@ -213,12 +256,52 @@ function Player({ data }: { data: LoadedLesson }) {
       >
         <Animated.View style={style} className="mx-auto w-full max-w-2xl">
           <LessonContext value={lessonContext}>
-            <LessonScreen data={data} item={item} state={state} t={t} />
+            <LessonScreen
+              data={data}
+              item={item}
+              state={state}
+              dispatch={dispatch}
+              feedback={feedback}
+              whyOpen={whyOpen}
+              t={t}
+            />
           </LessonContext>
         </Animated.View>
       </ScrollView>
-      <LessonTray>
-        <TrayButton label={primary.label} onPress={primary.onPress} />
+      <LessonTray
+        tone={feedback.title || feedback.message ? feedback.tone : undefined}
+        feedback={
+          <TrayFeedback
+            title={feedback.title}
+            message={feedback.message}
+            why={
+              feedback.why
+                ? {
+                    label: whyLabel,
+                    open: feedback.why.open,
+                    onPress: () => setWhyOpen((open) => !open),
+                  }
+                : null
+            }
+          />
+        }
+      >
+        {feedback.primary ? (
+          <TrayButton
+            label={feedback.primary.label}
+            variant={feedback.primary.variant}
+            disabled={feedback.primary.disabled}
+            onPress={() => run(feedback.primary!.action)}
+          />
+        ) : null}
+        {feedback.hint ? (
+          <TrayButton
+            label={t.hint}
+            variant="outline"
+            pressed={feedback.hint.open}
+            onPress={() => run({ type: "hint" })}
+          />
+        ) : null}
       </LessonTray>
     </View>
   )

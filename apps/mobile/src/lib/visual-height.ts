@@ -3,7 +3,11 @@ import { useWindowDimensions } from "react-native"
 
 import { hash } from "@workspace/player-core/prepared"
 
-import { measureVisual } from "../../modules/visual-height"
+import {
+  measureVisual,
+  measureVisualSpots,
+  type MeasuredSpots,
+} from "../../modules/visual-height"
 
 // How tall an HTML visual without a height of its own is drawn: the height of its document laid
 // out at the frame's width, measured natively with scripts off (modules/visual-height), as the web
@@ -89,10 +93,12 @@ export function measureAhead(
 export function useVisualHeight(
   doc: string,
   baseUrl: string,
-  declared?: number
+  declared?: number,
+  /** The frame's own width, where it's narrower than the lesson column (an option card's panel). */
+  laidOut?: number
 ): number | null {
   const { width: windowWidth } = useWindowDimensions()
-  const width = frameWidth(windowWidth)
+  const width = Math.round(laidOut ?? frameWidth(windowWidth))
   const key = useMemo(() => keyFor(width, doc), [width, doc])
   const [measured, setMeasured] = useState<{
     key: string
@@ -110,4 +116,49 @@ export function useVisualHeight(
   }, [declared, doc, baseUrl, width, key])
   if (declared) return declared
   return measured.key === key ? measured.height : (settled.get(key) ?? null)
+}
+
+/** Measurements of a hotspot's parts by keyFor(), in flight or done. */
+const knownSpots = new Map<string, Promise<MeasuredSpots | null>>()
+
+/**
+ * Where a hotspot's parts sit in its document at the frame's width, with the document's height,
+ * measured natively (modules/visual-height) once per width and document. Null until it's known,
+ * or where it can't be measured: the parts then can't be tapped, and the frame shows as a picture.
+ */
+export function useVisualSpots(
+  doc: string,
+  baseUrl: string,
+  laidOut?: number
+): MeasuredSpots | null {
+  const { width: windowWidth } = useWindowDimensions()
+  const width = Math.round(laidOut ?? frameWidth(windowWidth))
+  const key = useMemo(() => keyFor(width, doc), [width, doc])
+  const [measured, setMeasured] = useState<{
+    key: string
+    spots: MeasuredSpots | null
+  }>({ key, spots: null })
+  useEffect(() => {
+    let live = true
+    let promise = knownSpots.get(key)
+    if (!promise) {
+      promise = measureVisualSpots(doc, baseUrl, width).then((m) =>
+        m
+          ? { ...m, height: Math.min(MAX_VISUAL_HEIGHT, Math.ceil(m.height)) }
+          : null
+      )
+      remember(knownSpots, key, promise)
+      void promise.then((m) => {
+        if (m === null && knownSpots.get(key) === promise)
+          knownSpots.delete(key)
+      })
+    }
+    void promise.then((spots) => {
+      if (live) setMeasured({ key, spots })
+    })
+    return () => {
+      live = false
+    }
+  }, [doc, baseUrl, width, key])
+  return measured.key === key ? measured.spots : null
 }

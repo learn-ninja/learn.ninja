@@ -4,23 +4,32 @@ import type { Item } from "@workspace/player-core/flow"
 import type { State } from "@workspace/player-core/state"
 import type { Strings } from "@workspace/player-core/strings"
 
-import { ConceptKata, KataPlaceholder } from "@/components/katas"
+import { ConceptKata } from "@/components/katas"
+import { QuestionScreen } from "@/components/question"
 import { Text } from "@/components/ui/text"
+import { WrapUp } from "@/components/wrap-up"
 import type { LoadedLesson } from "@/lib/api"
+import type { Feedback } from "@/lib/feedback"
+import type { AppAction } from "@/lib/play"
 
 // One screen of the lesson, as the web's Screen draws it (packages/player/src/lesson-player.tsx),
-// with the text at the player's medium size (the lesson-* sizes). Phase 1 draws the intro, the
-// concepts, and a plain wrap-up; question katas are placeholders.
+// with the text at the player's medium size (the lesson-* sizes).
 
 export function LessonScreen({
   data,
   item,
   state,
+  dispatch,
+  feedback,
+  whyOpen,
   t,
 }: {
   data: LoadedLesson
   item: Item
   state: State
+  dispatch: (action: AppAction) => void
+  feedback: Feedback
+  whyOpen: boolean
   t: Strings
 }) {
   const { lesson } = data
@@ -42,24 +51,18 @@ export function LessonScreen({
         </View>
       )
     case "concept":
-      return (
-        <ConceptKata
-          kata={item.kata}
-          prepared={data.prepared}
-          baseCss={data.baseCss}
-        />
-      )
+      return <ConceptKata kata={item.kata} />
     case "question":
-      return (
-        <View className="gap-6">
-          {item.role === "hook" ? (
-            <Text className="text-lesson-sm -mb-4 font-mono text-muted-foreground">
-              {t.warmUp}
-            </Text>
-          ) : null}
-          <KataPlaceholder kata={item.kata} />
-        </View>
-      )
+      return state.question ? (
+        <QuestionScreen
+          item={item}
+          question={state.question}
+          dispatch={dispatch}
+          feedback={feedback}
+          whyOpen={whyOpen}
+          t={t}
+        />
+      ) : null
     case "fix":
       return (
         <View className="gap-2">
@@ -70,16 +73,7 @@ export function LessonScreen({
         </View>
       )
     case "wrap":
-      return (
-        <View className="items-center gap-3">
-          <Text className="text-lesson-2xl text-center font-semibold tracking-tight">
-            {t.done}
-          </Text>
-          <Text className="text-lesson-base text-center font-medium text-muted-foreground">
-            {lesson.title}
-          </Text>
-        </View>
-      )
+      return <WrapUp lesson={lesson} results={state.results} t={t} />
   }
 }
 
