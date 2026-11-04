@@ -203,4 +203,3 @@ Overlays render in place, sized to fit the visual, so you can show them open:
 
 - Run `validate` and fix every issue. The messages say exactly what to change.
 - Read the lesson once as a learner: is the hook intriguing? Does every question kata feel like the natural way to ask its question? Does each concept explain the practice that follows? Is every wrong option's feedback specific? Reading only a question's options, could you pick the right one from how it's written? Is the challenge harder than the practice? Is every term, fact, and method each question needs taught in an earlier concept kata, not only in feedback, a hint, or an explanation? Does it hold its level? Run the "You've drifted if…" check in `levels/{level}.md`, and cut any concept sentence that re-teaches what the summary says the learner knows.
-

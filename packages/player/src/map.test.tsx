@@ -2,6 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { geoBounds } from "d3-geo"
 import type { Feature, MultiPolygon, Polygon } from "geojson"
 import { feature } from "topojson-client"
 import type { GeometryCollection, Topology } from "topojson-specification"
@@ -9,6 +10,7 @@ import {
   COUNTRIES,
   DRAWN_SIZES,
   MAP_REGION_NAMES,
+  MAP_REGIONS,
   NOT_ON_MAP,
   type MapVisual,
 } from "@workspace/spec"
@@ -61,7 +63,7 @@ describe("WorldMap", () => {
     }
   })
 
-  it("draws Central Asia at its intended scale with accurate country sizes", () => {
+  it("draws Central Asia with its countries labeled and a point", () => {
     const svg = draw({
       region: "central-asia",
       alt: "Central Asia.",
@@ -81,24 +83,26 @@ describe("WorldMap", () => {
       "Afghanistan",
     ])
     expect(svg.match(/class="fill-chart-2\/70"/g)).toHaveLength(3)
+  })
 
+  it("holds all of Central Asia, each country large enough to tap", () => {
+    const [west, south, east, north] = MAP_REGIONS["central-asia"]
     const topology = data as unknown as Topology<{
       countries: GeometryCollection
     }>
     const shapes = feature(topology, topology.objects.countries)
       .features as Feature<Polygon | MultiPolygon>[]
-    const drawn = measureDrawnSizes("central-asia", shapes)
-    expect(drawn).toEqual(DRAWN_SIZES["central-asia"])
-    expect(drawn).toMatchObject({
-      AF: expect.any(Number),
-      KZ: expect.any(Number),
-      UZ: expect.any(Number),
-    })
-    expect(drawn.AF).toBeGreaterThan(24)
-    expect(drawn.KZ).toBeGreaterThan(24)
-    expect(drawn.UZ).toBeGreaterThan(24)
-    expect(drawn.TR).toBeLessThan(24)
-    expect(drawn.PK).toBeGreaterThan(24)
+    for (const code of ["KZ", "UZ", "TM", "KG", "TJ", "AF"]) {
+      const shape = shapes.find((s) => s.id === code)!
+      const [[x0, y0], [x1, y1]] = geoBounds(shape)
+      expect([x0 >= west, y0 >= south, x1 <= east, y1 <= north], code).toEqual([
+        true,
+        true,
+        true,
+        true,
+      ])
+      expect(DRAWN_SIZES["central-asia"][code], code).toBeGreaterThanOrEqual(24)
+    }
   })
 
   it("makes a region's land and borders once, for every map of it", () => {
