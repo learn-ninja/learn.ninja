@@ -254,12 +254,142 @@ export function withImageSizes(
   return lines.length ? `${source}\n${lines.join("\n")}\n` : source
 }
 
+/** The space between arrows that meet the same side of a box. */
+export const EDGE_SPREAD = 16
+
+/** Box shapes with flat sides, whose sides' middles are on the outline. */
+const FLAT_SIDED = new Set(["rectangle", "square", "image"])
+
+type Point = { x: number; y: number }
+type Side = "top" | "right" | "bottom" | "left"
+interface EdgeShape {
+  id: string
+  type?: string
+  pos: Point
+  width: number
+  height: number
+}
+interface EdgeConnection {
+  src: string
+  dst: string
+  isCurve?: boolean
+  route: Point[]
+}
+
+/**
+ * Moves each arrow's ends to the middle of the box sides they meet. D2's default layout (dagre)
+ * routes arrows wherever its ranks put them, often near a box's bottom edge, and sometimes stops
+ * one short of the box. Arrows sharing a side are spread EDGE_SPREAD apart around its middle, in
+ * the order they had. The point after each end moves with it, so the curve keeps its shape. Only
+ * dagre's curved routes are touched (sequence diagrams and grids place theirs on purpose), and
+ * only at boxes with flat sides; self-loops and arrows between a container and its own child stay.
+ */
+export function centerEdges(diagram: {
+  shapes: EdgeShape[]
+  connections: EdgeConnection[]
+}): void {
+  const shapes = new Map(diagram.shapes.map((s) => [s.id, s]))
+  const ends: {
+    route: Point[]
+    at: number
+    neighbor: number
+    shape: EdgeShape
+    side: Side
+  }[] = []
+  for (const c of diagram.connections) {
+    const { route } = c
+    if (!c.isCurve || route.length < 4 || c.src === c.dst) continue
+    if (c.dst.startsWith(`${c.src}.`) || c.src.startsWith(`${c.dst}.`)) continue
+    for (const [id, at, neighbor] of [
+      [c.src, 0, 1],
+      [c.dst, route.length - 1, route.length - 2],
+    ] as const) {
+      const shape = shapes.get(id)
+      if (!shape || !FLAT_SIDED.has(shape.type ?? "rectangle")) continue
+      const side = sideOf(shape, route[at]!, route[neighbor]!)
+      ends.push({ route, at, neighbor, shape, side })
+    }
+  }
+  const groups = new Map<string, typeof ends>()
+  for (const e of ends) {
+    const key = `${e.shape.id}\n${e.side}`
+    groups.set(key, [...(groups.get(key) ?? []), e])
+  }
+  for (const group of groups.values()) {
+    const across = (e: (typeof group)[number]) =>
+      e.side === "top" || e.side === "bottom" ? "x" : "y"
+    group.sort((a, b) => a.route[a.at]![across(a)] - b.route[b.at]![across(b)])
+    group.forEach((e, i) => {
+      const { pos, width, height } = e.shape
+      const length = across(e) === "x" ? width : height
+      const gap = Math.min(EDGE_SPREAD, length / (group.length + 1))
+      const offset = (i - (group.length - 1) / 2) * gap
+      const target: Point =
+        e.side === "top" || e.side === "bottom"
+          ? {
+              x: pos.x + width / 2 + offset,
+              y: e.side === "top" ? pos.y : pos.y + height,
+            }
+          : {
+              x: e.side === "left" ? pos.x : pos.x + width,
+              y: pos.y + height / 2 + offset,
+            }
+      const point = e.route[e.at]!
+      const neighbor = e.route[e.neighbor]!
+      e.route[e.neighbor] = {
+        x: neighbor.x + target.x - point.x,
+        y: neighbor.y + target.y - point.y,
+      }
+      e.route[e.at] = target
+    })
+  }
+}
+
+/**
+ * The side of a box an arrow's end meets: of the sides the route heads out through (toward its
+ * next point), the one nearest the end. A steep curve can leave through the top while ending
+ * closer to the left; dagre also stops some routes short of the box.
+ */
+function sideOf(shape: EdgeShape, end: Point, next: Point): Side {
+  const { x, y } = shape.pos
+  const right = x + shape.width
+  const bottom = y + shape.height
+  const clamp = (v: number, lo: number, hi: number) =>
+    Math.min(hi, Math.max(lo, v))
+  const sides: { side: Side; out: boolean; distance: number }[] = [
+    {
+      side: "top",
+      out: next.y < y,
+      distance: Math.hypot(end.x - clamp(end.x, x, right), end.y - y),
+    },
+    {
+      side: "bottom",
+      out: next.y > bottom,
+      distance: Math.hypot(end.x - clamp(end.x, x, right), end.y - bottom),
+    },
+    {
+      side: "left",
+      out: next.x < x,
+      distance: Math.hypot(end.x - x, end.y - clamp(end.y, y, bottom)),
+    },
+    {
+      side: "right",
+      out: next.x > right,
+      distance: Math.hypot(end.x - right, end.y - clamp(end.y, y, bottom)),
+    },
+  ]
+  const outward = sides.filter((s) => s.out)
+  const pool = outward.length ? outward : sides
+  return pool.reduce((a, b) => (b.distance < a.distance ? b : a)).side
+}
+
 /** The diagram as an SVG string in the theme's colors. Throws when the D2 doesn't compile. */
 export async function renderDiagram(source: string): Promise<string> {
   const svg = await run(async (d2) => {
     let { diagram, renderOptions } = await d2.compile(source)
     const sized = withImageSizes(source, diagram.shapes)
     if (sized !== source) ({ diagram, renderOptions } = await d2.compile(sized))
+    centerEdges(diagram)
     return d2.render(diagram, {
       ...renderOptions,
       // Light-mode classes only: the theme tokens below recolor them for both modes.

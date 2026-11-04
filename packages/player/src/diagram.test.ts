@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  centerEdges,
   checkDiagram,
   compileErrors,
   LABEL_ICON_GAP,
@@ -152,6 +153,123 @@ describe("renderDiagram", () => {
 })
 
 describe("checkDiagram", () => {
+  it("meets boxes in the middle of their sides, spreading arrows that share one", () => {
+    const box = (id: string, x: number, y: number) => ({
+      id,
+      type: "rectangle",
+      pos: { x, y },
+      width: 140,
+      height: 120,
+    })
+    // Dagre's routes, as D2 lays out a commit chain with branch labels: low on the side, and one
+    // stopping short of its box.
+    const diagram = {
+      shapes: [
+        box("a", 0, 0),
+        box("b", 240, 0),
+        box("c", 480, 200),
+        box("main", 240, 200),
+        box("f", 240, 400),
+      ],
+      connections: [
+        {
+          src: "a",
+          dst: "b",
+          isCurve: true,
+          route: [
+            { x: 140, y: 108 },
+            { x: 180, y: 108 },
+            { x: 200, y: 108 },
+            { x: 240, y: 108 },
+          ],
+        },
+        {
+          src: "main",
+          dst: "c",
+          isCurve: true,
+          route: [
+            { x: 380, y: 300 },
+            { x: 420, y: 300 },
+            { x: 440, y: 300 },
+            { x: 480, y: 300 },
+          ],
+        },
+        {
+          src: "f",
+          dst: "c",
+          isCurve: true,
+          route: [
+            { x: 380, y: 480 },
+            { x: 420, y: 480 },
+            { x: 450, y: 450 },
+            { x: 515, y: 350 },
+          ],
+        },
+        {
+          src: "b",
+          dst: "c",
+          isCurve: true,
+          route: [
+            { x: 380, y: 100 },
+            { x: 420, y: 100 },
+            { x: 440, y: 120 },
+            { x: 480, y: 290 },
+          ],
+        },
+        {
+          src: "b",
+          dst: "c",
+          isCurve: true,
+          route: [
+            { x: 380, y: 110 },
+            { x: 420, y: 110 },
+            { x: 440, y: 130 },
+            { x: 480, y: 310 },
+          ],
+        },
+      ],
+    }
+    centerEdges(diagram)
+    const [ab, mainC, fC, bc1, bc2] = diagram.connections.map((c) => c.route)
+    // Straight across, through the middle of both boxes.
+    expect(ab!.map((p) => p.y)).toEqual([60, 60, 60, 60])
+    // Onto the middle of the bottom side, and the curve moves with it.
+    expect(fC!.at(-1)).toEqual({ x: 550, y: 320 })
+    expect(fC![2]).toEqual({ x: 485, y: 420 })
+    // Three arrows on c's left side, spread around its middle in their order.
+    expect([bc1!.at(-1)!.y, mainC!.at(-1)!.y, bc2!.at(-1)!.y]).toEqual([
+      244, 260, 276,
+    ])
+  })
+
+  it("leaves sequence diagrams' arrows where D2 put them", () => {
+    const route = [
+      { x: 62, y: 234 },
+      { x: 212, y: 234 },
+    ]
+    const diagram = {
+      shapes: [
+        {
+          id: "s.alice",
+          type: "rectangle",
+          pos: { x: 12, y: 88 },
+          width: 100,
+          height: 66,
+        },
+        {
+          id: "s.bob",
+          type: "rectangle",
+          pos: { x: 162, y: 88 },
+          width: 100,
+          height: 66,
+        },
+      ],
+      connections: [{ src: "s.alice", dst: "s.bob", route: [...route] }],
+    }
+    centerEdges(diagram)
+    expect(diagram.connections[0]!.route).toEqual(route)
+  })
+
   it("accepts plain boxes and arrows", async () => {
     expect(await checkDiagram(flow)).toEqual([])
   }, 20_000)
