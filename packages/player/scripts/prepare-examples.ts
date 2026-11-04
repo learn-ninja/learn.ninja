@@ -44,8 +44,10 @@ for (const file of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
   for (const c of visualClasses(result.lesson)) classes.add(c)
 }
 for (const c of visualClasses(visualKit)) classes.add(c)
+// Both sizes, so a sample can go on an option or item card as well as a kata.
 for (const { chart } of chartSamples)
-  merged.charts![chartKey(chart, false)] = renderChart(chart, false)
+  for (const compact of [false, true])
+    merged.charts![chartKey(chart, compact)] = renderChart(chart, compact)
 for (const sample of diagramSamples)
   merged.diagrams![diagramKey(sample.d2)] = await renderDiagram(sample.d2)
 for (const { molecule } of moleculeSamples)
