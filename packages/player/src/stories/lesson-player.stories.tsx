@@ -210,6 +210,44 @@ export const Phone: Story = {
   args: { lesson: lessons.buttons },
   globals: { viewport: { value: "mobile2", isRotated: false } },
 }
+/** Presses Hint once the question is in, in whichever language the toolbar picked. */
+const pressHint: Story["play"] = async ({ canvas, userEvent, globals }) => {
+  const button = await canvas.findByRole(
+    "button",
+    { name: stringsFor(globals.ui ?? "en").hint },
+    { timeout: 10_000 }
+  )
+  await userEvent.click(button)
+}
+const PHONE = { viewport: { value: "mobile2", isRotated: false } }
+
+/** A question with a hint, before checking: a Hint pill sits beside Check (H opens it too). */
+export const HintOffered: Story = {
+  name: "Hint: offered",
+  args: { lesson: lessons.correlation, startAt: "p1" },
+}
+/**
+ * Hint pressed: the hint is a quiet note under the answers (he says nothing), and the button stays
+ * pressed so another press hides it. It's free: the kata can still be right first time.
+ */
+export const HintOpen: Story = {
+  name: "Hint: open",
+  args: { lesson: lessons.correlation, startAt: "p1" },
+  play: pressHint,
+}
+/** On a phone, Hint shares the tray's width with Check. */
+export const HintOfferedPhone: Story = {
+  name: "Hint: offered, phone",
+  args: { lesson: lessons.correlation, startAt: "p1" },
+  globals: PHONE,
+}
+/** On a phone, the hint is the same note under the answers, and the two buttons share the bar. */
+export const HintOpenPhone: Story = {
+  name: "Hint: open, phone",
+  args: { lesson: lessons.correlation, startAt: "p1" },
+  globals: PHONE,
+  play: pressHint,
+}
 /**
  * The ninja as the sensei: he settles and bows in, breathes while he waits, and bows at the earned
  * moments. On a lesson you can play through by keyboard, to reach the wrap-up and his line there.

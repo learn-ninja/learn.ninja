@@ -5,12 +5,17 @@ import { describe, expect, it } from "vitest"
 import type { Lesson, QuestionKata } from "@workspace/spec"
 
 import { chipsInGaps } from "./katas"
-import { buildSequence, type Item, type Outcome } from "@workspace/player-core/flow"
+import {
+  buildSequence,
+  type Item,
+  type Outcome,
+} from "@workspace/player-core/flow"
 import {
   earnedMoment,
   freshQuestion,
   reducer,
   wordBank,
+  type Action,
   type State,
 } from "./lesson-player"
 
@@ -298,6 +303,55 @@ describe("scenario story mode", () => {
       tried: ["b"],
       answer: { kind: "select", ids: [] },
     })
+  })
+})
+
+describe("hint", () => {
+  const hinted = { ...sort, hint: "Which ones are sweet?" }
+  const right: Action = {
+    type: "answer",
+    answer: {
+      kind: "zones",
+      zones: { pool: [], fruit: ["apple", "pear"], veg: ["kale", "leek"] },
+    },
+  }
+
+  it("toggles on demand while answering, and stays free", () => {
+    let state = reducer(stateFor(hinted), { type: "hint" })
+    expect(state.question).toMatchObject({
+      hintOpen: true,
+      attempts: 0,
+      phase: "answering",
+    })
+    expect(reducer(state, { type: "hint" }).question?.hintOpen).toBe(false)
+    state = reducer(reducer(state, right), { type: "check" })
+    expect(state.results).toEqual({ s: "first" })
+  })
+
+  it("does nothing without a hint, on the hook, during a brief, or after checking", () => {
+    const none = stateFor(sort)
+    expect(reducer(none, { type: "hint" })).toBe(none)
+    const hookItem: Item = { kind: "question", kata: hinted, role: "hook" }
+    const hook = { ...stateFor(hinted), items: [hookItem] }
+    expect(reducer(hook, { type: "hint" })).toBe(hook)
+    const briefing = stateFor(scenario)
+    expect(reducer(briefing, { type: "hint" })).toBe(briefing)
+    const checked = reducer(reducer(stateFor(hinted), right), { type: "check" })
+    expect(reducer(checked, { type: "hint" })).toBe(checked)
+  })
+
+  it("opens for the retry after a miss, even if it was toggled off", () => {
+    let state = reducer(stateFor(hinted), { type: "hint" })
+    state = reducer(state, { type: "hint" })
+    state = reducer(state, {
+      type: "answer",
+      answer: {
+        kind: "zones",
+        zones: { pool: [], fruit: ["apple", "kale"], veg: ["pear", "leek"] },
+      },
+    })
+    state = reducer(reducer(state, { type: "check" }), { type: "retry" })
+    expect(state.question).toMatchObject({ hintOpen: true })
   })
 })
 

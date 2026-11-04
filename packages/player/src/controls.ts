@@ -30,5 +30,12 @@ export const markStyles =
   "data-[status=wrong]:border-yellow-500! data-[status=wrong]:bg-yellow-500/10! " +
   "data-[status=partial]:border-amber-500! data-[status=partial]:bg-amber-500/10!"
 
+/**
+ * The least a visual's own window is tall (288px). A two-line chat or a small formula would otherwise be
+ * a thin strip between the prompt and the answers; shorter content sits in the middle of the window.
+ * Not for a `plain` visual, which sits on a surface that already sizes it (an option card's panel).
+ */
+export const visualWindow = "min-h-72"
+
 /** The number key on an option, chip, or sort lane: hidden on touch screens, which have no keys to press. */
 export const keyHintStyles = "pointer-coarse:hidden"

@@ -2,7 +2,7 @@ import type { Translation } from "../strings"
 
 export const id: Translation = {
   start: "Mulai pelajaran",
-  check: "Periksa jawaban",
+  check: "Periksa",
   continue: "Lanjut",
   tryAgain: "Coba lagi",
   why: "Mengapa?",

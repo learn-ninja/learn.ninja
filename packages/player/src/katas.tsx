@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { CheckIcon, XIcon } from "lucide-react"
+import { CheckIcon, LightbulbIcon, XIcon } from "lucide-react"
 
 import type {
   ConceptKata as ConceptKataData,
@@ -182,14 +182,15 @@ export function Explanation({
 
 /**
  * The player's feedback under the answers, beside the ninja's line: a miss's hint or a scenario's
- * outcome in amber, the explanation in green. The explanation's recipe, led by a filled icon.
+ * outcome in amber, the explanation in green, and the hint the learner asked for in neutral grey
+ * with a lightbulb. The explanation's recipe, led by a filled icon.
  */
 export function Note({
   tone,
   text,
   className,
 }: {
-  tone: "good" | "warn"
+  tone: "good" | "warn" | "neutral"
   text: string
   className?: string
 }) {
@@ -199,36 +200,45 @@ export function Note({
         "flex items-start gap-2.5 rounded-lg border px-4 py-3 text-sm tabular-nums",
         tone === "good"
           ? "border-green-600 bg-green-600/10"
-          : "border-yellow-500 bg-yellow-500/10",
+          : tone === "warn"
+            ? "border-yellow-500 bg-yellow-500/10"
+            : "border-border bg-muted",
         className
       )}
     >
-      {/* A filled dot: a white check, or a dark "!" (white is too faint on yellow). */}
-      <span
-        aria-hidden="true"
-        className={cn(
-          "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full",
-          tone === "good"
-            ? "bg-green-600 text-white"
-            : "bg-yellow-500 text-yellow-950"
-        )}
-      >
-        {tone === "good" ? (
-          <CheckIcon className="size-3" strokeWidth={3} />
-        ) : (
-          // Lucide's circle-alert mark, without its circle.
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={3}
-            strokeLinecap="round"
-            className="size-3"
-          >
-            <path d="M12 7v6M12 17h.01" />
-          </svg>
-        )}
-      </span>
+      {tone === "neutral" ? (
+        <LightbulbIcon
+          aria-hidden="true"
+          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+        />
+      ) : (
+        /* A filled dot: a white check, or a dark "!" (white is too faint on yellow). */
+        <span
+          aria-hidden="true"
+          className={cn(
+            "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full",
+            tone === "good"
+              ? "bg-green-600 text-white"
+              : "bg-yellow-500 text-yellow-950"
+          )}
+        >
+          {tone === "good" ? (
+            <CheckIcon className="size-3" strokeWidth={3} />
+          ) : (
+            // Lucide's circle-alert mark, without its circle.
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={3}
+              strokeLinecap="round"
+              className="size-3"
+            >
+              <path d="M12 7v6M12 17h.01" />
+            </svg>
+          )}
+        </span>
+      )}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         {text
           .split("\n")
