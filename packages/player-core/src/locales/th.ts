@@ -2,7 +2,7 @@ import type { Translation } from "../strings"
 
 export const th: Translation = {
   start: "เริ่มบทเรียน",
-  check: "ตรวจคำตอบ",
+  check: "ตรวจ",
   continue: "ต่อไป",
   tryAgain: "ลองอีกครั้ง",
   why: "ทำไม?",

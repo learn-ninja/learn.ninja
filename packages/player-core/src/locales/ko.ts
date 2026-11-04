@@ -2,7 +2,7 @@ import type { Translation } from "../strings"
 
 export const ko: Translation = {
   start: "레슨 시작",
-  check: "정답 확인",
+  check: "확인",
   continue: "계속",
   tryAgain: "다시 시도",
   why: "왜죠?",

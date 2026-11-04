@@ -2,7 +2,7 @@ import type { Translation } from "../strings"
 
 export const zhTw: Translation = {
   start: "開始課程",
-  check: "檢查答案",
+  check: "檢查",
   continue: "繼續",
   tryAgain: "再試一次",
   why: "為什麼？",

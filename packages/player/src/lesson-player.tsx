@@ -20,6 +20,7 @@ import {
 import { Alert, AlertDescription } from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
+import { Toggle } from "@workspace/ui/components/toggle"
 import { Card, CardContent } from "@workspace/ui/components/card"
 import { DirectionProvider } from "@workspace/ui/components/direction"
 import { toast, Toaster } from "@workspace/ui/components/sonner"
@@ -554,6 +555,8 @@ export type Action =
   | { type: "resume"; state: State }
   | { type: "answer"; answer: Answer }
   | { type: "why" }
+  /** Hint while answering: toggles the hint under the answers. It's free, so the score doesn't change. */
+  | { type: "hint" }
   | { type: "briefed" }
   | { type: "rebrief" }
   | { type: "check" }
@@ -622,6 +625,18 @@ export function reducer(state: State, action: Action): State {
       return state.question
         ? { ...state, question: { ...state.question, whyOpen: true } }
         : state
+    case "hint":
+      return state.question?.phase === "answering" &&
+        item?.kind === "question" &&
+        hintOffered(item, state.question)
+        ? {
+            ...state,
+            question: {
+              ...state.question,
+              hintOpen: !state.question.hintOpen,
+            },
+          }
+        : state
     case "briefed":
       return state.question
         ? { ...state, question: { ...state.question, briefed: true } }
@@ -650,7 +665,7 @@ export function reducer(state: State, action: Action): State {
           ...s,
           phase: "answering",
           answer: retryAnswer(item.kata, s.answer),
-          // There's no help button: a miss earns the hint on the second try.
+          // A miss opens the hint under the answers for the second try (Hint toggles it any time).
           hintOpen: Boolean(item.kata.hint),
           ...(rewind
             ? {
@@ -910,19 +925,21 @@ function Player({
   // Until it's measured the open tray takes its natural height, so it doesn't slide open as the page
   // loads; it only animates for a change after that.
   const shownHeight = dragHeight ?? (trayOpen ? (trayHeight ?? "auto") : 0)
-  // "?" shows the keyboard shortcuts, as it does on most of the web. D opens and closes the tray and
-  // W the theory card (Why?), matched by key position so they work on any keyboard layout; touch
-  // screens have no notch to toggle.
+  // "?" shows the keyboard shortcuts, as it does on most of the web. D opens and closes the tray, W
+  // the explanation (Why?), and H opens the hint (Hint), matched by key position so they work on any
+  // keyboard layout; touch screens have no notch to toggle.
   const keys = React.useRef({ onShortcuts, onTrayToggle, fixedTray })
   keys.current = { onShortcuts, onTrayToggle, fixedTray }
   const toggleWhy = React.useRef<(() => void) | null>(null)
+  const askHint = React.useRef<(() => void) | null>(null)
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const help = e.key === "?"
       const tray = e.code === "KeyD" && !e.shiftKey && !keys.current.fixedTray
       const why = e.code === "KeyW" && !e.shiftKey && toggleWhy.current
+      const hint = e.code === "KeyH" && !e.shiftKey && askHint.current
       if (
-        !(help || tray || why) ||
+        !(help || tray || why || hint) ||
         e.repeat ||
         e.metaKey ||
         e.ctrlKey ||
@@ -935,7 +952,8 @@ function Player({
       e.preventDefault()
       if (help) keys.current.onShortcuts()
       else if (tray) keys.current.onTrayToggle()
-      else toggleWhy.current?.()
+      else if (why) toggleWhy.current?.()
+      else askHint.current?.()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
@@ -953,6 +971,13 @@ function Player({
     state.question?.phase === "feedback" &&
     state.question.result?.correct === true
   toggleWhy.current = canWhy ? () => setWhyOpen((open) => !open) : null
+  // H toggles the hint while the Hint button is offered.
+  askHint.current =
+    item.kind === "question" &&
+    state.question &&
+    hintOffered(item, state.question)
+      ? () => dispatch({ type: "hint" })
+      : null
   // Every path makes a scenario's rows taller: scroll them up clear of his bubble.
   const pathsOpen =
     canWhy &&
@@ -1022,9 +1047,10 @@ function Player({
   // toast floats in the card's corner, over the answers when they reach that far down (a tall
   // question on a short screen): scroll them up clear of it, into the room the screen leaves below.
   // The note under the answers always clears it, which also brings it up from below the fold, and
-  // Why? adding the explanation note runs this again.
+  // Why? adding the explanation note runs this again, and so does Hint's note while answering.
+  const hintNote = q?.phase === "answering" && q.hintOpen
   React.useEffect(() => {
-    if (!q?.result || q.phase === "answering") return
+    if (!hintNote && (!q?.result || q.phase === "answering")) return
     const id = window.setTimeout(() => {
       const scroller = scrollRef.current
       if (!scroller) return
@@ -1057,7 +1083,7 @@ function Player({
       if (overlap > 0) scroller.scrollBy({ top: overlap, behavior })
     }, 250)
     return () => window.clearTimeout(id)
-  }, [q?.result, q?.phase, whyOpen])
+  }, [q?.result, q?.phase, whyOpen, hintNote])
   // A scenario opens with his brief (story mode): he steps up to tell it, then goes back to his
   // corner for the question. Each telling has its own key, so a replay starts fresh. With him off
   // there's no brief: the situation is on the question screen.
@@ -1680,6 +1706,22 @@ function ScreenLabel({
   )
 }
 
+/**
+ * Whether the Hint button (and H) is offered: while answering a question with a hint, before
+ * checking. Not on the hook, the warm-up guess, and not during a scenario's brief.
+ */
+export function hintOffered(
+  item: Extract<Item, { kind: "question" }>,
+  s: QuestionState
+): boolean {
+  return (
+    item.role !== "hook" &&
+    Boolean(item.kata.hint) &&
+    s.phase === "answering" &&
+    s.briefed
+  )
+}
+
 /** The explanation opens after "Why?", and by itself once a missed answer is revealed (not for the hook's guess). */
 function explanationShown(s: QuestionState, role: Role): boolean {
   return s.whyOpen || (s.phase === "revealed" && role !== "hook")
@@ -2147,6 +2189,8 @@ export function ActionArea({
   // In the player the bubble says only the ninja's line; the message is a note under the answers,
   // amber for a hint, a miss, or where a wrong pick led, green for the explanation or a right pick's outcome.
   let noteTone: "good" | "warn" = "warn"
+  // The hint while answering, under the answers on every screen size (phones have no card for it).
+  let hintNote: string | null = null
   const helpButton = (label: string, onPress: () => void) => (
     <Button
       variant="outline"
@@ -2216,12 +2260,22 @@ export function ActionArea({
         onPress: () => dispatch({ type: "check" }),
         isDisabled: !isReady(kata, s.answer),
       }
-      // Try again clears the bubble: the miss already said the hint. After a scenario's rewind
-      // the miss said its outcome, so the hint comes now.
-      if (story && s.tried.length > 0 && kata.hint) {
-        title = t.hint
-        message = kata.hint
-      }
+      // The hint is a quiet note under the answers, not his line: Hint toggles it, and a miss opens
+      // it for the retry (Try again clears the bubble, so the note is what remains of the hint). A
+      // lone demo shows it as an alert instead (QuestionScreen).
+      if (inBubble && kata.hint && s.hintOpen) hintNote = kata.hint
+      if (hintOffered(item, s))
+        secondary = (
+          <Toggle
+            variant="outline"
+            size={tray ? "lg" : "sm"}
+            className={cn(tray && [TRAY_BUTTON, TRAY_GHOST, PHONE_BAR])}
+            isSelected={s.hintOpen}
+            onChange={() => dispatch({ type: "hint" })}
+          >
+            {t.hint}
+          </Toggle>
+        )
     } else if (role === "hook" && r) {
       // The hook is a guess, so a miss still moves on, but both get the colors a checked answer would.
       // A wrong guess also says what it got wrong: the misconception is what the lesson starts from.
@@ -2462,6 +2516,16 @@ export function ActionArea({
           )}
         >
           <Note tone={noteTone} text={note} />
+        </div>
+      ) : null}
+      {hintNote ? (
+        <div
+          key="hint"
+          data-feedback-note
+          data-text-size={textSize}
+          className="-mt-2 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-bottom-1"
+        >
+          <Note tone="neutral" text={hintNote} />
         </div>
       ) : null}
       <p aria-live="polite" className="sr-only">

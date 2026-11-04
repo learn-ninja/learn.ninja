@@ -2,7 +2,7 @@ import type { Translation } from "../strings"
 
 export const ja: Translation = {
   start: "レッスンを始める",
-  check: "答えを確認",
+  check: "確認",
   continue: "次へ",
   tryAgain: "もう一度",
   why: "なぜ？",
