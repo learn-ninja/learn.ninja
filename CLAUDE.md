@@ -13,6 +13,7 @@ An LLM turns any input into one short, interactive lesson (Duolingo/Brilliant-st
 - `packages/db`: the Postgres schema (Drizzle) and its SQL migrations
 - `packages/spec`: the lesson spec v0.3: Zod schema, exported JSON Schema, validation rules, and the 0.2 → 0.3 upgrade (single source of truth)
 - `packages/player`: React components for every lesson screen and kata
+- `packages/player-core`: the player's DOM-free parts (answer checking, flow and state, saved progress with storage passed in, strings and every locale, the ninja's lines, `Prepared` types), shared by `packages/player` and `apps/mobile`; its tsconfig has no DOM library
 - `packages/cli`: the `learn` command (sync, validate, publish, schema) the skill runs; bundled into `skills/learn/scripts/learn.mjs`
 - `packages/eslint-config`, `packages/typescript-config`: shared configs
 - `skills/learn/`: the installable skill (`npx skills add https://learn.ninja -g`, served by `apps/web` at `/.well-known/skills/`): a short SKILL.md that runs `sync`, then `steps.md`, the teaching guide, format reference (also shown in the docs through `<include>`), and generated copies of the schema, examples, and bundled CLI. Everything but SKILL.md and the CLI is also served as one bundle at `/api/skill`, which `sync` downloads into a project's `.learn/skill/`, so guide changes reach every install on deploy
@@ -28,7 +29,7 @@ An LLM turns any input into one short, interactive lesson (Duolingo/Brilliant-st
 - `npm run skill:build -w @workspace/cli`: rebuild `skills/learn` (bundled CLI, schema, examples) after changing the spec, CLI, or examples; a test fails if it's stale
 - `npm run schema -w @workspace/spec`: re-export `packages/spec/schema/lesson.schema.json` after changing the spec (a test fails if it's stale)
 - `npm run map -w @workspace/player`: rebuild the map visual's country shapes (`packages/player/src/map-data.json`) and the checker's table of countries (`packages/spec/src/countries.ts`) from Natural Earth via world-atlas
-- `npm run voice -w @workspace/player`: speak the ninja's English lines (`packages/player/src/locales/voices/en.ts`) with his ElevenLabs voice into `apps/web/public/voice/en/` and `packages/player/src/voice-clips.json`, after changing them (a test fails if a clip is missing); only new lines cost credits, and it reads `ELEVENLABS_API_KEY` from `apps/web/.env.local`
+- `npm run voice -w @workspace/player`: speak the ninja's English lines (`packages/player-core/src/locales/voices/en.ts`) with his ElevenLabs voice into `apps/web/public/voice/en/` and `packages/player-core/src/voice-clips.json`, after changing them (a test fails if a clip is missing); only new lines cost credits, and it reads `ELEVENLABS_API_KEY` from `apps/web/.env.local`
 - `npm run favicon -w web`: rebuild `apps/web/app/favicon.ico` from `app/icon.svg` after changing the icon
 - `npm run smoke -w web`: rebuild the intro smoke's textures (`packages/ui/src/styles/smoke.css`) after changing the recipe in `apps/web/scripts/build-smoke.mjs`; they live in the stylesheet so the smoke is there on the first paint
 - `npm run tags -w web`: the weekly tag report (subjects by lesson count, top tags per subject, tags used once) from `DATABASE_URL` or `apps/web/.env.local`, else the local PGlite; read it to add synonyms to `packages/spec/src/tags.ts`
@@ -78,4 +79,4 @@ A lesson is made of **katas**, one per screen: `concept` katas (theory) and ques
 
 ## v1 scope reminders
 
-No accounts (progress is kept in the browser only, per lesson page), lessons expire after 7 days, no typed answers (word chips instead), no `number` katas (multiple choice instead), no images. Multiple languages and right-to-left matter from day one: lessons are written in any language. The player's own interface follows the lesson's language or the learner's choice in the language menu (`UI_TRANSLATIONS` in `packages/player/src/strings.ts`); keep every translation up to date when adding strings, and check one with `?ui=`.
+No accounts (progress is kept in the browser only, per lesson page), lessons expire after 7 days, no typed answers (word chips instead), no `number` katas (multiple choice instead), no images. Multiple languages and right-to-left matter from day one: lessons are written in any language. The player's own interface follows the lesson's language or the learner's choice in the language menu (`UI_TRANSLATIONS` in `packages/player-core/src/strings.ts`); keep every translation up to date when adding strings, and check one with `?ui=`.

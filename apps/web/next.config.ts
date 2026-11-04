@@ -6,7 +6,7 @@ import optimizeLocales from "@react-aria/optimize-locales-plugin"
 import { createMDX } from "fumadocs-mdx/next"
 
 // Languages whose built-in React Aria strings we ship: one per player language (UI_LANGUAGES in
-// packages/player/src/strings.ts). React Aria keys them by full locale, Arabic as ar-AE: a code it
+// packages/player-core/src/strings.ts). React Aria keys them by full locale, Arabic as ar-AE: a code it
 // doesn't know (e.g. ar-EG) silently strips that language's strings.
 const LOCALES = [
   "en-US",
@@ -82,6 +82,7 @@ const nextConfig: NextConfig = {
     "@workspace/ui",
     "@workspace/cli",
     "@workspace/player",
+    "@workspace/player-core",
     "@workspace/spec",
     "@workspace/db",
   ],

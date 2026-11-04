@@ -5,7 +5,7 @@ import { parseHTML } from "linkedom"
 
 import type { ChartVisual, FunctionChartVisual } from "@workspace/spec"
 
-import { sampleExpression, type Point } from "./curve"
+import { sampleExpression, type Point } from "@workspace/player-core/curve"
 
 // Server-only: draws a lesson's chart visuals with Observable Plot into plain SVG, once per lesson,
 // so the learner's browser loads no chart library and the frame runs no script. Colors are the

@@ -13,10 +13,10 @@ import type {
 import { Selectable } from "@workspace/ui/components/selectable"
 import { cn } from "@workspace/ui/lib/utils"
 
-import type { Mark } from "./check"
+import type { Mark } from "@workspace/player-core/check"
 import { useIsDark, usePlayer } from "./context"
 import { markStyles } from "./controls"
-import { countryName } from "./country-names"
+import { countryName } from "@workspace/player-core/country-names"
 import { Clock, Fractions, NumberLine } from "./figures"
 import { shortcutBlocked } from "./keys"
 import {
@@ -26,7 +26,7 @@ import {
   mathKey,
   moleculeKey,
   type CodeLines,
-} from "./prepared"
+} from "@workspace/player-core/prepared"
 import { markSpots, SPOT_CSS } from "./spots"
 
 /** Hotspot wiring for interactive visuals: which regions are selected or marked, and what a tap does. */

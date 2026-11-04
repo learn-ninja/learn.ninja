@@ -3,11 +3,11 @@ import { useGlobals } from "storybook/preview-api"
 
 import type { Lesson } from "@workspace/spec"
 
-import { buildSequence, scoredQuestions, type Outcome } from "../flow"
+import { buildSequence, scoredQuestions, type Outcome } from "@workspace/player-core/flow"
 import { LessonPlayer, type State } from "../lesson-player"
 import { fingerprint } from "../progress"
 import type { DayStreak } from "../streak"
-import { stringsFor } from "../strings"
+import { stringsFor } from "@workspace/player-core/strings"
 import { lessons, prepared } from "./fixtures"
 
 // The whole player, playable end to end. Switch language and theme in the toolbar or the footer.

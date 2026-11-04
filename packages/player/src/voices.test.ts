@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
 
 import { FOOTER_LINES, footerClip } from "./footer-lines"
-import { UI_LANGUAGES } from "./strings"
+import { UI_LANGUAGES } from "@workspace/player-core/strings"
 import {
   CADENCE,
   clipFor,
@@ -13,7 +13,7 @@ import {
   voiceLines,
   type Lines,
   type Moment,
-} from "./voices"
+} from "@workspace/player-core/voices"
 
 const MOMENTS: Moment[] = [
   "praise",

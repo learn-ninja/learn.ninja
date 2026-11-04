@@ -36,6 +36,7 @@
     "@workspace/cli": "^0.0.0",
     "@workspace/db": "^0.0.0",
     "@workspace/player": "^0.0.0",
+    "@workspace/player-core": "^0.0.0",
     "@workspace/spec": "^0.0.0",
     "@workspace/ui": "*",
     "better-auth": "^1.7.12",

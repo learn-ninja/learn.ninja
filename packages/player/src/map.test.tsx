@@ -15,7 +15,7 @@ import {
   type MapVisual,
 } from "@workspace/spec"
 
-import type { Mark } from "./check"
+import type { Mark } from "@workspace/player-core/check"
 import WorldMap, { nearestSmall, outlinesFor, spotsFor } from "./map"
 import data from "./map-data.json"
 import { measureDrawnSizes } from "./map-frame"

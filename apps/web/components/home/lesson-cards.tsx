@@ -1,7 +1,7 @@
 import Link from "next/link"
 
 import { LearnLogo } from "@workspace/player/logo"
-import { stringsFor } from "@workspace/player/strings"
+import { stringsFor } from "@workspace/player-core/strings"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { UserAvatar } from "@/components/account/user-avatar"

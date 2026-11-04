@@ -1,11 +1,11 @@
 import { ImageResponse } from "next/og"
 
-import { plainText } from "@workspace/player/plain-text"
+import { plainText } from "@workspace/player-core/plain-text"
 import {
   loadLanguage,
   UI_TRANSLATIONS,
   type Strings,
-} from "@workspace/player/strings"
+} from "@workspace/player-core/strings"
 import type { Lesson } from "@workspace/spec"
 
 import { INSTALL_COMMAND, SITE } from "./site"

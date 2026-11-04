@@ -11,7 +11,7 @@ import { Kbd } from "@workspace/ui/components/kbd"
 import { Selectable } from "@workspace/ui/components/selectable"
 import { cn } from "@workspace/ui/lib/utils"
 
-import type { Answer, Mark } from "./check"
+import type { Answer, Mark } from "@workspace/player-core/check"
 import { usePlayer } from "./context"
 import {
   controlPadding,
