@@ -679,7 +679,7 @@ export interface NinjaCue {
 
 /**
  * Where he is on the lesson card. He sits in the screen's `[data-ninja-slot]` when it has one
- * (the intro, the wrap-up, a scenario's brief) and in the card's bottom start corner otherwise, and
+ * (the intro, the wrap-up) and in the card's bottom start corner otherwise, and
  * leaps between the two. To and from a brief (`data-ninja-slot="brief"`) it's a quick hop, since
  * the question is waiting.
  */
@@ -884,7 +884,7 @@ export function NinjaStage({
         "pointer-events-none absolute z-10",
         !placed && "invisible",
         // Phones have no room for him beside the content, so there he only shows in a screen's slot
-        // (the intro, a scenario's brief, the wrap-up).
+        // (the intro, the wrap-up).
         !slot &&
           "start-4 bottom-4 size-10 max-sm:hidden sm:start-6 sm:bottom-6",
         vanishing && "ninja-vanish",

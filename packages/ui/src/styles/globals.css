@@ -853,6 +853,26 @@
     translate: 0 0.25em;
   }
 }
+/* A chat visual's typing dots (packages/player/src/chat.tsx): each rises and brightens in turn. */
+.chat-dot {
+  opacity: 0.4;
+  animation: chat-dot 1.1s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-dot {
+    animation: none;
+  }
+}
+@keyframes chat-dot {
+  30% {
+    opacity: 1;
+    translate: 0 -3px;
+  }
+  60% {
+    opacity: 0.4;
+    translate: 0 0;
+  }
+}
 @keyframes brief-blink {
   50% {
     opacity: 0.15;

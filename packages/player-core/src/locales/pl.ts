@@ -16,6 +16,8 @@ export const pl: Translation = {
   everyPath: "Wszystkie ścieżki",
   replayBrief: "Pokaż sytuację ponownie",
   tried: "Wypróbowane",
+  you: "Ty",
+  scenario: "Scenariusz",
   picked: (parts) => `Wybrano: ${parts}`,
   hookNote: "To pierwsze pytanie to rozgrzewka. Nie liczy się do wyniku.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),

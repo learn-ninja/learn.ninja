@@ -12,6 +12,8 @@ export const zh: Translation = {
   everyPath: "所有路线",
   replayBrief: "重看情境",
   tried: "试过了",
+  you: "你",
+  scenario: "情景",
   picked: (parts) => `已选：${parts}`,
   hookNote: "第一题是热身，不计入得分。",
   minutes: (n) => `${n} 分钟`,

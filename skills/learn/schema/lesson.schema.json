@@ -250,6 +250,9 @@
         },
         {
           "$ref": "#/$defs/MoleculeVisual"
+        },
+        {
+          "$ref": "#/$defs/ChatVisual"
         }
       ]
     },
@@ -978,6 +981,49 @@
       "required": [
         "kind",
         "smiles"
+      ],
+      "additionalProperties": false
+    },
+    "ChatVisual": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "chat"
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "turns": {
+          "minItems": 1,
+          "maxItems": 8,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "who": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 240
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "turns"
       ],
       "additionalProperties": false
     },

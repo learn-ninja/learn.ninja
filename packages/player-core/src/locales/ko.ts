@@ -12,6 +12,8 @@ export const ko: Translation = {
   everyPath: "모든 선택지",
   replayBrief: "상황 다시 보기",
   tried: "시도함",
+  you: "나",
+  scenario: "시나리오",
   picked: (parts) => `선택함: ${parts}`,
   hookNote: "첫 문제는 준비 운동이에요. 점수에 들어가지 않아요.",
   minutes: (n) => `${n}분`,

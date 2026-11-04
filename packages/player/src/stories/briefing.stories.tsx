@@ -6,7 +6,6 @@ import { Button } from "@workspace/ui/components/button"
 
 import { Briefing } from "../briefing"
 import { usePlayer } from "../context"
-import { Ninja } from "../ninja"
 import { directionOf } from "@workspace/player-core/strings"
 import { lessons, PlayerFrame } from "./fixtures"
 
@@ -44,7 +43,7 @@ function BriefingDemo({
           lang={lang}
           skip={skip}
           onTold={() => setTold(true)}
-          slot={<Ninja className="size-16" />}
+          label={t.scenario}
         />
       </div>
       <Button

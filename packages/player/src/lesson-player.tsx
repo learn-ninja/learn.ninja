@@ -133,6 +133,7 @@ import {
   type TextSize,
   type Theme,
 } from "@workspace/player-core/strings"
+import { scenarioTurns } from "./chat"
 import { Visual } from "./visuals"
 import {
   ChallengeNote,
@@ -1731,9 +1732,7 @@ function QuestionScreen({
         lang={lang}
         skip={brief.skip}
         onTold={brief.onTold}
-        slot={
-          <div aria-hidden="true" data-ninja-slot="brief" className="size-16" />
-        }
+        label={t.scenario}
       />
     )
   const locked = state.phase !== "answering"
@@ -1781,14 +1780,17 @@ function QuestionScreen({
     kata.type === "scenario"
       ? kata.options.filter((o) => o.quality === "best").map((o) => o.id)
       : []
+  // A scenario with a chat plays the pick and its outcome as the next two turns (chat.tsx).
+  const chatty = kata.type === "scenario" && kata.visual?.kind === "chat"
   // In the player a pick's outcome is in the note under the answers, so rows show outcomes only
-  // for Every path. A lone demo shows them under the picked row and, once revealed, the best one.
+  // for Every path. A lone demo shows them under the picked row and, once revealed, the best one;
+  // with a chat, the chat shows them instead.
   const showOutcomes =
     kata.type !== "scenario"
       ? []
       : paths
         ? kata.options.map((o) => o.id)
-        : !state.result
+        : !state.result || chatty
           ? []
           : [
               ...(!inBubble && state.answer.kind === "select"
@@ -1804,44 +1806,49 @@ function QuestionScreen({
   return (
     <>
       {eyebrow ? <ScreenLabel text={eyebrow} className="-mb-4" /> : null}
-      {kata.type === "scenario" ? (
-        // The situation, kept in view while choosing. In story mode it's what the ninja just said.
-        <Card size="sm" className={at(0).className} style={at(0).style}>
-          <CardContent className="flex items-start gap-3 text-muted-foreground [&_code]:text-foreground [&_strong]:text-foreground">
-            {storyMode ? (
-              <Ninja className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            ) : null}
-            <RichText
-              text={kata.situation}
-              className="min-w-0 flex-1 text-pretty"
-            />
-            {storyMode && state.phase === "answering" ? (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={t.replayBrief}
-                className="-my-1 -me-1.5 shrink-0"
-                onPress={() => dispatch({ type: "rebrief" })}
-              >
-                <RotateCcwIcon className="rtl:-scale-x-100" />
-              </Button>
-            ) : null}
+      {kata.type === "scenario" && !storyMode ? (
+        // The situation, kept in view while choosing. In story mode the ninja has just told it, so
+        // the screen goes without the card and a Replay button beside the prompt tells it again.
+        <Card size="sm">
+          <CardContent className="text-muted-foreground [&_code]:text-foreground [&_strong]:text-foreground">
+            <RichText text={kata.situation} className="text-pretty" />
           </CardContent>
         </Card>
       ) : null}
       <h2
-        className={cn("text-lg font-semibold", at(200).className)}
-        style={at(200).style}
+        className={cn(
+          "flex items-start gap-2 text-lg font-semibold",
+          at(0).className
+        )}
+        style={at(0).style}
       >
-        <RichText text={kata.prompt} />
+        <RichText text={kata.prompt} className="min-w-0 flex-1" />
+        {kata.type === "scenario" &&
+        storyMode &&
+        state.phase === "answering" ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t.replayBrief}
+            className="-my-0.5 shrink-0"
+            onPress={() => dispatch({ type: "rebrief" })}
+          >
+            <RotateCcwIcon className="rtl:-scale-x-100" />
+          </Button>
+        ) : null}
       </h2>
       {kata.visual && kata.type !== "hotspot" ? (
-        <Visual visual={kata.visual} />
+        <div className={at(180).className} style={at(180).style}>
+          <Visual
+            visual={kata.visual}
+            turns={scenarioTurns(kata, state.answer, state.phase)}
+          />
+        </div>
       ) : null}
       {kata.type === "choice" ||
       kata.type === "compare" ||
       kata.type === "scenario" ? (
-        <div className={at(380).className} style={at(380).style}>
+        <div className={at(300).className} style={at(300).style}>
           <OptionsKata
             {...props}
             order={state.optionOrder}
@@ -2194,7 +2201,12 @@ export function ActionArea({
     const missText = (res: CheckResult) =>
       res.feedback ?? (res.missKey ? missMessage(res, t) : null)
     // In the player a scenario is a story: the ninja says what each pick led to, a miss rewinds.
+    // With a chat, the pick's outcome is the other person's reply in it, so he only gives the verdict.
     const story = inBubble && kata.type === "scenario"
+    const outcome = (res: CheckResult) =>
+      kata.type === "scenario" && kata.visual?.kind === "chat"
+        ? null
+        : (res.feedback ?? null)
     if (s.phase === "answering") {
       // Until every sort item is in a group, Check says how many are left instead.
       const unsorted =
@@ -2224,7 +2236,7 @@ export function ActionArea({
       title = say(earnedMoment(state, item) ?? "praise")
       explanation = kata.explanation
       // What the pick led to; with Every path open the rows show every outcome, so he says why.
-      if (story) message = why?.open ? kata.explanation : (r.feedback ?? null)
+      if (story) message = why?.open ? kata.explanation : outcome(r)
       else if (inBubble && why?.open) message = kata.explanation
       noteTone = "good"
       primary = { ...primary, variant: "success" }
@@ -2232,7 +2244,7 @@ export function ActionArea({
       // What the pick led to, then back to the decision.
       tone = "warn"
       title = say(r.partial ? "close" : "nudge")
-      message = r.feedback ?? null
+      message = outcome(r)
       primary = {
         label: t.rewind,
         onPress: onRewind ?? (() => dispatch({ type: "retry" })),

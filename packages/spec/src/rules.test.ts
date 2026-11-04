@@ -1772,3 +1772,52 @@ describe("explanation length", () => {
     ).toContain("The explanation has 31 words")
   })
 })
+
+describe("chat visuals", () => {
+  const correlation = () => loadExample("correlation-vs-causation.json")
+
+  it("accepts a chat on a scenario, ending on the other person's turn", () => {
+    const lesson = correlation()
+    expect(lesson.challenge.visual.kind).toBe("chat")
+    expect(validateLesson(lesson).ok).toBe(true)
+  })
+
+  it("wants someone besides the learner to speak", () => {
+    const lesson = correlation()
+    delete lesson.challenge.visual.turns[0].who
+    expectIssue(lesson, {
+      path: "challenge.visual.turns",
+      message: /Every turn in this chat is the learner's own/,
+    })
+  })
+
+  it("keeps a chat to three people besides the learner", () => {
+    const lesson = correlation()
+    lesson.challenge.visual.turns = ["Ana", "Ben", "Cy", "Di"].map((who) => ({
+      who,
+      text: "Hi",
+    }))
+    expectIssue(lesson, {
+      path: "challenge.visual.turns",
+      message: /4 people besides the learner/,
+    })
+  })
+
+  it("wants a scenario's chat to end on the other person's turn", () => {
+    const lesson = correlation()
+    lesson.challenge.visual.turns.push({ text: "Let me think." })
+    expectIssue(lesson, {
+      path: "challenge.visual.turns",
+      message: /ends on the learner's own line/,
+    })
+  })
+
+  it("wants alt text, like an HTML visual", () => {
+    const lesson = correlation()
+    delete lesson.challenge.visual.alt
+    expectIssue(lesson, {
+      path: "challenge.visual",
+      message: /This chat has no "alt"/,
+    })
+  })
+})

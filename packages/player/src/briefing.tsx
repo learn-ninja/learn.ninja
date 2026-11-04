@@ -64,9 +64,8 @@ export function streamUnits(beat: string): string[] {
   return units
 }
 
-// The stream's timing, in ms. He hops up (the leap), the caret blinks a moment, then each word
-// fades in a step after the last, overlapping, with a short breath between sentences.
-const LEAP = 650
+// The stream's timing, in ms. The caret blinks a moment, then each word fades in a step after the
+// last, overlapping, with a short breath between sentences.
 const LEAD = 700
 const STEP = 44
 const BREATH = 418
@@ -77,7 +76,7 @@ export function streamSchedule(units: string[][]): {
   delays: number[][]
   end: number
 } {
-  let t = LEAP + LEAD
+  let t = LEAD
   const delays = units.map((beat, b) => {
     if (b > 0) t += BREATH
     return beat.map(() => (t += STEP) - STEP)
@@ -87,24 +86,24 @@ export function streamSchedule(units: string[][]): {
 
 /**
  * The ninja's brief before a scenario, said like an assistant's reply: no bubble, just his words
- * above him. A caret blinks, then the words stream in, each fading up from a soft blur on its own
- * CSS timer (no re-render per word). Every word is laid out from the start, so nothing reflows and
- * he never moves. `skip` counts Skip presses: a new one shows the rest at once. `onTold` fires once
- * it's all out.
+ * in the middle of the screen while he stays in his corner. A caret blinks, then the words stream
+ * in, each fading up from a soft blur on its own CSS timer (no re-render per word). Every word is
+ * laid out from the start, so nothing reflows. `skip` counts Skip presses: a new one shows the rest
+ * at once. `onTold` fires once it's all out.
  */
 export function Briefing({
   text,
   lang,
   skip,
   onTold,
-  slot,
+  label,
 }: {
   text: string
   lang?: string
   skip: number
   onTold: () => void
-  /** Where the ninja stands, under his words (NinjaStage puts him there). */
-  slot: React.ReactNode
+  /** The screen's label above his words, as the question after the brief shows it ("Challenge"). */
+  label?: string
 }) {
   const beats = React.useMemo(() => briefBeats(text, lang), [text, lang])
   const units = React.useMemo(() => beats.map(streamUnits), [beats])
@@ -132,7 +131,7 @@ export function Briefing({
   }, [skipped, finish])
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center">
       {/* Screen readers get the whole brief at once; the streaming words are for the eyes. */}
       <p className="sr-only">{plainText(text)}</p>
       <div
@@ -141,11 +140,14 @@ export function Briefing({
         className="brief flex w-full max-w-md flex-col gap-2 text-base text-pretty"
         style={
           {
-            "--brief-start": `${LEAP + LEAD}ms`,
+            "--brief-start": `${LEAD}ms`,
             "--brief-end": `${end}ms`,
           } as React.CSSProperties
         }
       >
+        {label ? (
+          <p className="mb-2 font-mono text-sm text-muted-foreground">{label}</p>
+        ) : null}
         {units.map((beat, b) => (
           <p key={b}>
             {b === 0 ? <Caret at="start" /> : null}
@@ -167,7 +169,6 @@ export function Briefing({
           </p>
         ))}
       </div>
-      {slot}
     </div>
   )
 }

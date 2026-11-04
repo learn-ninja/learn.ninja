@@ -16,6 +16,8 @@ export const hi: Translation = {
   everyPath: "सभी रास्ते",
   replayBrief: "स्थिति फिर से देखें",
   tried: "आज़माया",
+  you: "आप",
+  scenario: "परिदृश्य",
   picked: (parts) => `चुना गया: ${parts}`,
   hookNote: "यह पहला सवाल वार्म-अप है। यह आपके स्कोर में नहीं गिना जाता।",
   minutes: (n) => p(n, { one: "# मिनट", other: "# मिनट" }),

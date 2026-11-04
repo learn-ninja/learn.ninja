@@ -16,6 +16,8 @@ export const de: Translation = {
   everyPath: "Alle Wege",
   replayBrief: "Situation noch einmal",
   tried: "Versucht",
+  you: "Du",
+  scenario: "Szenario",
   picked: (parts) => `Gewählt: ${parts}`,
   hookNote:
     "Die erste Frage ist zum Aufwärmen. Sie zählt nicht für deine Punktzahl.",

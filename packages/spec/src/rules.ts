@@ -630,6 +630,38 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
       }
   }
 
+  // Chats: someone besides the learner speaks, and few enough people to tell apart by their bubbles.
+  for (const { visual, path } of everyVisual(lesson)) {
+    if (visual.kind !== "chat") continue
+    const speakers = [
+      ...new Set(visual.turns.flatMap((t) => (t.who ? [t.who] : []))),
+    ]
+    if (speakers.length === 0)
+      add(
+        "structure",
+        `${path}.turns`,
+        `Every turn in this chat is the learner's own. Give the other person's turns a "who" (their name); a turn without one is the learner's.`
+      )
+    if (speakers.length > LIMITS.chatSpeakers)
+      add(
+        "structure",
+        `${path}.turns`,
+        `This chat has ${speakers.length} people besides the learner (${speakers.join(", ")}); keep it to ${LIMITS.chatSpeakers}, so each one's bubbles stay apart on a phone.`
+      )
+  }
+  // A scenario's chat ends on the other person's turn: the options are what the learner says back,
+  // and the pick's outcome arrives as that person's reply.
+  for (const { kata, path } of questions) {
+    if (kata.type !== "scenario" || kata.visual?.kind !== "chat") continue
+    const last = kata.visual.turns[kata.visual.turns.length - 1]!
+    if (!last.who)
+      add(
+        "teaching",
+        `${path}.visual.turns`,
+        `A scenario's chat ends on the learner's own line. End it on the other person's turn (one with a "who"): the options are what the learner says back, and the outcome shows as that person's reply.`
+      )
+  }
+
   // Number lines: ticks that fit, and everything marked on them inside the line.
   for (const { visual, path } of everyVisual(lesson)) {
     if (visual.kind !== "numberline") continue
@@ -1690,5 +1722,6 @@ const VISUAL_NAMES: Partial<Record<Visual["kind"], string>> = {
   numberline: "number line",
   fraction: "fraction picture",
   chess: "chess position",
+  chat: "chat",
 }
 const visualName = (v: Visual) => VISUAL_NAMES[v.kind] ?? v.kind
