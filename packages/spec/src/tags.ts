@@ -175,7 +175,9 @@ export function normalizeTag(label: string): string {
   const folded = lowered
     .replace(/['’]/g, "")
     .replace(/[\s_\p{P}\p{S}]+/gu, "-")
-    .replace(/^-+|-+$/g, "")
+    // The fold above leaves at most one hyphen at each end, so trimming a single one is enough,
+    // and unlike `^-+|-+$` it can't backtrack quadratically on a long run of hyphens.
+    .replace(/^-|-$/g, "")
   return TAG_SYNONYMS[folded] ?? folded
 }
 

@@ -115,14 +115,30 @@ const DATA_TAGS = new Set([
   "analytics",
 ])
 
+/**
+ * The longest `topic` or tag string the upgrade looks at. The upgrade runs on raw JSON before the
+ * schema caps any string, so without this its regexes (normalizeTag, splitTopic) would see strings
+ * as long as a whole lesson. A valid label is at most TAG_LIMITS.max characters, so a longer one
+ * could never become a tag anyway and is ignored.
+ */
+const MAX_UPGRADE_LABEL = 200
+
+/** A string short enough for the upgrade's label regexes, else undefined. */
+function shortLabel(value: unknown): string | undefined {
+  return typeof value === "string" && value.length <= MAX_UPGRADE_LABEL
+    ? value
+    : undefined
+}
+
 /** Spec 0.7 split `math` into `math` and `data`: a math lesson tagged as data moves to `data`. */
 function withDataSubject(
   lesson: Record<string, unknown>
 ): Record<string, unknown> {
   if (lesson.subject !== "math" || !Array.isArray(lesson.tags)) return lesson
-  return lesson.tags.some(
-    (t) => typeof t === "string" && DATA_TAGS.has(normalizeTag(t))
-  )
+  return lesson.tags.some((t) => {
+    const label = shortLabel(t)
+    return label !== undefined && DATA_TAGS.has(normalizeTag(label))
+  })
     ? { ...lesson, subject: "data" }
     : lesson
 }
@@ -146,11 +162,13 @@ function withLabels(lesson: Record<string, unknown>): Record<string, unknown> {
 /**
  * The parts of an old `topic` label, each a tag of its own: "Git & Claude Code" → "Git", "Claude
  * Code". Splits on &, commas, " and ", and a slash between spaces (so "CI/CD" stays one), and
- * keeps each part as written.
+ * keeps each part as written. Whitespace is collapsed first so the split pattern never meets a
+ * run of spaces it could backtrack over.
  */
 export function splitTopic(topic: string): string[] {
   return topic
-    .split(/\s*[&,]\s*|\s+\/\s+|\s+and\s+/i)
+    .replace(/\s+/g, " ")
+    .split(/ ?[&,] ?| \/ | and /i)
     .map(normalizeLabel)
     .filter(Boolean)
 }
@@ -267,8 +285,12 @@ function withSubject(lesson: Record<string, unknown>): Record<string, unknown> {
     ? rest.subject
     : subjectForTopic(topic)
   const tags = Array.isArray(rest.tags) ? [...rest.tags] : []
-  if (typeof topic === "string") {
-    const keys = tags.map((t) => (typeof t === "string" ? normalizeTag(t) : ""))
+  const topicLabel = shortLabel(topic)
+  if (topicLabel !== undefined) {
+    const keys = tags.map((t) => {
+      const tag = shortLabel(t)
+      return tag === undefined ? "" : normalizeTag(tag)
+    })
     const fields = {
       subject,
       language: typeof rest.language === "string" ? rest.language : "",
@@ -277,16 +299,16 @@ function withSubject(lesson: Record<string, unknown>): Record<string, unknown> {
           ? rest.targetLanguage
           : undefined,
     }
-    for (const label of splitTopic(topic)) {
-      const key = normalizeTag(label)
+    for (const part of splitTopic(topicLabel)) {
+      const key = normalizeTag(part)
       if (
-        isTagLabel(label) &&
+        isTagLabel(part) &&
         TAG_PATTERN.test(key) &&
         !keys.includes(key) &&
         tags.length < TAG_LIMITS.perLesson &&
-        !redundantTag(key, fields, label)
+        !redundantTag(key, fields, part)
       ) {
-        tags.push(label)
+        tags.push(part)
         keys.push(key)
       }
     }
