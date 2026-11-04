@@ -15,7 +15,8 @@
 import { shuffle } from "./check"
 import { packFor } from "./language"
 import { seeded } from "./random"
-import { uiLanguageFor, type NinjaLevel, type UiLanguage } from "./strings"
+import type { NinjaLevel } from "./strings"
+import { uiLanguageFor, type UiLanguage } from "./ui-languages"
 import voiceClips from "./voice-clips.json"
 
 /** A point in a lesson where the ninja says something. */

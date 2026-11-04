@@ -96,6 +96,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [
     "@electric-sql/pglite",
     "@terrastruct/d2",
+    "mathjax-full",
     "openchemlib",
   ],
   // GitHub profile pictures are served from our own origin (see UserAvatar): after a client-side

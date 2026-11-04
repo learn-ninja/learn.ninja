@@ -13,11 +13,14 @@ import { inStyle, VISUAL_CSP } from "@workspace/player-core/visual-frame"
 export function visualDocument({
   html,
   css,
+  height,
   baseCss,
   visualsCss,
 }: {
   html: string
   css?: string
+  /** The visual's own height: it then fills the frame. Without one it keeps its natural size, to be measured. */
+  height?: number
   /** The visuals' shared stylesheet (/lesson-visuals.css), inlined. */
   baseCss: string
   /** The lesson's prepared Tailwind utilities (Prepared.visualsCss). */
@@ -29,7 +32,7 @@ export function visualDocument({
     `<meta name="viewport" content="width=device-width, initial-scale=1">` +
     `<style>${inStyle(baseCss)}</style>` +
     `<style>${inStyle(visualsCss)}</style>` +
-    `<style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box;min-height:100vh}${inStyle(css ?? "")}</style>` +
+    `<style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box${height ? ";min-height:100vh" : ""}}${inStyle(css ?? "")}</style>` +
     `</head><body>${html}</body></html>`
   )
 }

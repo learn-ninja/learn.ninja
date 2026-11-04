@@ -105,6 +105,26 @@ describe("reading a lesson", () => {
     ).toBe(404)
   })
 
+  it("adds the prepared formulas drawn as SVG, by the same keys", async () => {
+    const math = { "i:x^2": "<span>…</span>" }
+    read.bundled = async () => ({
+      lesson: JSON.parse(buttons) as Lesson,
+      prepared: { ...emptyPrepared, math },
+    })
+    read.drawMath = (prepared) =>
+      Object.fromEntries(
+        Object.keys(prepared.math).map((key) => [
+          key,
+          { svg: "<svg></svg>", width: 1, ascent: 1, descent: 0 },
+        ])
+      )
+    const bundled = await readLesson({ param: "x", client: "x" }, read)
+    expect(bundled.body).toMatchObject({ mathSvg: { "i:x^2": {} } })
+    const id = await published()
+    const stored = await readLesson({ param: id, client: "x" }, read)
+    expect(stored.body).toHaveProperty("mathSvg")
+  })
+
   it("limits reads per client", async () => {
     read.limiter = new MemoryRateLimiter(1)
     const first = await readLesson(
