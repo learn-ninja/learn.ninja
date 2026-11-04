@@ -96,7 +96,6 @@ import {
   Ninja,
   NinjaStage,
   reducedMotion,
-  type CueKind,
   type NinjaCue,
 } from "./ninja"
 import { emptyPrepared, type Prepared } from "@workspace/player-core/prepared"
@@ -124,6 +123,7 @@ import {
   useShare,
   type Preferences,
 } from "./shell"
+import { cueKindFor } from "@workspace/player-core/ninja"
 import { playSound, preloadSounds } from "./sound"
 import { StreakScreen, type DayStreak } from "./streak"
 import {
@@ -474,25 +474,7 @@ export {
   type State,
 }
 
-/**
- * What the ninja's body knows about the answer just checked: the earned moments that get a move
- * of their own (a streak, the last question), a near miss, and the second miss that shows the
- * answer. A wrong hook guess is only a guess, so it's a plain miss.
- */
-export function cueKindFor(
-  state: State,
-  item: Extract<Item, { kind: "question" }>
-): CueKind {
-  const s = state.question
-  if (!s?.result) return "sad"
-  if (s.result.correct) {
-    const earned = earnedMoment(state, item)
-    return earned === "streak" || earned === "last" ? "earned" : "happy"
-  }
-  if (item.role === "hook") return "sad"
-  if (s.phase === "revealed") return "reveal"
-  return s.result.partial ? "close" : "sad"
-}
+export { cueKindFor } from "@workspace/player-core/ninja"
 
 /** Whether two states show the same piece of feedback: the same screen, attempt, and phase. */
 function sameFeedback(a: State, b: State): boolean {

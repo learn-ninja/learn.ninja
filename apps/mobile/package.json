@@ -11,7 +11,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "tokens": "node scripts/build-tokens.mjs"
+    "tokens": "node scripts/build-tokens.mjs",
+    "smoke": "node scripts/build-smoke.mjs"
   },
   "dependencies": {
     "@formatjs/intl-getcanonicallocales": "^3.3.0",

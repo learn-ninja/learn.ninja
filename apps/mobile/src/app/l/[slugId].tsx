@@ -38,6 +38,8 @@ import { createLinePicker } from "@workspace/player-core/voices"
 
 import { LessonContext } from "@/components/lesson-context"
 import { LessonScreen } from "@/components/screens"
+import { Aura, useIntroVanish } from "@/components/smoke"
+import { StageContext } from "@/components/stage-context"
 import {
   LessonHeader,
   LessonTray,
@@ -52,6 +54,8 @@ import { result as resultHaptic } from "@/lib/haptics"
 import { reducer, start, type AppAction } from "@/lib/play"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
+import { ninjaOf } from "@/lib/preferences"
+import { usePreferences } from "@/lib/use-preferences"
 import { visualDocument } from "@/lib/visual-frame"
 import { measureAhead } from "@/lib/visual-height"
 
@@ -169,6 +173,9 @@ function Player({ data }: { data: LoadedLesson }) {
     () => createLinePicker(`${lesson.title}:${state.run}`),
     [lesson.title, state.run]
   )
+  // Phase 3: the ninja's character from the learner's preferences (the web's, on the device).
+  const [prefs] = usePreferences()
+  const ninja = ninjaOf(prefs)
   // After a right answer, Why? adds the explanation to the feedback; each screen starts closed.
   const [whyOpen, setWhyOpen] = useState(false)
   useEffect(() => setWhyOpen(false), [state.index])
@@ -179,6 +186,7 @@ function Player({ data }: { data: LoadedLesson }) {
     lang: lesson.language,
     pickLine,
     whyOpen,
+    level: ninja,
   })
   // The system's success or error tap as an answer is checked (not a resumed one).
   const q = state.question
@@ -202,10 +210,14 @@ function Player({ data }: { data: LoadedLesson }) {
   }, [item.kind])
 
   const { style, leave } = useScreenMotion(state)
+  // Phase 3: Start makes the intro vanish into smoke before the first kata arrives.
+  const { vanishing, vanish } = useIntroVanish()
+  const stage = useMemo(() => ({ ninja, vanishing }), [ninja, vanishing])
 
   const next = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    leave(item.kind === "concept", () => dispatch({ type: "next" }))
+    if (item.kind === "intro") vanish(() => dispatch({ type: "next" }))
+    else leave(item.kind === "concept", () => dispatch({ type: "next" }))
   }
   /** The tray's main action: a move to the next screen leaves this one first. */
   const run = (action: AppAction) => {
@@ -243,31 +255,39 @@ function Player({ data }: { data: LoadedLesson }) {
         t={t}
       />
       {/* The window: on a phone, edge to edge between two hairlines. */}
-      <ScrollView
-        ref={scrollRef}
-        // The header and tray already keep clear of the notch and the home bar.
-        contentInsetAdjustmentBehavior="never"
-        className="flex-1 border-y border-border"
-        contentContainerClassName={
-          item.kind === "intro" || item.kind === "wrap"
-            ? "grow justify-center px-4 py-16"
-            : "px-4 py-6"
-        }
-      >
-        <Animated.View style={style} className="mx-auto w-full max-w-2xl">
-          <LessonContext value={lessonContext}>
-            <LessonScreen
-              data={data}
-              item={item}
-              state={state}
-              dispatch={dispatch}
-              feedback={feedback}
-              whyOpen={whyOpen}
-              t={t}
-            />
-          </LessonContext>
-        </Animated.View>
-      </ScrollView>
+      <View className="flex-1">
+        {/* Phase 3: the smoke behind the intro; without the ninja it follows the title up. */}
+        {item.kind === "intro" ? (
+          <Aura shift={ninja === "off" ? -54 : 0} vanishing={vanishing} />
+        ) : null}
+        <ScrollView
+          ref={scrollRef}
+          // The header and tray already keep clear of the notch and the home bar.
+          contentInsetAdjustmentBehavior="never"
+          className="flex-1 border-y border-border"
+          contentContainerClassName={
+            item.kind === "intro" || item.kind === "wrap"
+              ? "grow justify-center px-4 py-16"
+              : "px-4 py-6"
+          }
+        >
+          <Animated.View style={style} className="mx-auto w-full max-w-2xl">
+            <LessonContext value={lessonContext}>
+              <StageContext value={stage}>
+                <LessonScreen
+                  data={data}
+                  item={item}
+                  state={state}
+                  dispatch={dispatch}
+                  feedback={feedback}
+                  whyOpen={whyOpen}
+                  t={t}
+                />
+              </StageContext>
+            </LessonContext>
+          </Animated.View>
+        </ScrollView>
+      </View>
       <LessonTray
         tone={feedback.title || feedback.message ? feedback.tone : undefined}
         feedback={
