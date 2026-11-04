@@ -13,6 +13,7 @@ export const ja: Translation = {
   replayBrief: "状況をもう一度",
   tried: "試した",
   you: "あなた",
+  scenario: "シナリオ",
   picked: (parts) => `選択中: ${parts}`,
   hookNote: "最初の問題はウォームアップです。スコアには入りません。",
   minutes: (n) => `${n}分`,

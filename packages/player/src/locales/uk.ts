@@ -17,6 +17,7 @@ export const uk: Translation = {
   replayBrief: "Повторити ситуацію",
   tried: "Уже пробували",
   you: "Ви",
+  scenario: "Сценарій",
   picked: (parts) => `Вибрано: ${parts}`,
   hookNote: "Перше запитання — розминка. Воно не впливає на результат.",
   minutes: (n) => p(n, { one: "# хв", other: "# хв" }),

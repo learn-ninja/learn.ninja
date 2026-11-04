@@ -24,6 +24,8 @@ export type Strings = {
   tried: string
   /** The learner, as the speaker of their own lines in a chat visual (read out, not shown). */
   you: string
+  /** The label above a scenario's brief, so the ninja's telling reads as the setup of one. */
+  scenario: string
   /** Under a hotspot's visual: the parts picked, by name. */
   picked: (parts: string) => string
   hookNote: string

@@ -13,6 +13,7 @@ export const vi: Translation = {
   replayBrief: "Xem lại tình huống",
   tried: "Đã thử",
   you: "Bạn",
+  scenario: "Tình huống",
   picked: (parts) => `Đã chọn: ${parts}`,
   hookNote: "Câu đầu tiên này là khởi động. Nó không tính vào điểm của bạn.",
   minutes: (n) => `${n} phút`,

@@ -17,6 +17,7 @@ export const pt: Translation = {
   replayBrief: "Rever a situação",
   tried: "Tentado",
   you: "Você",
+  scenario: "Cenário",
   picked: (parts) => `Escolhido: ${parts}`,
   hookNote: "Esta primeira é um aquecimento. Ela não conta na sua pontuação.",
   minutes: (n) => p(n, { one: "# min", other: "# min" }),

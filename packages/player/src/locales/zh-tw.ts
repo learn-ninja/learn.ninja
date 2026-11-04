@@ -13,6 +13,7 @@ export const zhTw: Translation = {
   replayBrief: "重看情境",
   tried: "試過了",
   you: "你",
+  scenario: "情境",
   picked: (parts) => `已選：${parts}`,
   hookNote: "第一題是暖身，不計入得分。",
   minutes: (n) => `${n} 分鐘`,

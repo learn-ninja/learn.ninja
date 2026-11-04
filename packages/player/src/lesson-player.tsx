@@ -1811,9 +1811,7 @@ function QuestionScreen({
         lang={lang}
         skip={brief.skip}
         onTold={brief.onTold}
-        slot={
-          <div aria-hidden="true" data-ninja-slot="brief" className="size-16" />
-        }
+        label={t.scenario}
       />
     )
   const locked = state.phase !== "answering"
@@ -1887,39 +1885,39 @@ function QuestionScreen({
   return (
     <>
       {eyebrow ? <ScreenLabel text={eyebrow} className="-mb-4" /> : null}
-      {kata.type === "scenario" ? (
-        // The situation, kept in view while choosing. In story mode it's what the ninja just said.
-        <Card size="sm" className={at(0).className} style={at(0).style}>
-          <CardContent className="flex items-start gap-3 text-muted-foreground [&_code]:text-foreground [&_strong]:text-foreground">
-            {storyMode ? (
-              <Ninja className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            ) : null}
-            <RichText
-              text={kata.situation}
-              className="min-w-0 flex-1 text-pretty"
-            />
-            {storyMode && state.phase === "answering" ? (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={t.replayBrief}
-                className="-my-1 -me-1.5 shrink-0"
-                onPress={() => dispatch({ type: "rebrief" })}
-              >
-                <RotateCcwIcon className="rtl:-scale-x-100" />
-              </Button>
-            ) : null}
+      {kata.type === "scenario" && !storyMode ? (
+        // The situation, kept in view while choosing. In story mode the ninja has just told it, so
+        // the screen goes without the card and a Replay button beside the prompt tells it again.
+        <Card size="sm">
+          <CardContent className="text-muted-foreground [&_code]:text-foreground [&_strong]:text-foreground">
+            <RichText text={kata.situation} className="text-pretty" />
           </CardContent>
         </Card>
       ) : null}
       <h2
-        className={cn("text-lg font-semibold", at(200).className)}
-        style={at(200).style}
+        className={cn(
+          "flex items-start gap-2 text-lg font-semibold",
+          at(0).className
+        )}
+        style={at(0).style}
       >
-        <RichText text={kata.prompt} />
+        <RichText text={kata.prompt} className="min-w-0 flex-1" />
+        {kata.type === "scenario" &&
+        storyMode &&
+        state.phase === "answering" ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t.replayBrief}
+            className="-my-0.5 shrink-0"
+            onPress={() => dispatch({ type: "rebrief" })}
+          >
+            <RotateCcwIcon className="rtl:-scale-x-100" />
+          </Button>
+        ) : null}
       </h2>
       {kata.visual && kata.type !== "hotspot" ? (
-        <div className={at(290).className} style={at(290).style}>
+        <div className={at(180).className} style={at(180).style}>
           <Visual
             visual={kata.visual}
             turns={scenarioTurns(kata, state.answer, state.phase)}
@@ -1929,7 +1927,7 @@ function QuestionScreen({
       {kata.type === "choice" ||
       kata.type === "compare" ||
       kata.type === "scenario" ? (
-        <div className={at(380).className} style={at(380).style}>
+        <div className={at(300).className} style={at(300).style}>
           <OptionsKata
             {...props}
             order={state.optionOrder}

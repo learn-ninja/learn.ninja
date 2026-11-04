@@ -17,6 +17,7 @@ export const he: Translation = {
   replayBrief: "להציג שוב את המצב",
   tried: "נוסה",
   you: "אתה",
+  scenario: "תרחיש",
   picked: (parts) => `נבחר: ${parts}`,
   hookNote: "השאלה הראשונה היא חימום. היא לא נספרת בניקוד.",
   minutes: (n) => p(n, { one: "דקה אחת", two: "# דקות", other: "# דק׳" }),

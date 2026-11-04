@@ -19,6 +19,7 @@ export const en: Strings = {
   replayBrief: "Replay the situation",
   tried: "Tried",
   you: "You",
+  scenario: "Scenario",
   picked: (parts) => `Picked: ${parts}`,
   hookNote: "This first one is a warm-up. It doesn't count toward your score.",
   minutes: (n) => `${n} min`,

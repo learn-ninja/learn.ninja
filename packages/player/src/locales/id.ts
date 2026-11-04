@@ -13,6 +13,7 @@ export const id: Translation = {
   replayBrief: "Ulangi situasinya",
   tried: "Sudah dicoba",
   you: "Anda",
+  scenario: "Skenario",
   picked: (parts) => `Dipilih: ${parts}`,
   hookNote: "Pertanyaan pertama ini pemanasan. Tidak dihitung dalam skor.",
   minutes: (n) => `${n} mnt`,

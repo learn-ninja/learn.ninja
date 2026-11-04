@@ -17,6 +17,7 @@ export const nl: Translation = {
   replayBrief: "Situatie opnieuw",
   tried: "Geprobeerd",
   you: "Jij",
+  scenario: "Scenario",
   picked: (parts) => `Gekozen: ${parts}`,
   hookNote:
     "Deze eerste vraag is een opwarmer. Hij telt niet mee voor je score.",
