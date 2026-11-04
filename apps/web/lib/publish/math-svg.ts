@@ -23,10 +23,20 @@ RegisterHTMLHandler(adaptor)
 // Every glyph as its own path: no <use> references for the app's SVG renderer to resolve.
 const output = new SVG({ fontCache: "none" })
 
+/**
+ * TeX that MathJax can't read throws instead of being drawn: without `noundefined` an unknown command
+ * is an error rather than red text, and formatError rethrows what would be drawn as one. Colours a
+ * formula asks for (\color, \textcolor) still draw.
+ */
+const PACKAGES = AllPackages.filter((name) => name !== "noundefined")
+const rethrow = (_jax: unknown, error: Error): never => {
+  throw error
+}
+
 /** A document for one formula: no definitions from any other. */
 const freshDocument = () =>
   mathjax.document("", {
-    InputJax: new TeX({ packages: AllPackages }),
+    InputJax: new TeX({ packages: PACKAGES, formatError: rethrow }),
     OutputJax: output,
   })
 
@@ -47,10 +57,6 @@ export function drawMath(tex: string, display: boolean): MathSvg | null {
 function draw(tex: string, display: boolean): MathSvg | null {
   try {
     const html = adaptor.outerHTML(freshDocument().convert(tex, { display }))
-    // A TeX error comes back drawn in red (merror, or an unknown command as red text); the app
-    // shows the source instead.
-    if (/data-mjx-error|data-mml-node="merror"|fill="red"/.test(html))
-      return null
     const svg = /<svg[\s\S]*<\/svg>/.exec(html)?.[0]
     const box = /viewBox="([-\d.]+) ([-\d.]+) ([\d.]+) ([\d.]+)"/.exec(
       svg ?? ""
@@ -71,6 +77,7 @@ function draw(tex: string, display: boolean): MathSvg | null {
       descent: round((top! + height!) / 1000),
     }
   } catch {
+    // TeX MathJax can't read: the app shows its source instead.
     return null
   }
 }

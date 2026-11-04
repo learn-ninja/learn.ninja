@@ -23,6 +23,11 @@ describe("formulas drawn for the app", () => {
     expect(x.descent).toBeLessThan(0.02)
   })
 
+  it("draws the colours a formula asks for", () => {
+    expect(drawMath("\\textcolor{red}{H}", false)?.svg).toContain('fill="red"')
+    expect(drawMath("\\color{red}{x} + y", false)).not.toBeNull()
+  })
+
   it("leaves out what MathJax can't read, so the app shows its source", () => {
     expect(drawMath("\\notacommand", false)).toBeNull()
     expect(drawMath("\\frac{1}", false)).toBeNull()
