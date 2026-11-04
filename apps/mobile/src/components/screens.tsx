@@ -73,7 +73,15 @@ export function LessonScreen({
         </View>
       )
     case "wrap":
-      return <WrapUp lesson={lesson} results={state.results} t={t} />
+      // Phase 3: the ninja's send-off, the streak, and the actions (wrap-up.tsx).
+      return (
+        <WrapUp
+          lesson={lesson}
+          results={state.results}
+          onRestart={() => dispatch({ type: "restart" })}
+          t={t}
+        />
+      )
   }
 }
 

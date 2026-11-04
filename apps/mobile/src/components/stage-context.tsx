@@ -8,7 +8,7 @@ import type { Streak } from "@/lib/streak"
  * What the screens need from the player around them for the ninja and his smoke, so the screens
  * take it without new props: his setting (Off leaves him out), whether the intro is vanishing, and
  * on the wrap-up the day streak (with the streak screen first on the day's first finish) and
- * whether the sound effects are on.
+ * whether the sound effects are on, and its Share.
  */
 export interface Stage {
   ninja: NinjaLevel
@@ -16,6 +16,8 @@ export interface Stage {
   streak: Streak | null
   streakScreen: boolean
   sound: boolean
+  /** Shares the challenge for the learner's first tries (the wrap-up's Challenge friend). */
+  onShare: ((first: number, total: number) => void) | null
 }
 
 export const StageContext = createContext<Stage>({
@@ -24,6 +26,7 @@ export const StageContext = createContext<Stage>({
   streak: null,
   streakScreen: false,
   sound: false,
+  onShare: null,
 })
 
 export const useStage = () => useContext(StageContext)

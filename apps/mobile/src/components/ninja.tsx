@@ -183,7 +183,8 @@ export const Ninja = forwardRef<
   const head = usePose()
   const shown = useSharedValue(1)
   const enter = usePose()
-  const enterOpacity = useSharedValue(1)
+  // Hidden from the first frame when he is about to enter or turn up, so he never flashes in place.
+  const enterOpacity = useSharedValue((entrance || appear) && !reduced ? 0 : 1)
   const ex = useSharedValue(0)
   const ey = useSharedValue(0)
   const eyeSx = [useSharedValue(1), useSharedValue(1)] as const

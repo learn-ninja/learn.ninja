@@ -1,6 +1,7 @@
 import * as Haptics from "expo-haptics"
 import { Stack, router, useLocalSearchParams } from "expo-router"
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -55,6 +56,7 @@ import { result as resultHaptic, tap as tapHaptic } from "@/lib/haptics"
 import { reducer, start, type AppAction } from "@/lib/play"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
+import { shareChallenge } from "@/lib/share-sheet"
 import { ninjaOf, soundOf } from "@/lib/preferences"
 import { playEffect, preloadEffects } from "@/lib/sound"
 import { usePreferences } from "@/lib/use-preferences"
@@ -238,9 +240,20 @@ function Player({ data }: { data: LoadedLesson }) {
     run: state.run,
     id: data.path.startsWith("/l/") ? data.id : undefined,
   })
+  const onShare = useCallback(
+    (first: number, total: number) =>
+      void shareChallenge({
+        title: lesson.title,
+        path: data.path,
+        first,
+        total,
+        t,
+      }),
+    [lesson.title, data.path, t]
+  )
   const stage = useMemo(
-    () => ({ ninja, vanishing, streak, streakScreen, sound: sfx }),
-    [ninja, vanishing, streak, streakScreen, sfx]
+    () => ({ ninja, vanishing, streak, streakScreen, sound: sfx, onShare }),
+    [ninja, vanishing, streak, streakScreen, sfx, onShare]
   )
 
   const next = () => {
