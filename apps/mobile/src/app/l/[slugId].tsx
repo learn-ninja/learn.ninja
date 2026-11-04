@@ -279,8 +279,10 @@ function useScreenMotion(state: State) {
     leaving.current = state.index
     const ease = { duration: 200, easing: Easing.in(Easing.cubic) }
     x.value = withTiming(SLIDE * end, ease)
-    opacity.value = withTiming(0, ease, (finished) => {
-      if (finished) runOnJS(then)()
+    // Moves on even when the slide is cut short (another animation took over), or the screen would
+    // stay faded with its Continue spent.
+    opacity.value = withTiming(0, ease, () => {
+      runOnJS(then)()
     })
   }
 
