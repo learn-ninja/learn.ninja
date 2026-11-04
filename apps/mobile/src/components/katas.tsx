@@ -1,6 +1,6 @@
 import { View } from "react-native"
 
-import type { Prepared } from "@workspace/player-core/prepared"
+import { mathKey, type Prepared } from "@workspace/player-core/prepared"
 import type {
   ConceptKata as ConceptKataData,
   Kata,
@@ -8,9 +8,12 @@ import type {
 } from "@workspace/spec"
 
 import { CodeBlock } from "@/components/code-block"
+import { useLesson } from "@/components/lesson-context"
+import { MathBlock } from "@/components/math"
 import { RichBlocks } from "@/components/rich-text"
 import { Text } from "@/components/ui/text"
 import { VisualFrame } from "@/components/visual-frame"
+import { fontSize, LESSON_TEXT_SCALE } from "../../tokens"
 
 /** A concept kata: its title, its visual if it has one, and its body, as the web lays them out. */
 export function ConceptKata({
@@ -50,6 +53,15 @@ function LessonVisual({
   prepared: Prepared
   baseCss: string
 }) {
+  const { mathSvg } = useLesson()
+  if (visual.kind === "math")
+    return (
+      <MathBlock
+        tex={visual.tex}
+        math={mathSvg[mathKey(visual.tex, true)]}
+        fontSize={fontSize.xl[0] * LESSON_TEXT_SCALE}
+      />
+    )
   if (visual.kind === "html")
     return (
       <VisualFrame

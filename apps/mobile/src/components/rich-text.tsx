@@ -2,25 +2,35 @@ import type { ReactNode } from "react"
 import { View } from "react-native"
 
 import { TOKEN } from "@workspace/player-core/plain-text"
+import { mathKey } from "@workspace/player-core/prepared"
 import { textBlocks } from "@workspace/spec"
 
+import { useLesson } from "@/components/lesson-context"
+import { InlineMath } from "@/components/math"
 import { Text } from "@/components/ui/text"
 import { cn } from "@/lib/utils"
+import { fontSize, LESSON_TEXT_SCALE } from "../../tokens"
 
 // The spec's rich-text subset as native Text runs: **bold**, *italic*, `code`, and \( formulas \),
 // with a concept body's paragraphs and lists. The web's version is packages/player/src/rich-text.tsx.
 
 /** Lesson body text: the web's text-sm leading-relaxed (1.625) at the player's medium text size. */
 const BODY = "text-lesson-sm leading-[25.6px]"
+/** BODY's font size, in points, for the formulas set in it. */
+const BODY_SIZE = fontSize.sm[0] * LESSON_TEXT_SCALE
 
 /** One paragraph's inline runs. */
 export function RichText({
   text,
   className,
+  size = BODY_SIZE,
 }: {
   text: string
   className?: string
+  /** The text's font size in points, when className changes it: formulas are set relative to it. */
+  size?: number
 }) {
+  const { mathSvg } = useLesson()
   const nodes: ReactNode[] = []
   let last = 0
   let key = 0
@@ -28,11 +38,17 @@ export function RichText({
     if (m.index > last) nodes.push(text.slice(last, m.index))
     const [, math, code, bold, italic] = m
     if (math !== undefined) {
-      // TODO(phase 1): render inline math natively (a MathJax view). For now its LaTeX source shows.
+      const tex = math.trim()
+      const drawn = mathSvg[mathKey(tex, false)]
+      // A formula the server couldn't draw shows its source, as the web does without KaTeX's.
       nodes.push(
-        <Text key={key++} className="font-mono text-muted-foreground">
-          {math.trim()}
-        </Text>
+        drawn ? (
+          <InlineMath key={key++} math={drawn} fontSize={size} label={tex} />
+        ) : (
+          <Text key={key++} className="font-mono">
+            {math}
+          </Text>
+        )
       )
     } else if (code !== undefined) {
       nodes.push(

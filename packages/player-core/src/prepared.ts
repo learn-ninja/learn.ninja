@@ -20,6 +20,23 @@ export interface Prepared {
   molecules?: Record<string, string>
 }
 
+/**
+ * A formula drawn as SVG for the app (GET /api/lessons/{id} adds them, keyed like `math`). Sizes are
+ * in em of the formula's font: KaTeX's, which the web sets 1.21 times the surrounding text.
+ */
+export interface MathSvg {
+  /** A whole <svg> with a viewBox and paths in currentColor, and no size of its own. */
+  svg: string
+  width: number
+  /** How far it reaches above the baseline. */
+  ascent: number
+  /** How far it reaches below the baseline. */
+  descent: number
+}
+
+/** KaTeX's formula size, relative to the text around it (`.katex { font-size: 1.21em }`). */
+export const MATH_SCALE = 1.21
+
 export const emptyPrepared: Prepared = {
   math: {},
   code: {},

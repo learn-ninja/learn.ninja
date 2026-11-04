@@ -3,6 +3,7 @@ import { Stack, router, useLocalSearchParams } from "expo-router"
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useReducer,
   useRef,
   useState,
@@ -22,6 +23,7 @@ import { progressAt, questionAt } from "@workspace/player-core/flow"
 import type { State } from "@workspace/player-core/state"
 import { stringsFor } from "@workspace/player-core/strings"
 
+import { LessonContext } from "@/components/lesson-context"
 import { LessonScreen } from "@/components/screens"
 import { LessonHeader, LessonTray, TrayButton } from "@/components/shell"
 import { Text } from "@/components/ui/text"
@@ -87,6 +89,10 @@ function Player({ data }: { data: LoadedLesson }) {
   const item = state.items[state.index]!
   // The player's own words, in the lesson's language (loaded with the lesson, in fetchLesson).
   const t = stringsFor(lesson.language)
+  const lessonContext = useMemo(
+    () => ({ mathSvg: data.mathSvg }),
+    [data.mathSvg]
+  )
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null)
 
   // The clock starts when the learner leaves the intro and stops at the wrap-up.
@@ -149,7 +155,9 @@ function Player({ data }: { data: LoadedLesson }) {
         }
       >
         <Animated.View style={style} className="mx-auto w-full max-w-2xl">
-          <LessonScreen data={data} item={item} state={state} t={t} />
+          <LessonContext value={lessonContext}>
+            <LessonScreen data={data} item={item} state={state} t={t} />
+          </LessonContext>
         </Animated.View>
       </ScrollView>
       <LessonTray>

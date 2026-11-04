@@ -46,6 +46,7 @@
     "jose": "^6.2.13",
     "katex": "^0.19.0",
     "lucide-react": "^1.52.0",
+    "mathjax-full": "^3.2.2",
     "mcp-handler": "^2.3.0",
     "mdast-util-to-markdown": "^2.1.2",
     "next": "16.4.4",

@@ -1,4 +1,8 @@
-import { emptyPrepared, type Prepared } from "@workspace/player-core/prepared"
+import {
+  emptyPrepared,
+  type MathSvg,
+  type Prepared,
+} from "@workspace/player-core/prepared"
 import { loadLanguage } from "@workspace/player-core/strings"
 import { validateLesson, type Lesson } from "@workspace/spec"
 
@@ -9,6 +13,8 @@ export interface LoadedLesson {
   id: string
   lesson: Lesson
   prepared: Prepared
+  /** The lesson's formulas drawn as SVG, keyed like prepared.math. */
+  mathSvg: Record<string, MathSvg>
   /** The visuals' shared stylesheet, inlined into each HTML visual; empty if it didn't load. */
   baseCss: string
 }
@@ -39,6 +45,7 @@ export async function fetchLesson(
     id?: string
     lesson?: unknown
     prepared?: Prepared
+    mathSvg?: Record<string, MathSvg>
     visualsCssUrl?: string
     message?: string
   } | null
@@ -63,6 +70,7 @@ export async function fetchLesson(
     baseCss,
     lesson: checked.lesson,
     prepared: body.prepared ?? emptyPrepared,
+    mathSvg: body.mathSvg ?? {},
   }
 }
 
