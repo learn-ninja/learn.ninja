@@ -10,13 +10,7 @@ import Animated, {
 
 import { chipsInGaps } from "@workspace/player-core/state"
 
-import {
-  Control,
-  controlSurface,
-  MarkBadge,
-  slotStyles,
-  useShake,
-} from "@/components/controls"
+import { Control, MarkBadge, slotStyles, useShake } from "@/components/controls"
 import { Text } from "@/components/ui/text"
 import { cn } from "@/lib/utils"
 import { fontSize, LESSON_TEXT_SCALE } from "../../../tokens"
@@ -216,5 +210,3 @@ function Caret() {
     />
   )
 }
-
-export { controlSurface }

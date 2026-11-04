@@ -4,7 +4,7 @@ import { readFen, type ChessVisual, type FenPiece } from "@workspace/spec"
 import { Selectable } from "@workspace/ui/components/selectable"
 import { cn } from "@workspace/ui/lib/utils"
 
-import { PIECES, type PieceCode } from "./chess-pieces"
+import { PIECES, type PieceCode } from "@workspace/player-core/chess-pieces"
 import type { HotspotControl } from "./visuals"
 
 // A chess position drawn as SVG in the browser: the board, its marked squares and arrows, and the

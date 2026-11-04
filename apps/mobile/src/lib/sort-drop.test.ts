@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { binAt, moveItem } from "./sort"
+import { binAt, moveItem } from "./sort-drop"
 
 describe("sorting", () => {
   it("moves an item between zones", () => {

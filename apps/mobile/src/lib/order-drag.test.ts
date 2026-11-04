@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { moveSlot, slotAfterDrag } from "./order"
+import { moveSlot, slotAfterDrag } from "./order-drag"
 
 describe("dragging a placed order item", () => {
   const heights = [40, 40, 40, 40]

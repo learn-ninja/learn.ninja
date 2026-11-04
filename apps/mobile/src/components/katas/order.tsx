@@ -22,6 +22,7 @@ import { RichText } from "@/components/rich-text"
 import { Text } from "@/components/ui/text"
 import { Visual } from "@/components/visuals/visual"
 import { tap } from "@/lib/haptics"
+import { moveSlot, slotAfterDrag } from "@/lib/order-drag"
 import { cn } from "@/lib/utils"
 
 import type { QuestionKataProps } from "./options"
@@ -30,38 +31,6 @@ import type { QuestionKataProps } from "./options"
 // and each lands in the next open slot, leaving a dashed space in the pool so the rest never shift;
 // tap a placed item to send it back, or drag it up or down to another slot. The web's version is
 // packages/player/src/order.tsx.
-
-/** The slot a placed item lands in when dragged `dy` points from slot `from`, by the slots' heights. */
-export function slotAfterDrag(
-  heights: number[],
-  from: number,
-  dy: number,
-  gap: number
-): number {
-  let to = from
-  let left = dy
-  while (left > 0 && to < heights.length - 1) {
-    const step = (heights[to + 1] ?? 0) + gap
-    if (left < step / 2) break
-    left -= step
-    to++
-  }
-  while (left < 0 && to > 0) {
-    const step = (heights[to - 1] ?? 0) + gap
-    if (-left < step / 2) break
-    left += step
-    to--
-  }
-  return to
-}
-
-/** The slots with the item at `from` moved to `to`, the others keeping their order. */
-export function moveSlot<T>(slots: T[], from: number, to: number): T[] {
-  const next = [...slots]
-  const [item] = next.splice(from, 1)
-  next.splice(to, 0, item!)
-  return next
-}
 
 const GAP = 8
 

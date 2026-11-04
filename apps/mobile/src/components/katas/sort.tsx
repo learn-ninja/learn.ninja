@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Pressable, View, type LayoutRectangle } from "react-native"
+import { Pressable, View } from "react-native"
 import { Gesture, GestureDetector } from "react-native-gesture-handler"
 import Animated, {
   runOnJS,
@@ -22,6 +22,7 @@ import {
 import { RichText } from "@/components/rich-text"
 import { Text } from "@/components/ui/text"
 import { tap } from "@/lib/haptics"
+import { binAt, moveItem, type Box } from "@/lib/sort-drop"
 import { cn } from "@/lib/utils"
 import { fontSize, LESSON_TEXT_SCALE } from "../../../tokens"
 
@@ -31,34 +32,6 @@ import type { QuestionKataProps } from "./options"
 // item is a card on top of a deck with a count above it, and each group is a bin below (side by
 // side for two groups, stacked for more). Tap a bin, or drag the card into it, and the item lands
 // in the bin as a chip; tap a chip to put it back on top of the deck.
-
-/** Move an item to the end of a zone, taking it out of whichever zone held it. */
-export function moveItem(
-  zones: Record<string, string[]>,
-  itemId: string,
-  toZone: string
-): Record<string, string[]> {
-  const next = Object.fromEntries(
-    Object.entries(zones).map(([z, ids]) => [
-      z,
-      ids.filter((id) => id !== itemId),
-    ])
-  )
-  next[toZone] = [...(next[toZone] ?? []), itemId]
-  return next
-}
-
-/** The bin a point (in the kata's own coordinates) is over, if any. */
-export function binAt(
-  bins: (LayoutRectangle | undefined)[],
-  x: number,
-  y: number
-): number {
-  return bins.findIndex(
-    (b) =>
-      b && x >= b.x && x <= b.x + b.width && y >= b.y && y <= b.y + b.height
-  )
-}
 
 export function SortKata({
   kata,
@@ -80,8 +53,8 @@ export function SortKata({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wrong])
   // Where the bins and the card sit in the kata, for a drop.
-  const bins = useRef<(LayoutRectangle | undefined)[]>([])
-  const card = useRef<LayoutRectangle | undefined>(undefined)
+  const bins = useRef<(Box | undefined)[]>([])
+  const card = useRef<Box | undefined>(undefined)
 
   const groups = kata.type === "sort" ? kata.groups : []
   const items = kata.type === "sort" ? kata.items : []
