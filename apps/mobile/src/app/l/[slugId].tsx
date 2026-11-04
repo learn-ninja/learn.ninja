@@ -34,11 +34,12 @@ import {
 import type { State } from "@workspace/player-core/state"
 import { stringsFor } from "@workspace/player-core/strings"
 
-import { createLinePicker } from "@workspace/player-core/voices"
+import { createLinePicker, hasVoice } from "@workspace/player-core/voices"
 
 import { LessonContext } from "@/components/lesson-context"
 import { LessonScreen } from "@/components/screens"
 import { Aura, useIntroVanish } from "@/components/smoke"
+import { SoundToggle } from "@/components/sound-toggle"
 import { StageContext } from "@/components/stage-context"
 import {
   LessonHeader,
@@ -54,8 +55,11 @@ import { result as resultHaptic } from "@/lib/haptics"
 import { reducer, start, type AppAction } from "@/lib/play"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
-import { ninjaOf } from "@/lib/preferences"
+import { ninjaOf, soundOf } from "@/lib/preferences"
+import { playEffect, preloadEffects } from "@/lib/sound"
 import { usePreferences } from "@/lib/use-preferences"
+import { useNinjaVoice } from "@/lib/use-voice"
+import { effectsOn, speaks } from "@/lib/voice"
 import { visualDocument } from "@/lib/visual-frame"
 import { measureAhead } from "@/lib/visual-height"
 
@@ -176,6 +180,8 @@ function Player({ data }: { data: LoadedLesson }) {
   // Phase 3: the ninja's character from the learner's preferences (the web's, on the device).
   const [prefs] = usePreferences()
   const ninja = ninjaOf(prefs)
+  const soundOn = soundOf(prefs)
+  const sfx = effectsOn(soundOn, lesson.language)
   // After a right answer, Why? adds the explanation to the feedback; each screen starts closed.
   const [whyOpen, setWhyOpen] = useState(false)
   useEffect(() => setWhyOpen(false), [state.index])
@@ -198,6 +204,19 @@ function Player({ data }: { data: LoadedLesson }) {
     lastHaptic.current = checkedKey
     resultHaptic(checked)
   }, [checked, checkedKey])
+  // Phase 3: he says the line heading the feedback, once per check (not a resumed one).
+  useNinjaVoice({
+    line: feedback.title,
+    key: checkedKey,
+    lang: lesson.language,
+    level: ninja,
+    pickLine,
+    on: speaks(ninja, soundOn, lesson.language),
+  })
+  // The whoosh is loaded ahead, so it starts with the press.
+  useEffect(() => {
+    if (sfx) preloadEffects(["vanish"])
+  }, [sfx])
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null)
 
   // The clock starts when the learner leaves the intro and stops at the wrap-up.
@@ -216,8 +235,10 @@ function Player({ data }: { data: LoadedLesson }) {
 
   const next = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    if (item.kind === "intro") vanish(() => dispatch({ type: "next" }))
-    else leave(item.kind === "concept", () => dispatch({ type: "next" }))
+    if (item.kind === "intro") {
+      if (sfx) playEffect("vanish")
+      vanish(() => dispatch({ type: "next" }))
+    } else leave(item.kind === "concept", () => dispatch({ type: "next" }))
   }
   /** The tray's main action: a move to the next screen leaves this one first. */
   const run = (action: AppAction) => {
@@ -252,6 +273,8 @@ function Player({ data }: { data: LoadedLesson }) {
         startedAt={clock.start}
         endedAt={clock.end}
         onClose={close}
+        // Phase 3: the Sound setting, in a language he speaks, until phase 4's menu takes it.
+        end={hasVoice(lesson.language) ? <SoundToggle t={t} /> : undefined}
         t={t}
       />
       {/* The window: on a phone, edge to edge between two hairlines. */}
