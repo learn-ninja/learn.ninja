@@ -11,7 +11,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "tokens": "node scripts/build-tokens.mjs"
+    "tokens": "node scripts/build-tokens.mjs",
+    "smoke": "node scripts/build-smoke.mjs"
   },
   "dependencies": {
     "@formatjs/intl-getcanonicallocales": "^3.3.0",
@@ -24,6 +25,7 @@
     "clsx": "^2.1.1",
     "d3-geo": "^3.1.1",
     "expo": "~58.0.23",
+    "expo-audio": "~58.0.11",
     "expo-constants": "~58.0.15",
     "expo-font": "~58.0.11",
     "expo-haptics": "^58.0.7",

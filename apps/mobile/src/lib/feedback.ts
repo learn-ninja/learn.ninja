@@ -104,12 +104,8 @@ export function feedbackFor({
       variant: "default",
     }
   else if (item.kind === "wrap")
-    // The wrap-up's own actions come with the ninja in phase 3; until then it offers a replay.
-    out.primary = {
-      label: t.restart,
-      action: { type: "restart" },
-      variant: "default",
-    }
+    // The wrap-up's actions are on it (Challenge friend, Restart), so the tray has none, as on the web.
+    out.primary = null
   else if (item.kind === "question" && state.question) {
     const s = state.question
     const { kata, role } = item

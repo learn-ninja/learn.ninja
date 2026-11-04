@@ -9,7 +9,14 @@ import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
 import { calm } from "./motion"
-import { LEARN_PER_REST, MAX_REST } from "./streak-rules"
+import {
+  LEARN_PER_REST,
+  MAX_REST,
+  restBeforeToday,
+  type DayState,
+  type DayStreak,
+  type StreakDay,
+} from "@workspace/player-core/streak"
 
 // The day streak, drawn as a paper lantern (chōchin): lit on a day with a finished lesson, blue in
 // outline on a rest day, unlit on a missed one. The header shows it with the count (apps/web), and
@@ -18,30 +25,11 @@ import { LEARN_PER_REST, MAX_REST } from "./streak-rules"
 // a new streak starts with one rest day, every second learning day saves another, up to two, and a
 // missed day spends one. While both are saved, learning days don't count toward a third.
 
-/** How a day stands in the streak: learned, kept by a rest day, missed, or today and still open. */
-export type DayState = "lit" | "rest" | "missed" | "open"
-
-/** One calendar day ("2026-10-26") and how it stands. */
-export interface StreakDay {
-  day: string
-  state: DayState
-}
-
-/** The learner's streak, as of today. */
-export interface DayStreak {
-  /** Learning days in the run (rest days keep it going without adding to it). */
-  current: number
-  /** The longest run ever, `current` included. */
-  longest: number
-  /** Rest days saved, for days without a lesson. */
-  rest: number
-  /** Learning days toward the next rest day, below LEARN_PER_REST; 0 while MAX_REST are saved. */
-  toward: number
-  /** Whether today's lesson recharged a rest day. */
-  recharged: boolean
-  /** The last seven days, oldest first, ending today. */
-  days: StreakDay[]
-}
+export type {
+  DayState,
+  DayStreak,
+  StreakDay,
+} from "@workspace/player-core/streak"
 
 /** How a lantern is drawn: lit, a rest day's blue outline, unlit, or a day still to come. */
 export type LanternLook = "lit" | "rest" | "unlit" | "ahead"
@@ -404,22 +392,6 @@ export function RestDays({
       )}
     </div>
   )
-}
-
-/** The rest days as they stood before today's lesson, for the moment before its lantern lights. */
-function restBeforeToday(streak: DayStreak): DayStreak {
-  // Today started the streak: there were none until its lesson.
-  if (streak.current === 1)
-    return { ...streak, rest: 0, toward: 0, recharged: false }
-  if (streak.recharged)
-    return {
-      ...streak,
-      rest: streak.rest - 1,
-      toward: LEARN_PER_REST - 1,
-      recharged: false,
-    }
-  if (streak.toward > 0) return { ...streak, toward: streak.toward - 1 }
-  return streak
 }
 
 /** How long the screen waits before lighting today's lantern, so the learner sees it happen. */

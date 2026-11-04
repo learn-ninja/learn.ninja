@@ -4,6 +4,7 @@ import type { Item } from "@workspace/player-core/flow"
 import type { State } from "@workspace/player-core/state"
 import type { Strings } from "@workspace/player-core/strings"
 
+import { Intro } from "@/components/intro"
 import { ConceptKata } from "@/components/katas"
 import { QuestionScreen } from "@/components/question"
 import { Text } from "@/components/ui/text"
@@ -35,20 +36,19 @@ export function LessonScreen({
   const { lesson } = data
   switch (item.kind) {
     case "intro":
+      // Phase 3: the ninja's slot and entrance, and the title vanishing into smoke (intro.tsx).
       return (
-        <View className="items-center gap-5">
-          <View className="w-full gap-3">
-            <Text className="text-lesson-2xl text-center font-semibold tracking-tight">
-              {lesson.title}
-            </Text>
-            <Text className="text-lesson-base text-center font-medium text-muted-foreground">
-              {lesson.summary}
-            </Text>
-          </View>
-          <MetaLine
-            facts={[t.minutes(lesson.estimatedMinutes), t.levels[lesson.level]]}
-          />
-        </View>
+        <Intro
+          lesson={lesson}
+          meta={
+            <MetaLine
+              facts={[
+                t.minutes(lesson.estimatedMinutes),
+                t.levels[lesson.level],
+              ]}
+            />
+          }
+        />
       )
     case "concept":
       return <ConceptKata kata={item.kata} />
@@ -73,7 +73,15 @@ export function LessonScreen({
         </View>
       )
     case "wrap":
-      return <WrapUp lesson={lesson} results={state.results} t={t} />
+      // Phase 3: the ninja's send-off, the streak, and the actions (wrap-up.tsx).
+      return (
+        <WrapUp
+          lesson={lesson}
+          results={state.results}
+          onRestart={() => dispatch({ type: "restart" })}
+          t={t}
+        />
+      )
   }
 }
 

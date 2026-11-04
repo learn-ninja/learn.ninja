@@ -38,6 +38,7 @@ export function LessonHeader({
   startedAt,
   endedAt,
   onClose,
+  end,
   t,
 }: {
   title: string
@@ -49,6 +50,8 @@ export function LessonHeader({
   startedAt?: number
   endedAt?: number
   onClose: () => void
+  /** A 32-point control at the header's end (the sound setting); without one, a spacer balances the close button. */
+  end?: ReactNode
   t: Strings
 }) {
   const insets = useSafeAreaInsets()
@@ -85,7 +88,7 @@ export function LessonHeader({
           </Text>
         )}
         {/* Balances the close button, so the bar sits in the middle as the web's does. */}
-        <View className="h-8 w-8" />
+        {end ?? <View className="h-8 w-8" />}
       </View>
     </View>
   )

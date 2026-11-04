@@ -127,6 +127,30 @@ export { VISUAL_CSP }
  * and jumping once it has loaded and been measured.
  */
 const knownHeights = new Map<string, number>()
+/** Enough for every visual in a few lessons at a few widths; past it the map starts over. */
+const KNOWN_HEIGHTS_MAX = 500
+
+/**
+ * A short key for a visual's document. The document inlines the lesson's stylesheet, so keying by
+ * it whole kept a copy of the page per width. A collision only starts a frame at the wrong height,
+ * which its first measurement corrects.
+ */
+function documentKey(doc: string): string {
+  let a = 0x811c9dc5
+  let b = 0x01000193
+  for (let i = 0; i < doc.length; i++) {
+    const c = doc.charCodeAt(i)
+    a = Math.imul(a ^ c, 0x01000193)
+    b = Math.imul(b ^ c, 0x5bd1e995)
+  }
+  return `${doc.length}:${(a >>> 0).toString(36)}${(b >>> 0).toString(36)}`
+}
+
+function rememberHeight(key: string, height: number) {
+  if (knownHeights.size >= KNOWN_HEIGHTS_MAX && !knownHeights.has(key))
+    knownHeights.clear()
+  knownHeights.set(key, height)
+}
 
 function HtmlFrame({
   html,
@@ -160,14 +184,15 @@ function HtmlFrame({
       `<!doctype html><html dir="auto"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${VISUAL_CSP}"><link rel="stylesheet" href="${visualsCss}"><style>${inStyle(prepared.visualsCss)}</style><style>html,body{background:transparent}body{margin:0;padding:16px;display:flex;justify-content:center;align-items:center;box-sizing:border-box${height ? ";min-height:100vh" : ""}}${inStyle(css ?? "")}${interactive ? SPOT_CSS : ""}</style></head><body>${html}</body></html>`,
     [html, css, visualsCss, height, prepared.visualsCss, interactive]
   )
+  const docKey = React.useMemo(() => documentKey(srcDoc), [srcDoc])
 
   // A height known from before, set ahead of the first paint: the frame has its width by now.
   React.useLayoutEffect(() => {
     const width = ref.current?.clientWidth
     if (height || !width) return
-    const known = knownHeights.get(`${width}:${srcDoc}`)
+    const known = knownHeights.get(`${width}:${docKey}`)
     if (known) setMeasured(known)
-  }, [srcDoc, height])
+  }, [docKey, height])
 
   // Size the frame to its content. allow-same-origin (without allow-scripts) lets the player measure it.
   // Not before the visual has loaded: the blank document a frame starts with would set a wrong
@@ -184,14 +209,13 @@ function HtmlFrame({
       setMeasured(measured)
       // Remembered for the next frame that shows this visual at this width.
       const width = ref.current?.clientWidth
-      if (width && measured > 0)
-        knownHeights.set(`${width}:${srcDoc}`, measured)
+      if (width && measured > 0) rememberHeight(`${width}:${docKey}`, measured)
     }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(doc.body)
     return () => observer.disconnect()
-  }, [loaded, height, srcDoc])
+  }, [loaded, height, docKey])
 
   // Drawings sit in the middle of their own canvas: a viewBox with empty space on one side would
   // push the drawing off-center however the frame lays it out. Runs before the hotspots are measured.

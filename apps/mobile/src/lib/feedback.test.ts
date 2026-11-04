@@ -198,10 +198,10 @@ describe("the tray", () => {
     expect(f.why).toBeNull()
   })
 
-  it("offers Start on the fix round and Restart on the wrap-up", () => {
+  it("offers Start on the fix round and leaves the wrap-up's actions to it", () => {
     const fix: State = { ...start(l), index: start(l).items.length - 2 }
     expect(tray(fix).primary?.action).toEqual({ type: "startFix" })
     const wrap: State = { ...start(l), index: start(l).items.length - 1 }
-    expect(tray(wrap).primary?.action).toEqual({ type: "restart" })
+    expect(tray(wrap).primary).toBeNull()
   })
 })
