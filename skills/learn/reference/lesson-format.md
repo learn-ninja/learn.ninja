@@ -230,14 +230,14 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 
 - `blank` with `"format": "code"` takes a `language` and is usually `"caseSensitive": true`.
 - `blank` options: `numeric` and `tolerance` (number chips compare by value, so "0.5" is "0.50"), and the kata's `caseSensitive` (case is ignored otherwise). Accents always count, since the learner picks the exact chip: _si_ is a fair decoy for _sí_, and `strictAccents` changes nothing while answers are chips.
-- `scenario` with a `chat` visual: the options are what the learner says next, and each `outcome` is the other person's reply, which the player adds to the chat after checking. Without a chat, `outcome` is what happened as a result.
+- `scenario`: the `situation` is two to four sentences that build up to the decision; the player's ninja tells it one sentence at a time before the question. With a `chat` visual, the options are what the learner says next, and each `outcome` is the other person's reply, which the player adds to the chat after checking. Without a chat, `outcome` is what happened as a result.
 - `number` katas exist in the spec but aren't allowed in v1.
 
 ## Rules the checker enforces
 
 - Hook is `choice` or `compare`; the first kata is a `concept`; 1–4 concept katas; 2–4 question katas after each concept kata; 3–12 question katas in `katas` in total; at most 20 katas; the challenge is a question kata.
 - Unique ids; every reference points to something real (`correct`, `group`, `alsoAccept`, `[[gap]]` ids, hotspot ids, code hotspot lines, squares on a chess hotspot, countries on a map hotspot).
-- Every `choice` has `multiple`, even when it's `false`; every wrong `choice`/`compare` option has `feedback`; every question kata has an `explanation`; a `choice` has at least one wrong option; a `scenario` has a `best` option.
+- Every `choice` has `multiple`, even when it's `false`; every wrong `choice`/`compare` option has `feedback`; every question kata has an `explanation`; a `choice` has at least one wrong option; a `scenario` has a `best` option and a `situation` of at least two sentences.
 - A right answer can't give itself away by length: at 30 characters or more it stays under 1.5 times the longest wrong option, and in a lesson with 4 or more one-answer text questions it isn't the longest option in most of them.
 - Prompts ≤40 words; concept bodies ≤80 words.
 - Lists only in a concept's body, with two or more items; no headings, links, images, tables, or code blocks in any lesson text (code and formulas may hold `#` and `|`).

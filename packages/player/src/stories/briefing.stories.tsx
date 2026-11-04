@@ -83,13 +83,14 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const OneBeat: Story = {}
+/** Three sentences, told one beat at a time. */
+export const ThreeBeats: Story = {}
 
-/** The example's colon and sentences split into separate beats. */
-export const SeveralBeats: Story = {
+/** A colon that introduces a list ends a beat too, so the list gets a beat of its own. */
+export const WithAColon: Story = {
   args: {
-    text: situation(lessons.correlation),
-    lang: lessons.correlation.language,
+    text: situation(lessons.buttons),
+    lang: lessons.buttons.language,
   },
 }
 

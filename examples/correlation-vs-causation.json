@@ -325,7 +325,7 @@
     "id": "ch",
     "type": "scenario",
     "prompt": "What do you say?",
-    "situation": "Monday standup. A colleague has a hypothetical study she is excited about, and a campaign idea to go with it.",
+    "situation": "Monday standup, and the team wants a campaign idea by Friday. Priya spent the weekend reading health research and found a study she can't stop talking about. She turns to you with it, and a campaign to go with it.",
     "visual": {
       "kind": "chat",
       "alt": "Priya shares a study of 10,000 adults where coffee drinkers live longer, and asks to tell customers that coffee extends life.",
