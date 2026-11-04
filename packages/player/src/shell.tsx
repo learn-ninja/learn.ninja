@@ -807,6 +807,7 @@ function ShortcutsDialog({
     [["Delete"], t.shortcutUnsort],
     [["D"], t.shortcutTray],
     [["W"], t.why],
+    [["H"], t.hint],
     [["?"], t.shortcutHelp],
   ]
   return (

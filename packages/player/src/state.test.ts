@@ -11,6 +11,7 @@ import {
   freshQuestion,
   reducer,
   wordBank,
+  type Action,
   type State,
 } from "./lesson-player"
 
@@ -298,6 +299,54 @@ describe("scenario story mode", () => {
       tried: ["b"],
       answer: { kind: "select", ids: [] },
     })
+  })
+})
+
+describe("hint", () => {
+  const hinted = { ...sort, hint: "Which ones are sweet?" }
+  const right: Action = {
+    type: "answer",
+    answer: {
+      kind: "zones",
+      zones: { pool: [], fruit: ["apple", "pear"], veg: ["kale", "leek"] },
+    },
+  }
+
+  it("opens on demand while answering, and stays free", () => {
+    let state = reducer(stateFor(hinted), { type: "hint" })
+    expect(state.question).toMatchObject({
+      hintOpen: true,
+      hintAsked: true,
+      attempts: 0,
+      phase: "answering",
+    })
+    state = reducer(reducer(state, right), { type: "check" })
+    expect(state.results).toEqual({ s: "first" })
+  })
+
+  it("does nothing without a hint, on the hook, during a brief, or after checking", () => {
+    const none = stateFor(sort)
+    expect(reducer(none, { type: "hint" })).toBe(none)
+    const hookItem: Item = { kind: "question", kata: hinted, role: "hook" }
+    const hook = { ...stateFor(hinted), items: [hookItem] }
+    expect(reducer(hook, { type: "hint" })).toBe(hook)
+    const briefing = stateFor(scenario)
+    expect(reducer(briefing, { type: "hint" })).toBe(briefing)
+    const checked = reducer(reducer(stateFor(hinted), right), { type: "check" })
+    expect(reducer(checked, { type: "hint" })).toBe(checked)
+  })
+
+  it("is already open after a miss, so Try again doesn't say it twice", () => {
+    let state = reducer(stateFor(hinted), { type: "hint" })
+    state = reducer(state, {
+      type: "answer",
+      answer: {
+        kind: "zones",
+        zones: { pool: [], fruit: ["apple", "kale"], veg: ["pear", "leek"] },
+      },
+    })
+    state = reducer(reducer(state, { type: "check" }), { type: "retry" })
+    expect(state.question).toMatchObject({ hintOpen: true, hintAsked: false })
   })
 })
 

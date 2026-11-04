@@ -1,4 +1,4 @@
-// The lesson's shortcuts (number keys, ?, D, W) listen on the window, so they stay out of the way
+// The lesson's shortcuts (number keys, ?, D, W, H) listen on the window, so they stay out of the way
 // of anything else that takes keys: a field being typed in, an open menu or dialog, or a widget
 // with keys of its own.
 

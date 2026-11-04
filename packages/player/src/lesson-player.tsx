@@ -554,6 +554,8 @@ export type Action =
   | { type: "resume"; state: State }
   | { type: "answer"; answer: Answer }
   | { type: "why" }
+  /** Hint while answering: the hint opens before checking. It's free, so the score doesn't change. */
+  | { type: "hint" }
   | { type: "briefed" }
   | { type: "rebrief" }
   | { type: "check" }
@@ -622,6 +624,15 @@ export function reducer(state: State, action: Action): State {
       return state.question
         ? { ...state, question: { ...state.question, whyOpen: true } }
         : state
+    case "hint":
+      return state.question?.phase === "answering" &&
+        item?.kind === "question" &&
+        hintOffered(item, state.question)
+        ? {
+            ...state,
+            question: { ...state.question, hintOpen: true, hintAsked: true },
+          }
+        : state
     case "briefed":
       return state.question
         ? { ...state, question: { ...state.question, briefed: true } }
@@ -650,8 +661,10 @@ export function reducer(state: State, action: Action): State {
           ...s,
           phase: "answering",
           answer: retryAnswer(item.kata, s.answer),
-          // There's no help button: a miss earns the hint on the second try.
+          // A miss opens the hint for the second try (Hint opens it sooner). Its feedback already
+          // said it, so the bubble starts clear.
           hintOpen: Boolean(item.kata.hint),
+          hintAsked: false,
           ...(rewind
             ? {
                 result: null,
@@ -910,19 +923,21 @@ function Player({
   // Until it's measured the open tray takes its natural height, so it doesn't slide open as the page
   // loads; it only animates for a change after that.
   const shownHeight = dragHeight ?? (trayOpen ? (trayHeight ?? "auto") : 0)
-  // "?" shows the keyboard shortcuts, as it does on most of the web. D opens and closes the tray and
-  // W the theory card (Why?), matched by key position so they work on any keyboard layout; touch
-  // screens have no notch to toggle.
+  // "?" shows the keyboard shortcuts, as it does on most of the web. D opens and closes the tray, W
+  // the explanation (Why?), and H opens the hint (Hint), matched by key position so they work on any
+  // keyboard layout; touch screens have no notch to toggle.
   const keys = React.useRef({ onShortcuts, onTrayToggle, fixedTray })
   keys.current = { onShortcuts, onTrayToggle, fixedTray }
   const toggleWhy = React.useRef<(() => void) | null>(null)
+  const askHint = React.useRef<(() => void) | null>(null)
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const help = e.key === "?"
       const tray = e.code === "KeyD" && !e.shiftKey && !keys.current.fixedTray
       const why = e.code === "KeyW" && !e.shiftKey && toggleWhy.current
+      const hint = e.code === "KeyH" && !e.shiftKey && askHint.current
       if (
-        !(help || tray || why) ||
+        !(help || tray || why || hint) ||
         e.repeat ||
         e.metaKey ||
         e.ctrlKey ||
@@ -935,7 +950,8 @@ function Player({
       e.preventDefault()
       if (help) keys.current.onShortcuts()
       else if (tray) keys.current.onTrayToggle()
-      else toggleWhy.current?.()
+      else if (why) toggleWhy.current?.()
+      else askHint.current?.()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
@@ -953,6 +969,13 @@ function Player({
     state.question?.phase === "feedback" &&
     state.question.result?.correct === true
   toggleWhy.current = canWhy ? () => setWhyOpen((open) => !open) : null
+  // H opens the hint while the Hint button is offered; it only opens, as the button goes once pressed.
+  askHint.current =
+    item.kind === "question" &&
+    state.question &&
+    hintOffered(item, state.question)
+      ? () => dispatch({ type: "hint" })
+      : null
   // Every path makes a scenario's rows taller: scroll them up clear of his bubble.
   const pathsOpen =
     canWhy &&
@@ -1022,9 +1045,10 @@ function Player({
   // toast floats in the card's corner, over the answers when they reach that far down (a tall
   // question on a short screen): scroll them up clear of it, into the room the screen leaves below.
   // The note under the answers always clears it, which also brings it up from below the fold, and
-  // Why? adding the explanation note runs this again.
+  // Why? adding the explanation note runs this again, and so does Hint's note while answering.
+  const hintNote = q?.phase === "answering" && q.hintAsked
   React.useEffect(() => {
-    if (!q?.result || q.phase === "answering") return
+    if (!hintNote && (!q?.result || q.phase === "answering")) return
     const id = window.setTimeout(() => {
       const scroller = scrollRef.current
       if (!scroller) return
@@ -1057,7 +1081,7 @@ function Player({
       if (overlap > 0) scroller.scrollBy({ top: overlap, behavior })
     }, 250)
     return () => window.clearTimeout(id)
-  }, [q?.result, q?.phase, whyOpen])
+  }, [q?.result, q?.phase, whyOpen, hintNote])
   // A scenario opens with his brief (story mode): he steps up to tell it, then goes back to his
   // corner for the question. Each telling has its own key, so a replay starts fresh. With him off
   // there's no brief: the situation is on the question screen.
@@ -1680,6 +1704,23 @@ function ScreenLabel({
   )
 }
 
+/**
+ * Whether the Hint button (and H) is offered: while answering a question with a hint that isn't open
+ * yet, before checking. Not on the hook, the warm-up guess, and not during a scenario's brief.
+ */
+export function hintOffered(
+  item: Extract<Item, { kind: "question" }>,
+  s: QuestionState
+): boolean {
+  return (
+    item.role !== "hook" &&
+    Boolean(item.kata.hint) &&
+    s.phase === "answering" &&
+    s.briefed &&
+    !s.hintOpen
+  )
+}
+
 /** The explanation opens after "Why?", and by itself once a missed answer is revealed (not for the hook's guess). */
 function explanationShown(s: QuestionState, role: Role): boolean {
   return s.whyOpen || (s.phase === "revealed" && role !== "hook")
@@ -2217,11 +2258,23 @@ export function ActionArea({
         isDisabled: !isReady(kata, s.answer),
       }
       // Try again clears the bubble: the miss already said the hint. After a scenario's rewind
-      // the miss said its outcome, so the hint comes now.
-      if (story && s.tried.length > 0 && kata.hint) {
+      // the miss said its outcome, so the hint comes now. Hint says it the way a miss would: his
+      // bubble and the note under the answers (the tray's card on phones). A lone demo shows it
+      // under the answers instead (QuestionScreen).
+      if (
+        inBubble &&
+        kata.hint &&
+        (s.hintAsked || (story && s.tried.length > 0))
+      ) {
         title = t.hint
         message = kata.hint
       }
+      // Hint sits beside Check until it's pressed; then focus moves on to Check.
+      if (hintOffered(item, s))
+        secondary = helpButton(t.hint, () => {
+          dispatch({ type: "hint" })
+          primaryRef.current?.focus()
+        })
     } else if (role === "hook" && r) {
       // The hook is a guess, so a miss still moves on, but both get the colors a checked answer would.
       // A wrong guess also says what it got wrong: the misconception is what the lesson starts from.
@@ -2364,8 +2417,16 @@ export function ActionArea({
     const has = Boolean(title)
     if (has && !hadFeedback.current) {
       const button = primaryRef.current
-      if (button && button.closest("[inert]") === null) button.focus()
-      else onFocusLost?.()
+      if (button && button.closest("[inert]") === null) {
+        button.focus()
+        // A disabled Check (Hint pressed before answering) can't take it: if focus fell to the page
+        // with the Hint button, keep it in the lesson.
+        if (
+          document.activeElement !== button &&
+          document.activeElement === document.body
+        )
+          onFocusLost?.()
+      } else onFocusLost?.()
     }
     hadFeedback.current = has
   }, [title, onFocusLost])
