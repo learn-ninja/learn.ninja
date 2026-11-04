@@ -18,7 +18,8 @@ export function start(lesson: Lesson, run = 0): State {
   return sharedStart(lesson, undefined, run)
 }
 
-export type AppAction = Exclude<Action, { type: "restart" }> | { type: "restart" }
+export type AppAction =
+  Exclude<Action, { type: "restart" }> | { type: "restart" }
 
 export function reducer(lesson: Lesson) {
   return (state: State, action: AppAction): State =>

@@ -42,6 +42,10 @@ const buttonVariants = cva(
           Platform.select({ web: "hover:bg-accent dark:hover:bg-accent/50" })
         ),
         link: "",
+        // The player's feedback buttons: Continue after a correct answer, Try again after a miss.
+        success:
+          "bg-feedback-goodButton shadow-sm shadow-black/5 active:opacity-80",
+        warning: "bg-feedback-warn shadow-sm shadow-black/5 active:opacity-80",
       },
       size: {
         default: cn(
@@ -88,6 +92,8 @@ const buttonTextVariants = cva(
             web: "underline-offset-4 group-hover:underline hover:underline",
           })
         ),
+        success: "text-feedback-goodButtonText",
+        warning: "text-feedback-warnText",
       },
       size: {
         default: "",
