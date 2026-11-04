@@ -380,7 +380,9 @@ export function TrayButton({
       variant={variant}
       size="lg"
       className={cn(
-        "h-12 flex-1 rounded-full px-4",
+        // 48 points at the default text size, and taller with a larger one (Dynamic Type), so
+        // its label is never cut off.
+        "h-auto min-h-12 flex-1 rounded-full px-4 py-2",
         pressed && "bg-surface-active"
       )}
       onPress={onPress}
