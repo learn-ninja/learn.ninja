@@ -2,6 +2,7 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { describe, expect, it } from "vitest"
 
+import { geoBounds } from "d3-geo"
 import type { Feature, MultiPolygon, Polygon } from "geojson"
 import { feature } from "topojson-client"
 import type { GeometryCollection, Topology } from "topojson-specification"
@@ -9,6 +10,7 @@ import {
   COUNTRIES,
   DRAWN_SIZES,
   MAP_REGION_NAMES,
+  MAP_REGIONS,
   NOT_ON_MAP,
   type MapVisual,
 } from "@workspace/spec"
@@ -58,6 +60,48 @@ describe("WorldMap", () => {
     for (const region of MAP_REGION_NAMES) {
       const svg = draw({ region, alt: region, countries: [{ code: "FR" }] })
       expect(svg).toMatch(/viewBox="0 0 480 \d+"/)
+    }
+  })
+
+  it("draws Central Asia with its countries labeled and a point", () => {
+    const svg = draw({
+      region: "central-asia",
+      alt: "Central Asia.",
+      countries: [
+        { code: "KZ", label: "Kazakhstan" },
+        { code: "UZ", label: "Uzbekistan" },
+        { code: "AF", label: "Afghanistan" },
+      ],
+      points: [{ lat: 41.3, lon: 69.3, label: "Tashkent" }],
+    })
+
+    expect(svg).toMatch(/viewBox="0 0 480 \d+"/)
+    expect(labels(svg)).toEqual([
+      "Tashkent",
+      "Kazakhstan",
+      "Uzbekistan",
+      "Afghanistan",
+    ])
+    expect(svg.match(/class="fill-chart-2\/70"/g)).toHaveLength(3)
+  })
+
+  it("holds all of Central Asia, each country large enough to tap", () => {
+    const [west, south, east, north] = MAP_REGIONS["central-asia"]
+    const topology = data as unknown as Topology<{
+      countries: GeometryCollection
+    }>
+    const shapes = feature(topology, topology.objects.countries)
+      .features as Feature<Polygon | MultiPolygon>[]
+    for (const code of ["KZ", "UZ", "TM", "KG", "TJ", "AF"]) {
+      const shape = shapes.find((s) => s.id === code)!
+      const [[x0, y0], [x1, y1]] = geoBounds(shape)
+      expect([x0 >= west, y0 >= south, x1 <= east, y1 <= north], code).toEqual([
+        true,
+        true,
+        true,
+        true,
+      ])
+      expect(DRAWN_SIZES["central-asia"][code], code).toBeGreaterThanOrEqual(24)
     }
   })
 

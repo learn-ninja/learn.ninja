@@ -142,6 +142,7 @@ export const Regions: Story = {
           ["europe", ["PL"]],
           ["asia", ["IN", "JP"]],
           ["middle-east", ["IR", "SA"]],
+          ["central-asia", ["KZ", "UZ", "AF"]],
           ["south-asia", ["NP", "LK"]],
           ["east-asia", ["KR", "TW"]],
           ["southeast-asia", ["VN", "ID"]],
