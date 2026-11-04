@@ -10,6 +10,8 @@ import type { Strings } from "@workspace/player-core/strings"
 import type { Lesson } from "@workspace/spec"
 
 import { RichText } from "@/components/rich-text"
+import { useStage } from "@/components/stage-context"
+import { StreakCard, StreakScreen } from "@/components/streak"
 import { Text } from "@/components/ui/text"
 import { alpha } from "@/lib/color"
 import { colors, fontSize, LESSON_TEXT_SCALE } from "../../tokens"
@@ -33,9 +35,20 @@ export function WrapUp({
   results: Record<string, Outcome>
   t: Strings
 }) {
+  const { streak, streakScreen, sound } = useStage()
   const summary = summarize(lesson, results)
   const perfect = runFor(summary) === "perfect"
   const outcomes = scoredQuestions(lesson).map((b) => results[b.id] ?? "missed")
+  // The day's first finish lights its lantern on a screen of its own first.
+  if (streakScreen && streak)
+    return (
+      <StreakScreen
+        streak={streak.streak}
+        sound={sound}
+        lang={lesson.language}
+        t={t}
+      />
+    )
   return (
     <View className="items-center gap-8">
       <View className="items-center gap-3">
@@ -55,6 +68,9 @@ export function WrapUp({
           </Text>
           <RunBar outcomes={outcomes} t={t} />
         </View>
+      ) : null}
+      {streak ? (
+        <StreakCard streak={streak.streak} lang={lesson.language} t={t} />
       ) : null}
       <View className="w-full gap-2">
         <Text className="px-1 text-sm font-medium text-muted-foreground">

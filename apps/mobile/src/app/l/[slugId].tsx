@@ -51,13 +51,14 @@ import { Text } from "@/components/ui/text"
 import { fetchLesson, sendToApi, type LoadedLesson } from "@/lib/api"
 import { API_BASE_URL } from "@/lib/config"
 import { feedbackFor } from "@/lib/feedback"
-import { result as resultHaptic } from "@/lib/haptics"
+import { result as resultHaptic, tap as tapHaptic } from "@/lib/haptics"
 import { reducer, start, type AppAction } from "@/lib/play"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
 import { ninjaOf, soundOf } from "@/lib/preferences"
 import { playEffect, preloadEffects } from "@/lib/sound"
 import { usePreferences } from "@/lib/use-preferences"
+import { useStreak } from "@/lib/use-streak"
 import { useNinjaVoice } from "@/lib/use-voice"
 import { effectsOn, speaks } from "@/lib/voice"
 import { visualDocument } from "@/lib/visual-frame"
@@ -231,7 +232,16 @@ function Player({ data }: { data: LoadedLesson }) {
   const { style, leave } = useScreenMotion(state)
   // Phase 3: Start makes the intro vanish into smoke before the first kata arrives.
   const { vanishing, vanish } = useIntroVanish()
-  const stage = useMemo(() => ({ ninja, vanishing }), [ninja, vanishing])
+  // Phase 3: the finish kept for the day streak, with the streak screen first on the day's first.
+  const { streak, streakScreen, leaveStreak } = useStreak({
+    atWrap: item.kind === "wrap",
+    run: state.run,
+    id: data.path.startsWith("/l/") ? data.id : undefined,
+  })
+  const stage = useMemo(
+    () => ({ ninja, vanishing, streak, streakScreen, sound: sfx }),
+    [ninja, vanishing, streak, streakScreen, sfx]
+  )
 
   const next = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
@@ -251,10 +261,10 @@ function Player({ data }: { data: LoadedLesson }) {
   }
   const close = () => (router.canGoBack() ? router.back() : router.replace("/"))
 
-  // Each new screen starts at the top.
+  // Each new screen starts at the top (the wrap-up after the streak screen too).
   useLayoutEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false })
-  }, [state.index])
+  }, [state.index, streakScreen])
 
   const whyLabel = feedback.why?.everyPath ? t.everyPath : t.why
 
@@ -329,7 +339,16 @@ function Player({ data }: { data: LoadedLesson }) {
           />
         }
       >
-        {feedback.primary ? (
+        {streakScreen ? (
+          // Phase 3: the streak screen's Continue goes on to the wrap-up itself.
+          <TrayButton
+            label={t.continue}
+            onPress={() => {
+              tapHaptic()
+              leaveStreak()
+            }}
+          />
+        ) : feedback.primary ? (
           <TrayButton
             label={feedback.primary.label}
             variant={feedback.primary.variant}

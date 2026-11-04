@@ -2,18 +2,28 @@ import { createContext, useContext } from "react"
 
 import type { NinjaLevel } from "@workspace/player-core/strings"
 
+import type { Streak } from "@/lib/streak"
+
 /**
  * What the screens need from the player around them for the ninja and his smoke, so the screens
- * take it without new props: his setting (Off leaves him out), and whether the intro is vanishing.
+ * take it without new props: his setting (Off leaves him out), whether the intro is vanishing, and
+ * on the wrap-up the day streak (with the streak screen first on the day's first finish) and
+ * whether the sound effects are on.
  */
 export interface Stage {
   ninja: NinjaLevel
   vanishing: boolean
+  streak: Streak | null
+  streakScreen: boolean
+  sound: boolean
 }
 
 export const StageContext = createContext<Stage>({
   ninja: "sensei",
   vanishing: false,
+  streak: null,
+  streakScreen: false,
+  sound: false,
 })
 
 export const useStage = () => useContext(StageContext)
