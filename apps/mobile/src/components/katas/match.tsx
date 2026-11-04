@@ -123,7 +123,7 @@ export function MatchKata({
         className={cn(
           controlPadding,
           "flex-1 items-center justify-center",
-          settled && cn(slotStyles, "shadow-none")
+          settled && slotStyles
         )}
         style={settled ? { backgroundColor: "transparent" } : undefined}
       >

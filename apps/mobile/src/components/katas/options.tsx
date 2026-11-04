@@ -158,7 +158,7 @@ function OptionRow({
       className={cn(
         "min-h-12 w-full flex-row items-center gap-2 rounded-lg px-4 py-3",
         // Rewound: a dashed outline on nothing, its text struck through.
-        tried && "border-dashed bg-transparent shadow-none"
+        tried && "border-dashed bg-transparent"
       )}
     >
       <View className="min-w-0 flex-1 gap-2">
