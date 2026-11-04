@@ -103,16 +103,20 @@ export function VisualFrame({
   const ref = useRef<WebView<object>>(null)
 
   // Every part shows its tile when the kata arrives, and while a finger holds the stage: phones
-  // have no hover to find the parts with.
+  // have no hover to find the parts with. The time counts from when the frame has drawn and its
+  // parts are measured, which takes a WebView a second or more (the web's iframe is there at once).
   const [reveal, setReveal] = useState(interactive)
+  const [loaded, setLoaded] = useState(false)
+  const ready = interactive && loaded && Boolean(spots)
   useEffect(() => {
-    if (!interactive) return
+    if (!ready) return
     const timer = setTimeout(() => setReveal(false), REVEAL_MS)
     return () => clearTimeout(timer)
-  }, [interactive])
+  }, [ready])
 
   const overlays =
-    hotspots && spots
+    // Not over an empty frame: the tiles and marks show once the parts are drawn.
+    hotspots && spots && loaded
       ? overlaysFor(spots.spots, {
           selected: hotspots.selected,
           marks: hotspots.marks,
@@ -142,6 +146,7 @@ export function VisualFrame({
           ref={ref}
           source={source}
           onShouldStartLoadWithRequest={guard}
+          onLoadEnd={() => setLoaded(true)}
           // iOS kills a WebView's content process under memory pressure, which leaves it blank;
           // load the same document again.
           onContentProcessDidTerminate={() => ref.current?.reload()}
