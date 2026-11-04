@@ -1,4 +1,4 @@
-import { ScrollView, View } from "react-native"
+import { Platform, ScrollView, View } from "react-native"
 import { SvgXml } from "react-native-svg"
 
 import { MATH_SCALE, type MathSvg } from "@workspace/player-core/prepared"
@@ -7,10 +7,16 @@ import { Text } from "@/components/ui/text"
 import { colors } from "../../tokens"
 
 /**
- * How far the system font's descender reaches below the baseline, in em (SF Pro's is 0.23). iOS sets
- * a view inside a Text with its bottom on that line, not on the baseline.
+ * How far the system font's descender reaches below the baseline, in em: a view inside a Text sits
+ * with its bottom on that line, not on the baseline. The app draws text in the system font (no font
+ * of its own; see tailwind.config.js): SF Pro on iOS, Roboto on Android. A script the system font
+ * falls back from (Arabic, Hindi, CJK) has its own descender, so formulas there may sit a point off.
  */
-const FONT_DESCENT = 0.23
+const FONT_DESCENT = Platform.select({
+  ios: 0.23,
+  android: 0.26,
+  default: 0.23,
+})
 
 /**
  * A formula set inline in a line of text, as KaTeX sets it on the web: 1.21 times the text's size,

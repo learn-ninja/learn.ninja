@@ -40,6 +40,8 @@ module.exports = {
       borderRadius: Object.fromEntries(
         Object.entries(radius).map(([k, v]) => [k, px(v)])
       ),
+      // Text is drawn in the system font (SF Pro, Roboto); math.tsx's FONT_DESCENT assumes it, so
+      // adding a font of our own means updating that too.
       // text-sm and the rest, plus lesson-sm and the rest: the same scale inside lesson content,
       // where the web's medium text size multiplies it (data-text-size in globals.css).
       fontSize: {
