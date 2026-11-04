@@ -338,6 +338,9 @@ function Player({ data }: { data: LoadedLesson }) {
             <LessonContext value={lessonContext}>
               <StageContext value={stage}>
                 <LessonScreen
+                  // Each screen is its own: two katas of a kind in a row (an order after an order,
+                  // two sorts in the fix round) mustn't share what the first one kept.
+                  key={`${state.run}:${state.index}`}
                   data={data}
                   item={item}
                   state={state}
