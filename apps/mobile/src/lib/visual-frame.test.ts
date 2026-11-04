@@ -38,19 +38,58 @@ describe("HTML visual WebView", () => {
     expect(VISUAL_WEBVIEW_PROPS.allowUniversalAccessFromFileURLs).toBe(false)
   })
 
-  it("loads its own document once and blocks every navigation after it", () => {
+  it("loads its own document, and nothing else", () => {
     const guard = navigationGuard(BASE)
     expect(guard({ url: "https://evil.example/", isTopFrame: true })).toBe(
       false
     )
     expect(guard({ url: BASE, isTopFrame: false })).toBe(false)
-    expect(guard({ url: BASE, isTopFrame: true })).toBe(true)
-    // A link, a meta refresh, or a form, even back to the base URL.
-    expect(guard({ url: BASE, isTopFrame: true })).toBe(false)
-    expect(guard({ url: "http://localhost:3000/docs", isTopFrame: true })).toBe(
+    expect(
+      guard({ url: BASE, isTopFrame: true, navigationType: "click" })
+    ).toBe(false)
+    expect(
+      guard({ url: BASE, isTopFrame: true, navigationType: "other" })
+    ).toBe(true)
+    for (const url of [
+      "http://localhost:3000/docs",
+      "http://localhost:3000/?x=1",
+      "http://localhost:3001/",
+      "https://localhost:3000/",
+      "https://learn.ninja/",
+      "tel:123",
+      "about:blank",
+    ])
+      for (const navigationType of [undefined, "other", "reload", "click"])
+        expect(guard({ url, isTopFrame: true, navigationType })).toBe(false)
+  })
+
+  it("loads the same document again after its process is killed, but not by a link or refresh", () => {
+    const ios = navigationGuard(BASE)
+    expect(ios({ url: BASE, isTopFrame: true, navigationType: "other" })).toBe(
+      true
+    )
+    expect(ios({ url: BASE, isTopFrame: true, navigationType: "reload" })).toBe(
+      true
+    )
+    expect(ios({ url: BASE, isTopFrame: true, navigationType: "reload" })).toBe(
+      true
+    )
+    // A meta refresh or link back to the base URL would fetch the web app's page.
+    expect(ios({ url: BASE, isTopFrame: true, navigationType: "other" })).toBe(
       false
     )
-    expect(guard({ url: "tel:123", isTopFrame: true })).toBe(false)
+    expect(ios({ url: BASE, isTopFrame: true, navigationType: "click" })).toBe(
+      false
+    )
+    expect(
+      ios({ url: BASE, isTopFrame: true, navigationType: "formsubmit" })
+    ).toBe(false)
+
+    // Android doesn't say how a navigation started: the exact base URL passes, nothing else.
+    const android = navigationGuard(BASE)
+    expect(android({ url: BASE, isTopFrame: true })).toBe(true)
+    expect(android({ url: BASE, isTopFrame: true })).toBe(true)
+    expect(android({ url: `${BASE}docs`, isTopFrame: true })).toBe(false)
   })
 
   it("carries the web frame's policy, first in its head", () => {

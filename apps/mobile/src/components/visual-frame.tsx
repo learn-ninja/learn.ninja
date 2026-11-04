@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useRef } from "react"
 import { View } from "react-native"
 import { WebView } from "react-native-webview"
 
@@ -35,8 +35,10 @@ export function VisualFrame({
     }),
     [html, css, visualsCss]
   )
-  // A new guard per document: the one load it allows is that document's.
+  // A new guard per document: the loads it allows are that document's.
   const guard = useMemo(() => navigationGuard(source.baseUrl), [source])
+  // WebView<P> types its props as WebViewProps & P; the default P (undefined) makes them never.
+  const ref = useRef<WebView<object>>(null)
   return (
     <View
       className="overflow-hidden rounded-xl border border-border bg-background"
@@ -47,8 +49,12 @@ export function VisualFrame({
     >
       <WebView
         {...VISUAL_WEBVIEW_PROPS}
+        ref={ref}
         source={source}
         onShouldStartLoadWithRequest={guard}
+        // iOS kills a WebView's content process under memory pressure, which leaves it blank;
+        // load the same document again.
+        onContentProcessDidTerminate={() => ref.current?.reload()}
         style={{ backgroundColor: colors.background }}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"

@@ -30,22 +30,34 @@ export function visualDocument({
   )
 }
 
+type Navigation = Pick<WebViewNavigation, "url"> & {
+  isTopFrame?: boolean
+  /** iOS only: "click", "formsubmit", "backforward", "reload", "formresubmit", or "other". */
+  navigationType?: string
+}
+
 /**
- * Lets the document itself load once, from its base URL, and blocks everything after it: links,
- * form posts, meta refreshes, frames. One guard per WebView.
+ * Lets the document itself load, from its base URL, and blocks every other navigation: links,
+ * form posts, frames, any other URL. The document may load again as itself: WebKit reloads it
+ * after its content process is killed (memory pressure, backgrounding), and VisualFrame reloads it
+ * then too. On iOS a repeat must be a reload, so a meta refresh or link that points at the base
+ * URL (which would fetch the web app's page, not this document) stays blocked; Android doesn't say
+ * how a navigation started, so there any load of the exact base URL passes. One guard per WebView.
  */
 export function navigationGuard(baseUrl: string) {
   const base = baseUrl.replace(/\/+$/, "")
   let loaded = false
-  return (
-    request: Pick<WebViewNavigation, "url"> & { isTopFrame?: boolean }
-  ) => {
-    const first =
-      !loaded &&
-      request.isTopFrame !== false &&
-      request.url.replace(/\/+$/, "") === base
-    if (first) loaded = true
-    return first
+  return (request: Navigation) => {
+    if (request.isTopFrame === false) return false
+    if (request.url.replace(/\/+$/, "") !== base) return false
+    const type = request.navigationType
+    if (!loaded) {
+      if (type !== undefined && type !== "other" && type !== "reload")
+        return false
+      loaded = true
+      return true
+    }
+    return type === undefined || type === "reload"
   }
 }
 
