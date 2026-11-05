@@ -176,6 +176,7 @@ function Player({ data }: { data: LoadedLesson }) {
     [data.path, data.id]
   )
   useEffect(() => sync?.update(state), [sync, state])
+  useEffect(() => () => sync?.close(), [sync])
 
   // The next screen's HTML visual is measured while this one is read, so it opens at its height.
   const { width: windowWidth } = useWindowDimensions()

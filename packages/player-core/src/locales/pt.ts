@@ -255,4 +255,95 @@ export const pt: Translation = {
   settings: "Configurações",
   privacy: "Privacidade",
   terms: "Termos",
+  signIn: {
+    title: "Entrar",
+    body: "Navegue pelo Explore, curta lições e mantenha sua sequência e suas lições concluídas no seu perfil.",
+    email: "E-mail",
+    sendCode: "Me envie um código",
+    noPassword: "Vamos enviar um código por e-mail. Sem senha.",
+    codeTitle: "Digite o código",
+    codeSent: (email) =>
+      `Enviamos um código de seis dígitos para ${email}. Ele vale por 5 minutos.`,
+    code: "Código",
+    submit: "Entrar",
+    otherEmail: "Usar outro e-mail",
+    legal: "Ao continuar, você concorda com os {terms} e a {privacy}.",
+    wrongCode: "Esse código não está certo. Confira ou envie um novo.",
+    expiredCode: "Esse código expirou. Envie um novo.",
+    tooManyTries: "Códigos errados demais. Envie um novo.",
+    tooManyCodes:
+      "Códigos demais enviados para este endereço. Tente de novo mais tarde.",
+    badEmail: "Digite um endereço de e-mail válido.",
+    failed: "Algo deu errado. Tente de novo.",
+    logOut: "Sair",
+  },
+  feed: {
+    title: "Explore",
+    empty:
+      "Nada aqui ainda. Seja o primeiro: peça uma lição ao seu agente e diga para mantê-la.",
+    logInTitle: "Lições que as pessoas mantiveram e compartilharam",
+    logInBody:
+      "Entre para navegar pelo Explore, curtir lições e ver sua sequência no seu perfil.",
+    testLessons: "Lições de teste",
+    failed: "Isso não carregou.",
+    views: (n) =>
+      p(n, { one: "# visualização", other: "# visualizações" }),
+    likes: (n) => p(n, { one: "# curtida", other: "# curtidas" }),
+    done: "Concluída",
+    minutesLeft: (n) => `Faltam ${n} min`,
+    katasDone: (done, total) => `${done} de ${total} katas feitos`,
+    anonymous: "ninja anônimo",
+    private: "Privada",
+    hidden: "Oculta",
+    profile: "Seu perfil",
+  },
+  profile: {
+    lessons: "Lições",
+    myLessons: "Minhas lições",
+    inProgress: "Em andamento",
+    likes: "Curtidas",
+    joined: (date) => `Entrou em ${date}`,
+    noLessonsOwn:
+      "Nenhuma lição ainda. Peça uma ao seu agente; com você conectado, ela fica salva aqui.",
+    noLessons: "Nenhuma lição publicada ainda.",
+    noProgress: "As lições que você começar aparecem aqui até você concluí-las.",
+    noLikesOwn: "As lições que você curtir aparecem aqui.",
+    noLikes: "Nenhuma lição curtida ainda.",
+    missing: "Ninguém tem este nome de usuário.",
+    yearTotal: (n) =>
+      p(n, {
+        one: "# lição no último ano",
+        other: "# lições no último ano",
+      }),
+    streaks: (current, longest) => {
+      const days = (n: number) => p(n, { one: "# dia", other: "# dias" })
+      return `Sequência atual ${days(current)} · Mais longa ${days(longest)}`
+    },
+    noStreak: "Nenhuma sequência ainda",
+    less: "Menos",
+    more: "Mais",
+    grid: "Lições concluídas por dia no último ano",
+    dayLessons: (n, date) =>
+      `${p(n, { one: "# lição", other: "# lições" })} em ${date}`,
+    dayRest: (date) => `Dia de descanso em ${date}`,
+    dayNone: (date) => `Nenhuma lição em ${date}`,
+  },
+  account: {
+    title: "Conta",
+    loggedInAs: (email) => `Conectado como ${email}`,
+    handle: "Nome de usuário",
+    handleHint: (url) => `Seu perfil fica em ${url}.`,
+    handleRules:
+      "Nomes de usuário têm de 3 a 30 caracteres: letras minúsculas, números e hífens, começando com uma letra ou um número.",
+    handleTaken: "Alguém já tem esse nome de usuário.",
+    handleReserved: "Esse nome de usuário está reservado.",
+    save: "Salvar",
+    saved: "Salvo",
+  },
+  lessonErrors: {
+    missing:
+      "Nenhuma lição aqui: ela expirou 7 dias depois de publicada, ou o link está errado.",
+    broken: "Esta lição não segue o formato de lição.",
+    failed: "A lição não carregou.",
+  },
 }

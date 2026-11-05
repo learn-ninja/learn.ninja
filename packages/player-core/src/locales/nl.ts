@@ -255,4 +255,94 @@ export const nl: Translation = {
   settings: "Instellingen",
   privacy: "Privacy",
   terms: "Voorwaarden",
+  signIn: {
+    title: "Inloggen",
+    body: "Blader door Explore, geef lessen een like en bewaar je reeks en afgeronde lessen op je profiel.",
+    email: "E-mail",
+    sendCode: "Mail me een code",
+    noPassword: "We mailen je een code. Geen wachtwoord.",
+    codeTitle: "Voer de code in",
+    codeSent: (email) =>
+      `We hebben een zescijferige code gemaild naar ${email}. Hij werkt 5 minuten.`,
+    code: "Code",
+    submit: "Inloggen",
+    otherEmail: "Ander e-mailadres gebruiken",
+    legal: "Door verder te gaan, ga je akkoord met de {terms} en {privacy}.",
+    wrongCode: "Die code klopt niet. Controleer hem of stuur een nieuwe.",
+    expiredCode: "Die code is verlopen. Stuur een nieuwe.",
+    tooManyTries: "Te veel verkeerde codes. Stuur een nieuwe.",
+    tooManyCodes:
+      "Te veel codes naar dit adres gestuurd. Probeer het later opnieuw.",
+    badEmail: "Voer een geldig e-mailadres in.",
+    failed: "Er ging iets mis. Probeer het opnieuw.",
+    logOut: "Uitloggen",
+  },
+  feed: {
+    title: "Explore",
+    empty:
+      "Hier staat nog niets. Wees de eerste: vraag je agent om een les en zeg dat hij hem moet bewaren.",
+    logInTitle: "Lessen die mensen bewaarden en deelden",
+    logInBody:
+      "Log in om door Explore te bladeren, lessen een like te geven en je reeks op je profiel te zien.",
+    testLessons: "Testlessen",
+    failed: "Dit is niet geladen.",
+    views: (n) => p(n, { one: "# weergave", other: "# weergaven" }),
+    likes: (n) => p(n, { one: "# like", other: "# likes" }),
+    done: "Afgerond",
+    minutesLeft: (n) => `Nog ${n} min`,
+    katasDone: (done, total) => `${done} van ${total} kata's af`,
+    anonymous: "anonieme ninja",
+    private: "Privé",
+    hidden: "Verborgen",
+    profile: "Je profiel",
+  },
+  profile: {
+    lessons: "Lessen",
+    myLessons: "Mijn lessen",
+    inProgress: "Bezig",
+    likes: "Likes",
+    joined: (date) => `Lid sinds ${date}`,
+    noLessonsOwn:
+      "Nog geen lessen. Vraag je agent om er een; als je bent ingelogd, wordt hij hier bewaard.",
+    noLessons: "Nog geen gepubliceerde lessen.",
+    noProgress: "Lessen die je begint, staan hier tot je ze afrondt.",
+    noLikesOwn: "Lessen die je leuk vindt, staan hier.",
+    noLikes: "Nog geen leuk gevonden lessen.",
+    missing: "Niemand heeft deze gebruikersnaam.",
+    yearTotal: (n) =>
+      p(n, {
+        one: "# les in het afgelopen jaar",
+        other: "# lessen in het afgelopen jaar",
+      }),
+    streaks: (current, longest) => {
+      const days = (n: number) => p(n, { one: "# dag", other: "# dagen" })
+      return `Huidige reeks ${days(current)} · Langste ${days(longest)}`
+    },
+    noStreak: "Nog geen reeks",
+    less: "Minder",
+    more: "Meer",
+    grid: "Afgeronde lessen per dag, over het afgelopen jaar",
+    dayLessons: (n, date) =>
+      `${p(n, { one: "# les", other: "# lessen" })} op ${date}`,
+    dayRest: (date) => `Rustdag op ${date}`,
+    dayNone: (date) => `Geen lessen op ${date}`,
+  },
+  account: {
+    title: "Account",
+    loggedInAs: (email) => `Ingelogd als ${email}`,
+    handle: "Gebruikersnaam",
+    handleHint: (url) => `Je profiel staat op ${url}.`,
+    handleRules:
+      "Gebruikersnamen hebben 3 tot 30 tekens: kleine letters, cijfers en koppeltekens, en beginnen met een letter of cijfer.",
+    handleTaken: "Iemand heeft die gebruikersnaam al.",
+    handleReserved: "Die gebruikersnaam is gereserveerd.",
+    save: "Opslaan",
+    saved: "Opgeslagen",
+  },
+  lessonErrors: {
+    missing:
+      "Hier staat geen les: hij is 7 dagen na publicatie verlopen, of de link klopt niet.",
+    broken: "Deze les past niet in het lesformaat.",
+    failed: "De les is niet geladen.",
+  },
 }

@@ -1,6 +1,7 @@
 import { apiKey } from "@better-auth/api-key"
 import { cimd } from "@better-auth/cimd"
 import { fetchClientMetadataResource } from "@better-auth/cimd/node"
+import { expo } from "@better-auth/expo"
 import { mcp } from "@better-auth/mcp"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
@@ -71,6 +72,14 @@ export const LOG_IN_ROUTES: Record<string, string> = {
 
 /** A session older than this logs in again before changing how it logs in (also Better Auth's freshAge). */
 export const FRESH_SESSION_SECONDS = 24 * 60 * 60
+
+/**
+ * The iOS app's URL scheme (apps/mobile/app.config.ts). Its auth client sends it as the request's
+ * origin (Better Auth's `expo` plugin turns the expo-origin header into Origin), so it has to be
+ * trusted for the app to sign in with an email code. Development builds in Expo Go send exp://,
+ * which the plugin trusts by itself in development.
+ */
+export const APP_ORIGIN = "learnninja://"
 
 /** The one OAuth scope the MCP server asks for: publishing and keeping lessons as the user. */
 export const MCP_SCOPE = "lessons"
@@ -191,6 +200,7 @@ export function createAuth(deps: AuthDeps) {
       fallback: publicSiteFromEnv(env),
     },
     database: drizzleAdapter(deps.db, { provider: "pg", schema }),
+    trustedOrigins: [APP_ORIGIN],
     secondaryStorage: storage,
     // The jwt plugin's /token hands out a session JWT; chat apps get theirs from /oauth2/token.
     disabledPaths: ["/token"],
@@ -272,6 +282,8 @@ export function createAuth(deps: AuthDeps) {
         fetchClientMetadataResource,
         metadataProfile: "mcp-2026-07-28",
       }),
+      // The iOS app: it keeps the session cookie itself and sends it on every request.
+      expo(),
       apiKey({
         defaultPrefix: API_KEY_PREFIX,
         // The publish routes read x-api-key as a session.

@@ -28,6 +28,7 @@
   "dependencies": {
     "@better-auth/api-key": "^1.7.12",
     "@better-auth/cimd": "^1.7.12",
+    "@better-auth/expo": "^1.7.12",
     "@better-auth/mcp": "^1.7.12",
     "@better-auth/oauth-provider": "^1.7.12",
     "@modelcontextprotocol/server": "^2.3.1",

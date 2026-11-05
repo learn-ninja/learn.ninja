@@ -262,4 +262,96 @@ export const fr: Translation = {
   settings: "Réglages",
   privacy: "Confidentialité",
   terms: "Conditions",
+  signIn: {
+    title: "Se connecter",
+    body: "Parcours Explore, aime des leçons, et garde ta série et tes leçons terminées sur ton profil.",
+    email: "E-mail",
+    sendCode: "M'envoyer un code",
+    noPassword: "On t'envoie un code par e-mail. Pas de mot de passe.",
+    codeTitle: "Saisis le code",
+    codeSent: (email) =>
+      `Nous avons envoyé un code à six chiffres à ${email}. Il est valable 5 minutes.`,
+    code: "Code",
+    submit: "Se connecter",
+    otherEmail: "Utiliser une autre adresse",
+    legal:
+      "En continuant, tu acceptes les {terms} et la politique de {privacy}.",
+    wrongCode: "Ce code n'est pas bon. Vérifie-le ou demandes-en un nouveau.",
+    expiredCode: "Ce code a expiré. Demandes-en un nouveau.",
+    tooManyTries: "Trop de codes erronés. Demandes-en un nouveau.",
+    tooManyCodes:
+      "Trop de codes envoyés à cette adresse. Réessaie plus tard.",
+    badEmail: "Saisis une adresse e-mail valide.",
+    failed: "Une erreur s'est produite. Réessaie.",
+    logOut: "Se déconnecter",
+  },
+  feed: {
+    title: "Explore",
+    empty:
+      "Rien ici pour l'instant. Sois le premier : demande une leçon à ton agent et dis-lui de la garder.",
+    logInTitle: "Des leçons gardées et partagées",
+    logInBody:
+      "Connecte-toi pour parcourir Explore, aimer des leçons et voir ta série sur ton profil.",
+    testLessons: "Leçons de test",
+    failed: "Le chargement a échoué.",
+    views: (n) => p(n, { one: "# vue", other: "# vues" }),
+    likes: (n) => p(n, { one: "# j'aime", other: "# j'aime" }),
+    done: "Terminée",
+    minutesLeft: (n) => `Encore ${n} min`,
+    katasDone: (done, total) => `${done} katas faits sur ${total}`,
+    anonymous: "ninja anonyme",
+    private: "Privée",
+    hidden: "Masquée",
+    profile: "Ton profil",
+  },
+  profile: {
+    lessons: "Leçons",
+    myLessons: "Mes leçons",
+    inProgress: "En cours",
+    likes: "J'aime",
+    joined: (date) => `Inscrit en ${date}`,
+    noLessonsOwn:
+      "Pas encore de leçon. Demandes-en une à ton agent ; une fois connecté, elle est enregistrée ici.",
+    noLessons: "Pas encore de leçon publiée.",
+    noProgress:
+      "Les leçons que tu commences apparaissent ici jusqu'à ce que tu les termines.",
+    noLikesOwn: "Les leçons que tu aimes apparaissent ici.",
+    noLikes: "Pas encore de leçon aimée.",
+    missing: "Personne n'a ce pseudo.",
+    yearTotal: (n) =>
+      p(n, {
+        one: "# leçon au cours de l'année écoulée",
+        other: "# leçons au cours de l'année écoulée",
+      }),
+    streaks: (current, longest) => {
+      const days = (n: number) => p(n, { one: "# jour", other: "# jours" })
+      return `Série actuelle ${days(current)} · Record ${days(longest)}`
+    },
+    noStreak: "Pas encore de série",
+    less: "Moins",
+    more: "Plus",
+    grid: "Leçons terminées, par jour, sur l'année écoulée",
+    dayLessons: (n, date) =>
+      `${p(n, { one: "# leçon", other: "# leçons" })} le ${date}`,
+    dayRest: (date) => `Jour de repos le ${date}`,
+    dayNone: (date) => `Aucune leçon le ${date}`,
+  },
+  account: {
+    title: "Compte",
+    loggedInAs: (email) => `Connecté en tant que ${email}`,
+    handle: "Pseudo",
+    handleHint: (url) => `Ton profil se trouve à ${url}.`,
+    handleRules:
+      "Les pseudos font de 3 à 30 caractères : lettres minuscules, chiffres et traits d'union, en commençant par une lettre ou un chiffre.",
+    handleTaken: "Quelqu'un a déjà ce pseudo.",
+    handleReserved: "Ce pseudo est réservé.",
+    save: "Enregistrer",
+    saved: "Enregistré",
+  },
+  lessonErrors: {
+    missing:
+      "Aucune leçon ici : elle a expiré 7 jours après sa publication, ou le lien est erroné.",
+    broken: "Cette leçon ne respecte pas le format des leçons.",
+    failed: "La leçon ne s'est pas chargée.",
+  },
 }

@@ -252,4 +252,94 @@ export const es: Translation = {
   settings: "Ajustes",
   privacy: "Privacidad",
   terms: "Términos",
+  signIn: {
+    title: "Iniciar sesión",
+    body: "Navega por Explore, dale me gusta a lecciones y guarda tu racha y tus lecciones terminadas en tu perfil.",
+    email: "Correo electrónico",
+    sendCode: "Envíame un código",
+    noPassword: "Te enviaremos un código por correo. Sin contraseña.",
+    codeTitle: "Introduce el código",
+    codeSent: (email) =>
+      `Enviamos un código de seis dígitos a ${email}. Vale durante 5 minutos.`,
+    code: "Código",
+    submit: "Iniciar sesión",
+    otherEmail: "Usar otro correo",
+    legal: "Al continuar, aceptas los {terms} y la {privacy}.",
+    wrongCode: "Ese código no es correcto. Revísalo o pide uno nuevo.",
+    expiredCode: "Ese código caducó. Pide uno nuevo.",
+    tooManyTries: "Demasiados códigos incorrectos. Pide uno nuevo.",
+    tooManyCodes:
+      "Se enviaron demasiados códigos a esta dirección. Inténtalo más tarde.",
+    badEmail: "Introduce un correo electrónico válido.",
+    failed: "Algo salió mal. Inténtalo de nuevo.",
+    logOut: "Cerrar sesión",
+  },
+  feed: {
+    title: "Explore",
+    empty:
+      "Aquí no hay nada todavía. Sé el primero: pídele una lección a tu agente y dile que la guarde.",
+    logInTitle: "Lecciones que la gente guardó y compartió",
+    logInBody:
+      "Inicia sesión para ver Explore, dar me gusta a lecciones y ver tu racha en tu perfil.",
+    testLessons: "Lecciones de prueba",
+    failed: "No se pudo cargar.",
+    views: (n) => p(n, { one: "# vista", other: "# vistas" }),
+    likes: (n) => p(n, { one: "# me gusta", other: "# me gusta" }),
+    done: "Terminada",
+    minutesLeft: (n) => `Quedan ${n} min`,
+    katasDone: (done, total) => `${done} de ${total} katas hechas`,
+    anonymous: "ninja anónimo",
+    private: "Privada",
+    hidden: "Oculta",
+    profile: "Tu perfil",
+  },
+  profile: {
+    lessons: "Lecciones",
+    myLessons: "Mis lecciones",
+    inProgress: "En curso",
+    likes: "Me gusta",
+    joined: (date) => `Se unió en ${date}`,
+    noLessonsOwn:
+      "Todavía no hay lecciones. Pídele una a tu agente; con la sesión iniciada, se guarda aquí.",
+    noLessons: "Todavía no hay lecciones publicadas.",
+    noProgress: "Las lecciones que empieces aparecen aquí hasta que las termines.",
+    noLikesOwn: "Las lecciones que te gusten aparecen aquí.",
+    noLikes: "Todavía no hay lecciones que le gusten.",
+    missing: "Nadie tiene este nombre de usuario.",
+    yearTotal: (n) =>
+      p(n, {
+        one: "# lección en el último año",
+        other: "# lecciones en el último año",
+      }),
+    streaks: (current, longest) => {
+      const days = (n: number) => p(n, { one: "# día", other: "# días" })
+      return `Racha actual ${days(current)} · Más larga ${days(longest)}`
+    },
+    noStreak: "Todavía no hay racha",
+    less: "Menos",
+    more: "Más",
+    grid: "Lecciones terminadas por día durante el último año",
+    dayLessons: (n, date) =>
+      `${p(n, { one: "# lección", other: "# lecciones" })} el ${date}`,
+    dayRest: (date) => `Día de descanso el ${date}`,
+    dayNone: (date) => `Sin lecciones el ${date}`,
+  },
+  account: {
+    title: "Cuenta",
+    loggedInAs: (email) => `Sesión iniciada como ${email}`,
+    handle: "Nombre de usuario",
+    handleHint: (url) => `Tu perfil está en ${url}.`,
+    handleRules:
+      "Los nombres de usuario tienen de 3 a 30 caracteres: letras minúsculas, números y guiones, y empiezan por una letra o un número.",
+    handleTaken: "Alguien ya tiene ese nombre de usuario.",
+    handleReserved: "Ese nombre de usuario está reservado.",
+    save: "Guardar",
+    saved: "Guardado",
+  },
+  lessonErrors: {
+    missing:
+      "Aquí no hay ninguna lección: caducó 7 días después de publicarse o el enlace es incorrecto.",
+    broken: "Esta lección no se ajusta al formato de lección.",
+    failed: "No se pudo cargar la lección.",
+  },
 }

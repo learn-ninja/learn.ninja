@@ -273,4 +273,110 @@ export const pl: Translation = {
   settings: "Ustawienia",
   privacy: "Prywatność",
   terms: "Regulamin",
+  signIn: {
+    title: "Zaloguj się",
+    body: "Przeglądaj Explore, polub lekcje i zachowaj serię oraz ukończone lekcje w swoim profilu.",
+    email: "E-mail",
+    sendCode: "Wyślij mi kod",
+    noPassword: "Wyślemy ci kod e-mailem. Bez hasła.",
+    codeTitle: "Wpisz kod",
+    codeSent: (email) =>
+      `Wysłaliśmy sześciocyfrowy kod na adres ${email}. Działa przez 5 minut.`,
+    code: "Kod",
+    submit: "Zaloguj się",
+    otherEmail: "Użyj innego adresu e-mail",
+    legal: "Kontynuując, akceptujesz {terms} i {privacy}.",
+    wrongCode: "Ten kod jest nieprawidłowy. Sprawdź go albo wyślij nowy.",
+    expiredCode: "Ten kod wygasł. Wyślij nowy.",
+    tooManyTries: "Zbyt wiele błędnych kodów. Wyślij nowy.",
+    tooManyCodes:
+      "Na ten adres wysłano zbyt wiele kodów. Spróbuj ponownie później.",
+    badEmail: "Wpisz prawidłowy adres e-mail.",
+    failed: "Coś poszło nie tak. Spróbuj ponownie.",
+    logOut: "Wyloguj się",
+  },
+  feed: {
+    title: "Explore",
+    empty:
+      "Na razie nic tu nie ma. Bądź pierwszy: poproś swojego agenta o lekcję i powiedz, żeby ją zachował.",
+    logInTitle: "Lekcje, które inni zachowali i udostępnili",
+    logInBody:
+      "Zaloguj się, aby przeglądać Explore, polubić lekcje i widzieć swoją serię w profilu.",
+    testLessons: "Lekcje testowe",
+    failed: "Nie udało się załadować.",
+    views: (n) =>
+      p(n, {
+        one: "# wyświetlenie",
+        few: "# wyświetlenia",
+        many: "# wyświetleń",
+        other: "# wyświetlenia",
+      }),
+    likes: (n) =>
+      p(n, {
+        one: "# polubienie",
+        few: "# polubienia",
+        many: "# polubień",
+        other: "# polubienia",
+      }),
+    done: "Ukończona",
+    minutesLeft: (n) => `Zostało ${n} min`,
+    katasDone: (done, total) => `Ukończono ${done} z ${total} kata`,
+    anonymous: "anonimowy ninja",
+    private: "Prywatna",
+    hidden: "Ukryta",
+    profile: "Twój profil",
+  },
+  profile: {
+    lessons: "Lekcje",
+    myLessons: "Moje lekcje",
+    inProgress: "W trakcie",
+    likes: "Polubione",
+    joined: (date) => `Dołączono: ${date}`,
+    noLessonsOwn:
+      "Nie masz jeszcze lekcji. Poproś o nią swojego agenta; gdy jesteś zalogowany, zapisze się tutaj.",
+    noLessons: "Brak opublikowanych lekcji.",
+    noProgress:
+      "Rozpoczęte lekcje pojawiają się tutaj, dopóki ich nie ukończysz.",
+    noLikesOwn: "Tutaj pojawiają się lekcje, które polubisz.",
+    noLikes: "Brak polubionych lekcji.",
+    missing: "Nikt nie ma takiej nazwy użytkownika.",
+    yearTotal: (n) =>
+      p(n, {
+        one: "# lekcja w ostatnim roku",
+        few: "# lekcje w ostatnim roku",
+        many: "# lekcji w ostatnim roku",
+        other: "# lekcji w ostatnim roku",
+      }),
+    streaks: (current, longest) => {
+      const days = (n: number) =>
+        p(n, { one: "# dzień", few: "# dni", many: "# dni", other: "# dnia" })
+      return `Obecna seria: ${days(current)} · Najdłuższa: ${days(longest)}`
+    },
+    noStreak: "Brak serii",
+    less: "Mniej",
+    more: "Więcej",
+    grid: "Ukończone lekcje według dni w ostatnim roku",
+    dayLessons: (n, date) =>
+      `${date}: ${p(n, { one: "# lekcja", few: "# lekcje", many: "# lekcji", other: "# lekcji" })}`,
+    dayRest: (date) => `${date}: dzień odpoczynku`,
+    dayNone: (date) => `${date}: bez lekcji`,
+  },
+  account: {
+    title: "Konto",
+    loggedInAs: (email) => `Zalogowano jako ${email}`,
+    handle: "Nazwa użytkownika",
+    handleHint: (url) => `Twój profil jest pod adresem ${url}.`,
+    handleRules:
+      "Nazwa użytkownika ma od 3 do 30 znaków: małe litery, cyfry i łączniki, a zaczyna się od litery lub cyfry.",
+    handleTaken: "Ktoś już ma tę nazwę użytkownika.",
+    handleReserved: "Ta nazwa użytkownika jest zarezerwowana.",
+    save: "Zapisz",
+    saved: "Zapisano",
+  },
+  lessonErrors: {
+    missing:
+      "Nie ma tu lekcji: wygasła 7 dni po publikacji albo link jest błędny.",
+    broken: "Ta lekcja nie pasuje do formatu lekcji.",
+    failed: "Nie udało się załadować lekcji.",
+  },
 }

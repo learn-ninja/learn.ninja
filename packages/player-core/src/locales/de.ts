@@ -261,4 +261,97 @@ export const de: Translation = {
   settings: "Einstellungen",
   privacy: "Datenschutz",
   terms: "Nutzungsbedingungen",
+  signIn: {
+    title: "Anmelden",
+    body: "Stöbere in Explore, like Lektionen und behalte deine Serie und deine abgeschlossenen Lektionen in deinem Profil.",
+    email: "E-Mail",
+    sendCode: "Code per E-Mail senden",
+    noPassword: "Wir schicken dir einen Code per E-Mail. Kein Passwort.",
+    codeTitle: "Code eingeben",
+    codeSent: (email) =>
+      `Wir haben einen sechsstelligen Code an ${email} geschickt. Er gilt 5 Minuten.`,
+    code: "Code",
+    submit: "Anmelden",
+    otherEmail: "Andere E-Mail verwenden",
+    legal:
+      "Wenn du fortfährst, stimmst du den {terms} zu und akzeptierst die Hinweise zum {privacy}.",
+    wrongCode:
+      "Dieser Code stimmt nicht. Prüf ihn oder lass dir einen neuen schicken.",
+    expiredCode: "Dieser Code ist abgelaufen. Lass dir einen neuen schicken.",
+    tooManyTries: "Zu viele falsche Codes. Lass dir einen neuen schicken.",
+    tooManyCodes:
+      "Zu viele Codes an diese Adresse gesendet. Versuch es später noch einmal.",
+    badEmail: "Gib eine gültige E-Mail-Adresse ein.",
+    failed: "Etwas ist schiefgelaufen. Versuch es noch einmal.",
+    logOut: "Abmelden",
+  },
+  feed: {
+    title: "Explore",
+    empty:
+      "Hier ist noch nichts. Sei der Erste: Bitte deinen Agenten um eine Lektion und sag ihm, er soll sie behalten.",
+    logInTitle: "Lektionen, die andere behalten und geteilt haben",
+    logInBody:
+      "Melde dich an, um in Explore zu stöbern, Lektionen zu liken und deine Serie in deinem Profil zu sehen.",
+    testLessons: "Testlektionen",
+    failed: "Laden fehlgeschlagen.",
+    views: (n) => p(n, { one: "# Aufruf", other: "# Aufrufe" }),
+    likes: (n) => p(n, { one: "# Like", other: "# Likes" }),
+    done: "Fertig",
+    minutesLeft: (n) => `Noch ${n} Min.`,
+    katasDone: (done, total) => `${done} von ${total} Katas geschafft`,
+    anonymous: "anonymer Ninja",
+    private: "Privat",
+    hidden: "Ausgeblendet",
+    profile: "Dein Profil",
+  },
+  profile: {
+    lessons: "Lektionen",
+    myLessons: "Meine Lektionen",
+    inProgress: "Begonnen",
+    likes: "Likes",
+    joined: (date) => `Dabei seit ${date}`,
+    noLessonsOwn:
+      "Noch keine Lektionen. Bitte deinen Agenten um eine; wenn du angemeldet bist, wird sie hier gespeichert.",
+    noLessons: "Noch keine öffentlichen Lektionen.",
+    noProgress:
+      "Lektionen, die du beginnst, erscheinen hier, bis du sie abschließt.",
+    noLikesOwn: "Lektionen, die dir gefallen, erscheinen hier.",
+    noLikes: "Noch keine gelikten Lektionen.",
+    missing: "Niemand hat diesen Nutzernamen.",
+    yearTotal: (n) =>
+      p(n, {
+        one: "# Lektion im letzten Jahr",
+        other: "# Lektionen im letzten Jahr",
+      }),
+    streaks: (current, longest) => {
+      const days = (n: number) => p(n, { one: "# Tag", other: "# Tage" })
+      return `Aktuelle Serie ${days(current)} · Längste ${days(longest)}`
+    },
+    noStreak: "Noch keine Serie",
+    less: "Weniger",
+    more: "Mehr",
+    grid: "Abgeschlossene Lektionen pro Tag im letzten Jahr",
+    dayLessons: (n, date) =>
+      `${p(n, { one: "# Lektion", other: "# Lektionen" })} am ${date}`,
+    dayRest: (date) => `Ruhetag am ${date}`,
+    dayNone: (date) => `Keine Lektionen am ${date}`,
+  },
+  account: {
+    title: "Konto",
+    loggedInAs: (email) => `Angemeldet als ${email}`,
+    handle: "Nutzername",
+    handleHint: (url) => `Dein Profil ist unter ${url}.`,
+    handleRules:
+      "Nutzernamen haben 3 bis 30 Zeichen: Kleinbuchstaben, Ziffern und Bindestriche, am Anfang ein Buchstabe oder eine Ziffer.",
+    handleTaken: "Diesen Nutzernamen hat schon jemand.",
+    handleReserved: "Dieser Nutzername ist reserviert.",
+    save: "Speichern",
+    saved: "Gespeichert",
+  },
+  lessonErrors: {
+    missing:
+      "Hier ist keine Lektion: Sie ist 7 Tage nach der Veröffentlichung abgelaufen, oder der Link ist falsch.",
+    broken: "Diese Lektion passt nicht zum Lektionsformat.",
+    failed: "Die Lektion konnte nicht geladen werden.",
+  },
 }

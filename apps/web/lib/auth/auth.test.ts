@@ -30,6 +30,7 @@ import {
 import { getActor, getActorByKey, InvalidApiKeyError } from "./actor"
 import {
   API_KEY_PREFIX,
+  APP_ORIGIN,
   createAuth,
   MCP_KEY_PREFIX,
   type Auth,
@@ -130,6 +131,46 @@ describe("email codes", () => {
     await expect(limited.api.sendVerificationOTP({ body })).rejects.toMatchObject(
       { status: "TOO_MANY_REQUESTS" }
     )
+  })
+
+  it("signs the iOS app in through its scheme's origin, and trusts no other app's", async () => {
+    // What @better-auth/expo's client sends: no Origin, the app's own as expo-origin, and the
+    // cookie it keeps once it has one.
+    const post = (path: string, body: unknown, origin: string) =>
+      auth.handler(
+        new Request(`${ORIGIN}/api/auth${path}`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "expo-origin": origin,
+          },
+          body: JSON.stringify(body),
+        })
+      )
+    const email = "app@example.com"
+    const sent = await post(
+      "/email-otp/send-verification-otp",
+      { email, type: "sign-in" },
+      APP_ORIGIN
+    )
+    expect(sent.status).toBe(200)
+    const signedIn = await post(
+      "/sign-in/email-otp",
+      { email, otp: codes.get(email) },
+      APP_ORIGIN
+    )
+    expect(signedIn.status).toBe(200)
+    const cookie = signedIn.headers
+      .getSetCookie()
+      .map((c) => c.split(";")[0])
+      .join("; ")
+    // The cookie the app keeps names the account on any API request.
+    expect(await getActor(auth, new Headers({ cookie }))).toMatchObject({ email })
+    // Tests skip Better Auth's origin check, so the list it checks against is read instead: the
+    // app's scheme is on it, another app's isn't.
+    const context = await auth.$context
+    expect(context.isTrustedOrigin(APP_ORIGIN)).toBe(true)
+    expect(context.isTrustedOrigin("evil://")).toBe(false)
   })
 
   it("stores codes hashed", async () => {

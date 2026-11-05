@@ -3,7 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { Item } from "@workspace/player-core/flow"
 import type { State } from "@workspace/player-core/state"
 
-import { createProgressSync, resetSignedOut, type Send } from "./progress-sync"
+import {
+  createProgressSync,
+  resetSignedOut,
+  signedIn,
+  type Send,
+} from "./progress-sync"
 
 const kata = (id: string) => ({ id }) as never
 const items: Item[] = [
@@ -92,6 +97,51 @@ describe("syncing progress to the server", () => {
     sync.update(at(6))
     await new Promise((r) => setTimeout(r, 10))
     expect(sent).toHaveLength(1)
+  })
+
+  it("sends what the server missed once the app signs in: the latest progress, then the finish", async () => {
+    status = 401
+    const sync = createProgressSync("abc", send)
+    sync.update(at(1))
+    await vi.waitFor(() => expect(sent).toHaveLength(1))
+    sync.update(at(3))
+    await new Promise((r) => setTimeout(r, 10))
+    expect(sent).toHaveLength(1)
+    status = 200
+    signedIn()
+    await vi.waitFor(() => expect(sent).toHaveLength(2))
+    expect(sent[1]).toEqual({
+      path: "/api/lessons/abc/progress",
+      method: "PUT",
+      body: { done: 2, total: 4 },
+    })
+    // Sent now: signing in again sends nothing more.
+    signedIn()
+    await new Promise((r) => setTimeout(r, 10))
+    expect(sent).toHaveLength(2)
+  })
+
+  it("resends only the finish when the lesson ended logged out, and nothing for a closed lesson", async () => {
+    status = 401
+    const finished = createProgressSync("done", send)
+    finished.update(at(1))
+    await vi.waitFor(() => expect(sent).toHaveLength(1))
+    // The 401 has landed: nothing more goes out.
+    await new Promise((r) => setTimeout(r, 10))
+    finished.update(at(6))
+    const closed = createProgressSync("gone", send)
+    closed.update(at(2))
+    closed.close()
+    // Both were held back while logged out.
+    await new Promise((r) => setTimeout(r, 10))
+    expect(sent).toHaveLength(1)
+    status = 200
+    signedIn()
+    await new Promise((r) => setTimeout(r, 20))
+    expect(sent.map((r) => `${r.path} ${r.method}`)).toEqual([
+      "/api/lessons/done/progress PUT",
+      "/api/lessons/done/complete POST",
+    ])
   })
 
   it("sends each request only after the one before it lands, so a slow one can't overtake", async () => {
