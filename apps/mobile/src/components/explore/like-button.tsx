@@ -1,10 +1,10 @@
+import { SymbolView } from "expo-symbols"
 import { router } from "expo-router"
 import { useEffect, useState } from "react"
 import { Pressable } from "react-native"
 
 import type { Strings } from "@workspace/player-core/strings"
 
-import { HeartIcon } from "@/components/icons"
 import { Text } from "@/components/ui/text"
 import { setLiked } from "@/lib/feed"
 import { tap } from "@/lib/haptics"
@@ -64,7 +64,11 @@ export function useLike({
   return { ...state, toggle: () => void toggle() }
 }
 
-/** The heart with the count, as the web's LikeButton. */
+/**
+ * The heart with the count, as the web's LikeButton, in the system's own heart (SF Symbols). It
+ * bounces when the learner taps it, as iOS's hearts do; only then, so the hearts in a list don't
+ * all bounce as they scroll in.
+ */
 export function LikeButton({
   like,
   lang,
@@ -74,27 +78,32 @@ export function LikeButton({
   lang: string
   t: Strings
 }) {
-  const state = like
-  const color = state.liked
-    ? colors.destructive.DEFAULT
-    : colors.muted.foreground
+  const [tapped, setTapped] = useState(false)
   return (
     <Pressable
-      onPress={like.toggle}
+      onPress={() => {
+        setTapped(true)
+        like.toggle()
+      }}
       hitSlop={8}
       className="-me-2 flex-row items-center gap-1 rounded-md px-2 py-1 active:bg-accent/50"
       accessibilityRole="button"
-      accessibilityLabel={state.liked ? t.liked : t.like}
-      accessibilityValue={{ text: t.feed.likes(state.likes) }}
-      accessibilityState={{ selected: state.liked }}
+      accessibilityLabel={like.liked ? t.liked : t.like}
+      accessibilityValue={{ text: t.feed.likes(like.likes) }}
+      accessibilityState={{ selected: like.liked }}
     >
-      <HeartIcon
+      <SymbolView
+        name={like.liked ? "heart.fill" : "heart"}
         size={14}
-        color={color}
-        fill={state.liked ? colors.destructive.DEFAULT : "none"}
+        tintColor={
+          like.liked ? colors.destructive.DEFAULT : colors.muted.foreground
+        }
+        animationSpec={
+          tapped ? { effect: { type: "bounce", wholeSymbol: true } } : undefined
+        }
       />
       <Text className="text-sm text-muted-foreground tabular-nums">
-        {compact(state.likes, lang)}
+        {compact(like.likes, lang)}
       </Text>
     </Pressable>
   )

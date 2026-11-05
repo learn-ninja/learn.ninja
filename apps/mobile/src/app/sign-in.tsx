@@ -1,14 +1,8 @@
 import { router, Stack } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { useRef, useState, type ComponentRef } from "react"
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  TextInput,
-  View,
-} from "react-native"
+import { Pressable, ScrollView, TextInput, View } from "react-native"
+import { KeyboardAvoidingView } from "react-native-keyboard-controller"
 
 import type { Strings } from "@workspace/player-core/strings"
 
@@ -19,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Text } from "@/components/ui/text"
 import { authClient } from "@/lib/auth-client"
 import { API_BASE_URL } from "@/lib/config"
-import { tap } from "@/lib/haptics"
+import { result } from "@/lib/haptics"
 import { looksLikeEmail, signInError } from "@/lib/sign-in-errors"
 import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
@@ -69,9 +63,11 @@ export default function SignIn() {
     if (error) {
       setCode("")
       setAttempt((n) => n + 1)
+      result(false)
       return setError(signInError(error, t))
     }
-    tap()
+    // The system's success and error taps, as iOS's own code fields give them.
+    result(true)
     if (router.canGoBack()) router.back()
     else router.replace("/")
   }
@@ -79,10 +75,8 @@ export default function SignIn() {
   return (
     // The screen and its text run the app language's way (direction.tsx).
     <DirectionView dir={dir} className="flex-1 bg-background">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1"
-      >
+      {/* Moves with the keyboard as it slides, frame by frame, rather than jumping once it's up. */}
+      <KeyboardAvoidingView behavior="padding" className="flex-1">
         <Stack.Screen options={{ headerShown: false }} />
         <View className="h-14 flex-row items-center px-4">
           <CloseButton

@@ -9,7 +9,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
-import Svg, { Path } from "react-native-svg"
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect"
+import { SymbolView } from "expo-symbols"
 
 import type { QuestionCount } from "@workspace/player-core/flow"
 import type { Strings } from "@workspace/player-core/strings"
@@ -78,9 +79,41 @@ export function LessonHeader({
           </Text>
         )}
         {/* Balances the close button, so the bar sits in the middle as the web's does. */}
-        {end ?? <View className="h-8 w-8" />}
+        {end ?? <View style={{ width: CONTROL, height: CONTROL }} />}
       </View>
     </View>
+  )
+}
+
+/** Whether this iOS draws Liquid Glass (iOS 26 and later). */
+export const GLASS = isLiquidGlassAvailable()
+
+/**
+ * A header control's size: the 40-point glass circle iOS 26's own bar buttons sit in, or the
+ * web's icon-sm (32 points) before Liquid Glass.
+ */
+export const CONTROL = GLASS ? 40 : 32
+
+/**
+ * A header control in Liquid Glass, as iOS 26 draws a bar's buttons (the tabs' bars do the same
+ * for the gear and the back button); before iOS 26 the control as it is.
+ */
+export function GlassCircle({ children }: { children: ReactNode }) {
+  if (!GLASS) return <>{children}</>
+  return (
+    <GlassView
+      isInteractive
+      glassEffectStyle="regular"
+      style={{
+        width: CONTROL,
+        height: CONTROL,
+        borderRadius: CONTROL / 2,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {children}
+    </GlassView>
   )
 }
 
@@ -93,17 +126,20 @@ export function CloseButton({
   label: string
 }) {
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      // The web's icon-sm (32px) with the phone's larger tap area around it.
-      className="h-8 w-8"
-      hitSlop={6}
-      onPress={onPress}
-      accessibilityLabel={label}
-    >
-      <CloseIcon />
-    </Button>
+    <GlassCircle>
+      <Button
+        variant="ghost"
+        size="icon"
+        // With the phone's larger tap area around it.
+        className="rounded-full"
+        style={{ width: CONTROL, height: CONTROL }}
+        hitSlop={6}
+        onPress={onPress}
+        accessibilityLabel={label}
+      >
+        <CloseIcon />
+      </Button>
+    </GlassCircle>
   )
 }
 
@@ -128,22 +164,15 @@ export function BareHeader({
   )
 }
 
-/** Lucide's X, the header's close mark. */
+/** The system's close mark (SF Symbols' xmark), as iOS's full-screen sheets close. */
 function CloseIcon() {
   return (
-    <Svg
-      width={16}
-      height={16}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={colors.foreground}
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <Path d="M18 6 6 18" />
-      <Path d="m6 6 12 12" />
-    </Svg>
+    <SymbolView
+      name="xmark"
+      size={15}
+      weight="semibold"
+      tintColor={colors.foreground}
+    />
   )
 }
 
@@ -360,7 +389,11 @@ export function TrayFeedback({
   )
 }
 
-/** The tray's main button: a full-width pill, 48 points tall, with 16-point text. */
+/**
+ * The tray's main button: a full-width pill, 48 points tall, with 16-point text. The outline one
+ * (Hint) is Liquid Glass on iOS 26 and later, as iOS draws a secondary button over content; the
+ * main action keeps its fill, the lesson's own look on both the web and the app.
+ */
 export function TrayButton({
   label,
   onPress,
@@ -375,9 +408,10 @@ export function TrayButton({
   /** For a toggle (Hint): shown pressed while it's open, a shade off the tray. */
   pressed?: boolean
 }) {
-  return (
+  const glass = GLASS && variant === "outline"
+  const button = (
     <Button
-      variant={variant}
+      variant={glass ? "ghost" : variant}
       size="lg"
       className={cn(
         // 48 points at the default text size, and taller with a larger one (Dynamic Type), so
@@ -393,5 +427,15 @@ export function TrayButton({
     >
       <Text className="text-base">{label}</Text>
     </Button>
+  )
+  if (!glass) return button
+  return (
+    <GlassView
+      isInteractive
+      glassEffectStyle="regular"
+      style={{ flex: 1, flexDirection: "row", borderRadius: 999 }}
+    >
+      {button}
+    </GlassView>
   )
 }

@@ -37,8 +37,11 @@ export default function Settings() {
   const { t, lang, dir } = useAppStrings()
   const session = useSession()
   const [, update] = usePreferences()
+  // Logged out some other way (the session ended): off the stack, back to the profile's root.
   useEffect(() => {
-    if (session.state === "out") router.replace("/")
+    if (session.state !== "out") return
+    if (router.canGoBack()) router.back()
+    else router.replace("/")
   }, [session.state])
   if (session.state !== "in") return null
   const { account } = session
@@ -56,9 +59,7 @@ export default function Settings() {
             title={t.account.title}
             footer={
               <Text>
-                {t.account.handleHint(
-                  `⁨${host}/u/${account.handle ?? ""}⁩`
-                )}
+                {t.account.handleHint(`⁨${host}/u/${account.handle ?? ""}⁩`)}
               </Text>
             }
           >
@@ -162,8 +163,10 @@ function confirmLogOut(t: Strings) {
       style: "destructive",
       onPress: async () => {
         tap()
+        // Off the tab's stack first (Settings is pushed there, not a modal): once the session
+        // ends this screen has nothing to show, and the tab would be left on it.
+        if (router.canGoBack()) router.back()
         await signOut()
-        router.dismissAll()
         router.replace("/")
       },
     },
