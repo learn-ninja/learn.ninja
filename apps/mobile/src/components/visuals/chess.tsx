@@ -44,7 +44,9 @@ export function ChessBoard({
       {hotspots && size > 0 ? (
         <View
           className="absolute top-0 flex-row flex-wrap"
-          style={{ left: start, width: squares, height: squares }}
+          // The board is a drawing: a1 is at the bottom left in every language, so its squares
+          // run left to right, and the gutter (the start of the drawing) is on the left.
+          style={{ left: start, width: squares, height: squares, direction: "ltr" }}
         >
           {squareOrder(flip).map((square) => {
             const selected = hotspots.selected.includes(square)

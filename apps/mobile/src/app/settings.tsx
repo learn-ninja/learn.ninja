@@ -124,7 +124,9 @@ function HandleField({ current, t }: { current: string; t: Strings }) {
       <Text className="text-sm font-medium">{t.account.handle}</Text>
       <View className="flex-row gap-2">
         <Input
-          value={value}
+          // Uncontrolled: a controlled field drops keys typed quickly.
+          defaultValue={current}
+          key={current}
           onChangeText={setValue}
           accessibilityLabel={t.account.handle}
           autoCapitalize="none"

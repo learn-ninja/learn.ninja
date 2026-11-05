@@ -39,6 +39,8 @@ export default function SignIn() {
   const [code, setCode] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  /** Each wrong code starts the field over, empty. */
+  const [attempt, setAttempt] = useState(0)
 
   async function sendCode() {
     if (busy) return
@@ -65,6 +67,7 @@ export default function SignIn() {
     setBusy(false)
     if (error) {
       setCode("")
+      setAttempt((n) => n + 1)
       return setError(signInError(error, t))
     }
     tap()
@@ -97,8 +100,12 @@ export default function SignIn() {
               <Heading title={s.title}>{s.body}</Heading>
               <View className="w-full gap-3">
                 <Input
-                  value={email}
-                  onChangeText={setEmail}
+                  // Uncontrolled: a controlled field drops keys typed quickly (autofill, paste).
+                  defaultValue={email}
+                  onChangeText={(text) => {
+                    setEmail(text)
+                    if (error) setError(null)
+                  }}
                   placeholder="you@example.com"
                   accessibilityLabel={s.email}
                   autoComplete="email"
@@ -132,6 +139,7 @@ export default function SignIn() {
                 {s.codeSent(`⁨${email.trim()}⁩`)}
               </Heading>
               <CodeField
+                key={attempt}
                 value={code}
                 label={s.code}
                 disabled={busy}
@@ -246,7 +254,8 @@ function CodeField({
       </View>
       <TextInput
         ref={input}
-        value={value}
+        // Uncontrolled, as the email field: a controlled one drops digits typed or pasted quickly.
+        // A cleared code (after a wrong one) remounts it empty through its key.
         onChangeText={(text) =>
           onChange(text.replace(/\D/g, "").slice(0, CODE_LENGTH))
         }
