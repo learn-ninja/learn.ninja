@@ -1,21 +1,20 @@
 import { router, Stack, useFocusEffect } from "expo-router"
-import { useCallback, useState } from "react"
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  View,
-} from "react-native"
+import { useCallback, useState, type ReactElement } from "react"
+import { FlatList, Pressable, RefreshControl, View } from "react-native"
 
 import type { Strings } from "@workspace/player-core/strings"
 
 import { Avatar } from "@/components/avatar"
-import { DirectionView } from "@/components/direction"
+import { DirectionProvider } from "@/components/direction"
 import { ActivityGrid } from "@/components/explore/activity-grid"
 import { LessonRow } from "@/components/explore/lesson-row"
-import { Empty, Hairline } from "@/components/explore/list-parts"
-import { Button } from "@/components/ui/button"
+import {
+  Empty,
+  Failed,
+  Hairline,
+  Loading,
+  LTR,
+} from "@/components/explore/list-parts"
 import { Text } from "@/components/ui/text"
 import { FeedError, fetchProfile, type ProfileData } from "@/lib/feed"
 import { tap } from "@/lib/haptics"
@@ -39,14 +38,33 @@ type Load =
   | { state: "error" }
   | { state: "ready"; data: ProfileData }
 
-export function ProfileView({ handle }: { handle: string }) {
+export function ProfileView({
+  handle,
+  title,
+  placeholder,
+}: {
+  /** Whose profile; null while there's no one to show (the Profile tab, logged out). */
+  handle: string | null
+  /** The bar's title while there's no handle. */
+  title?: string
+  /** What the list holds while there's no handle: the call to log in, or a spinner. */
+  placeholder?: ReactElement
+}) {
   const { t, lang, dir } = useAppStrings()
   const session = useSession()
   const [load, setLoad] = useState<Load>({ state: "loading" })
   const [tab, setTab] = useState<Tab>("lessons")
   const [refreshing, setRefreshing] = useState(false)
 
+  // Someone else's profile (or the learner's, just logged in) starts from its spinner.
+  const [shown, setShown] = useState(handle)
+  if (shown !== handle) {
+    setShown(handle)
+    setLoad({ state: "loading" })
+  }
+
   const refresh = useCallback(async () => {
+    if (!handle) return
     try {
       const data = await fetchProfile(handle)
       setLoad({ state: "ready", data })
@@ -68,7 +86,7 @@ export function ProfileView({ handle }: { handle: string }) {
   )
   const viewerId = session.state === "in" ? session.account.id : undefined
 
-  const data = load.state === "ready" ? load.data : null
+  const data = handle && load.state === "ready" ? load.data : null
   const list = !data
     ? []
     : tab === "lessons"
@@ -89,9 +107,11 @@ export function ProfileView({ handle }: { handle: string }) {
           : t.profile.noLikes
 
   return (
-    <DirectionView dir={dir} className="flex-1 bg-background">
+    <DirectionProvider value={dir}>
       {/* A profile goes by its handle alone: no display name, no @. */}
-      <Stack.Screen options={{ title: data?.profile.handle ?? handle }} />
+      <Stack.Screen
+        options={{ title: data?.profile.handle ?? handle ?? title ?? "" }}
+      />
       {data?.own ? (
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button
@@ -103,54 +123,61 @@ export function ProfileView({ handle }: { handle: string }) {
           </Stack.Toolbar.Button>
         </Stack.Toolbar>
       ) : null}
-      {load.state === "loading" ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
-      ) : load.state !== "ready" ? (
-        <View className="flex-1 items-center justify-center gap-4 p-6">
-          <Text className="text-center text-sm text-muted-foreground">
-            {load.state === "missing" ? t.profile.missing : t.feed.failed}
-          </Text>
-          {load.state === "error" ? (
-            <Button
-              variant="outline"
-              onPress={() => {
-                setLoad({ state: "loading" })
-                void refresh()
-              }}
-            >
-              <Text>{t.tryAgain}</Text>
-            </Button>
-          ) : null}
-        </View>
-      ) : (
-        <FlatList
-          data={list}
-          contentInsetAdjustmentBehavior="automatic"
-          keyExtractor={(l) => l.id}
-          contentContainerClassName="px-4 pb-12"
-          ItemSeparatorComponent={Hairline}
-          ListHeaderComponent={
-            <Head
-              data={load.data}
-              tab={tab}
-              setTab={setTab}
-              lang={lang}
-              t={t}
+      {/* The screen's root, from the first render, whatever it holds (list-parts.tsx says why). */}
+      <FlatList
+        // The list itself runs left to right and what scrolls in it runs the screen's way: on iOS 26
+        // the large title is drawn inside the scroll view, and React Native mirrors a right-to-left
+        // scroll view (for sideways lists), which would mirror the title's letters too.
+        className="flex-1"
+        style={LTR}
+        contentContainerStyle={{ direction: dir }}
+        data={list}
+        contentInsetAdjustmentBehavior="automatic"
+        keyExtractor={(l) => l.id}
+        contentContainerClassName={cn("px-4 pb-12", !data && "grow")}
+        ItemSeparatorComponent={Hairline}
+        ListHeaderComponent={
+          data ? (
+            <Head data={data} tab={tab} setTab={setTab} lang={lang} t={t} />
+          ) : !handle ? (
+            placeholder
+          ) : undefined
+        }
+        renderItem={({ item }) => (
+          <LessonRow
+            lesson={item}
+            viewer={data?.viewer}
+            viewerId={viewerId}
+            lang={lang}
+            t={t}
+          />
+        )}
+        ListEmptyComponent={
+          data ? (
+            <Empty>{empty}</Empty>
+          ) : !handle ? undefined : load.state === "loading" ? (
+            <Loading />
+          ) : (
+            <Failed
+              message={
+                load.state === "missing" ? t.profile.missing : t.feed.failed
+              }
+              retry={
+                load.state === "error"
+                  ? {
+                      label: t.tryAgain,
+                      onPress: () => {
+                        setLoad({ state: "loading" })
+                        void refresh()
+                      },
+                    }
+                  : undefined
+              }
             />
-          }
-          renderItem={({ item }) => (
-            <LessonRow
-              lesson={item}
-              viewer={load.data.viewer}
-              viewerId={viewerId}
-              lang={lang}
-              t={t}
-            />
-          )}
-          ListEmptyComponent={<Empty>{empty}</Empty>}
-          refreshControl={
+          )
+        }
+        refreshControl={
+          data ? (
             <RefreshControl
               refreshing={refreshing}
               tintColor={colors.muted.foreground}
@@ -160,10 +187,10 @@ export function ProfileView({ handle }: { handle: string }) {
                 setRefreshing(false)
               }}
             />
-          }
-        />
-      )}
-    </DirectionView>
+          ) : undefined
+        }
+      />
+    </DirectionProvider>
   )
 }
 

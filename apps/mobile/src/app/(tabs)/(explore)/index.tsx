@@ -1,17 +1,17 @@
 import { Link, router, Stack, useFocusEffect } from "expo-router"
 import { useCallback, useEffect, useRef, useState } from "react"
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  View,
-} from "react-native"
+import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native"
 
 import type { Strings } from "@workspace/player-core/strings"
 
-import { DirectionView } from "@/components/direction"
-import { Empty, Hairline } from "@/components/explore/list-parts"
+import { DirectionProvider } from "@/components/direction"
+import {
+  Empty,
+  Failed,
+  Hairline,
+  Loading,
+  LTR,
+} from "@/components/explore/list-parts"
 import { LessonRow } from "@/components/explore/lesson-row"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
@@ -20,6 +20,7 @@ import { fetchExplore, type LessonRowData, type Viewer } from "@/lib/feed"
 import { mergeFirstPage } from "@/lib/feed-merge"
 import { useSession, type Account } from "@/lib/session"
 import { useAppStrings } from "@/lib/use-strings"
+import { cn } from "@/lib/utils"
 import { colors } from "../../../../tokens"
 
 // The app's home. Signed in, it's Explore, as the web's /explore lists it: the newest lessons
@@ -31,13 +32,14 @@ import { colors } from "../../../../tokens"
 export default function Home() {
   const { t, lang, dir } = useAppStrings()
   const session = useSession()
+  const account = session.state === "in" ? session.account : null
+  const { feed, refresh, retry, loadMore } = useExplore(account)
+  const [refreshing, setRefreshing] = useState(false)
   return (
-    <DirectionView dir={dir} className="flex-1 bg-background">
+    <DirectionProvider value={dir}>
       {/* The system's bar: a large title that shrinks into it as the feed scrolls (TabStack). */}
       <Stack.Screen
-        options={{
-          title: session.state === "in" ? t.feed.title : "learn.ninja",
-        }}
+        options={{ title: account ? t.feed.title : "learn.ninja" }}
       />
       {session.state === "out" ? (
         <Stack.Toolbar placement="right">
@@ -46,16 +48,75 @@ export default function Home() {
           </Stack.Toolbar.Button>
         </Stack.Toolbar>
       ) : null}
-      {session.state === "loading" ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
-      ) : session.state === "in" ? (
-        <Explore account={session.account} lang={lang} t={t} />
-      ) : (
-        <SignedOut t={t} />
-      )}
-    </DirectionView>
+      {/* The screen's root, from the first render, logged in or out (list-parts.tsx says why). */}
+      <FlatList
+        // The list itself runs left to right and what scrolls in it runs the screen's way: on iOS 26
+        // the large title is drawn inside the scroll view, and React Native mirrors a right-to-left
+        // scroll view (for sideways lists), which would mirror the title's letters too.
+        className="flex-1"
+        style={LTR}
+        contentContainerStyle={{ direction: dir }}
+        data={account && feed.state === "ready" ? feed.lessons : []}
+        contentInsetAdjustmentBehavior="automatic"
+        keyExtractor={(l) => l.id}
+        contentContainerClassName={cn(
+          "px-4 pb-12",
+          (!account || feed.state !== "ready") && "grow"
+        )}
+        ItemSeparatorComponent={Hairline}
+        ListHeaderComponent={
+          session.state === "out" ? <LogInCard t={t} /> : undefined
+        }
+        renderItem={({ item }) => (
+          <LessonRow
+            lesson={item}
+            viewer={feed.viewer}
+            viewerId={account?.id}
+            lang={lang}
+            t={t}
+          />
+        )}
+        ListEmptyComponent={
+          session.state === "out" ? undefined : session.state === "loading" ||
+            feed.state === "loading" ? (
+            <Loading />
+          ) : feed.state === "error" ? (
+            <Failed
+              message={t.feed.failed}
+              retry={{ label: t.tryAgain, onPress: retry }}
+            />
+          ) : (
+            <Empty>{t.feed.empty}</Empty>
+          )
+        }
+        onEndReached={() => void loadMore()}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          account ? (
+            <RefreshControl
+              refreshing={refreshing}
+              tintColor={colors.muted.foreground}
+              onRefresh={async () => {
+                setRefreshing(true)
+                await refresh()
+                setRefreshing(false)
+              }}
+            />
+          ) : undefined
+        }
+        ListFooterComponent={
+          <>
+            {account && feed.next ? (
+              <ActivityIndicator className="py-6" />
+            ) : null}
+            {/* Logged out, or in a development build: the bundled test lessons to play. */}
+            {session.state === "out" || (account && __DEV__) ? (
+              <TestLessons t={t} />
+            ) : null}
+          </>
+        }
+      />
+    </DirectionProvider>
   )
 }
 
@@ -66,44 +127,47 @@ type Feed = {
   state: "loading" | "ready" | "error"
 }
 
-function Explore({
-  account,
-  lang,
-  t,
-}: {
-  account: Account
-  lang: string
-  t: Strings
-}) {
-  const [feed, setFeed] = useState<Feed>({
-    lessons: [],
-    next: null,
-    state: "loading",
-  })
-  const [refreshing, setRefreshing] = useState(false)
+const START: Feed = { lessons: [], next: null, state: "loading" }
+
+/** Explore's pages for the logged-in account; nothing (and no requests) while logged out. */
+function useExplore(account: Account | null) {
+  const [feed, setFeed] = useState<Feed>(START)
   const loadingMore = useRef(false)
+  const signedIn = account !== null
+
+  // Logging out (or in as someone else) starts the feed over.
+  const id = account?.id ?? null
+  const [shown, setShown] = useState(id)
+  if (shown !== id) {
+    setShown(id)
+    setFeed(START)
+  }
 
   /**
    * The first page again. Pulled down, it starts the feed over; coming back into view, it's merged
    * into what's on screen (feed-merge.ts), so the pages scrolled through and the place stay.
    */
-  const refresh = useCallback(async (merge = false) => {
-    try {
-      const page = await fetchExplore()
-      setFeed((f) =>
-        merge && f.state === "ready"
-          ? { ...mergeFirstPage(f, page), state: "ready" }
-          : {
-              lessons: page.lessons,
-              viewer: page.viewer,
-              next: page.next,
-              state: "ready",
-            }
-      )
-    } catch {
-      setFeed((f) => (f.state === "ready" ? f : { ...f, state: "error" }))
-    }
-  }, [])
+  const refresh = useCallback(
+    async (merge = false) => {
+      if (!signedIn) return
+      try {
+        const page = await fetchExplore()
+        setFeed((f) =>
+          merge && f.state === "ready"
+            ? { ...mergeFirstPage(f, page), state: "ready" }
+            : {
+                lessons: page.lessons,
+                viewer: page.viewer,
+                next: page.next,
+                state: "ready",
+              }
+        )
+      } catch {
+        setFeed((f) => (f.state === "ready" ? f : { ...f, state: "error" }))
+      }
+    },
+    [signedIn]
+  )
 
   // Fresh each time the feed comes back into view: a lesson just finished shows Done.
   useFocusEffect(
@@ -113,7 +177,7 @@ function Explore({
   )
 
   const loadMore = async () => {
-    if (!feed.next || loadingMore.current) return
+    if (!signedIn || !feed.next || loadingMore.current) return
     loadingMore.current = true
     try {
       const page = await fetchExplore(feed.next)
@@ -137,75 +201,18 @@ function Explore({
     }
   }
 
-  if (feed.state === "loading")
-    return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator />
-      </View>
-    )
-  if (feed.state === "error")
-    return (
-      <View className="flex-1 items-center justify-center gap-4 p-6">
-        <Text className="text-center text-sm text-muted-foreground">
-          {t.feed.failed}
-        </Text>
-        <Button
-          variant="outline"
-          onPress={() => {
-            setFeed((f) => ({ ...f, state: "loading" }))
-            void refresh()
-          }}
-        >
-          <Text>{t.tryAgain}</Text>
-        </Button>
-      </View>
-    )
-  return (
-    <FlatList
-      data={feed.lessons}
-      contentInsetAdjustmentBehavior="automatic"
-      keyExtractor={(l) => l.id}
-      contentContainerClassName="px-4 pb-12"
-      ItemSeparatorComponent={Hairline}
-      renderItem={({ item }) => (
-        <LessonRow
-          lesson={item}
-          viewer={feed.viewer}
-          viewerId={account.id}
-          lang={lang}
-          t={t}
-        />
-      )}
-      ListEmptyComponent={<Empty>{t.feed.empty}</Empty>}
-      onEndReached={() => void loadMore()}
-      onEndReachedThreshold={0.5}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          tintColor={colors.muted.foreground}
-          onRefresh={async () => {
-            setRefreshing(true)
-            await refresh()
-            setRefreshing(false)
-          }}
-        />
-      }
-      ListFooterComponent={
-        <>
-          {feed.next ? <ActivityIndicator className="py-6" /> : null}
-          {__DEV__ ? <TestLessons t={t} /> : null}
-        </>
-      }
-    />
-  )
+  const retry = () => {
+    setFeed((f) => ({ ...f, state: "loading" }))
+    void refresh()
+  }
+
+  return { feed, refresh: () => refresh(), retry, loadMore }
 }
 
-function SignedOut({ t }: { t: Strings }) {
+/** Logged out: what Explore is, and the way in. */
+function LogInCard({ t }: { t: Strings }) {
   return (
-    <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerClassName="mx-auto w-full max-w-lg gap-8 p-6"
-    >
+    <View className="mx-auto w-full max-w-lg py-6">
       <View className="gap-4 rounded-xl bg-card p-6 shadow-xs">
         <View className="gap-2">
           <Text
@@ -222,8 +229,7 @@ function SignedOut({ t }: { t: Strings }) {
           <Text>{t.logIn}</Text>
         </Button>
       </View>
-      <TestLessons t={t} />
-    </ScrollView>
+    </View>
   )
 }
 

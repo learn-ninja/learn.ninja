@@ -14,17 +14,24 @@ import { usePreferences } from "./use-preferences"
 
 // The player's words in a language, for a screen: English (or what's already loaded) at once, and
 // the language's own once its pack has loaded, which is quick (it's bundled; loadLanguage keeps it).
+// The words are kept in state, not just looked up again on the next render: the React Compiler
+// keeps a component's result while its inputs (the language) stay the same, so a lookup would hold
+// on to the English it found before the pack arrived.
 
 export function useStringsFor(lang: string): Strings {
-  const [, setLoaded] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState<{ lang: string; strings: Strings }>(
+    () => ({ lang, strings: stringsFor(lang) })
+  )
   useEffect(() => {
     let live = true
-    void loadLanguage(lang).then(() => live && setLoaded(lang))
+    void loadLanguage(lang).then(
+      (pack) => live && setLoaded({ lang, strings: pack.strings })
+    )
     return () => {
       live = false
     }
   }, [lang])
-  return stringsFor(lang)
+  return loaded.lang === lang ? loaded.strings : stringsFor(lang)
 }
 
 function readDeviceLanguages(): string[] {

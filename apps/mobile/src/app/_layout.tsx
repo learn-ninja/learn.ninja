@@ -22,7 +22,7 @@ const theme = {
 }
 
 /** A link opened from outside (learn.ninja/l/…) lands with the tabs under it, so closing goes home. */
-export const unstable_settings = { initialRouteName: "(tabs)" }
+export const unstable_settings = { anchor: "(tabs)" }
 
 export default function RootLayout() {
   return (

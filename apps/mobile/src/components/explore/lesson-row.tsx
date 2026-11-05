@@ -1,5 +1,5 @@
 import { Link, router } from "expo-router"
-import { memo } from "react"
+import { memo, useState } from "react"
 import { Pressable, View } from "react-native"
 import Svg, { Circle, Path } from "react-native-svg"
 
@@ -45,6 +45,7 @@ export const LessonRow = memo(function LessonRow({
   const badge = rowBadge(lesson, viewerId)
   const author = lesson.author
   const now = Date.now()
+  const [previewHeight, setPreviewHeight] = useState<number>()
   const like = useLike({
     id: lesson.id,
     liked: viewer?.liked.includes(lesson.id) ?? false,
@@ -153,8 +154,16 @@ export const LessonRow = memo(function LessonRow({
           </View>
         </Pressable>
       </Link.Trigger>
-      <Link.Preview>
-        <RowPreview lesson={lesson} t={t} />
+      {/* iOS sizes the lifted preview to the screen unless told; the card's own height, once
+          laid out, keeps it just the card. */}
+      <Link.Preview
+        style={{
+          width: PREVIEW_WIDTH,
+          height: previewHeight,
+          backgroundColor: colors.card.DEFAULT,
+        }}
+      >
+        <RowPreview lesson={lesson} t={t} onHeight={setPreviewHeight} />
       </Link.Preview>
       <Link.Menu>
         <Link.MenuAction
@@ -184,11 +193,25 @@ export const LessonRow = memo(function LessonRow({
   )
 })
 
+const PREVIEW_WIDTH = 340
+
 /** What lifts out of the list when a row is pressed and held: the lesson's title card. */
-function RowPreview({ lesson, t }: { lesson: LessonRowData; t: Strings }) {
+function RowPreview({
+  lesson,
+  t,
+  onHeight,
+}: {
+  lesson: LessonRowData
+  t: Strings
+  onHeight: (height: number) => void
+}) {
   const dir = directionOf(lesson.language)
   return (
-    <View className="gap-3 bg-card p-6" style={{ width: 340, direction: dir }}>
+    <View
+      className="gap-3 bg-card p-6"
+      style={{ width: PREVIEW_WIDTH, direction: dir }}
+      onLayout={(e) => onHeight(Math.ceil(e.nativeEvent.layout.height))}
+    >
       <Text className="text-xl font-semibold" style={{ writingDirection: dir }}>
         {lesson.title}
       </Text>
