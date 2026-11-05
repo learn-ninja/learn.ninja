@@ -24,6 +24,13 @@ export function apiFor(profile: Profile) {
     : { baseUrl: "https://learn.ninja", localNetworking: false }
 }
 
+/**
+ * The site the app opens links from: https://learn.ninja/l/{slug}-{id} and /u/{handle} open in the
+ * app once iOS has read the site's apple-app-site-association (apps/web/app/.well-known/), which
+ * names this app by its Apple Team ID.
+ */
+export const LINK_DOMAINS = ["applinks:learn.ninja", "applinks:www.learn.ninja"]
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const api = apiFor(profileOf())
   return {
@@ -39,6 +46,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       bundleIdentifier: "ninja.learn.app",
       supportsTablet: true,
+      associatedDomains: LINK_DOMAINS,
       ...(api.localNetworking
         ? {
             infoPlist: {
@@ -58,6 +66,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       "expo-router",
+      "expo-secure-store",
+      // Right to left when the device's language is (I18nManager.isRTL at launch); a screen in
+      // another direction than the app's sets its own (src/components/direction.tsx).
+      ["expo-localization", { supportsRTL: true }],
       [
         "expo-splash-screen",
         {
