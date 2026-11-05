@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { alpha } from "@/lib/color"
 import { tap } from "@/lib/haptics"
-import { colors, fontSize, LESSON_TEXT_SCALE } from "../../tokens"
+import { colors, fontSize } from "../../tokens"
 
 // The wrap-up, as the web's WrapUp lays it out on a phone (packages/player/src/lesson-player.tsx
 // and wrap-up.tsx): two groups, further apart than anything inside them. First how it went: the
@@ -179,7 +179,7 @@ function Takeaways({ items, t }: { items: string[]; t: Strings }) {
             <View className="min-w-0 flex-1">
               <RichText
                 text={text}
-                size={fontSize.sm[0] * LESSON_TEXT_SCALE}
+                size={fontSize.sm[0]}
                 className="text-lesson-sm font-medium"
               />
             </View>

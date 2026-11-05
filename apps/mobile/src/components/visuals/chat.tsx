@@ -17,7 +17,7 @@ import type { ChatVisual } from "@workspace/spec"
 import { RichText } from "@/components/rich-text"
 import { Text } from "@/components/ui/text"
 import { cn } from "@/lib/utils"
-import { fontSize, LESSON_TEXT_SCALE } from "../../../tokens"
+import { fontSize } from "../../../tokens"
 
 // A conversation as chat bubbles, as the web's chat.tsx lays it out: the other people on the
 // start side, each named above their run of bubbles with their initials beside it, and the
@@ -55,7 +55,7 @@ export function ChatBlock({
     return () => clearTimeout(timer)
   }, [replyKey, reduced])
   const turns: ChatTurn[] = [...chat.turns, ...extra]
-  const size = fontSize.sm[0] * LESSON_TEXT_SCALE
+  const size = fontSize.sm[0]
 
   return (
     <View

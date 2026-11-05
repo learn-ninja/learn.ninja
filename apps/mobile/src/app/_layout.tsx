@@ -4,6 +4,7 @@ import { DarkTheme, Stack, ThemeProvider } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 
+import { DirectionEffect } from "@/lib/direction-effect"
 import { SessionEffects } from "@/lib/session"
 import { colors } from "../../tokens"
 
@@ -26,17 +27,19 @@ export default function RootLayout() {
       <ThemeProvider value={theme}>
         <StatusBar style="light" />
         <SessionEffects />
+        <DirectionEffect />
         <Stack
           screenOptions={{
+            // Every screen draws its own header, in its own direction (components/app-header.tsx).
+            headerShown: false,
             contentStyle: { backgroundColor: colors.background },
           }}
         >
-          <Stack.Screen name="index" options={{ title: "learn.ninja" }} />
-          <Stack.Screen name="l/[slugId]" options={{ title: "" }} />
-          <Stack.Screen
-            name="sign-in"
-            options={{ presentation: "modal", headerShown: false }}
-          />
+          <Stack.Screen name="index" />
+          <Stack.Screen name="l/[slugId]" />
+          <Stack.Screen name="u/[handle]" />
+          <Stack.Screen name="settings" />
+          <Stack.Screen name="sign-in" options={{ presentation: "modal" }} />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>

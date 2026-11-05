@@ -22,6 +22,8 @@ export interface LoadedLesson {
   mathSvg: Record<string, MathSvg>
   /** The visuals' shared stylesheet, inlined into each HTML visual; empty if it didn't load. */
   baseCss: string
+  /** When a published lesson's link stops working (ms since epoch); null once it's kept. */
+  expiresAt: number | null
 }
 
 /** A request to the API, signed in when the app is (the session cookie rides along). */
@@ -59,6 +61,7 @@ export async function fetchLesson(
     prepared?: Prepared
     mathSvg?: Record<string, MathSvg>
     visualsCssUrl?: string
+    expiresAt?: number | null
     message?: string
   } | null
   if (!res.ok || !body?.ok)
@@ -84,6 +87,7 @@ export async function fetchLesson(
     lesson: checked.lesson,
     prepared: body.prepared ?? emptyPrepared,
     mathSvg: body.mathSvg ?? {},
+    expiresAt: body.expiresAt ?? null,
   }
 }
 

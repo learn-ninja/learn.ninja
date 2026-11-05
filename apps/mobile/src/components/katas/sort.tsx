@@ -24,7 +24,7 @@ import { Text } from "@/components/ui/text"
 import { tap } from "@/lib/haptics"
 import { binAt, moveItem, type Box } from "@/lib/sort-drop"
 import { cn } from "@/lib/utils"
-import { fontSize, LESSON_TEXT_SCALE } from "../../../tokens"
+import { fontSize } from "../../../tokens"
 
 import type { QuestionKataProps } from "./options"
 
@@ -270,7 +270,7 @@ function DeckCard({
       >
         <RichText
           text={text}
-          size={fontSize.base[0] * LESSON_TEXT_SCALE}
+          size={fontSize.base[0]}
           className="text-lesson-base text-center font-semibold"
         />
       </Animated.View>

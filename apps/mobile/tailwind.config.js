@@ -3,8 +3,6 @@ const {
   colors,
   radius,
   fontSize,
-  LESSON_TEXT_SCALE,
-  LEADING_RELAXED,
 } = require("./tokens.ts")
 
 const px = (n) => `${n}px`
@@ -38,15 +36,22 @@ const sizes = (scale, prefix = "") =>
     ])
   )
 
-/** The lesson sizes with leading-relaxed (the web's text-sm leading-relaxed in a concept body). */
-const relaxed = Object.fromEntries(
-  Object.entries(fontSize).map(([k, [size]]) => {
-    const scaled = size * LESSON_TEXT_SCALE
-    return [
+/**
+ * The lesson sizes (lesson-sm and the rest, and lesson-sm-relaxed with leading-relaxed): CSS
+ * variables, so the learner's text size changes them at once. LessonTextSize
+ * (src/components/text-size.tsx) sets them from src/lib/text-size.ts, at medium until chosen.
+ */
+const lessonSizes = Object.fromEntries(
+  Object.keys(fontSize).flatMap((k) => [
+    [
+      `lesson-${k}`,
+      [`var(--lesson-${k})`, { lineHeight: `var(--lesson-${k}-leading)` }],
+    ],
+    [
       `lesson-${k}-relaxed`,
-      [px(scaled), { lineHeight: px(scaled * LEADING_RELAXED) }],
-    ]
-  })
+      [`var(--lesson-${k})`, { lineHeight: `var(--lesson-${k}-relaxed)` }],
+    ],
+  ])
 )
 
 /** @type {import('tailwindcss').Config} */
@@ -66,8 +71,7 @@ module.exports = {
       // where the web's medium text size multiplies it (data-text-size in globals.css).
       fontSize: {
         ...sizes(1),
-        ...sizes(LESSON_TEXT_SCALE, "lesson-"),
-        ...relaxed,
+        ...lessonSizes,
       },
     },
   },

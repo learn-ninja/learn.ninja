@@ -16,7 +16,7 @@ import { Text } from "@/components/ui/text"
 import { alpha } from "@/lib/color"
 import { tap } from "@/lib/haptics"
 import { cn } from "@/lib/utils"
-import { colors, fontSize, LESSON_TEXT_SCALE } from "../../tokens"
+import { colors, fontSize } from "../../tokens"
 
 // The one recipe for the controls inside a kata (options, chips, sort and order items, placed
 // words), after the web's packages/player/src/controls.ts, so every kata's controls share a shape
@@ -56,7 +56,7 @@ export function markStyle(mark: Mark | undefined): ViewStyle | undefined {
 }
 
 /** The size of a sentence's text in a control, in points. */
-export const CONTROL_TEXT_SIZE = fontSize.sm[0] * LESSON_TEXT_SCALE
+export const CONTROL_TEXT_SIZE = fontSize.sm[0]
 
 /**
  * An answer control: an option row, a chip, a tile. It takes a light tap as it's pressed, shows
