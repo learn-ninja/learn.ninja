@@ -8,6 +8,7 @@ import { directionOf, type Strings } from "@workspace/player-core/strings"
 import { shortTimeAgo, timeAgo } from "@workspace/player-core/time"
 
 import { Avatar } from "@/components/avatar"
+import { useDirection } from "@/components/direction"
 import { EyeIcon } from "@/components/icons"
 import { Text } from "@/components/ui/text"
 import { lessonParam, type LessonRowData, type Viewer } from "@/lib/feed"
@@ -37,6 +38,7 @@ export const LessonRow = memo(function LessonRow({
   t: Strings
 }) {
   const param = lessonParam(lesson)
+  const screen = useDirection()
   const local = safeProgress(`l/${param}`)
   const time = rowTime(lesson, viewer, local)
   const badge = rowBadge(lesson, viewerId)
@@ -97,7 +99,7 @@ export const LessonRow = memo(function LessonRow({
       <View className="gap-1">
         <Text
           className="text-base leading-snug font-medium"
-          style={{ writingDirection: directionOf(lesson.language) }}
+          style={textOf(lesson.language, screen)}
         >
           {lesson.title}
           {badge ? (
@@ -111,7 +113,7 @@ export const LessonRow = memo(function LessonRow({
           <Text
             numberOfLines={2}
             className="text-sm text-muted-foreground"
-            style={{ writingDirection: directionOf(lesson.language) }}
+            style={textOf(lesson.language, screen)}
           >
             {lesson.summary}
           </Text>
@@ -213,4 +215,18 @@ function RowTimeLabel({
       </Text>
     </View>
   )
+}
+
+/**
+ * A lesson's own text (its title and summary) in its language's direction, aligned to that
+ * language's start whichever way the screen runs: the web's dir="auto". iOS would otherwise align
+ * it to the screen's start, so an English title sat on the right of an Arabic profile. React
+ * Native reads textAlign's left and right as start and end of the screen's direction, so text
+ * running the other way is aligned to the screen's end ("right").
+ */
+function textOf(language: string, screen: "ltr" | "rtl") {
+  const dir = directionOf(language)
+  return dir === screen
+    ? { writingDirection: dir }
+    : { writingDirection: dir, textAlign: "right" as const }
 }

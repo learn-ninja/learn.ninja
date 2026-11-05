@@ -3,7 +3,13 @@ import { readFileSync } from "node:fs"
 import { eq } from "drizzle-orm"
 import { beforeAll, beforeEach, describe, expect, it } from "vitest"
 
-import { activityDay, connectPglite, lesson, user, type Db } from "@workspace/db"
+import {
+  activityDay,
+  connectPglite,
+  lesson,
+  user,
+  type Db,
+} from "@workspace/db"
 
 import type { Actor } from "@/lib/auth/actor"
 import { publishLesson, type Deps } from "@/lib/publish/handlers"
@@ -109,7 +115,8 @@ const exploreDeps = () => ({
 describe("the app's Explore feed", () => {
   it("pages through the listed lessons, newest first, with a cursor", async () => {
     const ids: string[] = []
-    for (let i = 0; i < FEED_PAGE_SIZE + 5; i++) ids.push(await published("ada"))
+    for (let i = 0; i < FEED_PAGE_SIZE + 5; i++)
+      ids.push(await published("ada"))
     await published("ada", { visibility: "unlisted" })
     await published("ada", { hidden: true })
     const first = await exploreFeed(
@@ -198,7 +205,10 @@ describe("the app's profiles", () => {
       { id: midway, userId: "ada", done: 2, total: 5 },
       exploreDeps()
     )
-    await completeLesson({ id: listed, userId: "ada", tz: "UTC" }, exploreDeps())
+    await completeLesson(
+      { id: listed, userId: "ada", tz: "UTC" },
+      exploreDeps()
+    )
     now += DAY
     await completeLesson(
       { id: unlisted, userId: "ada", tz: "UTC" },

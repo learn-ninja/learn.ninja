@@ -8,7 +8,6 @@ import { useDirection } from "@/components/direction"
 import { Text } from "@/components/ui/text"
 import { CELL, columnX, describeDay, monthLabels, STEP } from "@/lib/activity"
 import type { ActivityCell, ActivityGridData } from "@/lib/feed"
-import { cn } from "@/lib/utils"
 import { colors, fontSize } from "../../../tokens"
 
 // A year of learning as GitHub draws a year of commits, after the web's ActivityGrid
@@ -134,11 +133,13 @@ export function ActivityGrid({
           {LEVEL.map((color, level) => (
             <View
               key={level}
-              className={cn("h-2.5 w-2.5 rounded-sm")}
+              className="h-2.5 w-2.5"
+              // The web's rounded-xs (2 points), which Tailwind 3 doesn't have.
               style={{
                 backgroundColor: color,
                 borderColor: RING,
                 borderWidth: 1,
+                borderRadius: 2,
               }}
             />
           ))}

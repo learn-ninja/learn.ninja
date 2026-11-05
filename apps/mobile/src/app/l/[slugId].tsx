@@ -306,8 +306,16 @@ function Player({ data }: { data: LoadedLesson }) {
     [lesson.title, data.path, by, t]
   )
   const stage = useMemo(
-    () => ({ ninja, vanishing, streak, streakScreen, sound: sfx, onShare }),
-    [ninja, vanishing, streak, streakScreen, sfx, onShare]
+    () => ({
+      ninja,
+      vanishing,
+      streak,
+      streakScreen,
+      sound: sfx,
+      onShare,
+      uiLang: ui,
+    }),
+    [ninja, vanishing, streak, streakScreen, sfx, onShare, ui]
   )
 
   // When this screen came up: a quick second tap of Continue lands on nothing (screen-guard.ts).
@@ -401,22 +409,36 @@ function Player({ data }: { data: LoadedLesson }) {
             }
           >
             <Animated.View style={style} className="mx-auto w-full max-w-2xl">
-              <LessonContext value={lessonContext}>
-                <StageContext value={stage}>
-                  <LessonScreen
-                    // Each screen is its own: two katas of a kind in a row (an order after an order,
-                    // two sorts in the fix round) mustn't share what the first one kept.
-                    key={`${state.run}:${state.index}`}
-                    data={data}
-                    item={item}
-                    state={state}
-                    dispatch={dispatch}
-                    feedback={feedback}
-                    whyOpen={whyOpen}
-                    t={t}
-                  />
-                </StageContext>
-              </LessonContext>
+              {/* The lesson's content runs its own language's way, as the web's LessonContent:
+                  an Arabic lesson reads right to left under the English interface, while the
+                  header and the tray keep the interface's direction. */}
+              <DirectionView
+                // The intro and the wrap-up (and the streak screen before it) are the player's
+                // own, in its language's direction; their lesson text (the title and summary, the
+                // takeaways) runs the lesson's way itself (intro.tsx, wrap-up.tsx).
+                dir={
+                  item.kind === "wrap" || item.kind === "intro"
+                    ? dir
+                    : directionOf(lesson.language)
+                }
+              >
+                <LessonContext value={lessonContext}>
+                  <StageContext value={stage}>
+                    <LessonScreen
+                      // Each screen is its own: two katas of a kind in a row (an order after an order,
+                      // two sorts in the fix round) mustn't share what the first one kept.
+                      key={`${state.run}:${state.index}`}
+                      data={data}
+                      item={item}
+                      state={state}
+                      dispatch={dispatch}
+                      feedback={feedback}
+                      whyOpen={whyOpen}
+                      t={t}
+                    />
+                  </StageContext>
+                </LessonContext>
+              </DirectionView>
             </Animated.View>
           </ScrollView>
         </View>
@@ -426,19 +448,22 @@ function Player({ data }: { data: LoadedLesson }) {
               feedback.title || feedback.message ? feedback.tone : undefined
             }
             feedback={
-              <TrayFeedback
-                title={feedback.title}
-                message={feedback.message}
-                why={
-                  feedback.why
-                    ? {
-                        label: whyLabel,
-                        open: feedback.why.open,
-                        onPress: () => setWhyOpen((open) => !open),
-                      }
-                    : null
-                }
-              />
+              // The ninja's line and the notes are in the lesson's language, so they run its way.
+              <DirectionView dir={directionOf(lesson.language)}>
+                <TrayFeedback
+                  title={feedback.title}
+                  message={feedback.message}
+                  why={
+                    feedback.why
+                      ? {
+                          label: whyLabel,
+                          open: feedback.why.open,
+                          onPress: () => setWhyOpen((open) => !open),
+                        }
+                      : null
+                  }
+                />
+              </DirectionView>
             }
           >
             {streakScreen ? (

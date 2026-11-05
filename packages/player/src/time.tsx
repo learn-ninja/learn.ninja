@@ -42,4 +42,3 @@ export function TimeAgo({
     </time>
   )
 }
-

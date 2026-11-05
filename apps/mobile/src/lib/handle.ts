@@ -19,9 +19,7 @@ export function normalizeHandle(input: string): string {
 
 /** Why the handle can't be used, in the learner's words, or null when it can. */
 export function handleProblem(handle: string, t: Strings): string | null {
-  return /^[a-z0-9][a-z0-9-]{2,29}$/.test(handle)
-    ? null
-    : t.account.handleRules
+  return /^[a-z0-9][a-z0-9-]{2,29}$/.test(handle) ? null : t.account.handleRules
 }
 
 /** What PATCH /api/account's refusal means: taken (409), reserved, or against the rules (422). */

@@ -1,9 +1,5 @@
 // NativeWind (Tailwind 3) config. Every value comes from tokens.ts, the app's one design file.
-const {
-  colors,
-  radius,
-  fontSize,
-} = require("./tokens.ts")
+const { colors, radius, fontSize } = require("./tokens.ts")
 
 const px = (n) => `${n}px`
 

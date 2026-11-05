@@ -141,8 +141,7 @@ export function BlankKata({
               className={cn(
                 "px-3 py-1",
                 // An outlined slot holds its place, so the other chips don't move.
-                gone &&
-                  cn(slotStyles, "border-dashed bg-transparent")
+                gone && cn(slotStyles, "border-dashed bg-transparent")
               )}
               style={gone ? { backgroundColor: "transparent" } : undefined}
             >

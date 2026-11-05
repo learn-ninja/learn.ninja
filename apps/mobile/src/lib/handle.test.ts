@@ -18,7 +18,9 @@ describe("handles", () => {
     expect(handleError(422, "That handle is reserved.", t)).toBe(
       t.account.handleReserved
     )
-    expect(handleError(422, "Handles are 3 to 30…", t)).toBe(t.account.handleRules)
+    expect(handleError(422, "Handles are 3 to 30…", t)).toBe(
+      t.account.handleRules
+    )
     expect(handleError(500, undefined, t)).toBe(t.signIn.failed)
   })
 })

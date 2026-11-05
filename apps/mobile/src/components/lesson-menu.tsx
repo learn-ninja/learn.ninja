@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useRef, useState, type ReactNode } from "react"
 import { Alert, Modal, Pressable, ScrollView, View } from "react-native"
 import Animated, { FadeIn } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -77,7 +77,11 @@ export function LessonMenu({
   const [page, setPage] = useState<Page>("main")
   const insets = useSafeAreaInsets()
   const dir = useDirection()
-  const close = () => {
+  // What to do once the sheet has gone: iOS presents nothing new (the share sheet, an alert)
+  // while a modal is still sliding away, so Share and Restart wait for onDismiss.
+  const after = useRef<(() => void) | null>(null)
+  const close = (then?: () => void) => {
+    after.current = then ?? null
     setOpen(false)
     setPage("main")
   }
@@ -108,13 +112,18 @@ export function LessonMenu({
         visible={open}
         transparent
         animationType="slide"
-        onRequestClose={close}
+        onRequestClose={() => close()}
+        onDismiss={() => {
+          const then = after.current
+          after.current = null
+          then?.()
+        }}
         statusBarTranslucent
       >
         <DirectionView dir={dir} className="flex-1 justify-end">
           <Pressable
             className="absolute inset-0 bg-black/50"
-            onPress={close}
+            onPress={() => close()}
             accessibilityLabel={t.cancel}
           />
           <View
@@ -141,25 +150,23 @@ export function LessonMenu({
                   <Row
                     icon={<ShareIcon />}
                     label={t.share}
-                    onPress={() => {
-                      close()
-                      onShare()
-                    }}
+                    onPress={() => close(onShare)}
                   />
                   <Row
                     icon={<RestartIcon />}
                     label={t.restart}
-                    onPress={() => {
-                      close()
-                      Alert.alert(t.restartTitle, t.restartBody, [
-                        { text: t.stay, style: "cancel" },
-                        {
-                          text: t.restart,
-                          style: "destructive",
-                          onPress: onRestart,
-                        },
-                      ])
-                    }}
+                    onPress={() =>
+                      close(() =>
+                        Alert.alert(t.restartTitle, t.restartBody, [
+                          { text: t.stay, style: "cancel" },
+                          {
+                            text: t.restart,
+                            style: "destructive",
+                            onPress: onRestart,
+                          },
+                        ])
+                      )
+                    }
                   />
                   <Separator />
                   <Row
@@ -193,8 +200,8 @@ export function LessonMenu({
                   {hasVoice(lessonLanguage) ? (
                     <Row
                       icon={<SoundIcon on={sound} />}
-                      label={t.sound}
-                      value={sound ? t.sound : t.muted}
+                      // The web's Sound item: "Sound", or "Muted" while it's off.
+                      label={sound ? t.sound : t.muted}
                       role="switch"
                       checked={sound}
                       onPress={() => {

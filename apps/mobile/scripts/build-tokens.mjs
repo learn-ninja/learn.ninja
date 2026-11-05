@@ -117,7 +117,9 @@ export async function tokensSource() {
     // The profile's activity grid (apps/web/components/explore/activity-grid.tsx): no lessons,
     // then an ember to the lantern's amber with activity, and a rest day's blue.
     activity: {
-      ...Object.fromEntries([0, 1, 2, 3, 4].map((n) => [n, c(`activity-${n}`)])),
+      ...Object.fromEntries(
+        [0, 1, 2, 3, 4].map((n) => [n, c(`activity-${n}`)])
+      ),
       rest: c("activity-rest"),
     },
   }

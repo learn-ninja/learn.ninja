@@ -270,7 +270,11 @@ export function useShake() {
   return { style, shake }
 }
 
-/** A label over a kata's controls, in the quiet mono of the screen's eyebrow. */
+/**
+ * A label over a kata's controls, in the quiet mono of the screen's eyebrow. Not in Arabic or
+ * Hebrew: iOS's monospaced face sets every letter apart, which breaks Arabic's joined letters
+ * (a browser falls back to a proportional face there, so the web keeps its look).
+ */
 export function Eyebrow({
   text,
   className,
@@ -278,10 +282,13 @@ export function Eyebrow({
   text: string
   className?: string
 }) {
+  // Hebrew and Arabic letters (and the Syriac and Thaana between them).
+  const rtl = /[\u0590-\u08ff]/.test(text)
   return (
     <Text
       className={cn(
-        "text-lesson-sm font-mono text-muted-foreground",
+        "text-lesson-sm text-muted-foreground",
+        !rtl && "font-mono",
         className
       )}
     >

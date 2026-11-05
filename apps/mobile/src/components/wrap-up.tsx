@@ -7,7 +7,7 @@ import {
   summarize,
   type Outcome,
 } from "@workspace/player-core/flow"
-import type { Strings } from "@workspace/player-core/strings"
+import { directionOf, type Strings } from "@workspace/player-core/strings"
 import type { Lesson } from "@workspace/spec"
 
 import { SLOT } from "@/components/intro"
@@ -16,6 +16,7 @@ import { RichText } from "@/components/rich-text"
 import { useStage } from "@/components/stage-context"
 import { StreakCard, StreakScreen } from "@/components/streak"
 import { Button } from "@/components/ui/button"
+import { DirectionView } from "@/components/direction"
 import { Text } from "@/components/ui/text"
 import { alpha } from "@/lib/color"
 import { tap } from "@/lib/haptics"
@@ -48,15 +49,10 @@ export function WrapUp({
   onRestart: () => void
   t: Strings
 }) {
-  const { ninja, streak, streakScreen, sound, onShare } = useStage()
+  const { ninja, streak, streakScreen, sound, onShare, uiLang } = useStage()
   if (streakScreen && streak)
     return (
-      <StreakScreen
-        streak={streak.streak}
-        sound={sound}
-        lang={lesson.language}
-        t={t}
-      />
+      <StreakScreen streak={streak.streak} sound={sound} lang={uiLang} t={t} />
     )
   const summary = summarize(lesson, results)
   const run = runFor(summary)
@@ -121,9 +117,13 @@ export function WrapUp({
       </View>
       <View className="gap-8">
         {streak ? (
-          <StreakCard streak={streak.streak} lang={lesson.language} t={t} />
+          <StreakCard streak={streak.streak} lang={uiLang} t={t} />
         ) : null}
-        <Takeaways items={lesson.wrapup.takeaways} t={t} />
+        <Takeaways
+          items={lesson.wrapup.takeaways}
+          language={lesson.language}
+          t={t}
+        />
       </View>
     </View>
   )
@@ -154,7 +154,16 @@ function RunBar({ outcomes, t }: { outcomes: Outcome[]; t: Strings }) {
 }
 
 /** The takeaways as a grouped list (the web's WrapSection): a quiet label over a card, a check on each row. */
-function Takeaways({ items, t }: { items: string[]; t: Strings }) {
+function Takeaways({
+  items,
+  language,
+  t,
+}: {
+  items: string[]
+  /** The lesson's language: the takeaways run its way, under a label in the player's. */
+  language: string
+  t: Strings
+}) {
   return (
     <View className="w-full gap-2">
       <Text
@@ -163,7 +172,10 @@ function Takeaways({ items, t }: { items: string[]; t: Strings }) {
       >
         {t.takeaways}
       </Text>
-      <View className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+      <DirectionView
+        dir={directionOf(language)}
+        className="overflow-hidden rounded-xl border border-border bg-card shadow-xs"
+      >
         {items.map((text, i) => (
           <View
             key={i}
@@ -185,7 +197,7 @@ function Takeaways({ items, t }: { items: string[]; t: Strings }) {
             </View>
           </View>
         ))}
-      </View>
+      </DirectionView>
     </View>
   )
 }

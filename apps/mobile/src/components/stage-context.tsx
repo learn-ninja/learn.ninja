@@ -18,6 +18,8 @@ export interface Stage {
   sound: boolean
   /** Shares the challenge for the learner's first tries (the wrap-up's Challenge friend). */
   onShare: ((first: number, total: number) => void) | null
+  /** The player's own language (the learner's choice, else the lesson's): the streak's weekdays. */
+  uiLang: string
 }
 
 export const StageContext = createContext<Stage>({
@@ -27,6 +29,7 @@ export const StageContext = createContext<Stage>({
   streakScreen: false,
   sound: false,
   onShare: null,
+  uiLang: "en",
 })
 
 export const useStage = () => useContext(StageContext)

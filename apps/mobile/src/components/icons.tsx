@@ -108,10 +108,13 @@ export const CheckIcon = (p: IconProps) => (
   </Icon>
 )
 
-export const LogOutIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <Path d="m16 17 5-5-5-5" />
-    <Path d="M21 12H9" />
-    <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-  </Icon>
-)
+/** Log out: the arrow leaves toward the end side. */
+export function LogOutIcon(p: IconProps) {
+  return (
+    <Icon {...p} mirror={useDirection() === "rtl"}>
+      <Path d="m16 17 5-5-5-5" />
+      <Path d="M21 12H9" />
+      <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    </Icon>
+  )
+}
