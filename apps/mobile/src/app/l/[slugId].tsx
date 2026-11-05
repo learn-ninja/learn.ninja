@@ -71,6 +71,9 @@ import { settled } from "@/lib/screen-guard"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
 import { useSession } from "@/lib/session"
+import { useLastLesson } from "@/lib/quick-actions"
+import { askForReviewAt } from "@/lib/review"
+import { lessonLink } from "@/lib/share"
 import { shareChallenge, shareLesson } from "@/lib/share-sheet"
 import { ninjaOf, soundOf, type Preferences } from "@/lib/preferences"
 import { playEffect, preloadEffects } from "@/lib/sound"
@@ -83,6 +86,7 @@ import { effectsOn, speaks } from "@/lib/voice"
 import { visualDocument } from "@/lib/visual-frame"
 import { cn } from "@/lib/utils"
 import { measureAhead } from "@/lib/visual-height"
+import { useHandoff } from "../../../modules/handoff"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 // A lesson at /l/{slug}-{id}, the same path as on the web, or /l/{slug} for a bundled test lesson.
@@ -335,6 +339,11 @@ function Player({
         : undefined,
   })
   const by = session.state === "in" ? session.account.handle : null
+  // Handoff: while the lesson is open, a nearby Mac or iPad offers its web page.
+  useHandoff(lessonLink(API_BASE_URL, data.path), lesson.title)
+  // The app icon's Continue quick action opens this lesson until it's finished.
+  const { slugId } = useLocalSearchParams<{ slugId: string }>()
+  useLastLesson(`/l/${slugId}`, lesson.title, item.kind === "wrap")
   const onShare = useCallback(
     (first: number, total: number) =>
       void shareChallenge({
@@ -516,6 +525,8 @@ function Player({
                 onPress={() => {
                   tapHaptic()
                   leaveStreak()
+                  // A week, a month, a hundred days: the moment to ask for a rating.
+                  if (streak) void askForReviewAt(streak.streak.current)
                 }}
               />
             ) : feedback.primary ? (

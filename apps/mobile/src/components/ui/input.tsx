@@ -15,7 +15,7 @@ function Input({
   return (
     <TextInput
       className={cn(
-        "h-11 w-full min-w-0 flex-row items-center rounded-lg border border-input bg-background px-3 text-base text-foreground dark:bg-input/30",
+        "min-h-11 w-full min-w-0 flex-row items-center rounded-lg border border-input bg-background px-3 py-2 text-base text-foreground dark:bg-input/30",
         props.editable === false && "opacity-50",
         Platform.select({ ios: "leading-5" }),
         className
