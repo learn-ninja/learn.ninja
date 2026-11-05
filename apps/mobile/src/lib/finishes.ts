@@ -65,10 +65,13 @@ export function sendFinishes(
 async function sendAll(storage: FinishStorage, send: Send, tz: string) {
   for (const { id, at } of keptFinishes(storage)) {
     try {
-      const res = await send(`/api/lessons/${encodeURIComponent(id)}/complete`, {
-        method: "POST",
-        body: JSON.stringify({ tz, at }),
-      })
+      const res = await send(
+        `/api/lessons/${encodeURIComponent(id)}/complete`,
+        {
+          method: "POST",
+          body: JSON.stringify({ tz, at }),
+        }
+      )
       // Not signed in after all: they all wait. Rate-limited or a server error: this one waits.
       // Anything else (sent, or the lesson is gone) is done with.
       if (res.status === 401) return

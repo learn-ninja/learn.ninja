@@ -20,7 +20,10 @@ describe("the API's fetch", () => {
   })
 
   it("sends no cookie when signed out, or when the keychain can't be read", async () => {
-    for (const cookie of [async () => "", async () => Promise.reject(new Error("locked"))]) {
+    for (const cookie of [
+      async () => "",
+      async () => Promise.reject(new Error("locked")),
+    ]) {
       const f = vi.fn(async () => new Response("{}"))
       await createApiFetch({ base: "https://learn.test", cookie, fetch: f })(
         "/api/lessons/x/progress",

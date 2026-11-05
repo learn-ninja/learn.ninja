@@ -18,14 +18,17 @@ export interface Account {
 }
 
 export type SessionState =
-  | { state: "loading" }
-  | { state: "out" }
-  | { state: "in"; account: Account }
+  { state: "loading" } | { state: "out" } | { state: "in"; account: Account }
 
 export function useSession(): SessionState {
   const session = authClient.useSession()
   const user = session.data?.user as
-    | { id: string; email: string; handle?: string | null; image?: string | null }
+    | {
+        id: string
+        email: string
+        handle?: string | null
+        image?: string | null
+      }
     | undefined
   if (user)
     return {

@@ -1,4 +1,5 @@
 // From React Native Reusables (https://reactnativereusables.com, MIT), NativeWind flavor.
+import { useDirection } from "@/components/direction"
 import { cn } from "@/lib/utils"
 import { Slot } from "@rn-primitives/slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -75,6 +76,7 @@ function Text({
   className,
   asChild = false,
   variant = "default",
+  style,
   ...props
 }: React.ComponentProps<typeof RNText> &
   React.RefAttributes<typeof RNText> &
@@ -82,10 +84,14 @@ function Text({
     asChild?: boolean
   }) {
   const textClass = React.useContext(TextClassContext)
+  // iOS aligns text to its writing direction's start, which follows the app's direction, not the
+  // view's: a screen running the other way (direction.tsx) sets it here. A style can still override it.
+  const dir = useDirection()
   const Component = asChild ? Slot : RNText
   return (
     <Component
       className={cn(textVariants({ variant }), textClass, className)}
+      style={[{ writingDirection: dir }, style]}
       role={variant ? ROLE[variant] : undefined}
       aria-level={variant ? ARIA_LEVEL[variant] : undefined}
       {...props}

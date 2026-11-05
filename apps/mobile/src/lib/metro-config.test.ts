@@ -6,7 +6,12 @@ const require = createRequire(import.meta.url)
 /** Stands in for a CommonJS module, so the config can be read without starting Metro. */
 function stub(id: string, exports: unknown) {
   const path = require.resolve(id)
-  require.cache[path] = { id: path, filename: path, loaded: true, exports } as NodeJS.Module
+  require.cache[path] = {
+    id: path,
+    filename: path,
+    loaded: true,
+    exports,
+  } as NodeJS.Module
 }
 
 describe("metro config", () => {

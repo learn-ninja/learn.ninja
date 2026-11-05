@@ -14,7 +14,11 @@ export interface ApiFetchDeps {
 }
 
 /** A fetch for paths on the API (`/api/…`) that carries the session. */
-export function createApiFetch({ base, cookie, fetch: f = fetch }: ApiFetchDeps) {
+export function createApiFetch({
+  base,
+  cookie,
+  fetch: f = fetch,
+}: ApiFetchDeps) {
   return async (path: string, init: RequestInit = {}): Promise<Response> => {
     const headers = new Headers(init.headers)
     if (!headers.has("accept")) headers.set("accept", "application/json")
