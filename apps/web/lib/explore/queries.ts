@@ -7,6 +7,7 @@ import {
   inArray,
   isNotNull,
   isNull,
+  lt,
   or,
   sql,
 } from "drizzle-orm"
@@ -232,6 +233,8 @@ export interface ExploreFilter {
   subject?: Subject
   tag?: string
   now?: number
+  /** New only: the lessons after this one in the list (older, or as old with a smaller id), for paging. */
+  before?: { createdAt: number; id: string }
 }
 
 /** The Explore list for one tab, optionally narrowed to a subject and a tag. */
@@ -239,8 +242,9 @@ export async function listLessons(
   db: Db,
   sort: ExploreSort,
   limit: number,
-  { subject, tag, now = Date.now() }: ExploreFilter = {}
+  { subject, tag, now = Date.now(), before }: ExploreFilter = {}
 ): Promise<LessonSummary[]> {
+  const after = before && sort === "new" ? new Date(before.createdAt) : null
   const rows = await db
     .select(columns)
     .from(lesson)
@@ -258,6 +262,13 @@ export async function listLessons(
                 .where(
                   and(eq(lessonTag.lessonId, lesson.id), eq(lessonTag.tag, tag))
                 )
+            )
+          : undefined,
+        // The same order as orderFor("new"): by date, then id, both descending.
+        after
+          ? or(
+              lt(lesson.createdAt, after),
+              and(eq(lesson.createdAt, after), lt(lesson.id, before!.id))
             )
           : undefined
       )
