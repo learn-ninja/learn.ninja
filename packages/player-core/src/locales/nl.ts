@@ -297,6 +297,7 @@ export const nl: Translation = {
     profile: "Je profiel",
   },
   profile: {
+    tab: "Profiel",
     lessons: "Lessen",
     myLessons: "Mijn lessen",
     inProgress: "Bezig",

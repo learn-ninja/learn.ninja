@@ -1,9 +1,4 @@
-import {
-  router,
-  Stack,
-  useFocusEffect,
-  useLocalSearchParams,
-} from "expo-router"
+import { router, Stack, useFocusEffect } from "expo-router"
 import { useCallback, useState } from "react"
 import {
   ActivityIndicator,
@@ -15,13 +10,11 @@ import {
 
 import type { Strings } from "@workspace/player-core/strings"
 
-import { AppHeader } from "@/components/app-header"
 import { Avatar } from "@/components/avatar"
 import { DirectionView } from "@/components/direction"
 import { ActivityGrid } from "@/components/explore/activity-grid"
 import { LessonRow } from "@/components/explore/lesson-row"
 import { Empty, Hairline } from "@/components/explore/list-parts"
-import { SettingsIcon } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { FeedError, fetchProfile, type ProfileData } from "@/lib/feed"
@@ -29,13 +22,14 @@ import { tap } from "@/lib/haptics"
 import { useSession } from "@/lib/session"
 import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
-import { colors } from "../../../tokens"
+import { colors } from "../../tokens"
 
-// A person's profile at /u/{handle}, the web's path, as its page draws it on a phone: the picture,
-// handle, and when they joined, then one box with the year of activity on a card and the tabs
+// A person's profile (/u/{handle}, the web's path, and the learner's own in the Profile tab), as
+// its page draws it on a phone: the handle as the bar's large title, the picture and when they
+// joined, then one box with the year of activity on a card and the tabs
 // under it, and the open tab's lessons below. On your own profile the first tab is My lessons
 // (everything you own, private and hidden ones marked), In progress follows it, and the gear at
-// the header's end opens the account settings.
+// the bar's end opens the account settings.
 
 type Tab = "lessons" | "progress" | "likes"
 
@@ -45,8 +39,7 @@ type Load =
   | { state: "error" }
   | { state: "ready"; data: ProfileData }
 
-export default function Profile() {
-  const { handle } = useLocalSearchParams<{ handle: string }>()
+export function ProfileView({ handle }: { handle: string }) {
   const { t, lang, dir } = useAppStrings()
   const session = useSession()
   const [load, setLoad] = useState<Load>({ state: "loading" })
@@ -97,25 +90,19 @@ export default function Profile() {
 
   return (
     <DirectionView dir={dir} className="flex-1 bg-background">
-      <Stack.Screen options={{ headerShown: false }} />
-      <AppHeader
-        back
-        t={t}
-        end={
-          data?.own ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="-me-2 h-8 w-8"
-              hitSlop={6}
-              accessibilityLabel={t.settings}
-              onPress={() => router.push("/settings")}
-            >
-              <SettingsIcon />
-            </Button>
-          ) : null
-        }
-      />
+      {/* A profile goes by its handle alone: no display name, no @. */}
+      <Stack.Screen options={{ title: data?.profile.handle ?? handle }} />
+      {data?.own ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button
+            icon="gearshape"
+            accessibilityLabel={t.settings}
+            onPress={() => router.push("/settings")}
+          >
+            {t.settings}
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      ) : null}
       {load.state === "loading" ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
@@ -140,6 +127,7 @@ export default function Profile() {
       ) : (
         <FlatList
           data={list}
+          contentInsetAdjustmentBehavior="automatic"
           keyExtractor={(l) => l.id}
           contentContainerClassName="px-4 pb-12"
           ItemSeparatorComponent={Hairline}
@@ -216,22 +204,10 @@ function Head({
   ]
   return (
     <View className="gap-5 pt-2 pb-2">
-      {/* A profile goes by its handle alone: no display name, no @. */}
+      {/* The handle is the bar's large title; the picture and when they joined sit under it. */}
       <View className="gap-3">
-        <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
-          <View className="min-w-0 flex-row items-center gap-2">
-            <Avatar image={profile.image} handle={profile.handle} size={32} />
-            <Text
-              className="text-base font-medium"
-              accessibilityRole="header"
-              style={{ writingDirection: "ltr" }}
-            >
-              {profile.handle}
-            </Text>
-          </View>
-          <Text className="text-sm text-muted-foreground" aria-hidden>
-            ·
-          </Text>
+        <View className="flex-row items-center gap-2">
+          <Avatar image={profile.image} handle={profile.handle} size={32} />
           <Text className="text-sm text-muted-foreground">
             {t.profile.joined(joined)}
           </Text>

@@ -285,6 +285,7 @@ export const id: Translation = {
     profile: "Profilmu",
   },
   profile: {
+    tab: "Profil",
     lessons: "Pelajaran",
     myLessons: "Pelajaranku",
     inProgress: "Sedang berjalan",

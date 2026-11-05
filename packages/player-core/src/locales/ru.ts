@@ -336,6 +336,7 @@ export const ru: Translation = {
     profile: "Ваш профиль",
   },
   profile: {
+    tab: "Профиль",
     lessons: "Уроки",
     myLessons: "Мои уроки",
     inProgress: "В процессе",

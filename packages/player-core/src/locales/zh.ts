@@ -269,6 +269,7 @@ export const zh: Translation = {
     profile: "你的个人主页",
   },
   profile: {
+    tab: "个人资料",
     lessons: "课程",
     myLessons: "我的课程",
     inProgress: "进行中",

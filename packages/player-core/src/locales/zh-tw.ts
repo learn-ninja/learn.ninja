@@ -269,6 +269,7 @@ export const zhTw: Translation = {
     profile: "你的個人檔案",
   },
   profile: {
+    tab: "個人檔案",
     lessons: "課程",
     myLessons: "我的課程",
     inProgress: "進行中",

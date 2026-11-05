@@ -275,6 +275,7 @@ export const ko: Translation = {
     profile: "내 프로필",
   },
   profile: {
+    tab: "프로필",
     lessons: "레슨",
     myLessons: "내 레슨",
     inProgress: "진행 중",

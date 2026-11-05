@@ -287,6 +287,7 @@ export const hi: Translation = {
     profile: "आपकी प्रोफ़ाइल",
   },
   profile: {
+    tab: "प्रोफ़ाइल",
     lessons: "पाठ",
     myLessons: "मेरे पाठ",
     inProgress: "जारी",

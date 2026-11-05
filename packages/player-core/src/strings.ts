@@ -299,6 +299,8 @@ export type Strings = {
   }
   /** A person's profile, as the web's /u/{handle} has it. */
   profile: {
+    /** The app's tab with the learner's own profile. */
+    tab: string
     lessons: string
     myLessons: string
     inProgress: string

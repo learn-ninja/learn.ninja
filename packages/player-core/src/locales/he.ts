@@ -306,6 +306,7 @@ export const he: Translation = {
     profile: "הפרופיל שלכם",
   },
   profile: {
+    tab: "פרופיל",
     lessons: "שיעורים",
     myLessons: "השיעורים שלי",
     inProgress: "בתהליך",

@@ -1,4 +1,4 @@
-import { router } from "expo-router"
+import { Link, router } from "expo-router"
 import { memo } from "react"
 import { Pressable, View } from "react-native"
 import Svg, { Circle, Path } from "react-native-svg"
@@ -14,9 +14,10 @@ import { Text } from "@/components/ui/text"
 import { lessonParam, type LessonRowData, type Viewer } from "@/lib/feed"
 import { compact, rowBadge, rowTime, wedge } from "@/lib/lesson-row"
 import { deviceStorage } from "@/lib/progress-storage"
+import { shareLesson } from "@/lib/share-sheet"
 import { colors } from "../../../tokens"
 
-import { LikeButton } from "./like-button"
+import { LikeButton, useLike } from "./like-button"
 
 // A lesson as one row of Explore or a profile, as the web's LessonRow draws it on a phone: the
 // byline (who made it, and how long ago at the end), the title, two lines of summary, and the meta
@@ -44,115 +45,167 @@ export const LessonRow = memo(function LessonRow({
   const badge = rowBadge(lesson, viewerId)
   const author = lesson.author
   const now = Date.now()
+  const like = useLike({
+    id: lesson.id,
+    liked: viewer?.liked.includes(lesson.id) ?? false,
+    likes: lesson.likes,
+    signedIn: viewer?.signedIn ?? false,
+  })
   return (
-    <Pressable
-      onPress={() =>
-        router.push({ pathname: "/l/[slugId]", params: { slugId: param } })
-      }
-      className="gap-3 py-5 active:opacity-70"
-      accessibilityRole="link"
-      accessibilityLabel={lesson.title}
-    >
-      <View className="flex-row items-center justify-between gap-3">
-        {author ? (
-          <Pressable
-            disabled={!author.handle}
+    // iOS's peek and pop: pressing and holding a row lifts a preview of the lesson with a menu
+    // (like, share, the maker's profile); a tap opens it.
+    <Link href={{ pathname: "/l/[slugId]", params: { slugId: param } }}>
+      <Link.Trigger>
+        <Pressable
+          className="gap-3 py-5 active:opacity-70"
+          accessibilityRole="link"
+          accessibilityLabel={lesson.title}
+        >
+          <View className="flex-row items-center justify-between gap-3">
+            {author ? (
+              <Pressable
+                disabled={!author.handle}
+                onPress={() =>
+                  author.handle &&
+                  router.push({
+                    pathname: "/u/[handle]",
+                    params: { handle: author.handle },
+                  })
+                }
+                hitSlop={6}
+                className="min-w-0 shrink flex-row items-center gap-1.5"
+                accessibilityRole="link"
+              >
+                <Avatar image={author.image} handle={author.handle} />
+                <Text
+                  numberOfLines={1}
+                  className="shrink text-sm text-foreground"
+                  // A handle reads left to right in every language (the web's <bdi dir="ltr">).
+                  style={{ writingDirection: "ltr" }}
+                >
+                  {author.handle ?? author.name}
+                </Text>
+              </Pressable>
+            ) : (
+              <View className="min-w-0 shrink flex-row items-center gap-1.5">
+                <Avatar image={null} handle={null} />
+                <Text
+                  numberOfLines={1}
+                  className="shrink text-sm text-muted-foreground"
+                >
+                  {t.feed.anonymous}
+                </Text>
+              </View>
+            )}
+            <Text
+              className="shrink-0 text-sm text-muted-foreground"
+              accessibilityLabel={timeAgo(lesson.createdAt, now, lang)}
+            >
+              {shortTimeAgo(lesson.createdAt, now, lang)}
+            </Text>
+          </View>
+          <View className="gap-1">
+            <Text
+              className="text-base leading-snug font-medium"
+              style={textOf(lesson.language, screen)}
+            >
+              {lesson.title}
+              {badge ? (
+                <Text className="text-xs text-muted-foreground">
+                  {"  "}
+                  {badge === "hidden" ? t.feed.hidden : t.feed.private}
+                </Text>
+              ) : null}
+            </Text>
+            {lesson.summary ? (
+              <Text
+                numberOfLines={2}
+                className="text-sm text-muted-foreground"
+                style={textOf(lesson.language, screen)}
+              >
+                {lesson.summary}
+              </Text>
+            ) : null}
+          </View>
+          <View className="flex-row items-center justify-between gap-3">
+            <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-1.5">
+              <RowTimeLabel time={time} t={t} />
+              <Text className="text-sm text-muted-foreground/60" aria-hidden>
+                ·
+              </Text>
+              <Text className="text-sm text-muted-foreground">
+                {t.levels[lesson.level]}
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <View
+                className="flex-row items-center gap-1"
+                accessible
+                accessibilityLabel={t.feed.views(lesson.views)}
+              >
+                <EyeIcon size={14} color={colors.muted.foreground} />
+                <Text className="text-sm text-muted-foreground tabular-nums">
+                  {compact(lesson.views, lang)}
+                </Text>
+              </View>
+              <LikeButton like={like} lang={lang} t={t} />
+            </View>
+          </View>
+        </Pressable>
+      </Link.Trigger>
+      <Link.Preview>
+        <RowPreview lesson={lesson} t={t} />
+      </Link.Preview>
+      <Link.Menu>
+        <Link.MenuAction
+          title={like.liked ? t.liked : t.like}
+          icon={like.liked ? "heart.fill" : "heart"}
+          onPress={like.toggle}
+        />
+        <Link.MenuAction
+          title={t.share}
+          icon="square.and.arrow.up"
+          onPress={() => void shareLesson(lesson.title, `/l/${param}`)}
+        />
+        {author?.handle ? (
+          <Link.MenuAction
+            title={author.handle}
+            icon="person.crop.circle"
             onPress={() =>
-              author.handle &&
               router.push({
                 pathname: "/u/[handle]",
-                params: { handle: author.handle },
+                params: { handle: author.handle! },
               })
             }
-            hitSlop={6}
-            className="min-w-0 shrink flex-row items-center gap-1.5"
-            accessibilityRole="link"
-          >
-            <Avatar image={author.image} handle={author.handle} />
-            <Text
-              numberOfLines={1}
-              className="shrink text-sm text-foreground"
-              // A handle reads left to right in every language (the web's <bdi dir="ltr">).
-              style={{ writingDirection: "ltr" }}
-            >
-              {author.handle ?? author.name}
-            </Text>
-          </Pressable>
-        ) : (
-          <View className="min-w-0 shrink flex-row items-center gap-1.5">
-            <Avatar image={null} handle={null} />
-            <Text
-              numberOfLines={1}
-              className="shrink text-sm text-muted-foreground"
-            >
-              {t.feed.anonymous}
-            </Text>
-          </View>
-        )}
-        <Text
-          className="shrink-0 text-sm text-muted-foreground"
-          accessibilityLabel={timeAgo(lesson.createdAt, now, lang)}
-        >
-          {shortTimeAgo(lesson.createdAt, now, lang)}
-        </Text>
-      </View>
-      <View className="gap-1">
-        <Text
-          className="text-base leading-snug font-medium"
-          style={textOf(lesson.language, screen)}
-        >
-          {lesson.title}
-          {badge ? (
-            <Text className="text-xs text-muted-foreground">
-              {"  "}
-              {badge === "hidden" ? t.feed.hidden : t.feed.private}
-            </Text>
-          ) : null}
-        </Text>
-        {lesson.summary ? (
-          <Text
-            numberOfLines={2}
-            className="text-sm text-muted-foreground"
-            style={textOf(lesson.language, screen)}
-          >
-            {lesson.summary}
-          </Text>
-        ) : null}
-      </View>
-      <View className="flex-row items-center justify-between gap-3">
-        <View className="min-w-0 flex-1 flex-row flex-wrap items-center gap-x-1.5">
-          <RowTimeLabel time={time} t={t} />
-          <Text className="text-sm text-muted-foreground/60" aria-hidden>
-            ·
-          </Text>
-          <Text className="text-sm text-muted-foreground">
-            {t.levels[lesson.level]}
-          </Text>
-        </View>
-        <View className="flex-row items-center gap-3">
-          <View
-            className="flex-row items-center gap-1"
-            accessible
-            accessibilityLabel={t.feed.views(lesson.views)}
-          >
-            <EyeIcon size={14} color={colors.muted.foreground} />
-            <Text className="text-sm text-muted-foreground tabular-nums">
-              {compact(lesson.views, lang)}
-            </Text>
-          </View>
-          <LikeButton
-            id={lesson.id}
-            likes={lesson.likes}
-            liked={viewer?.liked.includes(lesson.id) ?? false}
-            signedIn={viewer?.signedIn ?? false}
-            lang={lang}
-            t={t}
           />
-        </View>
-      </View>
-    </Pressable>
+        ) : null}
+      </Link.Menu>
+    </Link>
   )
 })
+
+/** What lifts out of the list when a row is pressed and held: the lesson's title card. */
+function RowPreview({ lesson, t }: { lesson: LessonRowData; t: Strings }) {
+  const dir = directionOf(lesson.language)
+  return (
+    <View className="gap-3 bg-card p-6" style={{ width: 340, direction: dir }}>
+      <Text className="text-xl font-semibold" style={{ writingDirection: dir }}>
+        {lesson.title}
+      </Text>
+      {lesson.summary ? (
+        <Text
+          className="text-base text-muted-foreground"
+          style={{ writingDirection: dir }}
+        >
+          {lesson.summary}
+        </Text>
+      ) : null}
+      <Text className="text-sm text-muted-foreground">
+        {`${t.minutes(lesson.minutes)} · ${t.levels[lesson.level]}`}
+      </Text>
+    </View>
+  )
+}
 
 function safeProgress(key: string) {
   try {

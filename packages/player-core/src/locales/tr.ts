@@ -286,6 +286,7 @@ export const tr: Translation = {
     profile: "Profilin",
   },
   profile: {
+    tab: "Profil",
     lessons: "Dersler",
     myLessons: "Derslerim",
     inProgress: "Devam edenler",

@@ -275,6 +275,7 @@ export const ja: Translation = {
     profile: "プロフィール",
   },
   profile: {
+    tab: "プロフィール",
     lessons: "レッスン",
     myLessons: "自分のレッスン",
     inProgress: "学習中",

@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   RefreshControl,
   ScrollView,
   View,
@@ -11,8 +10,6 @@ import {
 
 import type { Strings } from "@workspace/player-core/strings"
 
-import { AppHeader } from "@/components/app-header"
-import { Avatar } from "@/components/avatar"
 import { DirectionView } from "@/components/direction"
 import { Empty, Hairline } from "@/components/explore/list-parts"
 import { LessonRow } from "@/components/explore/lesson-row"
@@ -23,7 +20,7 @@ import { fetchExplore, type LessonRowData, type Viewer } from "@/lib/feed"
 import { mergeFirstPage } from "@/lib/feed-merge"
 import { useSession, type Account } from "@/lib/session"
 import { useAppStrings } from "@/lib/use-strings"
-import { colors } from "../../tokens"
+import { colors } from "../../../../tokens"
 
 // The app's home. Signed in, it's Explore, as the web's /explore lists it: the newest lessons
 // people kept and shared, a page at a time, pulled down to refresh, with the heart on each row.
@@ -36,12 +33,19 @@ export default function Home() {
   const session = useSession()
   return (
     <DirectionView dir={dir} className="flex-1 bg-background">
-      <Stack.Screen options={{ headerShown: false }} />
-      <AppHeader
-        title={session.state === "in" ? t.feed.title : "learn.ninja"}
-        end={<AccountButton session={session} t={t} />}
-        t={t}
+      {/* The system's bar: a large title that shrinks into it as the feed scrolls (TabStack). */}
+      <Stack.Screen
+        options={{
+          title: session.state === "in" ? t.feed.title : "learn.ninja",
+        }}
       />
+      {session.state === "out" ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button onPress={() => router.push("/sign-in")}>
+            {t.logIn}
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      ) : null}
       {session.state === "loading" ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator />
@@ -52,37 +56,6 @@ export default function Home() {
         <SignedOut t={t} />
       )}
     </DirectionView>
-  )
-}
-
-/** The header's end: the learner's picture, to their profile, or Log in. */
-function AccountButton({
-  session,
-  t,
-}: {
-  session: ReturnType<typeof useSession>
-  t: Strings
-}) {
-  if (session.state === "loading") return null
-  if (session.state === "out")
-    return (
-      <Button size="sm" onPress={() => router.push("/sign-in")}>
-        <Text>{t.logIn}</Text>
-      </Button>
-    )
-  const { handle, image } = session.account
-  return (
-    <Pressable
-      hitSlop={8}
-      disabled={!handle}
-      onPress={() =>
-        handle && router.push({ pathname: "/u/[handle]", params: { handle } })
-      }
-      accessibilityRole="link"
-      accessibilityLabel={t.feed.profile}
-    >
-      <Avatar image={image} handle={handle} size={28} />
-    </Pressable>
   )
 }
 
@@ -190,6 +163,7 @@ function Explore({
   return (
     <FlatList
       data={feed.lessons}
+      contentInsetAdjustmentBehavior="automatic"
       keyExtractor={(l) => l.id}
       contentContainerClassName="px-4 pb-12"
       ItemSeparatorComponent={Hairline}
@@ -228,7 +202,10 @@ function Explore({
 
 function SignedOut({ t }: { t: Strings }) {
   return (
-    <ScrollView contentContainerClassName="mx-auto w-full max-w-lg gap-8 p-6">
+    <ScrollView
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerClassName="mx-auto w-full max-w-lg gap-8 p-6"
+    >
       <View className="gap-4 rounded-xl bg-card p-6 shadow-xs">
         <View className="gap-2">
           <Text

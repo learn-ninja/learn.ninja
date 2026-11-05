@@ -336,6 +336,7 @@ export const ar: Translation = {
     profile: "ملفك الشخصي",
   },
   profile: {
+    tab: "الملف الشخصي",
     lessons: "الدروس",
     myLessons: "دروسي",
     inProgress: "قيد التقدّم",

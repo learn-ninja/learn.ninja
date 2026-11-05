@@ -276,6 +276,7 @@ export const en: Strings = {
     profile: "Your profile",
   },
   profile: {
+    tab: "Profile",
     lessons: "Lessons",
     myLessons: "My lessons",
     inProgress: "In progress",

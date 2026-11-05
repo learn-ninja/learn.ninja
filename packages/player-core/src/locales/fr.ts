@@ -305,6 +305,7 @@ export const fr: Translation = {
     profile: "Ton profil",
   },
   profile: {
+    tab: "Profil",
     lessons: "Leçons",
     myLessons: "Mes leçons",
     inProgress: "En cours",

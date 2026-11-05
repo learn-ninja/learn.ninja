@@ -294,6 +294,7 @@ export const es: Translation = {
     profile: "Tu perfil",
   },
   profile: {
+    tab: "Perfil",
     lessons: "Lecciones",
     myLessons: "Mis lecciones",
     inProgress: "En curso",

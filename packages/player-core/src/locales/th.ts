@@ -278,6 +278,7 @@ export const th: Translation = {
     profile: "โปรไฟล์ของคุณ",
   },
   profile: {
+    tab: "โปรไฟล์",
     lessons: "บทเรียน",
     myLessons: "บทเรียนของฉัน",
     inProgress: "กำลังเรียน",

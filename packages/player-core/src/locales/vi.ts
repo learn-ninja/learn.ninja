@@ -282,6 +282,7 @@ export const vi: Translation = {
     profile: "Hồ sơ của bạn",
   },
   profile: {
+    tab: "Hồ sơ",
     lessons: "Bài học",
     myLessons: "Bài học của tôi",
     inProgress: "Đang học",

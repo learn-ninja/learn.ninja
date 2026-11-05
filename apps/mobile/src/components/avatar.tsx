@@ -1,4 +1,5 @@
-import { Image, View } from "react-native"
+import { Image } from "expo-image"
+import { View } from "react-native"
 
 import { Text } from "@/components/ui/text"
 import { API_BASE_URL } from "@/lib/config"
@@ -29,7 +30,13 @@ export function Avatar({
       accessible={false}
     >
       {uri ? (
-        <Image source={{ uri }} style={{ width: size, height: size }} />
+        // Cached across the feed's rows and launches, faded in as it arrives.
+        <Image
+          source={{ uri }}
+          style={{ width: size, height: size }}
+          transition={150}
+          cachePolicy="memory-disk"
+        />
       ) : (
         <Text
           className="font-medium text-muted-foreground uppercase"
