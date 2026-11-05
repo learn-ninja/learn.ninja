@@ -12,6 +12,7 @@ import {
 
 import type { Strings } from "@workspace/player-core/strings"
 
+import { DirectionView } from "@/components/direction"
 import { CloseButton } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -76,110 +77,112 @@ export default function SignIn() {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      className="flex-1 bg-background"
-      style={{ direction: dir }}
-    >
-      <Stack.Screen options={{ headerShown: false }} />
-      <View className="h-14 flex-row items-center px-4">
-        <CloseButton
-          label={t.cancel}
-          onPress={() =>
-            router.canGoBack() ? router.back() : router.replace("/")
-          }
-        />
-      </View>
-      <ScrollView
-        keyboardShouldPersistTaps="handled"
-        contentContainerClassName="grow items-center justify-center px-4 py-12"
+    // The screen and its text run the app language's way (direction.tsx).
+    <DirectionView dir={dir} className="flex-1 bg-background">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        className="flex-1"
       >
-        <View className="w-full max-w-sm items-center gap-8">
-          {step === "email" ? (
-            <>
-              <Heading title={s.title}>{s.body}</Heading>
-              <View className="w-full gap-3">
-                <Input
-                  // Uncontrolled: a controlled field drops keys typed quickly (autofill, paste).
-                  defaultValue={email}
-                  onChangeText={(text) => {
-                    setEmail(text)
-                    if (error) setError(null)
+        <Stack.Screen options={{ headerShown: false }} />
+        <View className="h-14 flex-row items-center px-4">
+          <CloseButton
+            label={t.cancel}
+            onPress={() =>
+              router.canGoBack() ? router.back() : router.replace("/")
+            }
+          />
+        </View>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerClassName="grow items-center justify-center px-4 py-12"
+        >
+          <View className="w-full max-w-sm items-center gap-8">
+            {step === "email" ? (
+              <>
+                <Heading title={s.title}>{s.body}</Heading>
+                <View className="w-full gap-3">
+                  <Input
+                    // Uncontrolled: a controlled field drops keys typed quickly (autofill, paste).
+                    defaultValue={email}
+                    onChangeText={(text) => {
+                      setEmail(text)
+                      if (error) setError(null)
+                    }}
+                    placeholder="you@example.com"
+                    accessibilityLabel={s.email}
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoFocus
+                    returnKeyType="send"
+                    onSubmitEditing={() => void sendCode()}
+                    editable={!busy}
+                    // An address reads left to right in every language.
+                    style={{ writingDirection: "ltr" }}
+                  />
+                  {error ? <FormError>{error}</FormError> : null}
+                  <Button
+                    size="lg"
+                    disabled={busy}
+                    onPress={() => void sendCode()}
+                  >
+                    <Text>{s.sendCode}</Text>
+                  </Button>
+                </View>
+                <Text className="text-center text-sm text-muted-foreground">
+                  {s.noPassword}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Heading title={s.codeTitle}>
+                  {s.codeSent(`⁨${email.trim()}⁩`)}
+                </Heading>
+                <CodeField
+                  key={attempt}
+                  value={code}
+                  label={s.code}
+                  disabled={busy}
+                  onChange={(value) => {
+                    setCode(value)
+                    if (value.length === CODE_LENGTH) void verify(value)
                   }}
-                  placeholder="you@example.com"
-                  accessibilityLabel={s.email}
-                  autoComplete="email"
-                  textContentType="emailAddress"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoFocus
-                  returnKeyType="send"
-                  onSubmitEditing={() => void sendCode()}
-                  editable={!busy}
-                  // An address reads left to right in every language.
-                  style={{ writingDirection: "ltr" }}
                 />
                 {error ? <FormError>{error}</FormError> : null}
-                <Button
-                  size="lg"
-                  disabled={busy}
-                  onPress={() => void sendCode()}
-                >
-                  <Text>{s.sendCode}</Text>
-                </Button>
-              </View>
-              <Text className="text-center text-sm text-muted-foreground">
-                {s.noPassword}
-              </Text>
-            </>
-          ) : (
-            <>
-              <Heading title={s.codeTitle}>
-                {s.codeSent(`⁨${email.trim()}⁩`)}
-              </Heading>
-              <CodeField
-                key={attempt}
-                value={code}
-                label={s.code}
-                disabled={busy}
-                onChange={(value) => {
-                  setCode(value)
-                  if (value.length === CODE_LENGTH) void verify(value)
-                }}
-              />
-              {error ? <FormError>{error}</FormError> : null}
-              <View className="w-full gap-2">
-                <Button
-                  size="lg"
-                  disabled={busy || code.length < CODE_LENGTH}
-                  onPress={() => void verify()}
-                >
-                  <Text>{s.submit}</Text>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  disabled={busy}
-                  onPress={() => {
-                    setError(null)
-                    setStep("email")
-                  }}
-                >
-                  <Text>{s.otherEmail}</Text>
-                </Button>
-              </View>
-            </>
-          )}
+                <View className="w-full gap-2">
+                  <Button
+                    size="lg"
+                    disabled={busy || code.length < CODE_LENGTH}
+                    onPress={() => void verify()}
+                  >
+                    <Text>{s.submit}</Text>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    disabled={busy}
+                    onPress={() => {
+                      setError(null)
+                      setStep("email")
+                    }}
+                  >
+                    <Text>{s.otherEmail}</Text>
+                  </Button>
+                </View>
+              </>
+            )}
+          </View>
+        </ScrollView>
+        <View
+          className="px-4 pt-2"
+          style={{ paddingBottom: Math.max(24, insets.bottom) }}
+        >
+          <Legal t={t} />
         </View>
-      </ScrollView>
-      <View
-        className="px-4 pt-2"
-        style={{ paddingBottom: Math.max(24, insets.bottom) }}
-      >
-        <Legal t={t} />
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </DirectionView>
   )
 }
 

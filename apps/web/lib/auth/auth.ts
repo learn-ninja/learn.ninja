@@ -164,7 +164,10 @@ export function githubFromEnv(env = process.env) {
  */
 function secretFromEnv(env: NodeJS.ProcessEnv): string | undefined {
   if (env.BETTER_AUTH_SECRET) return env.BETTER_AUTH_SECRET
-  if (env.VERCEL_ENV) throw new Error("BETTER_AUTH_SECRET is not set for this Vercel environment.")
+  if (env.VERCEL_ENV)
+    throw new Error(
+      "BETTER_AUTH_SECRET is not set for this Vercel environment."
+    )
   return undefined
 }
 
@@ -203,7 +206,10 @@ export function createAuth(deps: AuthDeps) {
     trustedOrigins: [APP_ORIGIN],
     secondaryStorage: storage,
     // The jwt plugin's /token hands out a session JWT; chat apps get theirs from /oauth2/token.
-    disabledPaths: ["/token"],
+    // The expo plugin's /expo-authorization-proxy is for social sign-in from the app, which signs
+    // in with email codes only: left on, it redirects anywhere and sets the signed OAuth state
+    // cookie from its query (an open redirect, and a way to plant a GitHub sign-in).
+    disabledPaths: ["/token", "/expo-authorization-proxy"],
     session: {
       freshAge: FRESH_SESSION_SECONDS,
       // A signed cookie answers most session checks without a database or Redis read.
@@ -258,8 +264,10 @@ export function createAuth(deps: AuthDeps) {
         generateOTP: ({ email, type }) =>
           type === "sign-in" && isReviewer(email) ? review!.code : undefined,
         async sendVerificationOTP({ email, otp, type }) {
-          if (type === "sign-in" && !isReviewer(email)) await sendCode(email, otp)
-          if (type === "change-email") await sendCode(email, otp, "change-email")
+          if (type === "sign-in" && !isReviewer(email))
+            await sendCode(email, otp)
+          if (type === "change-email")
+            await sendCode(email, otp, "change-email")
         },
       }),
       // Signs the OAuth access tokens (and serves their public keys at /jwks).
@@ -291,7 +299,9 @@ export function createAuth(deps: AuthDeps) {
         // Publishing has its own limits; a key shouldn't stop after ten lessons a day.
         rateLimit: { enabled: false },
         // Enough of the start to tell keys apart in the settings, and to see an MCP key's prefix.
-        startingCharactersConfig: { charactersLength: MCP_KEY_PREFIX.length + 4 },
+        startingCharactersConfig: {
+          charactersLength: MCP_KEY_PREFIX.length + 4,
+        },
       }),
     ],
     hooks: {

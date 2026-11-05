@@ -11,6 +11,7 @@ import { directionOf, type Strings } from "@workspace/player-core/strings"
 import type { Lesson } from "@workspace/spec"
 
 import { SLOT } from "@/components/intro"
+import { TrophyIcon } from "@/components/icons"
 import { Ninja } from "@/components/ninja"
 import { RichText } from "@/components/rich-text"
 import { useStage } from "@/components/stage-context"
@@ -18,6 +19,7 @@ import { StreakCard, StreakScreen } from "@/components/streak"
 import { Button } from "@/components/ui/button"
 import { DirectionView } from "@/components/direction"
 import { Text } from "@/components/ui/text"
+import { challengeVerdict } from "@/lib/challenge-text"
 import { alpha } from "@/lib/color"
 import { tap } from "@/lib/haptics"
 import { colors, fontSize } from "../../tokens"
@@ -49,7 +51,8 @@ export function WrapUp({
   onRestart: () => void
   t: Strings
 }) {
-  const { ninja, streak, streakScreen, sound, onShare, uiLang } = useStage()
+  const { ninja, streak, streakScreen, sound, onShare, uiLang, challenge } =
+    useStage()
   if (streakScreen && streak)
     return (
       <StreakScreen streak={streak.streak} sound={sound} lang={uiLang} t={t} />
@@ -86,6 +89,7 @@ export function WrapUp({
                 {score}
               </Text>
             ) : null}
+            {challenge ? <Verdict first={summary.first} t={t} /> : null}
           </View>
           {summary.total > 0 ? <RunBar outcomes={outcomes} t={t} /> : null}
         </View>
@@ -99,7 +103,7 @@ export function WrapUp({
               }}
             >
               <ActionIcon kind="challenge" color={colors.primary.foreground} />
-              <Text>{t.challengeTitle}</Text>
+              <Text>{challenge ? t.challengeBack : t.challengeTitle}</Text>
             </Button>
           ) : null}
           <Button
@@ -149,6 +153,22 @@ function RunBar({ outcomes, t }: { outcomes: Outcome[]; t: Strings }) {
           style={{ backgroundColor: SEGMENT[o] }}
         />
       ))}
+    </View>
+  )
+}
+
+/** For a challenged learner, under the score: whether they beat the score they were sent. */
+function Verdict({ first, t }: { first: number; t: Strings }) {
+  const { challenge } = useStage()
+  if (!challenge) return null
+  const { won, text } = challengeVerdict(first, challenge, t)
+  return (
+    <View className="flex-row items-center gap-2">
+      <TrophyIcon
+        size={16}
+        color={won ? colors.feedback.warn : colors.muted.foreground}
+      />
+      <Text className="text-sm font-medium">{text}</Text>
     </View>
   )
 }

@@ -1,5 +1,5 @@
 import { router } from "expo-router"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Pressable } from "react-native"
 
 import type { Strings } from "@workspace/player-core/strings"
@@ -33,6 +33,13 @@ export function LikeButton({
 }) {
   const [state, setState] = useState({ liked, likes })
   const [busy, setBusy] = useState(false)
+  // A fresh count or like from the server (the feed refreshed: liked on the web, say) replaces
+  // what the heart showed, unless a press is on its way.
+  useEffect(() => {
+    if (!busy) setState({ liked, likes })
+    // Only new props, not the end of a press, which settles on the server's own answer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liked, likes])
   const press = async () => {
     if (!signedIn) {
       router.push("/sign-in")

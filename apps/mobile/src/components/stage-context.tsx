@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react"
 
+import type { Challenge } from "@workspace/player-core/challenge"
 import type { NinjaLevel } from "@workspace/player-core/strings"
 
 import type { Streak } from "@/lib/streak"
@@ -20,6 +21,8 @@ export interface Stage {
   onShare: ((first: number, total: number) => void) | null
   /** The player's own language (the learner's choice, else the lesson's): the streak's weekdays. */
   uiLang: string
+  /** The score a friend sent with the link (?c= and ?by=), when it still fits the lesson. */
+  challenge?: Challenge
 }
 
 export const StageContext = createContext<Stage>({

@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { fetchTestLessons, type TestLesson } from "@/lib/api"
 import { fetchExplore, type LessonRowData, type Viewer } from "@/lib/feed"
+import { mergeFirstPage } from "@/lib/feed-merge"
 import { useSession, type Account } from "@/lib/session"
 import { useAppStrings } from "@/lib/use-strings"
 import { colors } from "../../tokens"
@@ -109,15 +110,23 @@ function Explore({
   const [refreshing, setRefreshing] = useState(false)
   const loadingMore = useRef(false)
 
-  const refresh = useCallback(async () => {
+  /**
+   * The first page again. Pulled down, it starts the feed over; coming back into view, it's merged
+   * into what's on screen (feed-merge.ts), so the pages scrolled through and the place stay.
+   */
+  const refresh = useCallback(async (merge = false) => {
     try {
       const page = await fetchExplore()
-      setFeed({
-        lessons: page.lessons,
-        viewer: page.viewer,
-        next: page.next,
-        state: "ready",
-      })
+      setFeed((f) =>
+        merge && f.state === "ready"
+          ? { ...mergeFirstPage(f, page), state: "ready" }
+          : {
+              lessons: page.lessons,
+              viewer: page.viewer,
+              next: page.next,
+              state: "ready",
+            }
+      )
     } catch {
       setFeed((f) => (f.state === "ready" ? f : { ...f, state: "error" }))
     }
@@ -126,7 +135,7 @@ function Explore({
   // Fresh each time the feed comes back into view: a lesson just finished shows Done.
   useFocusEffect(
     useCallback(() => {
-      void refresh()
+      void refresh(true)
     }, [refresh])
   )
 

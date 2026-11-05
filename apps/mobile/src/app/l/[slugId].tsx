@@ -25,14 +25,19 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 
-import { progressAt, questionAt } from "@workspace/player-core/flow"
+import {
+  progressAt,
+  questionAt,
+  scoredQuestions,
+} from "@workspace/player-core/flow"
 import {
   fingerprint,
   loadProgress,
   saveProgress,
 } from "@workspace/player-core/progress"
 import type { State } from "@workspace/player-core/state"
-import { directionOf } from "@workspace/player-core/strings"
+import { challengeFor, parseChallenge } from "@workspace/player-core/challenge"
+import { directionOf, uiLanguageFor } from "@workspace/player-core/strings"
 
 import { createLinePicker } from "@workspace/player-core/voices"
 
@@ -67,7 +72,7 @@ import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
 import { useSession } from "@/lib/session"
 import { shareChallenge, shareLesson } from "@/lib/share-sheet"
-import { ninjaOf, soundOf } from "@/lib/preferences"
+import { ninjaOf, soundOf, type Preferences } from "@/lib/preferences"
 import { playEffect, preloadEffects } from "@/lib/sound"
 import { usePreferences } from "@/lib/use-preferences"
 import { useStreak } from "@/lib/use-streak"
@@ -97,7 +102,14 @@ function closeLesson() {
 }
 
 export default function LessonRoute() {
-  const { slugId } = useLocalSearchParams<{ slugId: string }>()
+  // The link's query, as the web's page reads it: a friend's challenge (?c=4-5&by=handle) and the
+  // player's language for this visit (?ui=).
+  const { slugId, c, by, ui } = useLocalSearchParams<{
+    slugId: string
+    c?: string
+    by?: string
+    ui?: string
+  }>()
   const [load, setLoad] = useState<Load>({ state: "loading" })
   // Try again after a failed load asks for the lesson once more.
   const [attempt, setAttempt] = useState(0)
@@ -153,7 +165,7 @@ export default function LessonRoute() {
           ) : null}
         </View>
       ) : (
-        <Player data={load.data} />
+        <Player data={load.data} link={{ c, by, ui }} />
       )}
     </DirectionView>
   )
@@ -162,7 +174,13 @@ export default function LessonRoute() {
 /** How far a concept slides as it arrives and leaves: the web's slide-in-from-end-24 (6rem). */
 const SLIDE = 96
 
-function Player({ data }: { data: LoadedLesson }) {
+function Player({
+  data,
+  link,
+}: {
+  data: LoadedLesson
+  link: { c?: string; by?: string; ui?: string }
+}) {
   const { lesson } = data
   // Progress is kept per lesson under the web's key for it (lessons/{slug} or l/{slug}-{id}), and
   // only while the lesson's content stays the same (its fingerprint): reopening the lesson lands on
@@ -210,8 +228,27 @@ function Player({ data }: { data: LoadedLesson }) {
   const item = state.items[state.index]!
   // The player's own words: the language the learner chose in the menu, else the lesson's (the
   // web's rule; the lesson's is loaded with it, in fetchLesson). The screen runs its way.
-  const [prefs, updatePrefs] = usePreferences()
-  const ui = lessonUiLanguage(prefs, lesson.language)
+  const [prefs, savePrefs] = usePreferences()
+  // ?ui= wins for this visit, until the learner picks a language in the menu (the web's order).
+  const [linkUi, setLinkUi] = useState(() =>
+    link.ui && uiLanguageFor(link.ui) ? link.ui : undefined
+  )
+  const updatePrefs = useCallback(
+    (patch: Partial<Preferences>) => {
+      if (patch.uiLanguage) setLinkUi(undefined)
+      savePrefs(patch)
+    },
+    [savePrefs]
+  )
+  const ui = linkUi ?? lessonUiLanguage(prefs, lesson.language)
+  const challenge = useMemo(
+    () =>
+      challengeFor(
+        parseChallenge(link.c, link.by),
+        scoredQuestions(lesson).length
+      ),
+    [link.c, link.by, lesson]
+  )
   const t = useStringsFor(ui)
   const dir = directionOf(ui)
   const lessonContext = useMemo(
@@ -286,12 +323,17 @@ function Player({ data }: { data: LoadedLesson }) {
   // Phase 3: Start makes the intro vanish into smoke before the first kata arrives.
   const { vanishing, vanish } = useIntroVanish()
   // Phase 3: the finish kept for the day streak, with the streak screen first on the day's first.
+  const session = useSession()
   const { streak, streakScreen, leaveStreak } = useStreak({
     atWrap: item.kind === "wrap",
     run: state.run,
-    id: data.path.startsWith("/l/") ? data.id : undefined,
+    // A published lesson's finish is kept for sign-in only while logged out, as the web keeps it
+    // (lesson-view.tsx); signed in, progress-sync tells the server itself.
+    id:
+      data.path.startsWith("/l/") && session.state !== "in"
+        ? data.id
+        : undefined,
   })
-  const session = useSession()
   const by = session.state === "in" ? session.account.handle : null
   const onShare = useCallback(
     (first: number, total: number) =>
@@ -314,8 +356,9 @@ function Player({ data }: { data: LoadedLesson }) {
       sound: sfx,
       onShare,
       uiLang: ui,
+      challenge,
     }),
-    [ninja, vanishing, streak, streakScreen, sfx, onShare, ui]
+    [ninja, vanishing, streak, streakScreen, sfx, onShare, ui, challenge]
   )
 
   // When this screen came up: a quick second tap of Continue lands on nothing (screen-guard.ts).

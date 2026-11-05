@@ -287,7 +287,14 @@ function SmokeWord({
   }))
   return (
     <Animated.View style={style}>
-      <Text className={cn(className)}>{word}</Text>
+      {/* In the title's own direction, so a word's trailing space falls between the words
+          whatever the interface's direction. */}
+      <Text
+        className={cn(className)}
+        style={{ writingDirection: dir === -1 ? "rtl" : "ltr" }}
+      >
+        {word}
+      </Text>
     </Animated.View>
   )
 }
