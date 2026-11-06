@@ -7,7 +7,7 @@ import { LessonFeed } from "@/components/explore/lesson-feed"
 import { ProfileTabs } from "@/components/explore/profile-tabs"
 import { buildGrid, localDay } from "@/lib/activity/activity"
 import { viewerTimeZone } from "@/lib/activity/server"
-import { normalizeHandle } from "@/lib/auth/handle-rules"
+import { normalizeHandle } from "@workspace/player-core/handle-rules"
 import { currentActor } from "@/lib/auth/session"
 import { cachedProfile } from "@/lib/explore/cache"
 import {

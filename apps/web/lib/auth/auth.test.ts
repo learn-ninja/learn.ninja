@@ -545,6 +545,10 @@ describe("handles", () => {
     })
     expect(await setHandle(auth, b, "api")).toMatchObject({
       status: 422,
+      body: { error: "reserved_handle", message: "That handle is reserved." },
+    })
+    expect(await setHandle(auth, b, "ab")).toMatchObject({
+      status: 422,
       body: { error: "invalid_handle" },
     })
     // The same user may keep their own handle.

@@ -11,16 +11,16 @@ describe("handles", () => {
     expect(normalizeHandle(" @Ada_Lovelace ")).toBe("ada-lovelace")
     expect(handleProblem("ada", t)).toBeNull()
     expect(handleProblem("ab", t)).toBe(t.account.handleRules)
+    // The web's reserved names are caught before asking the server.
+    expect(handleProblem("settings", t)).toBe(t.account.handleReserved)
   })
 
   it("says why the server refused one", () => {
-    expect(handleError(409, "", t)).toBe(t.account.handleTaken)
-    expect(handleError(422, "That handle is reserved.", t)).toBe(
+    expect(handleError(409, "handle_taken", t)).toBe(t.account.handleTaken)
+    expect(handleError(422, "reserved_handle", t)).toBe(
       t.account.handleReserved
     )
-    expect(handleError(422, "Handles are 3 to 30…", t)).toBe(
-      t.account.handleRules
-    )
+    expect(handleError(422, "invalid_handle", t)).toBe(t.account.handleRules)
     expect(handleError(500, undefined, t)).toBe(t.signIn.failed)
   })
 })

@@ -27,6 +27,7 @@ import {
   findByHandle,
   freeHandle,
   handleProblem,
+  handleRuleBroken,
   normalizeHandle,
   randomHandle,
 } from "./handles"
@@ -391,7 +392,10 @@ export function createAuth(deps: AuthDeps) {
             if (problem) {
               throw new APIError("UNPROCESSABLE_ENTITY", {
                 message: problem,
-                code: "INVALID_HANDLE",
+                code:
+                  handleRuleBroken(handle) === "reserved_handle"
+                    ? "RESERVED_HANDLE"
+                    : "INVALID_HANDLE",
               })
             }
             const taken = await findByHandle(deps.db, handle)

@@ -113,7 +113,7 @@ GET /api/account
 x-api-key: <key>
 ```
 
-Returns `{ "ok": true, "email": "…", "handle": "…", "name": "…", "image": "…" }` for the key's account (`learn whoami`); `image` is the profile picture's URL, or null. `PATCH /api/account` with `{ "handle": "…" }` sets the handle: 3 to 30 lowercase letters, numbers, and hyphens.
+Returns `{ "ok": true, "email": "…", "handle": "…", "name": "…", "image": "…" }` for the key's account (`learn whoami`); `image` is the profile picture's URL, or null. `PATCH /api/account` with `{ "handle": "…" }` sets the handle: 3 to 30 lowercase letters, numbers, and hyphens. It answers `422 invalid_handle` for one against those rules, `422 reserved_handle` for a name the site keeps for itself (like `settings` or `api`), and `409 handle_taken` when another account has it; switch on `error`, since `message` is English for people.
 
 ```http
 POST /api/account/avatar
@@ -171,7 +171,8 @@ Errors return `"ok": false` with an `error` code and a `message`.
 | 409    | `handle_taken`     | Someone already has that handle                             |
 | 413    | `too_large`        | The lesson file is too big                                  |
 | 422    | `invalid_lesson`   | The lesson breaks the format; the response lists each issue |
-| 422    | `invalid_handle`   | The handle breaks the rules or is reserved                  |
+| 422    | `invalid_handle`   | The handle breaks the rules                                 |
+| 422    | `reserved_handle`  | The handle is one the site keeps for itself                 |
 | 422    | `invalid_visibility` | Visibility must be `public` or `unlisted`                 |
 | 422    | `unsupported_spec` | The lesson's `spec` version isn't supported                 |
 | 429    | `rate_limited`     | Too many publishes, reports, or reads from one place; try later |

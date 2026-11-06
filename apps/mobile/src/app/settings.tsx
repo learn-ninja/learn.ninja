@@ -101,11 +101,11 @@ function HandleField({ current, t }: { current: string; t: Strings }) {
       })
       const body = (await res.json().catch(() => null)) as {
         ok?: boolean
-        message?: string
+        error?: string
       } | null
       if (!res.ok || !body?.ok)
         return setMessage({
-          text: handleError(res.status, body?.message, t),
+          text: handleError(res.status, body?.error, t),
           error: true,
         })
       tap()

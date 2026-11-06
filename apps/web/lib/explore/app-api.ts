@@ -7,7 +7,7 @@ import {
   type ActivityGridData,
 } from "@/lib/activity/activity"
 import type { Actor } from "@/lib/auth/actor"
-import { normalizeHandle } from "@/lib/auth/handle-rules"
+import { normalizeHandle } from "@workspace/player-core/handle-rules"
 import type { Reply } from "@/lib/publish/handlers"
 import type { RateLimiter } from "@/lib/publish/rate-limit"
 
