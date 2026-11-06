@@ -4,7 +4,7 @@ A native learn.ninja app that opens any shared lesson and plays it with the same
 
 ## Decisions
 
-- **Platforms:** iOS first. Android compiles and stays green in CI but isn't polished or submitted.
+- **Platforms:** iOS first. Android compiles and stays green in CI but isn't polished or submitted. Where iOS uses its own controls (the lesson menu and Settings in SwiftUI through `@expo/ui`, the system's text prompt for the handle), a `.ios.tsx` file holds them and the plain `.tsx` beside it is phase 4's React Native version, so Android never loads them. Link previews and their menus do nothing off iOS, and only iOS has the see-through bar with a large title.
 - **Scope of the first release:** play lessons, sign in, Explore, profile and streak. Matches the website.
 - **Stack:** Expo (SDK 58 at the time of writing), Expo Router, NativeWind for styling, React Native Reusables for the shadcn-shaped component kit, Reanimated for motion, Gesture Handler for drag, `expo-haptics`, `expo-audio` for the ninja's voice and sounds (phase 3 chose it over `expo-av`, which SDK 58 no longer bundles), `react-native-svg` for the drawn renderers, `react-native-webview` for lesson visuals, and formulas drawn as SVG by MathJax on the server (phase 1 chose this over a MathJax view on the device).
 - **Location:** `apps/mobile` in this repo. The DOM-free parts of `packages/player` move to a new `packages/player-core` that both players import.
