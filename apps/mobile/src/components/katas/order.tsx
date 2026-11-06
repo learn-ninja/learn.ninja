@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { View } from "react-native"
+import { useWindowDimensions, View } from "react-native"
 import { Gesture, GestureDetector } from "react-native-gesture-handler"
 import Animated, {
   runOnJS,
@@ -24,6 +24,7 @@ import { Visual } from "@/components/visuals/visual"
 import { tap } from "@/lib/haptics"
 import { moveSlot, slotAfterDrag } from "@/lib/order-drag"
 import { cn } from "@/lib/utils"
+import { orderItemWidth } from "@/lib/visual-widths"
 
 import type { QuestionKataProps } from "./options"
 
@@ -31,8 +32,14 @@ import type { QuestionKataProps } from "./options"
 // and each lands in the next open slot, leaving a dashed space in the pool so the rest never shift;
 // tap a placed item to send it back, or drag it up or down to another slot. The web's version is
 // packages/player/src/order.tsx.
+//
+// Visual items are one size wherever they sit: each visual is laid out at the same width in the
+// pool and in a slot (orderItemWidth), and every card, open slot, and dashed space is as tall as
+// the tallest item, so nothing below moves as items are placed or sent back.
 
 const GAP = 8
+/** A visual item's padding (p-2) and border, top and bottom together. */
+const ITEM_INSET = 2 * (8 + 1)
 
 export function OrderKata({
   kata,
@@ -61,6 +68,15 @@ export function OrderKata({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wrong])
   const heights = useRef<number[]>([])
+  const { width: windowWidth } = useWindowDimensions()
+  const visualWidth = orderItemWidth(windowWidth)
+  // Each visual's height as laid out, by item; the tallest sets every visual card's and slot's.
+  const [sizes, setSizes] = useState<Record<string, number>>({})
+  const measured = Object.values(sizes)
+  const itemHeight = measured.length
+    ? Math.ceil(Math.max(...measured)) + ITEM_INSET
+    : undefined
+  const sized = itemHeight ? { minHeight: itemHeight } : undefined
 
   if (kata.type !== "order" || answer.kind !== "sequence") return null
   const { slots, pool } = answer
@@ -104,8 +120,9 @@ export function OrderKata({
         aria-hidden
         className={cn(
           slotStyles,
-          visual ? "min-h-16 w-[48%] grow" : controlPadding
+          visual ? cn("w-[48%] grow", !sized && "min-h-16") : controlPadding
         )}
+        style={visual ? sized : undefined}
       >
         {visual ? null : (
           <RichText
@@ -134,9 +151,18 @@ export function OrderKata({
           placed && !visual ? "items-start" : "items-center",
           it.visual && "p-2"
         )}
+        style={visual ? sized : undefined}
       >
         {it.visual ? (
-          <Visual visual={it.visual} label={textOf(id)} plain />
+          <View
+            style={{ width: visualWidth }}
+            onLayout={(e) => {
+              const h = e.nativeEvent.layout.height
+              setSizes((s) => (s[id] === h ? s : { ...s, [id]: h }))
+            }}
+          >
+            <Visual visual={it.visual} label={textOf(id)} plain />
+          </View>
         ) : (
           <RichText
             text={it.text ?? ""}
@@ -181,14 +207,16 @@ export function OrderKata({
               </Draggable>
             ) : (
               // An open slot; the next one to fill stands out a little. It takes a tile's padding
-              // and one line of its text, so it's exactly as tall as a placed item.
+              // and one line of its text (or, for visuals, the tallest item's height), so it's
+              // exactly as tall as a placed item.
               <View
                 className={cn(
                   slotStyles,
                   "min-w-0 flex-1",
-                  visual ? "min-h-16" : controlPadding,
+                  visual ? !sized && "min-h-16" : controlPadding,
                   i === next && "border-foreground/40"
                 )}
+                style={visual ? sized : undefined}
                 accessibilityLabel={t.emptyGap}
               >
                 {visual ? null : (
