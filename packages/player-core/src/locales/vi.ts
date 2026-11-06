@@ -315,6 +315,9 @@ export const vi: Translation = {
       "Tên người dùng dài 3 đến 30 ký tự: chữ thường, số và dấu gạch ngang, bắt đầu bằng chữ cái hoặc số.",
     handleTaken: "Tên người dùng này đã có người dùng.",
     handleReserved: "Tên người dùng này đã được giữ trước.",
+    needsHandleTitle: "Chọn tên người dùng",
+    needsHandleBody:
+      "Hồ sơ của bạn, với các bài học và chuỗi ngày, nằm ở tên người dùng của bạn. Hãy chọn một tên trong Cài đặt.",
     save: "Lưu",
     saved: "Đã lưu",
   },

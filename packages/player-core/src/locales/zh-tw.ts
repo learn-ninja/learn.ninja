@@ -302,6 +302,9 @@ export const zhTw: Translation = {
       "帳號名稱為 3 到 30 個字元，可使用小寫字母、數字和連字號，並以字母或數字開頭。",
     handleTaken: "這個帳號名稱已經有人使用了。",
     handleReserved: "這個帳號名稱已被保留。",
+    needsHandleTitle: "選一個帳號名稱",
+    needsHandleBody:
+      "你的個人檔案（含課程與連續紀錄）就在你的帳號名稱底下。請在設定中選一個。",
     save: "儲存",
     saved: "已儲存",
   },

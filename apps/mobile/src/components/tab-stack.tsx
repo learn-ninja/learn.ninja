@@ -1,4 +1,5 @@
 import { Stack } from "expo-router"
+import { Platform } from "react-native"
 import { LocaleDirContext } from "expo-router/react-navigation"
 
 import { useAppStrings } from "@/lib/use-strings"
@@ -22,8 +23,9 @@ export function TabStack() {
           // contentInsetAdjustmentBehavior keeps the first row clear) and the system's scroll-edge
           // effect shades the bar as content passes beneath. An opaque bar makes
           // react-native-screens wrap the screen in its own safe-area view, and the large title
-          // then never draws.
-          headerTransparent: true,
+          // then never draws. iOS only: Android has no large title, and its lists don't inset
+          // themselves under a see-through bar.
+          headerTransparent: Platform.OS === "ios",
           headerShadowVisible: false,
           headerLargeTitleShadowVisible: false,
           headerTintColor: colors.foreground,

@@ -1,4 +1,7 @@
+import { router } from "expo-router"
 import { ActivityIndicator, View, type ViewStyle } from "react-native"
+
+import type { Strings } from "@workspace/player-core/strings"
 
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
@@ -57,5 +60,60 @@ export function Failed({
         </Button>
       ) : null}
     </View>
+  )
+}
+
+/**
+ * A card in the middle of an empty tab that asks for one step: a title, a line on why, and the
+ * button that takes it (log in, or choose a handle).
+ */
+export function CallCard({
+  title,
+  body,
+  action,
+  onPress,
+}: {
+  title: string
+  body: string
+  action: string
+  onPress: () => void
+}) {
+  return (
+    <View className="mx-auto w-full max-w-lg py-6">
+      <View className="gap-4 rounded-xl bg-card p-6 shadow-xs">
+        <View className="gap-2">
+          <Text
+            className="text-2xl font-semibold tracking-tight"
+            accessibilityRole="header"
+          >
+            {title}
+          </Text>
+          <Text className="text-base text-muted-foreground">{body}</Text>
+        </View>
+        <Button size="lg" onPress={onPress}>
+          <Text>{action}</Text>
+        </Button>
+      </View>
+    </View>
+  )
+}
+
+/** The call to log in, with what logging in gives on this tab. */
+export function LogInCard({
+  title,
+  body,
+  t,
+}: {
+  title: string
+  body: string
+  t: Strings
+}) {
+  return (
+    <CallCard
+      title={title}
+      body={body}
+      action={t.logIn}
+      onPress={() => router.push("/sign-in")}
+    />
   )
 }
