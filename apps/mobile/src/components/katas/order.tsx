@@ -161,7 +161,12 @@ export function OrderKata({
               setSizes((s) => (s[id] === h ? s : { ...s, [id]: h }))
             }}
           >
-            <Visual visual={it.visual} label={textOf(id)} plain />
+            <Visual
+              visual={it.visual}
+              label={textOf(id)}
+              plain
+              width={visualWidth}
+            />
           </View>
         ) : (
           <RichText

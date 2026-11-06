@@ -86,6 +86,7 @@ import { effectsOn, speaks } from "@/lib/voice"
 import { visualDocument } from "@/lib/visual-frame"
 import { cn } from "@/lib/utils"
 import { measureAhead } from "@/lib/visual-height"
+import { visualsAhead } from "@/lib/visuals-ahead"
 import { useHandoff } from "../../../modules/handoff"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -217,23 +218,25 @@ function Player({
   useEffect(() => sync?.update(state), [sync, state])
   useEffect(() => () => sync?.close(), [sync])
 
-  // The next screen's HTML visual is measured while this one is read, so it opens at its height.
+  // The next screen's HTML visuals (a concept's, a question's, its option cards and order items, a
+  // hotspot's parts) are measured while this one is read, so they open at their height.
   const { width: windowWidth } = useWindowDimensions()
   const ahead = state.items[state.index + 1]
-  const aheadVisual = ahead?.kind === "concept" ? ahead.kata.visual : undefined
   useEffect(() => {
-    if (aheadVisual?.kind !== "html" || aheadVisual.height) return
-    measureAhead(
-      visualDocument({
-        html: aheadVisual.html,
-        css: aheadVisual.css,
-        baseCss: data.baseCss,
-        visualsCss: data.prepared.visualsCss,
-      }),
-      `${API_BASE_URL}/`,
-      windowWidth
-    )
-  }, [aheadVisual, data.baseCss, data.prepared.visualsCss, windowWidth])
+    for (const v of visualsAhead(ahead, windowWidth))
+      measureAhead(
+        visualDocument({
+          html: v.html,
+          css: v.css,
+          height: v.height,
+          baseCss: data.baseCss,
+          visualsCss: data.prepared.visualsCss,
+        }),
+        `${API_BASE_URL}/`,
+        v.width,
+        { height: !v.height, spots: v.spots }
+      )
+  }, [ahead, data.baseCss, data.prepared.visualsCss, windowWidth])
   const item = state.items[state.index]!
   // The player's own words: the language the learner chose in the menu, else the lesson's (the
   // web's rule; the lesson's is loaded with it, in fetchLesson). The screen runs its way.

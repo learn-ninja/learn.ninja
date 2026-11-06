@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Pressable, View } from "react-native"
+import { Pressable, useWindowDimensions, View } from "react-native"
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated"
 import { WebView } from "react-native-webview"
 
 import type { HotspotControl } from "@/components/visuals/visual"
@@ -19,6 +26,7 @@ import {
   useVisualHeight,
   useVisualSpots,
 } from "@/lib/visual-height"
+import { frameWidth, hotspotWidth } from "@/lib/visual-widths"
 import { colors } from "../../tokens"
 import { markColor } from "./controls"
 
@@ -49,12 +57,15 @@ export function useVisualSource({
 const REVEAL_MS = 1800
 /** How long a finger holds the stage before the parts show. */
 const HOLD_MS = 350
+/** How long a frame takes to fade in once its document has loaded. */
+const FADE_MS = 200
 
 /**
  * A lesson's HTML visual, as the web's HtmlFrame: in its own window (at least 288 points tall, the
  * content in the middle), or `plain` on a surface that already frames it. On a hotspot kata the
  * parts are measured natively and taps land on buttons laid over them, with the picks and marks
- * drawn over the frame (lib/spots.ts).
+ * drawn over the frame (lib/spots.ts). A WebView takes a second or more to draw, so the frame
+ * fades in once it has loaded rather than popping in over an empty window.
  */
 export function VisualFrame({
   html,
@@ -66,6 +77,7 @@ export function VisualFrame({
   plain = false,
   hotspots,
   label,
+  width,
 }: {
   html: string
   css?: string
@@ -77,22 +89,35 @@ export function VisualFrame({
   hotspots?: HotspotControl
   /** What's picked, in words under the stage (the parts' names), as on the web. */
   label?: (parts: string) => string
+  /** The width the frame is laid out at, when the place it sits in fixes it (an order item). */
+  width?: number
 }) {
   const source = useVisualSource({ html, css, height, baseCss, visualsCss })
-  // The frame's own width once it's laid out: an option card's panel is narrower than the column.
-  const [laidOut, setLaidOut] = useState<number | undefined>(undefined)
   const interactive = Boolean(hotspots)
+  // The frame's own width once it's laid out. Until then: the width it's given, or for a frame in
+  // its own window the column's (visual-widths.ts), so a visual measured ahead opens at its height
+  // on the first render; a plain frame (an option card's panel) waits for its layout.
+  const { width: windowWidth } = useWindowDimensions()
+  const [laidOut, setLaidOut] = useState<number | undefined>(undefined)
+  const layoutWidth =
+    laidOut ??
+    width ??
+    (plain
+      ? undefined
+      : interactive
+        ? hotspotWidth(windowWidth)
+        : frameWidth(windowWidth))
   // Its own height, or its content's (measured natively, with scripts off), capped as on the web.
   const measuredHeight = useVisualHeight(
     source.html,
     source.baseUrl,
     height,
-    laidOut
+    layoutWidth
   )
   const spots = useVisualSpots(
     interactive ? source.html : "",
     source.baseUrl,
-    laidOut
+    layoutWidth
   )
   const measured = interactive
     ? (spots?.height ?? measuredHeight)
@@ -108,6 +133,16 @@ export function VisualFrame({
   const [reveal, setReveal] = useState(interactive)
   const [loaded, setLoaded] = useState(false)
   const ready = interactive && loaded && Boolean(spots)
+  // Hidden until its document has loaded, then faded in (at once under reduced motion).
+  const reduced = useReducedMotion()
+  const opacity = useSharedValue(0)
+  useEffect(() => {
+    if (loaded)
+      opacity.value = reduced
+        ? 1
+        : withTiming(1, { duration: FADE_MS, easing: Easing.out(Easing.cubic) })
+  }, [loaded, reduced, opacity])
+  const fade = useAnimatedStyle(() => ({ opacity: opacity.value }))
   useEffect(() => {
     if (!ready) return
     const timer = setTimeout(() => setReveal(false), REVEAL_MS)
@@ -141,21 +176,23 @@ export function VisualFrame({
     >
       {/* Drawn once its height is known, so it doesn't open at one size and jump to another. */}
       {measured === null ? null : (
-        <WebView
-          {...VISUAL_WEBVIEW_PROPS}
-          ref={ref}
-          source={source}
-          onShouldStartLoadWithRequest={guard}
-          onLoadEnd={() => setLoaded(true)}
-          // iOS kills a WebView's content process under memory pressure, which leaves it blank;
-          // load the same document again.
-          onContentProcessDidTerminate={() => ref.current?.reload()}
-          style={{ backgroundColor: "transparent", flex: 1 }}
-          // The frame is a picture: the buttons over it take the taps on a hotspot.
-          pointerEvents="none"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        />
+        <Animated.View style={[{ flex: 1 }, fade]} pointerEvents="none">
+          <WebView
+            {...VISUAL_WEBVIEW_PROPS}
+            ref={ref}
+            source={source}
+            onShouldStartLoadWithRequest={guard}
+            onLoadEnd={() => setLoaded(true)}
+            // iOS kills a WebView's content process under memory pressure, which leaves it blank;
+            // load the same document again.
+            onContentProcessDidTerminate={() => ref.current?.reload()}
+            style={{ backgroundColor: "transparent", flex: 1 }}
+            // The frame is a picture: the buttons over it take the taps on a hotspot.
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          />
+        </Animated.View>
       )}
       {overlays.map((o) => (
         <View

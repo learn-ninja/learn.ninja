@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { columnWidth, orderItemWidth } from "./visual-widths"
+import { columnWidth, optionCardWidths, orderItemWidth } from "./visual-widths"
 
 describe("visual widths", () => {
   it("keeps the column inside the window's padding, up to max-w-2xl", () => {
@@ -13,5 +13,16 @@ describe("visual widths", () => {
     expect(orderItemWidth(402)).toBe(181 - 18)
     expect(orderItemWidth(375)).toBe(167 - 18)
     expect(orderItemWidth(1024)).toBe(332 - 18)
+  })
+})
+
+describe("option card widths", () => {
+  it("stacks a pair at the column's width, inside the panel", () => {
+    expect(optionCardWidths(402, 2)).toEqual([360])
+  })
+
+  it("puts three or more two a row, and an odd last card across the row", () => {
+    expect(optionCardWidths(402, 4)).toEqual([169])
+    expect(optionCardWidths(402, 3)).toEqual([169, 360])
   })
 })

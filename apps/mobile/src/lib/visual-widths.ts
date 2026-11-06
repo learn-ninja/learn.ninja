@@ -14,6 +14,16 @@ export function columnWidth(windowWidth: number): number {
   return Math.min(windowWidth - 2 * GUTTER, COLUMN)
 }
 
+/** A visual in its own window (a concept's, a question's): the column, inside the window's border. */
+export function frameWidth(windowWidth: number): number {
+  return columnWidth(windowWidth) - 2 * BORDER
+}
+
+/** A hotspot's visual: on a filled stage with no border or side padding, the column's full width. */
+export function hotspotWidth(windowWidth: number): number {
+  return columnWidth(windowWidth)
+}
+
 /** The gap between an order kata's pool cards (gap-2). */
 const ORDER_GAP = 8
 /** An order item's padding (p-2) and border, each side. */
@@ -28,4 +38,25 @@ export function orderItemWidth(windowWidth: number): number {
   return (
     Math.floor((columnWidth(windowWidth) - ORDER_GAP) / 2) - 2 * ORDER_INSET
   )
+}
+
+/** The gap between option cards (gap-3). */
+const CARD_GAP = 12
+/**
+ * An option card's visual panel, each side: the panel's -m-px lays it over the card's border, and
+ * inside it are its own border and its padding (px-1).
+ */
+const PANEL_INSET = BORDER + 4
+
+/**
+ * The widths an option card's visual can be laid out at (options.tsx). A pair stacks, full width;
+ * three or more sit two a row (w-[48%] grow, gap-3), and with an odd count the last card grows to
+ * the full row, which could be any option once they're shuffled.
+ */
+export function optionCardWidths(windowWidth: number, count: number): number[] {
+  const column = columnWidth(windowWidth)
+  const full = column - 2 * PANEL_INSET
+  if (count < 3) return [full]
+  const half = Math.round((column - CARD_GAP) / 2) - 2 * PANEL_INSET
+  return count % 2 ? [half, full] : [half]
 }
