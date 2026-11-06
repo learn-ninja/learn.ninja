@@ -129,7 +129,9 @@ function changeHandle(current: string, t: Strings) {
 
 async function changeTo(value: string, current: string, t: Strings) {
   const handle = normalizeHandle(value)
-  if (!handle || handle === current) return
+  // Unchanged: nothing to save. Anything else is checked first, so an answer that tidies away to
+  // nothing ("@@", an emoji) says the rules instead of closing the prompt without a word.
+  if (handle && handle === current) return
   const problem = handleProblem(handle, t) ?? (await saveHandle(handle, t))
   if (problem) Alert.alert(t.account.handle, problem)
 }
