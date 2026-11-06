@@ -3,8 +3,10 @@ import Svg, { Circle, Path } from "react-native-svg"
 import { useDirection } from "@/components/direction"
 import { colors } from "../../tokens"
 
-// Lucide's icons the app's frame uses, as the web's lucide-react draws them (24-unit grid, 2-unit
-// round strokes). Directional ones (the back chevron) mirror in right-to-left.
+// Lucide's icons, as the web's lucide-react draws them (24-unit grid, 2-unit round strokes), for a
+// lesson and for the React Native lesson menu and Settings off iOS; on iOS the app's frame uses the
+// system's own icons (SF Symbols, through expo-symbols), with these as their `fallback` elsewhere
+// (Android has no SF Symbols). Directional ones (the back chevron) mirror in right-to-left.
 
 type IconProps = { size?: number; color?: string; fill?: string }
 
@@ -45,10 +47,10 @@ export const HeartIcon = (p: IconProps) => (
   </Icon>
 )
 
-export const SettingsIcon = (p: IconProps) => (
+export const CloseIcon = (p: IconProps) => (
   <Icon {...p}>
-    <Path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
-    <Circle cx={12} cy={12} r={3} />
+    <Path d="M18 6 6 18" />
+    <Path d="m6 6 12 12" />
   </Icon>
 )
 

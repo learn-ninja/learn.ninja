@@ -9,7 +9,7 @@ import {
 } from "@expo/ui/swift-ui"
 import { foregroundStyle, pickerStyle, tag } from "@expo/ui/swift-ui/modifiers"
 import { router, Stack } from "expo-router"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { Alert } from "react-native"
 
 import {
@@ -38,8 +38,14 @@ export default function Settings() {
   const { t, lang, dir } = useAppStrings()
   const session = useSession()
   const [, update] = usePreferences()
+  // Set once this screen's Log out takes it off the stack itself, so the effect below doesn't pop
+  // a second screen (the profile under it, from Explore) as the session ends mid-transition.
+  const leaving = useRef(false)
+  // Logged out some other way (the session ended): off the stack, back to the profile's root.
   useEffect(() => {
-    if (session.state === "out") router.replace("/")
+    if (session.state !== "out" || leaving.current) return
+    if (router.canGoBack()) router.back()
+    else router.replace("/")
   }, [session.state])
   if (session.state !== "in") return null
   const { account } = session
@@ -57,9 +63,7 @@ export default function Settings() {
             title={t.account.title}
             footer={
               <Text>
-                {t.account.handleHint(
-                  `⁨${host}/u/${account.handle ?? ""}⁩`
-                )}
+                {t.account.handleHint(`⁨${host}/u/${account.handle ?? ""}⁩`)}
               </Text>
             }
           >
@@ -100,7 +104,11 @@ export default function Settings() {
             <Button
               role="destructive"
               label={t.signIn.logOut}
-              onPress={() => confirmLogOut(t)}
+              onPress={() =>
+                confirmLogOut(t, () => {
+                  leaving.current = true
+                })
+              }
             />
           </Section>
         </Form>
@@ -137,7 +145,7 @@ async function changeTo(value: string, current: string, t: Strings) {
 }
 
 /** Log out, after the system's confirmation, back to the home. */
-function confirmLogOut(t: Strings) {
+function confirmLogOut(t: Strings, onLeave: () => void) {
   Alert.alert(t.signIn.logOut, undefined, [
     { text: t.cancel, style: "cancel" },
     {
@@ -145,8 +153,11 @@ function confirmLogOut(t: Strings) {
       style: "destructive",
       onPress: async () => {
         tap()
+        // Off the tab's stack first (Settings is pushed there, not a modal): once the session
+        // ends this screen has nothing to show, and the tab would be left on it.
+        onLeave()
+        if (router.canGoBack()) router.back()
         await signOut()
-        router.dismissAll()
         router.replace("/")
       },
     },

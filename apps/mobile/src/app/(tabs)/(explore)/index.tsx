@@ -20,6 +20,7 @@ import { fetchTestLessons, type TestLesson } from "@/lib/api"
 import { fetchExplore, type LessonRowData, type Viewer } from "@/lib/feed"
 import { mergeFirstPage } from "@/lib/feed-merge"
 import { useSession, type Account } from "@/lib/session"
+import { tap } from "@/lib/haptics"
 import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
 import { colors } from "../../../../tokens"
@@ -104,6 +105,8 @@ export default function Home() {
               refreshing={refreshing}
               tintColor={colors.muted.foreground}
               onRefresh={async () => {
+                // A light tap as the pull catches, as iOS's own lists give one.
+                tap()
                 setRefreshing(true)
                 await refresh()
                 setRefreshing(false)

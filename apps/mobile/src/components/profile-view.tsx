@@ -17,7 +17,7 @@ import {
 } from "@/components/explore/list-parts"
 import { Text } from "@/components/ui/text"
 import { FeedError, fetchProfile, type ProfileData } from "@/lib/feed"
-import { tap } from "@/lib/haptics"
+import { selection, tap } from "@/lib/haptics"
 import { useSession } from "@/lib/session"
 import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
@@ -182,6 +182,7 @@ export function ProfileView({
               refreshing={refreshing}
               tintColor={colors.muted.foreground}
               onRefresh={async () => {
+                tap()
                 setRefreshing(true)
                 await refresh()
                 setRefreshing(false)
@@ -257,7 +258,7 @@ function Head({
                 <Pressable
                   key={item.id}
                   onPress={() => {
-                    if (!on) tap()
+                    if (!on) selection()
                     setTab(item.id)
                   }}
                   accessibilityRole="tab"

@@ -1,4 +1,5 @@
 import { Link, router } from "expo-router"
+import { SymbolView } from "expo-symbols"
 import { memo, useState } from "react"
 import { Pressable, View } from "react-native"
 import Svg, { Circle, Path } from "react-native-svg"
@@ -8,8 +9,8 @@ import { directionOf, type Strings } from "@workspace/player-core/strings"
 import { shortTimeAgo, timeAgo } from "@workspace/player-core/time"
 
 import { Avatar } from "@/components/avatar"
-import { useDirection } from "@/components/direction"
 import { EyeIcon } from "@/components/icons"
+import { useDirection } from "@/components/direction"
 import { Text } from "@/components/ui/text"
 import { lessonParam, type LessonRowData, type Viewer } from "@/lib/feed"
 import { compact, rowBadge, rowTime, wedge } from "@/lib/lesson-row"
@@ -54,8 +55,10 @@ export const LessonRow = memo(function LessonRow({
   })
   return (
     // iOS's peek and pop: pressing and holding a row lifts a preview of the lesson with a menu
-    // (like, share, the maker's profile); a tap opens it.
-    <Link href={{ pathname: "/l/[slugId]", params: { slugId: param } }}>
+    // (like, share, the maker's profile); a tap opens it. asChild hands the link's press to the
+    // row's Pressable (through Link.Trigger); without it the link wraps the row in a Text whose
+    // press the Pressable takes first, and a tap does nothing.
+    <Link href={{ pathname: "/l/[slugId]", params: { slugId: param } }} asChild>
       <Link.Trigger>
         <Pressable
           className="gap-3 py-5 active:opacity-70"
@@ -144,7 +147,14 @@ export const LessonRow = memo(function LessonRow({
                 accessible
                 accessibilityLabel={t.feed.views(lesson.views)}
               >
-                <EyeIcon size={14} color={colors.muted.foreground} />
+                <SymbolView
+                  name="eye"
+                  size={14}
+                  tintColor={colors.muted.foreground}
+                  fallback={
+                    <EyeIcon size={14} color={colors.muted.foreground} />
+                  }
+                />
                 <Text className="text-sm text-muted-foreground tabular-nums">
                   {compact(lesson.views, lang)}
                 </Text>
@@ -177,7 +187,7 @@ export const LessonRow = memo(function LessonRow({
         <Link.MenuAction
           title={like.liked ? t.liked : t.like}
           icon={like.liked ? "heart.fill" : "heart"}
-          onPress={like.toggle}
+          onPress={() => like.toggle()}
         />
         <Link.MenuAction
           title={t.share}

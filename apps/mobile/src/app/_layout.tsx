@@ -3,6 +3,7 @@ import "../global.css"
 import { DarkTheme, Stack, ThemeProvider } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
+import { KeyboardProvider } from "react-native-keyboard-controller"
 
 import { DirectionEffect } from "@/lib/direction-effect"
 import { SessionEffects } from "@/lib/session"
@@ -27,29 +28,35 @@ export const unstable_settings = { anchor: "(tabs)" }
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={theme}>
-        <StatusBar style="light" />
-        <SessionEffects />
-        <DirectionEffect />
-        <Stack
-          screenOptions={{
-            // Every screen draws its own header, in its own direction (components/app-header.tsx).
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.background },
-          }}
-        >
-          {/* The tabs: Explore and the learner's profile, each its own stack. */}
-          <Stack.Screen name="(tabs)" />
-          {/* A lesson slides up over everything, as Duolingo's and Brilliant's do, and closes
+      {/* The keyboard's own motion, frame by frame, for the screens that move with it (sign-in). */}
+      <KeyboardProvider>
+        <ThemeProvider value={theme}>
+          <StatusBar style="light" />
+          <SessionEffects />
+          <DirectionEffect />
+          <Stack
+            screenOptions={{
+              // Every screen draws its own header, in its own direction (components/app-header.tsx).
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.background },
+            }}
+          >
+            {/* The tabs: Explore and the learner's profile, each its own stack. */}
+            <Stack.Screen name="(tabs)" />
+            {/* A lesson slides up over everything, as Duolingo's and Brilliant's do, and closes
               with its X: no edge swipe, which a drag near the edge in sort or order would
               otherwise set off. */}
-          <Stack.Screen
-            name="l/[slugId]"
-            options={{ presentation: "fullScreenModal", gestureEnabled: false }}
-          />
-          <Stack.Screen name="sign-in" options={{ presentation: "modal" }} />
-        </Stack>
-      </ThemeProvider>
+            <Stack.Screen
+              name="l/[slugId]"
+              options={{
+                presentation: "fullScreenModal",
+                gestureEnabled: false,
+              }}
+            />
+            <Stack.Screen name="sign-in" options={{ presentation: "modal" }} />
+          </Stack>
+        </ThemeProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   )
 }
