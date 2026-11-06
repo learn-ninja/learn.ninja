@@ -9,6 +9,7 @@ import { directionOf, type Strings } from "@workspace/player-core/strings"
 import { shortTimeAgo, timeAgo } from "@workspace/player-core/time"
 
 import { Avatar } from "@/components/avatar"
+import { EyeIcon } from "@/components/icons"
 import { useDirection } from "@/components/direction"
 import { Text } from "@/components/ui/text"
 import { lessonParam, type LessonRowData, type Viewer } from "@/lib/feed"
@@ -150,6 +151,9 @@ export const LessonRow = memo(function LessonRow({
                   name="eye"
                   size={14}
                   tintColor={colors.muted.foreground}
+                  fallback={
+                    <EyeIcon size={14} color={colors.muted.foreground} />
+                  }
                 />
                 <Text className="text-sm text-muted-foreground tabular-nums">
                   {compact(lesson.views, lang)}
@@ -183,7 +187,7 @@ export const LessonRow = memo(function LessonRow({
         <Link.MenuAction
           title={like.liked ? t.liked : t.like}
           icon={like.liked ? "heart.fill" : "heart"}
-          onPress={like.toggle}
+          onPress={() => like.toggle()}
         />
         <Link.MenuAction
           title={t.share}

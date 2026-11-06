@@ -5,8 +5,8 @@ import { colors } from "../../tokens"
 
 // Lucide's icons, as the web's lucide-react draws them (24-unit grid, 2-unit round strokes), for a
 // lesson and for the React Native lesson menu and Settings off iOS; on iOS the app's frame uses the
-// system's own icons (SF Symbols, through expo-symbols). Directional ones (the back chevron)
-// mirror in right-to-left.
+// system's own icons (SF Symbols, through expo-symbols), with these as their `fallback` elsewhere
+// (Android has no SF Symbols). Directional ones (the back chevron) mirror in right-to-left.
 
 type IconProps = { size?: number; color?: string; fill?: string }
 
@@ -33,6 +33,26 @@ function Icon({
     </Svg>
   )
 }
+
+export const EyeIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+    <Circle cx={12} cy={12} r={3} />
+  </Icon>
+)
+
+export const HeartIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+  </Icon>
+)
+
+export const CloseIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Path d="M18 6 6 18" />
+    <Path d="m6 6 12 12" />
+  </Icon>
+)
 
 /** The way back, pointing to the start side. */
 export function BackIcon(p: IconProps) {

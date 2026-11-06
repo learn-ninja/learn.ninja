@@ -76,7 +76,8 @@ export default function SignIn() {
     // The screen and its text run the app language's way (direction.tsx).
     <DirectionView dir={dir} className="flex-1 bg-background">
       {/* Moves with the keyboard as it slides, frame by frame, rather than jumping once it's up. */}
-      <KeyboardAvoidingView behavior="padding" className="flex-1">
+      {/* style, not className: NativeWind maps className only for components it knows. */}
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <Stack.Screen options={{ headerShown: false }} />
         <View className="h-14 flex-row items-center px-4">
           <CloseButton
