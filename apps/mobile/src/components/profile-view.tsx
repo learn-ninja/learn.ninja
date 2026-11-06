@@ -264,7 +264,7 @@ function Head({
                   accessibilityRole="tab"
                   accessibilityState={{ selected: on }}
                   className={cn(
-                    "h-8 flex-row items-center gap-1.5 rounded-md border border-transparent px-3",
+                    "min-h-8 flex-row items-center gap-1.5 rounded-md border border-transparent px-3 py-1",
                     on && "border-input bg-input/30"
                   )}
                 >

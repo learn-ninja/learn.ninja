@@ -47,17 +47,19 @@ const buttonVariants = cva(
           "bg-feedback-goodButton shadow-sm shadow-black/5 active:opacity-80",
         warning: "bg-feedback-warn shadow-sm shadow-black/5 active:opacity-80",
       },
+      // Minimum heights, not fixed ones: with a larger Dynamic Type size the label grows and the
+      // button grows with it instead of cutting it off.
       size: {
         default: cn(
-          "h-10 px-4 py-2 sm:h-9",
+          "min-h-10 px-4 py-2 sm:min-h-9",
           Platform.select({ web: "has-[>svg]:px-3" })
         ),
         sm: cn(
-          "h-9 gap-1.5 rounded-lg px-3 sm:h-8",
+          "min-h-9 gap-1.5 rounded-lg px-3 py-1.5 sm:min-h-8",
           Platform.select({ web: "has-[>svg]:px-2.5" })
         ),
         lg: cn(
-          "h-11 rounded-lg px-6 sm:h-10",
+          "min-h-11 rounded-lg px-6 py-2 sm:min-h-10",
           Platform.select({ web: "has-[>svg]:px-4" })
         ),
         icon: "h-10 w-10 sm:h-9 sm:w-9",
