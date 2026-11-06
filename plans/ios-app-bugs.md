@@ -38,18 +38,26 @@ A pass over the iOS app (`apps/mobile`) as a learner uses it, on the iPhone simu
 | 12 | An inline code chip split across lines and left an empty grey box at the end of the first: its padding was plain spaces. | `4d5cfd0` |
 | 13 | With a larger text size, the tray's buttons (fixed at 48) cut their labels off. They grow now. | `0efcb0b` |
 | 14 | A quick double tap of Continue skipped the concept it opened (the second tap left it as it arrived; at once under reduced motion). A new screen now ignores Continue for 350 ms; tested. | `47bb71e` |
+| 15 | HTML visuals were slow to appear (open item 2): option cards and order items weren't measured ahead, so they opened at 240 and jumped. The next screen's HTML visuals are now measured at the widths they'll be laid out at (a question's visual, each option card at the widths it can take, order items, a hotspot's parts), and a frame fades in once its document has loaded instead of popping in. Tested; `plans/ios-app-bugs-visuals.png`. | `38de93e` |
+| 16 | The marked answer could sit under the tray after a check (open item 3). Marked controls register with the player, and 250 ms after a check (or Why?) the lowest of them scrolls up 12 points clear of the tray, never past its own top. Tested; `plans/ios-app-bugs-tray.png`. | `aa4f555` |
+| 17 | The offline error was raw and English only, nothing timed out, and the home screen had no retry (open item 4). API requests give up after 15 seconds, body and all; a lesson, Explore, and the test lessons say "Couldn't reach learn.ninja. Check your connection and try again." (a new player string, in every locale) with Try again. Tested; `plans/ios-app-bugs-offline.png`. | `44ed0b6` |
+| 18 | VoiceOver didn't hear a checked answer's mark (open item 5). Every answer control, and an HTML hotspot's parts, now carry the web's screen-reader words ("correct", "not right", "partly right") as their accessibility value, read after the label. Tested; not heard with VoiceOver here. | `3a035b4` |
+| 19 | `shadow-xs` didn't exist in Tailwind 3, and Metro advised about shadows on translucent fills (open item 8). It's in the theme as the web's (5% black); control surfaces, mark tints, and pressed buttons are solid, and the clear states drop the shadow. No advice in Metro through a lesson. | `fafc9e5` |
+| 20 | Order kata layout shifts (open item 9). Visual items are laid out at one width in the pool and in their slot, and every card, open slot, and dashed space is as tall as the tallest item, so nothing moves as items are placed. Tested; `plans/ios-app-bugs-order.png`. | `f73e2a4` |
+
+Rows 15 to 20 were fixed on 2026-11-06, after phase 4, on `claude/ios-bug-pass-f3bdb6`, and checked on the iPhone 18 Pro simulator against a local server (test lessons published to it with the visual katas first and a long warm-up).
 
 ## Open, with a recommendation
 
 1. **Right to left isn't mirrored** (phase 4 in the plan). In an Arabic lesson the close mark, the progress bar's fill, the eyebrow, and the tray's feedback line stay on the left while the prompt and options align right. Recommend `direction: "rtl"` on the player's root view for an RTL lesson (Yoga flips rows and `start`/`end`), and the screen slide reading the lesson's direction instead of `I18nManager.isRTL`.
-2. **HTML visuals are slow to appear.** A WebView takes 1.5 to 5 seconds to paint; until then the window is empty (worst on a hotspot, which also measures its parts). Option cards and order items aren't measured ahead (only a concept's visual is), so they open at 240 and jump to their height. Recommend measuring a question's visuals ahead like a concept's, and fading a frame in on its load.
-3. **The marked answer can sit under the tray** after a check, when the tray grows (seen on map vs forEach's scenario). Already a known gap in the plan; recommend scrolling the marked answer into view when feedback opens.
-4. **The offline error is raw**: "fetch failed: Could not connect to the server.", in English. Recommend a player string for "couldn't reach learn.ninja" in every locale. The lesson and home fetches also have no timeout, so a server that never answers leaves a spinner forever (Close now gets out of it); the home screen has no retry.
-5. **VoiceOver doesn't hear a checked answer's mark**: the badge is hidden from accessibility and nothing replaces it (the web adds screen-reader text). Recommend adding "correct" / "wrong" to each option's label after a check.
+2. **Fixed, row 15.** HTML visuals were slow to appear.
+3. **Fixed, row 16.** The marked answer could sit under the tray.
+4. **Fixed, row 17.** The offline error was raw.
+5. **Fixed, row 18.** VoiceOver didn't hear a checked answer's mark.
 6. **iPad and App Store**: `supportsTablet: true` with portrait only. App Store validation requires an iPad app to support all four orientations for multitasking or to set `UIRequiresFullScreen`. Decide before phase 5's TestFlight.
 7. **The font is San Francisco, the web's is Inter**, so lines break differently (the intro's title fits one line in the app and wraps on the web). A design call: SF is native; Inter would match.
-8. **`shadow-xs` doesn't exist in Tailwind 3**, so cards and controls draw no shadow (the web's is 5% black, faint on dark). Metro also repeats the advice "has a shadow set but cannot calculate shadow efficiently" for views with a shadow on a translucent fill. Recommend defining `shadow-xs` in the tokens or dropping the class, and giving shadowed views a solid fill.
-9. **Order kata layout shifts**: a placed visual item is about 20 points taller than an empty slot, so everything below moves as items are placed, and the pool's dashed spaces shrink once placed.
+8. **Fixed, row 19.** `shadow-xs` didn't exist in Tailwind 3.
+9. **Fixed, row 20.** Order kata layout shifts.
 10. **The ninja's lines repeat after reopening**: the line picker is seeded by title and run, so closing and reopening a lesson (or relaunching) replays the same lines. The web does the same on reload. Minor.
 11. **The progress details stay open** from one screen to the next until tapped again. Minor; the web's tooltip closes on its own.
 12. **Code answers** show as inline code chips in the app and as plain monospace on the web. Minor.
