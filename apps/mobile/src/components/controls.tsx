@@ -11,6 +11,7 @@ import Svg, { Path } from "react-native-svg"
 
 import type { Mark } from "@workspace/player-core/check"
 
+import { useMarkedAnswer } from "@/components/answer-marks"
 import { RichText } from "@/components/rich-text"
 import { Text } from "@/components/ui/text"
 import { alpha } from "@/lib/color"
@@ -60,11 +61,14 @@ export const CONTROL_TEXT_SIZE = fontSize.sm[0]
 
 /**
  * An answer control: an option row, a chip, a tile. It takes a light tap as it's pressed, shows
- * selection with the primary border, and after checking takes its mark's color.
+ * selection with the primary border, and after checking takes its mark's color (unless `markTint`
+ * is off: an option card colors only its border, itself). A marked control is one the player keeps
+ * in view when the feedback opens (answer-marks.tsx).
  */
 export function Control({
   selected = false,
   mark,
+  markTint = true,
   disabled = false,
   onPress,
   className,
@@ -75,6 +79,7 @@ export function Control({
 }: {
   selected?: boolean
   mark?: Mark
+  markTint?: boolean
   disabled?: boolean
   onPress?: () => void
   className?: string
@@ -83,8 +88,10 @@ export function Control({
   accessibilityLabel?: string
   hitSlop?: number
 }) {
+  const ref = useMarkedAnswer(mark)
   return (
     <Pressable
+      ref={ref}
       accessibilityRole="button"
       accessibilityState={{ selected, disabled, checked: selected }}
       accessibilityLabel={accessibilityLabel}
@@ -99,7 +106,7 @@ export function Control({
         selected && selectedStyles,
         className
       )}
-      style={[markStyle(mark), style]}
+      style={[markTint ? markStyle(mark) : undefined, style]}
     >
       {children}
     </Pressable>

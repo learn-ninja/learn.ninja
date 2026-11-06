@@ -41,6 +41,7 @@ import { directionOf, uiLanguageFor } from "@workspace/player-core/strings"
 
 import { createLinePicker } from "@workspace/player-core/voices"
 
+import { AnswerMarksContext } from "@/components/answer-marks"
 import { DirectionView, type Direction } from "@/components/direction"
 import { LessonContext } from "@/components/lesson-context"
 import { LessonMenu } from "@/components/lesson-menu"
@@ -63,6 +64,7 @@ import {
   sendToApi,
   type LoadedLesson,
 } from "@/lib/api"
+import { createAnswerMarks, revealBy } from "@/lib/answer-marks"
 import { API_BASE_URL } from "@/lib/config"
 import { feedbackFor } from "@/lib/feedback"
 import { result as resultHaptic, tap as tapHaptic } from "@/lib/haptics"
@@ -321,6 +323,37 @@ function Player({
     if (sfx) preloadEffects(["vanish"])
   }, [sfx])
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null)
+  // The window the screens scroll in, and how far they're scrolled.
+  const windowRef = useRef<ComponentRef<typeof View>>(null)
+  const scrollY = useRef(0)
+  // After a check the tray grows to show the feedback, which can cover the marked answers: once it
+  // has settled, the lowest of them scrolls back into view (the web's phone layout does the same).
+  // Why? adding the explanation grows the tray again, so it runs then too.
+  const answerMarks = useMemo(() => createAnswerMarks(), [])
+  const reduced = useReducedMotion()
+  useEffect(() => {
+    if (!q?.result || q.phase === "answering") return
+    let live = true
+    const timer = setTimeout(() => {
+      void answerMarks.lowest().then((low) => {
+        const view = windowRef.current
+        if (!live || !low || !view) return
+        view.measureInWindow((_x, top, _w, height) => {
+          // Clear of the tray by a gap, but never past the answer's own top.
+          const overlap = revealBy(low, { top, height })
+          if (live && overlap > 0)
+            scrollRef.current?.scrollTo({
+              y: scrollY.current + overlap,
+              animated: !reduced,
+            })
+        })
+      })
+    }, 250)
+    return () => {
+      live = false
+      clearTimeout(timer)
+    }
+  }, [q?.result, q?.phase, whyOpen, answerMarks, reduced])
 
   // The clock starts when the learner leaves the intro and stops at the wrap-up.
   const [clock, setClock] = useState<{ start?: number; end?: number }>({})
@@ -351,10 +384,7 @@ function Player({
   // (expo-router preloads the route), and a peeked lesson isn't an opened one.
   const focused = useIsFocused()
   // Handoff: while the lesson is open, a nearby Mac or iPad offers its web page.
-  useHandoff(
-    focused ? lessonLink(API_BASE_URL, data.path) : null,
-    lesson.title
-  )
+  useHandoff(focused ? lessonLink(API_BASE_URL, data.path) : null, lesson.title)
   // The app icon's Continue quick action opens this lesson until it's finished.
   const { slugId } = useLocalSearchParams<{ slugId: string }>()
   useLastLesson(`/l/${slugId}`, lesson.title, item.kind === "wrap", focused)
@@ -411,6 +441,7 @@ function Player({
   // Each new screen starts at the top (the wrap-up after the streak screen too).
   useLayoutEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false })
+    scrollY.current = 0
   }, [state.index, streakScreen])
 
   const whyLabel = feedback.why?.everyPath ? t.everyPath : t.why
@@ -451,7 +482,7 @@ function Player({
           t={t}
         />
         {/* The window: on a phone, edge to edge between two hairlines. */}
-        <View className="flex-1">
+        <View ref={windowRef} className="flex-1">
           {/* Phase 3: the smoke behind the intro; without the ninja it follows the title up. */}
           {item.kind === "intro" ? (
             <Aura shift={ninja === "off" ? -54 : 0} vanishing={vanishing} />
@@ -460,6 +491,10 @@ function Player({
             ref={scrollRef}
             // The header and tray already keep clear of the notch and the home bar.
             contentInsetAdjustmentBehavior="never"
+            onScroll={(e) => {
+              scrollY.current = e.nativeEvent.contentOffset.y
+            }}
+            scrollEventThrottle={16}
             className={cn(
               "flex-1 border-border",
               trayShown ? "border-y" : "border-t"
@@ -490,18 +525,20 @@ function Player({
               >
                 <LessonContext value={lessonContext}>
                   <StageContext value={stage}>
-                    <LessonScreen
-                      // Each screen is its own: two katas of a kind in a row (an order after an order,
-                      // two sorts in the fix round) mustn't share what the first one kept.
-                      key={`${state.run}:${state.index}`}
-                      data={data}
-                      item={item}
-                      state={state}
-                      dispatch={dispatch}
-                      feedback={feedback}
-                      whyOpen={whyOpen}
-                      t={t}
-                    />
+                    <AnswerMarksContext value={answerMarks}>
+                      <LessonScreen
+                        // Each screen is its own: two katas of a kind in a row (an order after an order,
+                        // two sorts in the fix round) mustn't share what the first one kept.
+                        key={`${state.run}:${state.index}`}
+                        data={data}
+                        item={item}
+                        state={state}
+                        dispatch={dispatch}
+                        feedback={feedback}
+                        whyOpen={whyOpen}
+                        t={t}
+                      />
+                    </AnswerMarksContext>
                   </StageContext>
                 </LessonContext>
               </DirectionView>

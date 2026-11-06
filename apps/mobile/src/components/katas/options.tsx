@@ -223,6 +223,8 @@ function OptionCard({
   return (
     <Control
       selected={selected}
+      mark={mark}
+      markTint={false}
       disabled={disabled}
       onPress={onPress}
       accessibilityLabel={o.text ?? t.optionLabel(String(index + 1))}
