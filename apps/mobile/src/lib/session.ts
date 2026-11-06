@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 
 import { sendToApi } from "./api"
-import { authClient } from "./auth-client"
+import { authClient, forgetSessionLocally } from "./auth-client"
 import { sendFinishes } from "./finishes"
 import { deviceStorage } from "./progress-storage"
 import { signedIn } from "./progress-sync"
@@ -47,8 +47,16 @@ export function useSession(): SessionState {
 export const refreshSession = () =>
   authClient.getSession({ query: { disableCookieCache: true } })
 
+/**
+ * Logs out on the server and, if the server can't be reached or refuses, on the device anyway, so
+ * the next launch isn't still signed in.
+ */
 export async function signOut() {
-  await authClient.signOut().catch(() => {})
+  const ok = await authClient
+    .signOut()
+    .then((res) => !res.error)
+    .catch(() => false)
+  if (!ok) await forgetSessionLocally().catch(() => {})
 }
 
 /**
