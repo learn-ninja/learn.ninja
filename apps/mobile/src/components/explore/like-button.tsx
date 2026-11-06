@@ -67,7 +67,9 @@ export function useLike({
 /**
  * The heart with the count, as the web's LikeButton, in the system's own heart (SF Symbols). It
  * bounces when the learner taps it, as iOS's hearts do; only then, so the hearts in a list don't
- * all bounce as they scroll in.
+ * all bounce as they scroll in. The symbol replays its animation whenever it reloads, so the
+ * bounce is on only for a moment after the tap: a like that arrives later (a refresh after a like
+ * on the web) changes the heart without a bounce.
  */
 export function LikeButton({
   like,
@@ -79,6 +81,11 @@ export function LikeButton({
   t: Strings
 }) {
   const [tapped, setTapped] = useState(false)
+  useEffect(() => {
+    if (!tapped) return
+    const timer = setTimeout(() => setTapped(false), 1000)
+    return () => clearTimeout(timer)
+  }, [tapped])
   return (
     <Pressable
       onPress={() => {
