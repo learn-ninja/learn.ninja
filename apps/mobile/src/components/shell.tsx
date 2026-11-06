@@ -16,6 +16,7 @@ import type { QuestionCount } from "@workspace/player-core/flow"
 import type { Strings } from "@workspace/player-core/strings"
 
 import { RichText } from "@/components/rich-text"
+import { CloseIcon } from "@/components/icons"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { mix } from "@/lib/color"
@@ -137,7 +138,7 @@ export function CloseButton({
         onPress={onPress}
         accessibilityLabel={label}
       >
-        <CloseIcon />
+        <CloseMark />
       </Button>
     </GlassCircle>
   )
@@ -164,14 +165,15 @@ export function BareHeader({
   )
 }
 
-/** The system's close mark (SF Symbols' xmark), as iOS's full-screen sheets close. */
-function CloseIcon() {
+/** The system's close mark (SF Symbols' xmark), as iOS's full-screen sheets close; Lucide's X elsewhere. */
+function CloseMark() {
   return (
     <SymbolView
       name="xmark"
       size={15}
       weight="semibold"
       tintColor={colors.foreground}
+      fallback={<CloseIcon />}
     />
   )
 }

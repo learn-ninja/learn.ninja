@@ -5,6 +5,7 @@ import { Pressable } from "react-native"
 
 import type { Strings } from "@workspace/player-core/strings"
 
+import { HeartIcon } from "@/components/icons"
 import { Text } from "@/components/ui/text"
 import { setLiked } from "@/lib/feed"
 import { tap } from "@/lib/haptics"
@@ -104,6 +105,15 @@ export function LikeButton({
         size={14}
         tintColor={
           like.liked ? colors.destructive.DEFAULT : colors.muted.foreground
+        }
+        fallback={
+          <HeartIcon
+            size={14}
+            color={
+              like.liked ? colors.destructive.DEFAULT : colors.muted.foreground
+            }
+            fill={like.liked ? colors.destructive.DEFAULT : "none"}
+          />
         }
         animationSpec={
           tapped ? { effect: { type: "bounce", wholeSymbol: true } } : undefined
