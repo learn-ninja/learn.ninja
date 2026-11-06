@@ -1,3 +1,4 @@
+import { REQUEST_TIMEOUT } from "./api-fetch"
 import { API_BASE_URL } from "./config"
 
 // The stylesheet every HTML visual loads first (Basecoat and the theme, /lesson-visuals.css on the
@@ -15,7 +16,10 @@ export function loadVisualsCss(
   const url = new URL(path, `${base}/`).toString()
   const cached = loaded.get(url)
   if (cached) return cached
-  const promise = fetch(url).then((res) => {
+  // Given up on with the API's requests (api-fetch.ts), so a lesson doesn't wait on it forever.
+  const controller = new AbortController()
+  setTimeout(() => controller.abort(), REQUEST_TIMEOUT)
+  const promise = fetch(url, { signal: controller.signal }).then((res) => {
     if (!res.ok)
       throw new Error(`The visuals' stylesheet didn't load (${res.status}).`)
     return res.text()

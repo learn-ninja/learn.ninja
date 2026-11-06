@@ -400,4 +400,5 @@ export const ar: Translation = {
     broken: "هذا الدرس لا يطابق صيغة الدروس.",
     failed: "تعذّر تحميل الدرس.",
   },
+  offline: "تعذّر الوصول إلى learn.ninja. تحقّق من اتصالك وحاول مرة أخرى.",
 }

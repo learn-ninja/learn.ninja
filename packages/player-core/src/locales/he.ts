@@ -358,4 +358,5 @@ export const he: Translation = {
     broken: "השיעור הזה לא תואם לפורמט השיעורים.",
     failed: "השיעור לא נטען.",
   },
+  offline: "אי אפשר להגיע ל-learn.ninja. כדאי לבדוק את החיבור ולנסות שוב.",
 }

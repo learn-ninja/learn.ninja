@@ -349,4 +349,6 @@ export const nl: Translation = {
     broken: "Deze les past niet in het lesformaat.",
     failed: "De les is niet geladen.",
   },
+  offline:
+    "Kan learn.ninja niet bereiken. Controleer je verbinding en probeer het opnieuw.",
 }

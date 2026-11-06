@@ -319,4 +319,6 @@ export const ko: Translation = {
     broken: "이 레슨은 레슨 형식에 맞지 않아요.",
     failed: "레슨을 불러오지 못했어요.",
   },
+  offline:
+    "learn.ninja에 연결할 수 없어요. 연결 상태를 확인하고 다시 시도해 주세요.",
 }

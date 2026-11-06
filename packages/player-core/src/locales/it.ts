@@ -273,7 +273,8 @@ export const it: Translation = {
     submit: "Accedi",
     otherEmail: "Usa un'altra email",
     legal: "Continuando, accetti i {terms} e la {privacy}.",
-    wrongCode: "Questo codice non è giusto. Controllalo o richiedine uno nuovo.",
+    wrongCode:
+      "Questo codice non è giusto. Controllalo o richiedine uno nuovo.",
     expiredCode: "Questo codice è scaduto. Richiedine uno nuovo.",
     tooManyTries: "Troppi codici sbagliati. Richiedine uno nuovo.",
     tooManyCodes:
@@ -291,7 +292,8 @@ export const it: Translation = {
       "Accedi per sfogliare Explore, mettere mi piace alle lezioni e vedere la tua serie nel tuo profilo.",
     testLessons: "Lezioni di prova",
     failed: "Il caricamento non è riuscito.",
-    views: (n) => p(n, { one: "# visualizzazione", other: "# visualizzazioni" }),
+    views: (n) =>
+      p(n, { one: "# visualizzazione", other: "# visualizzazioni" }),
     likes: (n) => p(n, { one: "# mi piace", other: "# mi piace" }),
     done: "Finita",
     minutesLeft: (n) => `Mancano ${n} min`,
@@ -354,4 +356,6 @@ export const it: Translation = {
     broken: "Questa lezione non rispetta il formato delle lezioni.",
     failed: "La lezione non si è caricata.",
   },
+  offline:
+    "Impossibile raggiungere learn.ninja. Controlla la connessione e riprova.",
 }

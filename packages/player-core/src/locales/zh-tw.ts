@@ -313,4 +313,5 @@ export const zhTw: Translation = {
     broken: "這堂課不符合課程格式。",
     failed: "課程載入失敗。",
   },
+  offline: "無法連線到 learn.ninja。請檢查網路連線後再試一次。",
 }

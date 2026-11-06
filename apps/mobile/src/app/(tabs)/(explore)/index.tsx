@@ -17,6 +17,7 @@ import { LessonRow } from "@/components/explore/lesson-row"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { fetchTestLessons, type TestLesson } from "@/lib/api"
+import { OfflineError } from "@/lib/api-fetch"
 import { fetchExplore, type LessonRowData, type Viewer } from "@/lib/feed"
 import { mergeFirstPage } from "@/lib/feed-merge"
 import { useSession, type Account } from "@/lib/session"
@@ -90,7 +91,7 @@ export default function Home() {
             <Loading />
           ) : feed.state === "error" ? (
             <Failed
-              message={t.feed.failed}
+              message={feed.offline ? t.offline : t.feed.failed}
               retry={{ label: t.tryAgain, onPress: retry }}
             />
           ) : (
@@ -135,6 +136,8 @@ type Feed = {
   viewer?: Viewer
   next: string | null
   state: "loading" | "ready" | "error"
+  /** The last failure was the server not answering (no connection, or too slow). */
+  offline?: boolean
 }
 
 const START: Feed = { lessons: [], next: null, state: "loading" }
@@ -172,8 +175,12 @@ function useExplore(account: Account | null) {
                 state: "ready",
               }
         )
-      } catch {
-        setFeed((f) => (f.state === "ready" ? f : { ...f, state: "error" }))
+      } catch (e) {
+        setFeed((f) =>
+          f.state === "ready"
+            ? f
+            : { ...f, state: "error", offline: e instanceof OfflineError }
+        )
       }
     },
     [signedIn]
@@ -221,18 +228,38 @@ function useExplore(account: Account | null) {
 
 /** Logged out: what Explore is, and the way in. */
 
-/** The lessons the web app bundles, opened from GET /api/lessons/{slug} without a database. */
+/**
+ * The lessons the web app bundles, opened from GET /api/lessons/{slug} without a database. When
+ * they don't load, it says why (the server out of reach, or failing) with a way to ask again.
+ */
 function TestLessons({ t }: { t: Strings }) {
-  const [lessons, setLessons] = useState<TestLesson[] | null>(null)
+  const [lessons, setLessons] = useState<
+    TestLesson[] | { error: "offline" | "failed" } | null
+  >(null)
+  const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     let live = true
+    setLessons(null)
     fetchTestLessons()
       .then((l) => live && setLessons(l))
-      .catch(() => live && setLessons([]))
+      .catch(
+        (e: unknown) =>
+          live &&
+          setLessons({
+            error: e instanceof OfflineError ? "offline" : "failed",
+          })
+      )
     return () => {
       live = false
     }
-  }, [])
+  }, [attempt])
+  if (lessons && "error" in lessons)
+    return (
+      <Failed
+        message={lessons.error === "offline" ? t.offline : t.feed.failed}
+        retry={{ label: t.tryAgain, onPress: () => setAttempt((n) => n + 1) }}
+      />
+    )
   if (!lessons?.length) return null
   return (
     <View className="gap-3 pt-8">

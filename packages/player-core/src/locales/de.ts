@@ -358,4 +358,6 @@ export const de: Translation = {
     broken: "Diese Lektion passt nicht zum Lektionsformat.",
     failed: "Die Lektion konnte nicht geladen werden.",
   },
+  offline:
+    "learn.ninja ist nicht erreichbar. Prüfe deine Verbindung und versuch es noch mal.",
 }

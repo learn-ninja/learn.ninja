@@ -6,7 +6,7 @@ import {
 import { loadLanguage } from "@workspace/player-core/strings"
 import { validateLesson, type Lesson } from "@workspace/spec"
 
-import { createApiFetch } from "./api-fetch"
+import { createApiFetch, OfflineError } from "./api-fetch"
 import { sessionCookie } from "./auth-client"
 import { API_BASE_URL } from "./config"
 import type { Send } from "./progress-sync"
@@ -32,6 +32,15 @@ export const apiFetch = createApiFetch({
   cookie: sessionCookie,
 })
 
+/** A body that stopped arriving (the request timed out) is the server not answering, not bad JSON. */
+function readJson(res: Response): Promise<unknown> {
+  return res.json().catch((e: unknown) => {
+    if (e instanceof Error && e.name === "AbortError")
+      throw new OfflineError(true)
+    return null
+  })
+}
+
 export class LessonError extends Error {
   constructor(
     message: string,
@@ -53,7 +62,7 @@ export async function fetchLesson(
   const res = await createApiFetch({ base, cookie: sessionCookie })(
     `/api/lessons/${encodeURIComponent(param)}`
   )
-  const body = (await res.json().catch(() => null)) as {
+  const body = (await readJson(res)) as {
     ok?: boolean
     id?: string
     path?: string
@@ -111,10 +120,11 @@ export interface TestLesson {
 export async function fetchTestLessons(
   base = API_BASE_URL
 ): Promise<TestLesson[]> {
-  const res = await fetch(`${base}/api/lessons`, {
-    headers: { accept: "application/json" },
-  })
-  const body = (await res.json().catch(() => null)) as {
+  // Signed out or in, the same list: no cookie, but the API fetch's timeout.
+  const res = await createApiFetch({ base, cookie: async () => "" })(
+    "/api/lessons"
+  )
+  const body = (await readJson(res)) as {
     ok?: boolean
     lessons?: TestLesson[]
   } | null

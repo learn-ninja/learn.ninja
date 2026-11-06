@@ -303,7 +303,8 @@ export const es: Translation = {
     noLessonsOwn:
       "Todavía no hay lecciones. Pídele una a tu agente; con la sesión iniciada, se guarda aquí.",
     noLessons: "Todavía no hay lecciones publicadas.",
-    noProgress: "Las lecciones que empieces aparecen aquí hasta que las termines.",
+    noProgress:
+      "Las lecciones que empieces aparecen aquí hasta que las termines.",
     noLikesOwn: "Las lecciones que te gusten aparecen aquí.",
     noLikes: "Todavía no hay lecciones que le gusten.",
     missing: "Nadie tiene este nombre de usuario.",
@@ -346,4 +347,6 @@ export const es: Translation = {
     broken: "Esta lección no se ajusta al formato de lección.",
     failed: "No se pudo cargar la lección.",
   },
+  offline:
+    "No se pudo conectar con learn.ninja. Revisa tu conexión e inténtalo de nuevo.",
 }

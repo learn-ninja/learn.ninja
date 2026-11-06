@@ -313,4 +313,5 @@ export const zh: Translation = {
     broken: "这节课不符合课程格式。",
     failed: "课程加载失败。",
   },
+  offline: "无法连接到 learn.ninja。请检查网络连接后重试。",
 }

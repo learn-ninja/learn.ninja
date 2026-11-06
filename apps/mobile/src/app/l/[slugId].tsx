@@ -67,6 +67,7 @@ import {
 } from "@/lib/api"
 import { createAnswerMarks, revealBy } from "@/lib/answer-marks"
 import { markWord } from "@/lib/mark-words"
+import { OfflineError } from "@/lib/api-fetch"
 import { API_BASE_URL } from "@/lib/config"
 import { feedbackFor } from "@/lib/feedback"
 import { result as resultHaptic, tap as tapHaptic } from "@/lib/haptics"
@@ -100,8 +101,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 type Load =
   | { state: "loading" }
-  /** `retry`: asking again could help (no connection, a server error), unlike a lesson that's gone. */
-  | { state: "error"; status: number; retry: boolean }
+  /**
+   * `retry`: asking again could help (no connection, a server error), unlike a lesson that's gone.
+   * `offline`: the server couldn't be reached, or didn't answer in time.
+   */
+  | { state: "error"; status: number; retry: boolean; offline: boolean }
   | { state: "ready"; data: LoadedLesson }
 
 /** Back to where the lesson was opened from, or home when it was opened by a link. */
@@ -135,6 +139,7 @@ export default function LessonRoute() {
             state: "error",
             status: e instanceof LessonError ? e.status : 0,
             retry: !(e instanceof LessonError) || e.status >= 500,
+            offline: e instanceof OfflineError,
           })
       )
     return () => {
@@ -152,11 +157,13 @@ export default function LessonRoute() {
   const message =
     load.state !== "error"
       ? ""
-      : load.status === 404 || load.status === 410
-        ? t.lessonErrors.missing
-        : load.status === 422
-          ? t.lessonErrors.broken
-          : t.lessonErrors.failed
+      : load.offline
+        ? t.offline
+        : load.status === 404 || load.status === 410
+          ? t.lessonErrors.missing
+          : load.status === 422
+            ? t.lessonErrors.broken
+            : t.lessonErrors.failed
   return (
     <DirectionView dir={dir} className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
