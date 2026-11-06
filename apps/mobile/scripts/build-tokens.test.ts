@@ -7,7 +7,8 @@ import { toRgb, tokensSource, TOKENS_PATH } from "./build-tokens.mjs"
 describe("tokens.ts", () => {
   it("is up to date with globals.css (run `npm run tokens -w mobile`)", async () => {
     expect(readFileSync(TOKENS_PATH, "utf8")).toBe(await tokensSource())
-  })
+    // Formatting the source cold takes over vitest's 5 s default on a busy CI runner.
+  }, 30_000)
 
   it("converts the theme's OKLCH colors", () => {
     expect(toRgb("oklch(0.18 0 0)")).toBe("#121212")
