@@ -11,26 +11,28 @@ import { tap } from "@/lib/haptics"
 import { compact } from "@/lib/lesson-row"
 import { colors } from "../../../tokens"
 
+export interface Like {
+  liked: boolean
+  likes: number
+  /** Likes or unlikes at once with a light tap, settling on the server's count; signed out, it opens the log-in. */
+  toggle: () => void
+}
+
 /**
- * The heart with the count, as the web's LikeButton: signed in, it toggles at once with a light
- * tap and settles on the server's count (or goes back if the server refused). Signed out, it
- * opens the log-in.
+ * A lesson's like, shared by its row's heart and its long-press menu: toggled at once and settled
+ * on the server's count (or put back if the server refused), as the web's LikeButton does.
  */
-export function LikeButton({
+export function useLike({
   id,
-  likes,
   liked,
+  likes,
   signedIn,
-  lang,
-  t,
 }: {
   id: string
-  likes: number
   liked: boolean
+  likes: number
   signedIn: boolean
-  lang: string
-  t: Strings
-}) {
+}): Like {
   const [state, setState] = useState({ liked, likes })
   const [busy, setBusy] = useState(false)
   // A fresh count or like from the server (the feed refreshed: liked on the web, say) replaces
@@ -40,7 +42,7 @@ export function LikeButton({
     // Only new props, not the end of a press, which settles on the server's own answer.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liked, likes])
-  const press = async () => {
+  const toggle = async () => {
     if (!signedIn) {
       router.push("/sign-in")
       return
@@ -59,12 +61,26 @@ export function LikeButton({
       setBusy(false)
     }
   }
+  return { ...state, toggle: () => void toggle() }
+}
+
+/** The heart with the count, as the web's LikeButton. */
+export function LikeButton({
+  like,
+  lang,
+  t,
+}: {
+  like: Like
+  lang: string
+  t: Strings
+}) {
+  const state = like
   const color = state.liked
     ? colors.destructive.DEFAULT
     : colors.muted.foreground
   return (
     <Pressable
-      onPress={() => void press()}
+      onPress={like.toggle}
       hitSlop={8}
       className="-me-2 flex-row items-center gap-1 rounded-md px-2 py-1 active:bg-accent/50"
       accessibilityRole="button"

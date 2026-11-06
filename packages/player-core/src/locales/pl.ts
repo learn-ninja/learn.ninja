@@ -327,6 +327,7 @@ export const pl: Translation = {
     profile: "Twój profil",
   },
   profile: {
+    tab: "Profil",
     lessons: "Lekcje",
     myLessons: "Moje lekcje",
     inProgress: "W trakcie",
@@ -370,6 +371,9 @@ export const pl: Translation = {
       "Nazwa użytkownika ma od 3 do 30 znaków: małe litery, cyfry i łączniki, a zaczyna się od litery lub cyfry.",
     handleTaken: "Ktoś już ma tę nazwę użytkownika.",
     handleReserved: "Ta nazwa użytkownika jest zarezerwowana.",
+    needsHandleTitle: "Wybierz nazwę użytkownika",
+    needsHandleBody:
+      "Twój profil z lekcjami i serią jest pod twoją nazwą użytkownika. Wybierz ją w Ustawieniach.",
     save: "Zapisz",
     saved: "Zapisano",
   },

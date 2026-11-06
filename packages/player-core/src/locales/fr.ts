@@ -305,6 +305,7 @@ export const fr: Translation = {
     profile: "Ton profil",
   },
   profile: {
+    tab: "Profil",
     lessons: "Leçons",
     myLessons: "Mes leçons",
     inProgress: "En cours",
@@ -345,6 +346,9 @@ export const fr: Translation = {
       "Les pseudos font de 3 à 30 caractères : lettres minuscules, chiffres et traits d'union, en commençant par une lettre ou un chiffre.",
     handleTaken: "Quelqu'un a déjà ce pseudo.",
     handleReserved: "Ce pseudo est réservé.",
+    needsHandleTitle: "Choisis un pseudo",
+    needsHandleBody:
+      "Ton profil, avec tes leçons et ta série, se trouve à ton pseudo. Choisis-en un dans les Réglages.",
     save: "Enregistrer",
     saved: "Enregistré",
   },

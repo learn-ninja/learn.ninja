@@ -294,6 +294,7 @@ export const es: Translation = {
     profile: "Tu perfil",
   },
   profile: {
+    tab: "Perfil",
     lessons: "Lecciones",
     myLessons: "Mis lecciones",
     inProgress: "En curso",
@@ -333,6 +334,9 @@ export const es: Translation = {
       "Los nombres de usuario tienen de 3 a 30 caracteres: letras minúsculas, números y guiones, y empiezan por una letra o un número.",
     handleTaken: "Alguien ya tiene ese nombre de usuario.",
     handleReserved: "Ese nombre de usuario está reservado.",
+    needsHandleTitle: "Elige un nombre de usuario",
+    needsHandleBody:
+      "Tu perfil, con tus lecciones y tu racha, está en tu nombre de usuario. Elige uno en Ajustes.",
     save: "Guardar",
     saved: "Guardado",
   },

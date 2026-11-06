@@ -285,6 +285,7 @@ export const id: Translation = {
     profile: "Profilmu",
   },
   profile: {
+    tab: "Profil",
     lessons: "Pelajaran",
     myLessons: "Pelajaranku",
     inProgress: "Sedang berjalan",
@@ -318,6 +319,9 @@ export const id: Translation = {
       "Nama pengguna terdiri dari 3 hingga 30 karakter: huruf kecil, angka, dan tanda hubung, diawali huruf atau angka.",
     handleTaken: "Nama pengguna itu sudah dipakai.",
     handleReserved: "Nama pengguna itu dicadangkan.",
+    needsHandleTitle: "Pilih nama pengguna",
+    needsHandleBody:
+      "Profilmu, dengan pelajaran dan streak-mu, ada di nama penggunamu. Pilih satu di Pengaturan.",
     save: "Simpan",
     saved: "Tersimpan",
   },

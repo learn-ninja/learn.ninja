@@ -287,6 +287,7 @@ export const hi: Translation = {
     profile: "आपकी प्रोफ़ाइल",
   },
   profile: {
+    tab: "प्रोफ़ाइल",
     lessons: "पाठ",
     myLessons: "मेरे पाठ",
     inProgress: "जारी",
@@ -323,6 +324,9 @@ export const hi: Translation = {
       "हैंडल 3 से 30 अक्षरों का होता है: छोटे अंग्रेज़ी अक्षर, अंक और हाइफ़न, और यह किसी अक्षर या अंक से शुरू होता है।",
     handleTaken: "यह हैंडल पहले से किसी के पास है।",
     handleReserved: "यह हैंडल आरक्षित है।",
+    needsHandleTitle: "एक हैंडल चुनें",
+    needsHandleBody:
+      "आपकी प्रोफ़ाइल, आपके पाठों और स्ट्रीक के साथ, आपके हैंडल पर रहती है। सेटिंग्स में एक चुनें।",
     save: "सहेजें",
     saved: "सहेजा गया",
   },

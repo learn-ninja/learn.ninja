@@ -286,6 +286,7 @@ export const tr: Translation = {
     profile: "Profilin",
   },
   profile: {
+    tab: "Profil",
     lessons: "Dersler",
     myLessons: "Derslerim",
     inProgress: "Devam edenler",
@@ -319,6 +320,9 @@ export const tr: Translation = {
       "Kullanıcı adları 3 ile 30 karakter arasıdır: küçük harfler, rakamlar ve kısa çizgiler; bir harf ya da rakamla başlar.",
     handleTaken: "Bu kullanıcı adı başkasında var.",
     handleReserved: "Bu kullanıcı adı ayrılmış.",
+    needsHandleTitle: "Bir kullanıcı adı seç",
+    needsHandleBody:
+      "Derslerin ve serinle profilin, kullanıcı adının adresinde. Ayarlar'dan bir tane seç.",
     save: "Kaydet",
     saved: "Kaydedildi",
   },

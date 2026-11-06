@@ -299,6 +299,8 @@ export type Strings = {
   }
   /** A person's profile, as the web's /u/{handle} has it. */
   profile: {
+    /** The app's tab with the learner's own profile. */
+    tab: string
     lessons: string
     myLessons: string
     inProgress: string
@@ -331,6 +333,9 @@ export type Strings = {
     handleRules: string
     handleTaken: string
     handleReserved: string
+    /** Signed in without a handle: the Profile tab has no profile to show until one is chosen. */
+    needsHandleTitle: string
+    needsHandleBody: string
     save: string
     saved: string
   }

@@ -275,6 +275,7 @@ export const ko: Translation = {
     profile: "내 프로필",
   },
   profile: {
+    tab: "프로필",
     lessons: "레슨",
     myLessons: "내 레슨",
     inProgress: "진행 중",
@@ -306,6 +307,9 @@ export const ko: Translation = {
       "핸들은 3~30자이며 영문 소문자, 숫자, 하이픈을 쓸 수 있어요. 첫 글자는 영문 소문자나 숫자여야 해요.",
     handleTaken: "이미 다른 사람이 쓰고 있는 핸들이에요.",
     handleReserved: "예약된 핸들이에요.",
+    needsHandleTitle: "핸들을 정하세요",
+    needsHandleBody:
+      "레슨과 연속 기록이 담긴 프로필은 핸들 주소에 있어요. 설정에서 하나 정하세요.",
     save: "저장",
     saved: "저장됨",
   },

@@ -28,3 +28,8 @@ export function milestone() {
     120
   )
 }
+
+/** The system's selection tick, as a picker or a segmented control gives when the choice changes. */
+export function selection() {
+  void Haptics.selectionAsync()
+}

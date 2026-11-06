@@ -297,6 +297,7 @@ export const nl: Translation = {
     profile: "Je profiel",
   },
   profile: {
+    tab: "Profiel",
     lessons: "Lessen",
     myLessons: "Mijn lessen",
     inProgress: "Bezig",
@@ -336,6 +337,9 @@ export const nl: Translation = {
       "Gebruikersnamen hebben 3 tot 30 tekens: kleine letters, cijfers en koppeltekens, en beginnen met een letter of cijfer.",
     handleTaken: "Iemand heeft die gebruikersnaam al.",
     handleReserved: "Die gebruikersnaam is gereserveerd.",
+    needsHandleTitle: "Kies een gebruikersnaam",
+    needsHandleBody:
+      "Je profiel, met je lessen en je reeks, staat op je gebruikersnaam. Kies er een in Instellingen.",
     save: "Opslaan",
     saved: "Opgeslagen",
   },

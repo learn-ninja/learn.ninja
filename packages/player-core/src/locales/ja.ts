@@ -275,6 +275,7 @@ export const ja: Translation = {
     profile: "プロフィール",
   },
   profile: {
+    tab: "プロフィール",
     lessons: "レッスン",
     myLessons: "自分のレッスン",
     inProgress: "学習中",
@@ -307,6 +308,9 @@ export const ja: Translation = {
       "ハンドルは3〜30文字で、英小文字・数字・ハイフンが使えます。先頭は英小文字か数字にしてください。",
     handleTaken: "そのハンドルはすでに使われています。",
     handleReserved: "そのハンドルは予約されています。",
+    needsHandleTitle: "ハンドルを決めましょう",
+    needsHandleBody:
+      "レッスンとストリークが載ったプロフィールは、ハンドルの URL にあります。設定で決めてください。",
     save: "保存",
     saved: "保存しました",
   },

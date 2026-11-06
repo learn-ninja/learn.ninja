@@ -21,6 +21,9 @@ const theme = {
   },
 }
 
+/** A link opened from outside (learn.ninja/l/…) lands with the tabs under it, so closing goes home. */
+export const unstable_settings = { anchor: "(tabs)" }
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -35,10 +38,15 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: colors.background },
           }}
         >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="l/[slugId]" />
-          <Stack.Screen name="u/[handle]" />
-          <Stack.Screen name="settings" />
+          {/* The tabs: Explore and the learner's profile, each its own stack. */}
+          <Stack.Screen name="(tabs)" />
+          {/* A lesson slides up over everything, as Duolingo's and Brilliant's do, and closes
+              with its X: no edge swipe, which a drag near the edge in sort or order would
+              otherwise set off. */}
+          <Stack.Screen
+            name="l/[slugId]"
+            options={{ presentation: "fullScreenModal", gestureEnabled: false }}
+          />
           <Stack.Screen name="sign-in" options={{ presentation: "modal" }} />
         </Stack>
       </ThemeProvider>

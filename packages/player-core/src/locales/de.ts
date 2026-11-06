@@ -305,6 +305,7 @@ export const de: Translation = {
     profile: "Dein Profil",
   },
   profile: {
+    tab: "Profil",
     lessons: "Lektionen",
     myLessons: "Meine Lektionen",
     inProgress: "Begonnen",
@@ -345,6 +346,9 @@ export const de: Translation = {
       "Nutzernamen haben 3 bis 30 Zeichen: Kleinbuchstaben, Ziffern und Bindestriche, am Anfang ein Buchstabe oder eine Ziffer.",
     handleTaken: "Diesen Nutzernamen hat schon jemand.",
     handleReserved: "Dieser Nutzername ist reserviert.",
+    needsHandleTitle: "Wähle einen Nutzernamen",
+    needsHandleBody:
+      "Dein Profil mit deinen Lektionen und deiner Serie liegt unter deinem Nutzernamen. Wähle einen in den Einstellungen.",
     save: "Speichern",
     saved: "Gespeichert",
   },

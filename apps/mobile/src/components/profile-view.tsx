@@ -1,41 +1,34 @@
-import {
-  router,
-  Stack,
-  useFocusEffect,
-  useLocalSearchParams,
-} from "expo-router"
-import { useCallback, useState } from "react"
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  View,
-} from "react-native"
+import { router, Stack, useFocusEffect } from "expo-router"
+import { useCallback, useState, type ReactElement } from "react"
+import { FlatList, Pressable, RefreshControl, View } from "react-native"
 
 import type { Strings } from "@workspace/player-core/strings"
 
-import { AppHeader } from "@/components/app-header"
 import { Avatar } from "@/components/avatar"
-import { DirectionView } from "@/components/direction"
+import { DirectionProvider } from "@/components/direction"
 import { ActivityGrid } from "@/components/explore/activity-grid"
 import { LessonRow } from "@/components/explore/lesson-row"
-import { Empty, Hairline } from "@/components/explore/list-parts"
-import { SettingsIcon } from "@/components/icons"
-import { Button } from "@/components/ui/button"
+import {
+  Empty,
+  Failed,
+  Hairline,
+  Loading,
+  LTR,
+} from "@/components/explore/list-parts"
 import { Text } from "@/components/ui/text"
 import { FeedError, fetchProfile, type ProfileData } from "@/lib/feed"
 import { tap } from "@/lib/haptics"
 import { useSession } from "@/lib/session"
 import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
-import { colors } from "../../../tokens"
+import { colors } from "../../tokens"
 
-// A person's profile at /u/{handle}, the web's path, as its page draws it on a phone: the picture,
-// handle, and when they joined, then one box with the year of activity on a card and the tabs
+// A person's profile (/u/{handle}, the web's path, and the learner's own in the Profile tab), as
+// its page draws it on a phone: the handle as the bar's large title, the picture and when they
+// joined, then one box with the year of activity on a card and the tabs
 // under it, and the open tab's lessons below. On your own profile the first tab is My lessons
 // (everything you own, private and hidden ones marked), In progress follows it, and the gear at
-// the header's end opens the account settings.
+// the bar's end opens the account settings.
 
 type Tab = "lessons" | "progress" | "likes"
 
@@ -45,15 +38,33 @@ type Load =
   | { state: "error" }
   | { state: "ready"; data: ProfileData }
 
-export default function Profile() {
-  const { handle } = useLocalSearchParams<{ handle: string }>()
+export function ProfileView({
+  handle,
+  title,
+  placeholder,
+}: {
+  /** Whose profile; null while there's no one to show (the Profile tab, logged out). */
+  handle: string | null
+  /** The bar's title while there's no handle. */
+  title?: string
+  /** What the list holds while there's no handle: the call to log in, or a spinner. */
+  placeholder?: ReactElement
+}) {
   const { t, lang, dir } = useAppStrings()
   const session = useSession()
   const [load, setLoad] = useState<Load>({ state: "loading" })
   const [tab, setTab] = useState<Tab>("lessons")
   const [refreshing, setRefreshing] = useState(false)
 
+  // Someone else's profile (or the learner's, just logged in) starts from its spinner.
+  const [shown, setShown] = useState(handle)
+  if (shown !== handle) {
+    setShown(handle)
+    setLoad({ state: "loading" })
+  }
+
   const refresh = useCallback(async () => {
+    if (!handle) return
     try {
       const data = await fetchProfile(handle)
       setLoad({ state: "ready", data })
@@ -75,7 +86,7 @@ export default function Profile() {
   )
   const viewerId = session.state === "in" ? session.account.id : undefined
 
-  const data = load.state === "ready" ? load.data : null
+  const data = handle && load.state === "ready" ? load.data : null
   const list = !data
     ? []
     : tab === "lessons"
@@ -96,73 +107,77 @@ export default function Profile() {
           : t.profile.noLikes
 
   return (
-    <DirectionView dir={dir} className="flex-1 bg-background">
-      <Stack.Screen options={{ headerShown: false }} />
-      <AppHeader
-        back
-        t={t}
-        end={
-          data?.own ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="-me-2 h-8 w-8"
-              hitSlop={6}
-              accessibilityLabel={t.settings}
-              onPress={() => router.push("/settings")}
-            >
-              <SettingsIcon />
-            </Button>
-          ) : null
-        }
+    <DirectionProvider value={dir}>
+      {/* A profile goes by its handle alone: no display name, no @. */}
+      <Stack.Screen
+        options={{ title: data?.profile.handle ?? handle ?? title ?? "" }}
       />
-      {load.state === "loading" ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
-      ) : load.state !== "ready" ? (
-        <View className="flex-1 items-center justify-center gap-4 p-6">
-          <Text className="text-center text-sm text-muted-foreground">
-            {load.state === "missing" ? t.profile.missing : t.feed.failed}
-          </Text>
-          {load.state === "error" ? (
-            <Button
-              variant="outline"
-              onPress={() => {
-                setLoad({ state: "loading" })
-                void refresh()
-              }}
-            >
-              <Text>{t.tryAgain}</Text>
-            </Button>
-          ) : null}
-        </View>
-      ) : (
-        <FlatList
-          data={list}
-          keyExtractor={(l) => l.id}
-          contentContainerClassName="px-4 pb-12"
-          ItemSeparatorComponent={Hairline}
-          ListHeaderComponent={
-            <Head
-              data={load.data}
-              tab={tab}
-              setTab={setTab}
-              lang={lang}
-              t={t}
+      {data?.own ? (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button
+            icon="gearshape"
+            accessibilityLabel={t.settings}
+            onPress={() => router.push("/settings")}
+          >
+            {t.settings}
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      ) : null}
+      {/* The screen's root, from the first render, whatever it holds (list-parts.tsx says why). */}
+      <FlatList
+        // The list itself runs left to right and what scrolls in it runs the screen's way: on iOS 26
+        // the large title is drawn inside the scroll view, and React Native mirrors a right-to-left
+        // scroll view (for sideways lists), which would mirror the title's letters too.
+        className="flex-1"
+        style={LTR}
+        contentContainerStyle={{ direction: dir }}
+        data={list}
+        contentInsetAdjustmentBehavior="automatic"
+        keyExtractor={(l) => l.id}
+        contentContainerClassName={cn("px-4 pb-12", !data && "grow")}
+        ItemSeparatorComponent={Hairline}
+        ListHeaderComponent={
+          data ? (
+            <Head data={data} tab={tab} setTab={setTab} lang={lang} t={t} />
+          ) : !handle ? (
+            placeholder
+          ) : undefined
+        }
+        renderItem={({ item }) => (
+          <LessonRow
+            lesson={item}
+            viewer={data?.viewer}
+            viewerId={viewerId}
+            lang={lang}
+            t={t}
+          />
+        )}
+        ListEmptyComponent={
+          data ? (
+            <Empty>{empty}</Empty>
+          ) : !handle ? undefined : load.state === "loading" ? (
+            <Loading />
+          ) : (
+            <Failed
+              message={
+                load.state === "missing" ? t.profile.missing : t.feed.failed
+              }
+              retry={
+                load.state === "error"
+                  ? {
+                      label: t.tryAgain,
+                      onPress: () => {
+                        setLoad({ state: "loading" })
+                        void refresh()
+                      },
+                    }
+                  : undefined
+              }
             />
-          }
-          renderItem={({ item }) => (
-            <LessonRow
-              lesson={item}
-              viewer={load.data.viewer}
-              viewerId={viewerId}
-              lang={lang}
-              t={t}
-            />
-          )}
-          ListEmptyComponent={<Empty>{empty}</Empty>}
-          refreshControl={
+          )
+        }
+        refreshControl={
+          data ? (
             <RefreshControl
               refreshing={refreshing}
               tintColor={colors.muted.foreground}
@@ -172,10 +187,10 @@ export default function Profile() {
                 setRefreshing(false)
               }}
             />
-          }
-        />
-      )}
-    </DirectionView>
+          ) : undefined
+        }
+      />
+    </DirectionProvider>
   )
 }
 
@@ -216,22 +231,10 @@ function Head({
   ]
   return (
     <View className="gap-5 pt-2 pb-2">
-      {/* A profile goes by its handle alone: no display name, no @. */}
+      {/* The handle is the bar's large title; the picture and when they joined sit under it. */}
       <View className="gap-3">
-        <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
-          <View className="min-w-0 flex-row items-center gap-2">
-            <Avatar image={profile.image} handle={profile.handle} size={32} />
-            <Text
-              className="text-base font-medium"
-              accessibilityRole="header"
-              style={{ writingDirection: "ltr" }}
-            >
-              {profile.handle}
-            </Text>
-          </View>
-          <Text className="text-sm text-muted-foreground" aria-hidden>
-            ·
-          </Text>
+        <View className="flex-row items-center gap-2">
+          <Avatar image={profile.image} handle={profile.handle} size={32} />
           <Text className="text-sm text-muted-foreground">
             {t.profile.joined(joined)}
           </Text>

@@ -269,6 +269,7 @@ export const zh: Translation = {
     profile: "你的个人主页",
   },
   profile: {
+    tab: "个人资料",
     lessons: "课程",
     myLessons: "我的课程",
     inProgress: "进行中",
@@ -301,6 +302,9 @@ export const zh: Translation = {
       "用户名为 3 到 30 个字符，可使用小写字母、数字和连字符，并以字母或数字开头。",
     handleTaken: "这个用户名已经有人使用了。",
     handleReserved: "这个用户名是保留的。",
+    needsHandleTitle: "选一个用户名",
+    needsHandleBody:
+      "你的个人主页（包括课程和连续记录）就在你的用户名下。请在设置中选一个。",
     save: "保存",
     saved: "已保存",
   },
