@@ -333,6 +333,9 @@ export type Strings = {
     handleRules: string
     handleTaken: string
     handleReserved: string
+    /** Signed in without a handle: the Profile tab has no profile to show until one is chosen. */
+    needsHandleTitle: string
+    needsHandleBody: string
     save: string
     saved: string
   }
