@@ -23,7 +23,7 @@ const open = new Set<{ resend: () => void }>()
 export function createProgressSync(id: string, send: Send) {
   let sentDone: number | undefined
   let completedRun: number | undefined
-  /** The latest progress and finish, and whether the server has them (a 401 or no connection: not yet). */
+  /** The latest progress and finish, and whether the server has them (a 401, any other failure, or no connection: not yet). */
   let progress: { body: unknown; landed: boolean } | null = null
   let finish: { body: unknown; landed: boolean } | null = null
   // Every request waits for the one before it, so they land in the order they were made: a slow
@@ -45,7 +45,9 @@ export function createProgressSync(id: string, send: Send) {
     })
       .then((res) => {
         if (res.status === 401) signedOut = true
-        else entry.landed = true
+        // Only a success has it: a 429 or a server error is sent again after the next sign-in,
+        // as a lost connection is.
+        else if (res.status >= 200 && res.status < 300) entry.landed = true
       })
       .catch(() => {})
   }

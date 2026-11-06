@@ -121,6 +121,22 @@ describe("syncing progress to the server", () => {
     expect(sent).toHaveLength(2)
   })
 
+  it("counts a failed request (a 503) as not delivered, and resends it after signing in", async () => {
+    status = 503
+    const sync = createProgressSync("abc", send)
+    sync.update(at(1))
+    sync.update(at(6))
+    await vi.waitFor(() => expect(sent).toHaveLength(2))
+    status = 200
+    signedIn()
+    await vi.waitFor(() => expect(sent).toHaveLength(3))
+    // The finish follows the progress it came after, so only the finish goes again.
+    expect(sent[2]).toMatchObject({ path: "/api/lessons/abc/complete", method: "POST" })
+    signedIn()
+    await new Promise((r) => setTimeout(r, 10))
+    expect(sent).toHaveLength(3)
+  })
+
   it("resends only the finish when the lesson ended logged out, and nothing for a closed lesson", async () => {
     status = 401
     const finished = createProgressSync("done", send)
