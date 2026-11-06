@@ -1,5 +1,5 @@
 import { FINISHED_PREFIX } from "./streak"
-import type { Send } from "./progress-sync"
+import { deliveredFinish, syncHoldsFinish, type Send } from "./progress-sync"
 
 // Lessons finished while logged out, kept on the device under the web's key and shape
 // (`learn:finished:{id}` = { at }, apps/web/lib/explore/finishes.ts; streak.ts keeps them) until the
@@ -64,6 +64,14 @@ export function sendFinishes(
 
 async function sendAll(storage: FinishStorage, send: Send, tz: string) {
   for (const { id, at } of keptFinishes(storage)) {
+    // The progress sync already sent this finish (it was kept before the session was known):
+    // sending it again would count it twice.
+    if (deliveredFinish(id)) {
+      storage.removeItem(FINISHED_PREFIX + id)
+      continue
+    }
+    // The lesson is still open and its sync sends this finish itself on sign-in: kept until then.
+    if (syncHoldsFinish(id)) continue
     try {
       const res = await send(
         `/api/lessons/${encodeURIComponent(id)}/complete`,

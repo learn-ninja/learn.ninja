@@ -1,7 +1,24 @@
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { keptFinishes, sendFinishes, type FinishStorage } from "./finishes"
-import type { Send } from "./progress-sync"
+import type { State } from "@workspace/player-core/state"
+
+import { createProgressSync, resetSignedOut, type Send } from "./progress-sync"
+
+beforeEach(() => resetSignedOut())
+
+/** A state at the wrap-up, for a progress sync to send the finish. */
+const atWrap = {
+  items: [{ kind: "intro" }, { kind: "wrap" }],
+  index: 1,
+  results: {},
+  mistakes: [],
+  fixed: [],
+  inFix: false,
+  fixQueued: false,
+  question: null,
+  run: 0,
+} as unknown as State
 
 const DAY = 24 * 3.6e6
 
@@ -65,6 +82,28 @@ describe("finishes kept while logged out", () => {
     ])
     // Rate-limited: kept for next time. Sent: forgotten, so a second sign-in sends nothing again.
     expect([...s.map.keys()]).toEqual(["learn:finished:busy"])
+  })
+
+  it("skips a finish the progress sync already sent, or still holds to send itself", async () => {
+    const at = Date.now() - DAY
+    const s = storage({
+      "learn:finished:sent": JSON.stringify({ at }),
+      "learn:finished:held": JSON.stringify({ at }),
+    })
+    const sent: string[] = []
+    // The sync for "sent" delivers its finish; the one for "held" is refused (logged out).
+    const send: Send = vi.fn(async (path) => {
+      sent.push(path)
+      return { status: path.includes("held") ? 401 : 200 }
+    })
+    createProgressSync("sent", send).update(atWrap)
+    await vi.waitFor(() => expect(sent).toHaveLength(1))
+    createProgressSync("held", vi.fn(async () => ({ status: 401 }))).update(atWrap)
+    await new Promise((r) => setTimeout(r, 10))
+    await sendFinishes(s, send, "Europe/Rome")
+    // Neither goes out again: "sent" is forgotten, "held" waits for its own sync.
+    expect(sent).toEqual(["/api/lessons/sent/complete"])
+    expect([...s.map.keys()]).toEqual(["learn:finished:held"])
   })
 
   it("keeps them all when the server says the app isn't signed in", async () => {

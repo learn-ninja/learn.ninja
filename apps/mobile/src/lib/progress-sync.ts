@@ -17,8 +17,21 @@ export type Send = (
 /** Whether the server has said the app isn't signed in: nothing more is sent until it signs in. */
 let signedOut = false
 
+/**
+ * The lessons whose finish this sync delivered since the app started, so the finishes kept for
+ * sign-in (finishes.ts) don't send one of them a second time.
+ */
+const finishDelivered = new Set<string>()
+
+/** Whether this sync has already told the server the lesson `id` was finished. */
+export const deliveredFinish = (id: string) => finishDelivered.has(id)
+
 /** The lessons open now, so signing in can send what each one missed. */
-const open = new Set<{ resend: () => void }>()
+const open = new Set<{ id: string; holdsFinish: () => boolean; resend: () => void }>()
+
+/** Whether an open lesson `id` holds a finish it will send itself once signed in. */
+export const syncHoldsFinish = (id: string) =>
+  [...open].some((sync) => sync.id === id && sync.holdsFinish())
 
 export function createProgressSync(id: string, send: Send) {
   let sentDone: number | undefined
@@ -47,12 +60,17 @@ export function createProgressSync(id: string, send: Send) {
         if (res.status === 401) signedOut = true
         // Only a success has it: a 429 or a server error is sent again after the next sign-in,
         // as a lost connection is.
-        else if (res.status >= 200 && res.status < 300) entry.landed = true
+        else if (res.status >= 200 && res.status < 300) {
+          entry.landed = true
+          if (path === "complete") finishDelivered.add(id)
+        }
       })
       .catch(() => {})
   }
 
   const sync = {
+    id,
+    holdsFinish: () => finish !== null && !finish.landed,
     /** Called with every new state: sends what changed, if anything. */
     update(state: State) {
       const item = state.items[state.index]
@@ -104,4 +122,5 @@ export function signedIn() {
 export function resetSignedOut() {
   signedOut = false
   open.clear()
+  finishDelivered.clear()
 }

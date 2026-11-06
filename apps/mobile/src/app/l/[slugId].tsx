@@ -330,7 +330,7 @@ function Player({
     // A published lesson's finish is kept for sign-in only while logged out, as the web keeps it
     // (lesson-view.tsx); signed in, progress-sync tells the server itself.
     id:
-      data.path.startsWith("/l/") && session.state !== "in"
+      data.path.startsWith("/l/") && session.state === "out"
         ? data.id
         : undefined,
   })
