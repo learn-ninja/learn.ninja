@@ -139,12 +139,12 @@ async function saveHandle(value: string, current: string, t: Strings) {
     })
     const body = (await res.json().catch(() => null)) as {
       ok?: boolean
-      message?: string
+      error?: string
     } | null
     if (!res.ok || !body?.ok)
       return Alert.alert(
         t.account.handle,
-        handleError(res.status, body?.message, t)
+        handleError(res.status, body?.error, t)
       )
     tap()
     await refreshSession()
