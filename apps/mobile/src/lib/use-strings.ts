@@ -1,5 +1,6 @@
 import { getLocales } from "expo-localization"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
+import { AppState } from "react-native"
 
 import {
   directionOf,
@@ -26,8 +27,7 @@ export function useStringsFor(lang: string): Strings {
   return stringsFor(lang)
 }
 
-/** The device's languages, best first, as BCP 47 tags. */
-export function deviceLanguages(): string[] {
+function readDeviceLanguages(): string[] {
   try {
     return getLocales().map((l) => l.languageTag)
   } catch {
@@ -35,10 +35,31 @@ export function deviceLanguages(): string[] {
   }
 }
 
+// The device's languages are a native call, so they're read once here, not on every render of
+// every screen, and again only when the app comes back to the front (where a change made in
+// Settings shows up), telling the screens only if they changed.
+let languages = readDeviceLanguages()
+const listeners = new Set<() => void>()
+AppState.addEventListener("change", (state) => {
+  if (state !== "active") return
+  const next = readDeviceLanguages()
+  if (next.join() === languages.join()) return
+  languages = next
+  for (const listener of listeners) listener()
+})
+const subscribe = (listener: () => void) => {
+  listeners.add(listener)
+  return () => void listeners.delete(listener)
+}
+
+/** The device's languages, best first, as BCP 47 tags. */
+export const deviceLanguages = (): readonly string[] => languages
+
 /** The app's language outside a lesson (ui-language.ts), its words, and its direction. */
 export function useAppStrings() {
   const [prefs] = usePreferences()
-  const lang = appUiLanguage(prefs, deviceLanguages())
+  const device = useSyncExternalStore(subscribe, deviceLanguages)
+  const lang = appUiLanguage(prefs, device)
   const t = useStringsFor(lang)
   return { lang, t, dir: directionOf(lang) }
 }
