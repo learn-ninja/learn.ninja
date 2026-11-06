@@ -10,7 +10,8 @@ import { useAppStrings } from "./use-strings"
 // The app icon's quick actions (press and hold it on the home screen): Continue, with the lesson
 // last left unfinished under it, then Explore and Profile, in the app's language and with the
 // system's symbols. The last lesson is kept on the device, so the actions are set again in the
-// right language at each launch; finishing that lesson takes Continue away.
+// right language at each launch; finishing that lesson takes Continue away, and so does opening it
+// once it's gone (expired, deleted, or another account's).
 
 export interface LastLesson {
   /** The app's route for it, /l/{slugId}. */
@@ -83,10 +84,31 @@ export function QuickActionsEffect() {
   return null
 }
 
-/** Keeps the open lesson as Continue's until it's finished (`done`), then takes Continue away. */
-export function useLastLesson(href: string, title: string, done: boolean) {
+/** Takes Continue away if it's for `href`: the lesson no longer opens. */
+export function forgetLastLesson(href: string, t: Strings) {
+  try {
+    if (readLast()?.href !== href) return
+    Storage.removeItemSync(LAST)
+    setItems(t, null)
+  } catch {
+    // The actions stay as they were.
+  }
+}
+
+/**
+ * Keeps the open lesson as Continue's until it's finished (`done`), then takes Continue away. Only
+ * while `active` (the lesson is on screen): a row's peek loads the lesson's screen out of sight,
+ * and peeking isn't opening.
+ */
+export function useLastLesson(
+  href: string,
+  title: string,
+  done: boolean,
+  active: boolean
+) {
   const { t } = useAppStrings()
   useEffect(() => {
+    if (!active) return
     try {
       const last = readLast()
       if (done) {
@@ -100,5 +122,5 @@ export function useLastLesson(href: string, title: string, done: boolean) {
     } catch {
       // The actions stay as they were.
     }
-  }, [href, title, done, t])
+  }, [href, title, done, active, t])
 }

@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics"
-import { Stack, router, useLocalSearchParams } from "expo-router"
+import { Stack, router, useIsFocused, useLocalSearchParams } from "expo-router"
 import {
   useCallback,
   useEffect,
@@ -71,7 +71,7 @@ import { settled } from "@/lib/screen-guard"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
 import { useSession } from "@/lib/session"
-import { useLastLesson } from "@/lib/quick-actions"
+import { forgetLastLesson, useLastLesson } from "@/lib/quick-actions"
 import { askForReviewAt } from "@/lib/review"
 import { lessonLink } from "@/lib/share"
 import { shareChallenge, shareLesson } from "@/lib/share-sheet"
@@ -139,6 +139,11 @@ export default function LessonRoute() {
 
   // Before the lesson (and its language) is known, the player's words are the app's.
   const { t, dir } = useAppStrings()
+  // A lesson that's gone (or never opens) is no longer the app icon's Continue.
+  const gone = load.state === "error" && !load.retry
+  useEffect(() => {
+    if (gone) forgetLastLesson(`/l/${slugId}`, t)
+  }, [gone, slugId, t])
   const message =
     load.state !== "error"
       ? ""
@@ -339,11 +344,17 @@ function Player({
         : undefined,
   })
   const by = session.state === "in" ? session.account.handle : null
+  // Only while the lesson is on screen: a row's peek in Explore loads this screen out of sight
+  // (expo-router preloads the route), and a peeked lesson isn't an opened one.
+  const focused = useIsFocused()
   // Handoff: while the lesson is open, a nearby Mac or iPad offers its web page.
-  useHandoff(lessonLink(API_BASE_URL, data.path), lesson.title)
+  useHandoff(
+    focused ? lessonLink(API_BASE_URL, data.path) : null,
+    lesson.title
+  )
   // The app icon's Continue quick action opens this lesson until it's finished.
   const { slugId } = useLocalSearchParams<{ slugId: string }>()
-  useLastLesson(`/l/${slugId}`, lesson.title, item.kind === "wrap")
+  useLastLesson(`/l/${slugId}`, lesson.title, item.kind === "wrap", focused)
   const onShare = useCallback(
     (first: number, total: number) =>
       void shareChallenge({
