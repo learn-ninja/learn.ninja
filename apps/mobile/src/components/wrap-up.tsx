@@ -7,19 +7,22 @@ import {
   summarize,
   type Outcome,
 } from "@workspace/player-core/flow"
-import type { Strings } from "@workspace/player-core/strings"
+import { directionOf, type Strings } from "@workspace/player-core/strings"
 import type { Lesson } from "@workspace/spec"
 
 import { SLOT } from "@/components/intro"
+import { TrophyIcon } from "@/components/icons"
 import { Ninja } from "@/components/ninja"
 import { RichText } from "@/components/rich-text"
 import { useStage } from "@/components/stage-context"
 import { StreakCard, StreakScreen } from "@/components/streak"
 import { Button } from "@/components/ui/button"
+import { DirectionView } from "@/components/direction"
 import { Text } from "@/components/ui/text"
+import { challengeVerdict } from "@/lib/challenge-text"
 import { alpha } from "@/lib/color"
 import { tap } from "@/lib/haptics"
-import { colors, fontSize, LESSON_TEXT_SCALE } from "../../tokens"
+import { colors, fontSize } from "../../tokens"
 
 // The wrap-up, as the web's WrapUp lays it out on a phone (packages/player/src/lesson-player.tsx
 // and wrap-up.tsx): two groups, further apart than anything inside them. First how it went: the
@@ -48,15 +51,11 @@ export function WrapUp({
   onRestart: () => void
   t: Strings
 }) {
-  const { ninja, streak, streakScreen, sound, onShare } = useStage()
+  const { ninja, streak, streakScreen, sound, onShare, uiLang, challenge } =
+    useStage()
   if (streakScreen && streak)
     return (
-      <StreakScreen
-        streak={streak.streak}
-        sound={sound}
-        lang={lesson.language}
-        t={t}
-      />
+      <StreakScreen streak={streak.streak} sound={sound} lang={uiLang} t={t} />
     )
   const summary = summarize(lesson, results)
   const run = runFor(summary)
@@ -90,6 +89,7 @@ export function WrapUp({
                 {score}
               </Text>
             ) : null}
+            {challenge ? <Verdict first={summary.first} t={t} /> : null}
           </View>
           {summary.total > 0 ? <RunBar outcomes={outcomes} t={t} /> : null}
         </View>
@@ -103,7 +103,7 @@ export function WrapUp({
               }}
             >
               <ActionIcon kind="challenge" color={colors.primary.foreground} />
-              <Text>{t.challengeTitle}</Text>
+              <Text>{challenge ? t.challengeBack : t.challengeTitle}</Text>
             </Button>
           ) : null}
           <Button
@@ -121,9 +121,13 @@ export function WrapUp({
       </View>
       <View className="gap-8">
         {streak ? (
-          <StreakCard streak={streak.streak} lang={lesson.language} t={t} />
+          <StreakCard streak={streak.streak} lang={uiLang} t={t} />
         ) : null}
-        <Takeaways items={lesson.wrapup.takeaways} t={t} />
+        <Takeaways
+          items={lesson.wrapup.takeaways}
+          language={lesson.language}
+          t={t}
+        />
       </View>
     </View>
   )
@@ -153,8 +157,33 @@ function RunBar({ outcomes, t }: { outcomes: Outcome[]; t: Strings }) {
   )
 }
 
+/** For a challenged learner, under the score: whether they beat the score they were sent. */
+function Verdict({ first, t }: { first: number; t: Strings }) {
+  const { challenge } = useStage()
+  if (!challenge) return null
+  const { won, text } = challengeVerdict(first, challenge, t)
+  return (
+    <View className="flex-row items-center gap-2">
+      <TrophyIcon
+        size={16}
+        color={won ? colors.feedback.warn : colors.muted.foreground}
+      />
+      <Text className="text-sm font-medium">{text}</Text>
+    </View>
+  )
+}
+
 /** The takeaways as a grouped list (the web's WrapSection): a quiet label over a card, a check on each row. */
-function Takeaways({ items, t }: { items: string[]; t: Strings }) {
+function Takeaways({
+  items,
+  language,
+  t,
+}: {
+  items: string[]
+  /** The lesson's language: the takeaways run its way, under a label in the player's. */
+  language: string
+  t: Strings
+}) {
   return (
     <View className="w-full gap-2">
       <Text
@@ -163,7 +192,10 @@ function Takeaways({ items, t }: { items: string[]; t: Strings }) {
       >
         {t.takeaways}
       </Text>
-      <View className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+      <DirectionView
+        dir={directionOf(language)}
+        className="overflow-hidden rounded-xl border border-border bg-card shadow-xs"
+      >
         {items.map((text, i) => (
           <View
             key={i}
@@ -179,13 +211,13 @@ function Takeaways({ items, t }: { items: string[]; t: Strings }) {
             <View className="min-w-0 flex-1">
               <RichText
                 text={text}
-                size={fontSize.sm[0] * LESSON_TEXT_SCALE}
+                size={fontSize.sm[0]}
                 className="text-lesson-sm font-medium"
               />
             </View>
           </View>
         ))}
-      </View>
+      </DirectionView>
     </View>
   )
 }

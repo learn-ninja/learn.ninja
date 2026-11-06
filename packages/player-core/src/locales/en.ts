@@ -235,4 +235,93 @@ export const en: Strings = {
   settings: "Settings",
   privacy: "Privacy",
   terms: "Terms",
+  signIn: {
+    title: "Log in",
+    body: "Browse Explore, like lessons, and keep your streak and finished lessons on your profile.",
+    email: "Email",
+    sendCode: "Email me a code",
+    noPassword: "We'll email you a code. No password.",
+    codeTitle: "Enter the code",
+    codeSent: (email) =>
+      `We emailed a six-digit code to ${email}. It works for 5 minutes.`,
+    code: "Code",
+    submit: "Log in",
+    otherEmail: "Use another email",
+    legal: "By continuing, you agree to the {terms} and {privacy}.",
+    wrongCode: "That code isn't right. Check it, or send a new one.",
+    expiredCode: "That code expired. Send a new one.",
+    tooManyTries: "Too many wrong codes. Send a new one.",
+    tooManyCodes: "Too many codes sent to this address. Try again later.",
+    badEmail: "Enter a valid email address.",
+    failed: "Something went wrong. Try again.",
+    logOut: "Log out",
+  },
+  feed: {
+    title: "Explore",
+    empty:
+      "Nothing here yet. Be the first: ask your agent for a lesson and say keep it.",
+    logInTitle: "Lessons people kept and shared",
+    logInBody:
+      "Log in to browse Explore, like lessons, and see your streak on your profile.",
+    testLessons: "Test lessons",
+    failed: "This didn't load.",
+    views: (n) => p(n, { one: "# view", other: "# views" }),
+    likes: (n) => p(n, { one: "# like", other: "# likes" }),
+    done: "Done",
+    minutesLeft: (n) => `${n} min left`,
+    katasDone: (done, total) => `${done} of ${total} katas done`,
+    anonymous: "anonymous ninja",
+    private: "Private",
+    hidden: "Hidden",
+    profile: "Your profile",
+  },
+  profile: {
+    lessons: "Lessons",
+    myLessons: "My lessons",
+    inProgress: "In progress",
+    likes: "Likes",
+    joined: (date) => `Joined ${date}`,
+    noLessonsOwn:
+      "No lessons yet. Ask your agent for one; logged in, it's saved here.",
+    noLessons: "No listed lessons yet.",
+    noProgress: "Lessons you start show up here until you finish them.",
+    noLikesOwn: "Lessons you like show up here.",
+    noLikes: "No liked lessons yet.",
+    missing: "Nobody has this handle.",
+    yearTotal: (n) =>
+      p(n, {
+        one: "# lesson in the last year",
+        other: "# lessons in the last year",
+      }),
+    streaks: (current, longest) => {
+      const days = (n: number) => p(n, { one: "# day", other: "# days" })
+      return `Current streak ${days(current)} · Longest ${days(longest)}`
+    },
+    noStreak: "No streak yet",
+    less: "Less",
+    more: "More",
+    grid: "Lessons finished, by day, over the last year",
+    dayLessons: (n, date) =>
+      `${p(n, { one: "# lesson", other: "# lessons" })} on ${date}`,
+    dayRest: (date) => `Rest day on ${date}`,
+    dayNone: (date) => `No lessons on ${date}`,
+  },
+  account: {
+    title: "Account",
+    loggedInAs: (email) => `Logged in as ${email}`,
+    handle: "Handle",
+    handleHint: (url) => `Your profile is at ${url}.`,
+    handleRules:
+      "Handles are 3 to 30 characters: lowercase letters, numbers, and hyphens, starting with a letter or number.",
+    handleTaken: "Someone already has that handle.",
+    handleReserved: "That handle is reserved.",
+    save: "Save",
+    saved: "Saved",
+  },
+  lessonErrors: {
+    missing:
+      "No lesson here: it expired 7 days after it was published, or the link is wrong.",
+    broken: "This lesson doesn't fit the lesson format.",
+    failed: "The lesson didn't load.",
+  },
 }

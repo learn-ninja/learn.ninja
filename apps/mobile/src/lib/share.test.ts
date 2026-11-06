@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { shareLink } from "./share"
+import { lessonLink, shareLink } from "./share"
 
 describe("shareLink", () => {
   it("is the lesson's web page with the score, as the web's challenge link", () => {
@@ -15,6 +15,18 @@ describe("shareLink", () => {
     )
     expect(shareLink("http://localhost:3000", "lessons/tides", 2, 2)).toBe(
       "http://localhost:3000/lessons/tides?c=2-2"
+    )
+  })
+
+  it("names a signed-in sender, as the web's challenge does", () => {
+    expect(
+      shareLink("https://learn.ninja", "/l/x-1", 3, 4, "ada-lovelace")
+    ).toBe("https://learn.ninja/l/x-1?c=3-4&by=ada-lovelace")
+  })
+
+  it("shares the lesson's own page from the menu", () => {
+    expect(lessonLink("https://learn.ninja/", "/l/x-1?c=1-2")).toBe(
+      "https://learn.ninja/l/x-1"
     )
   })
 })

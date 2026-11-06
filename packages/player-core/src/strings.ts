@@ -247,6 +247,99 @@ export type Strings = {
   /** Footer links to the legal pages. */
   privacy: string
   terms: string
+  /** The iOS app's log-in, an email code as the web's /login has it. */
+  signIn: {
+    title: string
+    body: string
+    email: string
+    sendCode: string
+    noPassword: string
+    codeTitle: string
+    /** Where the code went, with the address as given (shown left to right). */
+    codeSent: (email: string) => string
+    /** The code field's name, for screen readers. */
+    code: string
+    submit: string
+    otherEmail: string
+    /** The line under the form: {terms} and {privacy} become links named by `terms` and `privacy`. */
+    legal: string
+    wrongCode: string
+    expiredCode: string
+    tooManyTries: string
+    tooManyCodes: string
+    badEmail: string
+    failed: string
+    logOut: string
+  }
+  /** The app's Explore feed and its lesson rows, as the web's Explore draws them. */
+  feed: {
+    title: string
+    empty: string
+    /** The home for a learner who isn't logged in: a call to log in over the test lessons. */
+    logInTitle: string
+    logInBody: string
+    /** The bundled lessons, for development builds. */
+    testLessons: string
+    failed: string
+    /** A row's counts, said in full to screen readers. */
+    views: (n: number) => string
+    likes: (n: number) => string
+    /** In a row's length's place once the learner has finished the lesson. */
+    done: string
+    /** In its place while they're partway: minutes left, and the katas behind them to screen readers. */
+    minutesLeft: (n: number) => string
+    katasDone: (done: number, total: number) => string
+    /** The author of a lesson nobody kept. */
+    anonymous: string
+    /** Badges on the learner's own rows that visitors don't see. */
+    private: string
+    hidden: string
+    /** The header's way to the learner's own profile. */
+    profile: string
+  }
+  /** A person's profile, as the web's /u/{handle} has it. */
+  profile: {
+    lessons: string
+    myLessons: string
+    inProgress: string
+    likes: string
+    joined: (date: string) => string
+    noLessonsOwn: string
+    noLessons: string
+    noProgress: string
+    noLikesOwn: string
+    noLikes: string
+    missing: string
+    /** The activity grid: its total, its streaks, its legend, and each day said to screen readers. */
+    yearTotal: (n: number) => string
+    streaks: (current: number, longest: number) => string
+    noStreak: string
+    less: string
+    more: string
+    grid: string
+    dayLessons: (n: number, date: string) => string
+    dayRest: (date: string) => string
+    dayNone: (date: string) => string
+  }
+  /** The app's account settings: the handle, and logging out. */
+  account: {
+    title: string
+    loggedInAs: (email: string) => string
+    handle: string
+    /** Under the handle field, with the profile's address. */
+    handleHint: (url: string) => string
+    handleRules: string
+    handleTaken: string
+    handleReserved: string
+    save: string
+    saved: string
+  }
+  /** Why a lesson didn't open in the app. */
+  lessonErrors: {
+    missing: string
+    broken: string
+    failed: string
+  }
 }
 
 /**

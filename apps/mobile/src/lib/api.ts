@@ -6,6 +6,8 @@ import {
 import { loadLanguage } from "@workspace/player-core/strings"
 import { validateLesson, type Lesson } from "@workspace/spec"
 
+import { createApiFetch } from "./api-fetch"
+import { sessionCookie } from "./auth-client"
 import { API_BASE_URL } from "./config"
 import type { Send } from "./progress-sync"
 import { loadVisualsCss } from "./visuals-css"
@@ -20,7 +22,15 @@ export interface LoadedLesson {
   mathSvg: Record<string, MathSvg>
   /** The visuals' shared stylesheet, inlined into each HTML visual; empty if it didn't load. */
   baseCss: string
+  /** When a published lesson's link stops working (ms since epoch); null once it's kept. */
+  expiresAt: number | null
 }
+
+/** A request to the API, signed in when the app is (the session cookie rides along). */
+export const apiFetch = createApiFetch({
+  base: API_BASE_URL,
+  cookie: sessionCookie,
+})
 
 export class LessonError extends Error {
   constructor(
@@ -40,9 +50,9 @@ export async function fetchLesson(
   param: string,
   base = API_BASE_URL
 ): Promise<LoadedLesson> {
-  const res = await fetch(`${base}/api/lessons/${encodeURIComponent(param)}`, {
-    headers: { accept: "application/json" },
-  })
+  const res = await createApiFetch({ base, cookie: sessionCookie })(
+    `/api/lessons/${encodeURIComponent(param)}`
+  )
   const body = (await res.json().catch(() => null)) as {
     ok?: boolean
     id?: string
@@ -51,6 +61,7 @@ export async function fetchLesson(
     prepared?: Prepared
     mathSvg?: Record<string, MathSvg>
     visualsCssUrl?: string
+    expiresAt?: number | null
     message?: string
   } | null
   if (!res.ok || !body?.ok)
@@ -76,12 +87,13 @@ export async function fetchLesson(
     lesson: checked.lesson,
     prepared: body.prepared ?? emptyPrepared,
     mathSvg: body.mathSvg ?? {},
+    expiresAt: body.expiresAt ?? null,
   }
 }
 
 /** A request to the API on the learner's behalf, for progress-sync.ts. */
 export const sendToApi: Send = async (path, { method, body }) => {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await apiFetch(path, {
     method,
     headers: { "content-type": "application/json" },
     body,

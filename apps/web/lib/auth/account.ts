@@ -15,7 +15,7 @@ import { mcpPath } from "@/lib/publish/paths"
 
 import type { Actor } from "./actor"
 import { MCP_KEY_PERMISSIONS, MCP_KEY_PREFIX, type Auth } from "./auth"
-import { normalizeHandle } from "./handle-rules"
+import { normalizeHandle } from "@workspace/player-core/handle-rules"
 
 // The account API behind /settings and the CLI's `whoami` and `login`: who am I, my handle, and
 // my API keys. Independent of Next.js so it can be tested directly.
@@ -37,7 +37,8 @@ export function whoami(actor: Actor): Reply {
 /**
  * PATCH /api/account with { handle }: sets the handle through Better Auth's updateUser, so the
  * session cookie's copy of the user refreshes too. The rules are checked in a database hook
- * (createAuth), which answers 422 for a bad handle and 409 for a taken one.
+ * (createAuth), which answers 422 for a bad handle (`invalid_handle`, or `reserved_handle` for one
+ * the site keeps for itself) and 409 for a taken one (`handle_taken`).
  */
 export async function setHandle(
   auth: Auth,
@@ -58,7 +59,12 @@ export async function setHandle(
         status: e.statusCode,
         body: {
           ok: false,
-          error: code === "HANDLE_TAKEN" ? "handle_taken" : "invalid_handle",
+          error:
+            code === "HANDLE_TAKEN"
+              ? "handle_taken"
+              : code === "RESERVED_HANDLE"
+                ? "reserved_handle"
+                : "invalid_handle",
           message: e.message,
         },
       }

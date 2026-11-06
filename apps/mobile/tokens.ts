@@ -35,6 +35,14 @@ export const colors = {
     "4": "#1447e6",
     "5": "#193cb8",
   },
+  activity: {
+    "0": "#262626",
+    "1": "#7c2d12",
+    "2": "#c2410c",
+    "3": "#f97316",
+    "4": "#fcd34d",
+    rest: "#3b82f6",
+  },
 } as const
 
 /** --radius is 0.625rem (10px); the rest follow globals.css's multipliers. */
@@ -66,6 +74,9 @@ export const fontSize = {
  * scales it inside data-text-size. tailwind.config.js adds lesson-sm and the rest at this scale.
  */
 export const LESSON_TEXT_SCALE = 1.125
+
+/** Lesson text's scale at each of the learner's text sizes (small is Tailwind's own). */
+export const TEXT_SCALES = { sm: 1, md: 1.125, lg: 1.25 } as const
 
 /** Tailwind's leading-relaxed: lesson body text's line height, as a multiple of its size. */
 export const LEADING_RELAXED = 1.625

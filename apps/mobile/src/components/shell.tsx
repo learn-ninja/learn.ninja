@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { mix } from "@/lib/color"
 import { cn } from "@/lib/utils"
-import { colors, fontSize, LESSON_TEXT_SCALE } from "../../tokens"
+import { colors, fontSize } from "../../tokens"
 
 // The frame around every lesson screen, as the web draws it on a phone (packages/player/src/shell.tsx
 // and the tray in lesson-player.tsx): a header with the way home, the lesson's title on the intro
@@ -314,7 +314,7 @@ export function TrayFeedback({
   why?: { label: string; open: boolean; onPress: () => void } | null
 }) {
   if (!title && !message) return null
-  const size = fontSize.sm[0] * LESSON_TEXT_SCALE
+  const size = fontSize.sm[0]
   return (
     <Animated.View
       entering={FadeInDown.duration(200)}

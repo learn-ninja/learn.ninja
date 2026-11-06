@@ -9,28 +9,31 @@ import { useLesson } from "@/components/lesson-context"
 import { InlineMath } from "@/components/math"
 import { Text } from "@/components/ui/text"
 import { cn } from "@/lib/utils"
-import { fontSize, LESSON_TEXT_SCALE } from "../../tokens"
+import { useLessonTextScale } from "@/components/text-size"
+import { fontSize } from "../../tokens"
 
 // The spec's rich-text subset as native Text runs: **bold**, *italic*, `code`, and \( formulas \),
 // with a concept body's paragraphs and lists. The web's version is packages/player/src/rich-text.tsx.
 
-/** Lesson body text: the web's text-sm leading-relaxed at the player's medium text size. */
+/** Lesson body text: the web's text-sm leading-relaxed at the learner's text size. */
 const BODY = "text-lesson-sm-relaxed"
-/** BODY's font size, in points, for the formulas set in it. */
-const BODY_SIZE = fontSize.sm[0] * LESSON_TEXT_SCALE
 
 /** One paragraph's inline runs. */
 export function RichText({
   text,
   className,
-  size = BODY_SIZE,
+  size = fontSize.sm[0],
 }: {
   text: string
   className?: string
-  /** The text's font size in points, when className changes it: formulas are set relative to it. */
+  /**
+   * The text's Tailwind size in points before the learner's text size scales it (14 for
+   * lesson-sm), when className changes it: formulas are set relative to it.
+   */
   size?: number
 }) {
   const { mathSvg } = useLesson()
+  const scaled = size * useLessonTextScale()
   const nodes: ReactNode[] = []
   let last = 0
   let key = 0
@@ -43,7 +46,7 @@ export function RichText({
       // A formula the server couldn't draw shows its source, as the web does without KaTeX's.
       nodes.push(
         drawn ? (
-          <InlineMath key={key++} math={drawn} fontSize={size} label={tex} />
+          <InlineMath key={key++} math={drawn} fontSize={scaled} label={tex} />
         ) : (
           <Text key={key++} className="font-mono">
             {math}

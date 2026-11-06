@@ -1,6 +1,7 @@
 import { apiKey } from "@better-auth/api-key"
 import { cimd } from "@better-auth/cimd"
 import { fetchClientMetadataResource } from "@better-auth/cimd/node"
+import { expo } from "@better-auth/expo"
 import { mcp } from "@better-auth/mcp"
 import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
@@ -26,6 +27,7 @@ import {
   findByHandle,
   freeHandle,
   handleProblem,
+  handleRuleBroken,
   normalizeHandle,
   randomHandle,
 } from "./handles"
@@ -71,6 +73,14 @@ export const LOG_IN_ROUTES: Record<string, string> = {
 
 /** A session older than this logs in again before changing how it logs in (also Better Auth's freshAge). */
 export const FRESH_SESSION_SECONDS = 24 * 60 * 60
+
+/**
+ * The iOS app's URL scheme (apps/mobile/app.config.ts). Its auth client sends it as the request's
+ * origin (Better Auth's `expo` plugin turns the expo-origin header into Origin), so it has to be
+ * trusted for the app to sign in with an email code. Development builds in Expo Go send exp://,
+ * which the plugin trusts by itself in development.
+ */
+export const APP_ORIGIN = "learnninja://"
 
 /** The one OAuth scope the MCP server asks for: publishing and keeping lessons as the user. */
 export const MCP_SCOPE = "lessons"
@@ -155,7 +165,10 @@ export function githubFromEnv(env = process.env) {
  */
 function secretFromEnv(env: NodeJS.ProcessEnv): string | undefined {
   if (env.BETTER_AUTH_SECRET) return env.BETTER_AUTH_SECRET
-  if (env.VERCEL_ENV) throw new Error("BETTER_AUTH_SECRET is not set for this Vercel environment.")
+  if (env.VERCEL_ENV)
+    throw new Error(
+      "BETTER_AUTH_SECRET is not set for this Vercel environment."
+    )
   return undefined
 }
 
@@ -191,9 +204,13 @@ export function createAuth(deps: AuthDeps) {
       fallback: publicSiteFromEnv(env),
     },
     database: drizzleAdapter(deps.db, { provider: "pg", schema }),
+    trustedOrigins: [APP_ORIGIN],
     secondaryStorage: storage,
     // The jwt plugin's /token hands out a session JWT; chat apps get theirs from /oauth2/token.
-    disabledPaths: ["/token"],
+    // The expo plugin's /expo-authorization-proxy is for social sign-in from the app, which signs
+    // in with email codes only: left on, it redirects anywhere and sets the signed OAuth state
+    // cookie from its query (an open redirect, and a way to plant a GitHub sign-in).
+    disabledPaths: ["/token", "/expo-authorization-proxy"],
     session: {
       freshAge: FRESH_SESSION_SECONDS,
       // A signed cookie answers most session checks without a database or Redis read.
@@ -248,8 +265,10 @@ export function createAuth(deps: AuthDeps) {
         generateOTP: ({ email, type }) =>
           type === "sign-in" && isReviewer(email) ? review!.code : undefined,
         async sendVerificationOTP({ email, otp, type }) {
-          if (type === "sign-in" && !isReviewer(email)) await sendCode(email, otp)
-          if (type === "change-email") await sendCode(email, otp, "change-email")
+          if (type === "sign-in" && !isReviewer(email))
+            await sendCode(email, otp)
+          if (type === "change-email")
+            await sendCode(email, otp, "change-email")
         },
       }),
       // Signs the OAuth access tokens (and serves their public keys at /jwks).
@@ -272,6 +291,8 @@ export function createAuth(deps: AuthDeps) {
         fetchClientMetadataResource,
         metadataProfile: "mcp-2026-07-28",
       }),
+      // The iOS app: it keeps the session cookie itself and sends it on every request.
+      expo(),
       apiKey({
         defaultPrefix: API_KEY_PREFIX,
         // The publish routes read x-api-key as a session.
@@ -279,7 +300,9 @@ export function createAuth(deps: AuthDeps) {
         // Publishing has its own limits; a key shouldn't stop after ten lessons a day.
         rateLimit: { enabled: false },
         // Enough of the start to tell keys apart in the settings, and to see an MCP key's prefix.
-        startingCharactersConfig: { charactersLength: MCP_KEY_PREFIX.length + 4 },
+        startingCharactersConfig: {
+          charactersLength: MCP_KEY_PREFIX.length + 4,
+        },
       }),
     ],
     hooks: {
@@ -369,7 +392,10 @@ export function createAuth(deps: AuthDeps) {
             if (problem) {
               throw new APIError("UNPROCESSABLE_ENTITY", {
                 message: problem,
-                code: "INVALID_HANDLE",
+                code:
+                  handleRuleBroken(handle) === "reserved_handle"
+                    ? "RESERVED_HANDLE"
+                    : "INVALID_HANDLE",
               })
             }
             const taken = await findByHandle(deps.db, handle)

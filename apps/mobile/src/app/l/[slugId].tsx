@@ -12,7 +12,6 @@ import {
 } from "react"
 import {
   ActivityIndicator,
-  I18nManager,
   ScrollView,
   useWindowDimensions,
   View,
@@ -26,22 +25,29 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated"
 
-import { progressAt, questionAt } from "@workspace/player-core/flow"
+import {
+  progressAt,
+  questionAt,
+  scoredQuestions,
+} from "@workspace/player-core/flow"
 import {
   fingerprint,
   loadProgress,
   saveProgress,
 } from "@workspace/player-core/progress"
 import type { State } from "@workspace/player-core/state"
-import { stringsFor } from "@workspace/player-core/strings"
+import { challengeFor, parseChallenge } from "@workspace/player-core/challenge"
+import { directionOf, uiLanguageFor } from "@workspace/player-core/strings"
 
-import { createLinePicker, hasVoice } from "@workspace/player-core/voices"
+import { createLinePicker } from "@workspace/player-core/voices"
 
+import { DirectionView, type Direction } from "@/components/direction"
 import { LessonContext } from "@/components/lesson-context"
+import { LessonMenu } from "@/components/lesson-menu"
 import { LessonScreen } from "@/components/screens"
 import { Aura, useIntroVanish } from "@/components/smoke"
-import { SoundToggle } from "@/components/sound-toggle"
 import { StageContext } from "@/components/stage-context"
+import { LessonTextSize } from "@/components/text-size"
 import {
   BareHeader,
   LessonHeader,
@@ -64,11 +70,14 @@ import { reducer, start, type AppAction } from "@/lib/play"
 import { settled } from "@/lib/screen-guard"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
-import { shareChallenge } from "@/lib/share-sheet"
-import { ninjaOf, soundOf } from "@/lib/preferences"
+import { useSession } from "@/lib/session"
+import { shareChallenge, shareLesson } from "@/lib/share-sheet"
+import { ninjaOf, soundOf, type Preferences } from "@/lib/preferences"
 import { playEffect, preloadEffects } from "@/lib/sound"
 import { usePreferences } from "@/lib/use-preferences"
 import { useStreak } from "@/lib/use-streak"
+import { lessonUiLanguage } from "@/lib/ui-language"
+import { useAppStrings, useStringsFor } from "@/lib/use-strings"
 import { useNinjaVoice } from "@/lib/use-voice"
 import { effectsOn, speaks } from "@/lib/voice"
 import { visualDocument } from "@/lib/visual-frame"
@@ -83,7 +92,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 type Load =
   | { state: "loading" }
   /** `retry`: asking again could help (no connection, a server error), unlike a lesson that's gone. */
-  | { state: "error"; message: string; retry: boolean }
+  | { state: "error"; status: number; retry: boolean }
   | { state: "ready"; data: LoadedLesson }
 
 /** Back to where the lesson was opened from, or home when it was opened by a link. */
@@ -93,7 +102,14 @@ function closeLesson() {
 }
 
 export default function LessonRoute() {
-  const { slugId } = useLocalSearchParams<{ slugId: string }>()
+  // The link's query, as the web's page reads it: a friend's challenge (?c=4-5&by=handle) and the
+  // player's language for this visit (?ui=).
+  const { slugId, c, by, ui } = useLocalSearchParams<{
+    slugId: string
+    c?: string
+    by?: string
+    ui?: string
+  }>()
   const [load, setLoad] = useState<Load>({ state: "loading" })
   // Try again after a failed load asks for the lesson once more.
   const [attempt, setAttempt] = useState(0)
@@ -108,7 +124,7 @@ export default function LessonRoute() {
           live &&
           setLoad({
             state: "error",
-            message: e instanceof Error ? e.message : "The lesson didn't load.",
+            status: e instanceof LessonError ? e.status : 0,
             retry: !(e instanceof LessonError) || e.status >= 500,
           })
       )
@@ -117,10 +133,18 @@ export default function LessonRoute() {
     }
   }, [slugId, attempt])
 
-  // Before the lesson (and its language) is known, the player's words are English.
-  const t = stringsFor("en")
+  // Before the lesson (and its language) is known, the player's words are the app's.
+  const { t, dir } = useAppStrings()
+  const message =
+    load.state !== "error"
+      ? ""
+      : load.status === 404 || load.status === 410
+        ? t.lessonErrors.missing
+        : load.status === 422
+          ? t.lessonErrors.broken
+          : t.lessonErrors.failed
   return (
-    <>
+    <DirectionView dir={dir} className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
       {load.state !== "ready" ? (
         <BareHeader onClose={closeLesson} label={t.home} />
@@ -132,7 +156,7 @@ export default function LessonRoute() {
       ) : load.state === "error" ? (
         <View className="flex-1 items-center justify-center gap-4 p-6">
           <Text className="text-center text-sm text-muted-foreground">
-            {load.message}
+            {message}
           </Text>
           {load.retry ? (
             <Button variant="outline" onPress={() => setAttempt((n) => n + 1)}>
@@ -141,16 +165,22 @@ export default function LessonRoute() {
           ) : null}
         </View>
       ) : (
-        <Player data={load.data} />
+        <Player data={load.data} link={{ c, by, ui }} />
       )}
-    </>
+    </DirectionView>
   )
 }
 
 /** How far a concept slides as it arrives and leaves: the web's slide-in-from-end-24 (6rem). */
 const SLIDE = 96
 
-function Player({ data }: { data: LoadedLesson }) {
+function Player({
+  data,
+  link,
+}: {
+  data: LoadedLesson
+  link: { c?: string; by?: string; ui?: string }
+}) {
   const { lesson } = data
   // Progress is kept per lesson under the web's key for it (lessons/{slug} or l/{slug}-{id}), and
   // only while the lesson's content stays the same (its fingerprint): reopening the lesson lands on
@@ -176,6 +206,7 @@ function Player({ data }: { data: LoadedLesson }) {
     [data.path, data.id]
   )
   useEffect(() => sync?.update(state), [sync, state])
+  useEffect(() => () => sync?.close(), [sync])
 
   // The next screen's HTML visual is measured while this one is read, so it opens at its height.
   const { width: windowWidth } = useWindowDimensions()
@@ -195,8 +226,31 @@ function Player({ data }: { data: LoadedLesson }) {
     )
   }, [aheadVisual, data.baseCss, data.prepared.visualsCss, windowWidth])
   const item = state.items[state.index]!
-  // The player's own words, in the lesson's language (loaded with the lesson, in fetchLesson).
-  const t = stringsFor(lesson.language)
+  // The player's own words: the language the learner chose in the menu, else the lesson's (the
+  // web's rule; the lesson's is loaded with it, in fetchLesson). The screen runs its way.
+  const [prefs, savePrefs] = usePreferences()
+  // ?ui= wins for this visit, until the learner picks a language in the menu (the web's order).
+  const [linkUi, setLinkUi] = useState(() =>
+    link.ui && uiLanguageFor(link.ui) ? link.ui : undefined
+  )
+  const updatePrefs = useCallback(
+    (patch: Partial<Preferences>) => {
+      if (patch.uiLanguage) setLinkUi(undefined)
+      savePrefs(patch)
+    },
+    [savePrefs]
+  )
+  const ui = linkUi ?? lessonUiLanguage(prefs, lesson.language)
+  const challenge = useMemo(
+    () =>
+      challengeFor(
+        parseChallenge(link.c, link.by),
+        scoredQuestions(lesson).length
+      ),
+    [link.c, link.by, lesson]
+  )
+  const t = useStringsFor(ui)
+  const dir = directionOf(ui)
   const lessonContext = useMemo(
     () => ({
       prepared: data.prepared,
@@ -211,8 +265,7 @@ function Player({ data }: { data: LoadedLesson }) {
     () => createLinePicker(`${lesson.title}:${state.run}`),
     [lesson.title, state.run]
   )
-  // Phase 3: the ninja's character from the learner's preferences (the web's, on the device).
-  const [prefs] = usePreferences()
+  // The ninja's character from the learner's preferences (the web's, on the device).
   const ninja = ninjaOf(prefs)
   const soundOn = soundOf(prefs)
   const sfx = effectsOn(soundOn, lesson.language)
@@ -266,15 +319,22 @@ function Player({ data }: { data: LoadedLesson }) {
     else setClock((c) => (c.start ? c : { start: Date.now() }))
   }, [item.kind])
 
-  const { style, leave } = useScreenMotion(state)
+  const { style, leave } = useScreenMotion(state, dir)
   // Phase 3: Start makes the intro vanish into smoke before the first kata arrives.
   const { vanishing, vanish } = useIntroVanish()
   // Phase 3: the finish kept for the day streak, with the streak screen first on the day's first.
+  const session = useSession()
   const { streak, streakScreen, leaveStreak } = useStreak({
     atWrap: item.kind === "wrap",
     run: state.run,
-    id: data.path.startsWith("/l/") ? data.id : undefined,
+    // A published lesson's finish is kept for sign-in only while logged out, as the web keeps it
+    // (lesson-view.tsx); signed in, progress-sync tells the server itself.
+    id:
+      data.path.startsWith("/l/") && session.state === "out"
+        ? data.id
+        : undefined,
   })
+  const by = session.state === "in" ? session.account.handle : null
   const onShare = useCallback(
     (first: number, total: number) =>
       void shareChallenge({
@@ -282,13 +342,23 @@ function Player({ data }: { data: LoadedLesson }) {
         path: data.path,
         first,
         total,
+        by,
         t,
       }),
-    [lesson.title, data.path, t]
+    [lesson.title, data.path, by, t]
   )
   const stage = useMemo(
-    () => ({ ninja, vanishing, streak, streakScreen, sound: sfx, onShare }),
-    [ninja, vanishing, streak, streakScreen, sfx, onShare]
+    () => ({
+      ninja,
+      vanishing,
+      streak,
+      streakScreen,
+      sound: sfx,
+      onShare,
+      uiLang: ui,
+      challenge,
+    }),
+    [ninja, vanishing, streak, streakScreen, sfx, onShare, ui, challenge]
   )
 
   // When this screen came up: a quick second tap of Continue lands on nothing (screen-guard.ts).
@@ -327,115 +397,147 @@ function Player({ data }: { data: LoadedLesson }) {
   const insets = useSafeAreaInsets()
 
   return (
-    <View className="flex-1 bg-background">
-      <LessonHeader
-        title={lesson.title}
-        showProgress={item.kind !== "intro" && item.kind !== "wrap"}
-        progress={progressAt(
-          state.items,
-          state.index,
-          state.results,
-          state.fixed
-        )}
-        count={questionAt(state.items, state.index, state.inFix)}
-        startedAt={clock.start}
-        endedAt={clock.end}
-        onClose={close}
-        // Phase 3: the Sound setting, in a language he speaks, until phase 4's menu takes it.
-        end={hasVoice(lesson.language) ? <SoundToggle t={t} /> : undefined}
-        t={t}
-      />
-      {/* The window: on a phone, edge to edge between two hairlines. */}
-      <View className="flex-1">
-        {/* Phase 3: the smoke behind the intro; without the ninja it follows the title up. */}
-        {item.kind === "intro" ? (
-          <Aura shift={ninja === "off" ? -54 : 0} vanishing={vanishing} />
-        ) : null}
-        <ScrollView
-          ref={scrollRef}
-          // The header and tray already keep clear of the notch and the home bar.
-          contentInsetAdjustmentBehavior="never"
-          className={cn(
-            "flex-1 border-border",
-            trayShown ? "border-y" : "border-t"
+    <DirectionView dir={dir} className="flex-1 bg-background">
+      <LessonTextSize size={prefs.textSize} className="flex-1">
+        <LessonHeader
+          title={lesson.title}
+          showProgress={item.kind !== "intro" && item.kind !== "wrap"}
+          progress={progressAt(
+            state.items,
+            state.index,
+            state.results,
+            state.fixed
           )}
-          contentContainerClassName={
-            item.kind === "intro" || item.kind === "wrap"
-              ? "grow justify-center px-4 py-16"
-              : "px-4 py-6"
+          count={questionAt(state.items, state.index, state.inFix)}
+          startedAt={clock.start}
+          endedAt={clock.end}
+          onClose={close}
+          end={
+            <LessonMenu
+              title={lesson.title}
+              expiresAt={data.expiresAt}
+              lessonLanguage={lesson.language}
+              uiLanguage={ui}
+              prefs={prefs}
+              onPrefs={updatePrefs}
+              onShare={() => void shareLesson(lesson.title, data.path)}
+              onRestart={() => dispatch({ type: "restart" })}
+              t={t}
+            />
           }
-          // Without the tray, the end of the wrap-up keeps clear of the home bar.
-          contentContainerStyle={
-            trayShown ? undefined : { paddingBottom: 64 + insets.bottom }
-          }
-        >
-          <Animated.View style={style} className="mx-auto w-full max-w-2xl">
-            <LessonContext value={lessonContext}>
-              <StageContext value={stage}>
-                <LessonScreen
-                  // Each screen is its own: two katas of a kind in a row (an order after an order,
-                  // two sorts in the fix round) mustn't share what the first one kept.
-                  key={`${state.run}:${state.index}`}
-                  data={data}
-                  item={item}
-                  state={state}
-                  dispatch={dispatch}
-                  feedback={feedback}
-                  whyOpen={whyOpen}
-                  t={t}
+          t={t}
+        />
+        {/* The window: on a phone, edge to edge between two hairlines. */}
+        <View className="flex-1">
+          {/* Phase 3: the smoke behind the intro; without the ninja it follows the title up. */}
+          {item.kind === "intro" ? (
+            <Aura shift={ninja === "off" ? -54 : 0} vanishing={vanishing} />
+          ) : null}
+          <ScrollView
+            ref={scrollRef}
+            // The header and tray already keep clear of the notch and the home bar.
+            contentInsetAdjustmentBehavior="never"
+            className={cn(
+              "flex-1 border-border",
+              trayShown ? "border-y" : "border-t"
+            )}
+            contentContainerClassName={
+              item.kind === "intro" || item.kind === "wrap"
+                ? "grow justify-center px-4 py-16"
+                : "px-4 py-6"
+            }
+            // Without the tray, the end of the wrap-up keeps clear of the home bar.
+            contentContainerStyle={
+              trayShown ? undefined : { paddingBottom: 64 + insets.bottom }
+            }
+          >
+            <Animated.View style={style} className="mx-auto w-full max-w-2xl">
+              {/* The lesson's content runs its own language's way, as the web's LessonContent:
+                  an Arabic lesson reads right to left under the English interface, while the
+                  header and the tray keep the interface's direction. */}
+              <DirectionView
+                // The intro and the wrap-up (and the streak screen before it) are the player's
+                // own, in its language's direction; their lesson text (the title and summary, the
+                // takeaways) runs the lesson's way itself (intro.tsx, wrap-up.tsx).
+                dir={
+                  item.kind === "wrap" || item.kind === "intro"
+                    ? dir
+                    : directionOf(lesson.language)
+                }
+              >
+                <LessonContext value={lessonContext}>
+                  <StageContext value={stage}>
+                    <LessonScreen
+                      // Each screen is its own: two katas of a kind in a row (an order after an order,
+                      // two sorts in the fix round) mustn't share what the first one kept.
+                      key={`${state.run}:${state.index}`}
+                      data={data}
+                      item={item}
+                      state={state}
+                      dispatch={dispatch}
+                      feedback={feedback}
+                      whyOpen={whyOpen}
+                      t={t}
+                    />
+                  </StageContext>
+                </LessonContext>
+              </DirectionView>
+            </Animated.View>
+          </ScrollView>
+        </View>
+        {trayShown ? (
+          <LessonTray
+            tone={
+              feedback.title || feedback.message ? feedback.tone : undefined
+            }
+            feedback={
+              // The ninja's line and the notes are in the lesson's language, so they run its way.
+              <DirectionView dir={directionOf(lesson.language)}>
+                <TrayFeedback
+                  title={feedback.title}
+                  message={feedback.message}
+                  why={
+                    feedback.why
+                      ? {
+                          label: whyLabel,
+                          open: feedback.why.open,
+                          onPress: () => setWhyOpen((open) => !open),
+                        }
+                      : null
+                  }
                 />
-              </StageContext>
-            </LessonContext>
-          </Animated.View>
-        </ScrollView>
-      </View>
-      {trayShown ? (
-        <LessonTray
-          tone={feedback.title || feedback.message ? feedback.tone : undefined}
-          feedback={
-            <TrayFeedback
-              title={feedback.title}
-              message={feedback.message}
-              why={
-                feedback.why
-                  ? {
-                      label: whyLabel,
-                      open: feedback.why.open,
-                      onPress: () => setWhyOpen((open) => !open),
-                    }
-                  : null
-              }
-            />
-          }
-        >
-          {streakScreen ? (
-            // Phase 3: the streak screen's Continue goes on to the wrap-up itself.
-            <TrayButton
-              label={t.continue}
-              onPress={() => {
-                tapHaptic()
-                leaveStreak()
-              }}
-            />
-          ) : feedback.primary ? (
-            <TrayButton
-              label={feedback.primary.label}
-              variant={feedback.primary.variant}
-              disabled={feedback.primary.disabled}
-              onPress={() => run(feedback.primary!.action)}
-            />
-          ) : null}
-          {feedback.hint ? (
-            <TrayButton
-              label={t.hint}
-              variant="outline"
-              pressed={feedback.hint.open}
-              onPress={() => run({ type: "hint" })}
-            />
-          ) : null}
-        </LessonTray>
-      ) : null}
-    </View>
+              </DirectionView>
+            }
+          >
+            {streakScreen ? (
+              // Phase 3: the streak screen's Continue goes on to the wrap-up itself.
+              <TrayButton
+                label={t.continue}
+                onPress={() => {
+                  tapHaptic()
+                  leaveStreak()
+                }}
+              />
+            ) : feedback.primary ? (
+              <TrayButton
+                label={feedback.primary.label}
+                variant={feedback.primary.variant}
+                disabled={feedback.primary.disabled}
+                onPress={() => run(feedback.primary!.action)}
+              />
+            ) : null}
+            {feedback.hint ? (
+              <TrayButton
+                label={t.hint}
+                variant="outline"
+                pressed={feedback.hint.open}
+                onPress={() => run({ type: "hint" })}
+              />
+            ) : null}
+          </LessonTray>
+        ) : null}
+      </LessonTextSize>
+    </DirectionView>
   )
 }
 
@@ -444,12 +546,12 @@ function Player({ data }: { data: LoadedLesson }) {
  * from the end side and leaves toward it, fading (300 ms in, 200 ms out); every other screen fades
  * up from 4 points below. Nothing moves when the system asks for reduced motion.
  */
-function useScreenMotion(state: State) {
+function useScreenMotion(state: State, dir: Direction) {
   const reduced = useReducedMotion()
   const opacity = useSharedValue(1)
   const x = useSharedValue(0)
   const y = useSharedValue(0)
-  const end = I18nManager.isRTL ? -1 : 1
+  const end = dir === "rtl" ? -1 : 1
   const kind = state.items[state.index]?.kind
 
   // A new screen: placed where it arrives from, then eased in.

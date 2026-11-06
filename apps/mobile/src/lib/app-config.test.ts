@@ -25,6 +25,13 @@ describe("app config", () => {
     ).toBe(true)
   })
 
+  it("opens learn.ninja's lesson and profile links in every build", () => {
+    for (const profile of [undefined, "preview", "production"])
+      expect(build(profile).ios?.associatedDomains).toContain(
+        "applinks:learn.ninja"
+      )
+  })
+
   it("reads learn.ninja over HTTPS with no exception in preview and production", () => {
     for (const profile of ["preview", "production"]) {
       const app = build(profile)

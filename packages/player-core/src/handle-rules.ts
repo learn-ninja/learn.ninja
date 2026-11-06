@@ -1,5 +1,5 @@
-// Handles: the public name in /u/{handle}. The rules alone, safe to import in the browser; the
-// lookups that need the database are in handles.ts.
+// Handles: the public name in /u/{handle}. The rules alone, with no DOM or database, shared by the
+// web (whose lookups that need the database are in apps/web/lib/auth/handles.ts) and the app.
 
 export const HANDLE_RULES =
   "3 to 30 characters: lowercase letters, numbers, and hyphens, starting with a letter or number."
@@ -49,11 +49,23 @@ export function normalizeHandle(input: string): string {
     .replace(/-+$/, "")
 }
 
+/**
+ * Which rule `handle` breaks, as PATCH /api/account names it (docs/reference/api.md), or null when
+ * it can be used. Clients switch on the code; the message is the web's English.
+ */
+export function handleRuleBroken(
+  handle: string
+): "invalid_handle" | "reserved_handle" | null {
+  if (!/^[a-z0-9][a-z0-9-]{2,29}$/.test(handle)) return "invalid_handle"
+  if (RESERVED.has(handle)) return "reserved_handle"
+  return null
+}
+
 /** Why `handle` can't be used, or null when it can. */
 export function handleProblem(handle: string): string | null {
-  if (!/^[a-z0-9][a-z0-9-]{2,29}$/.test(handle))
-    return `Handles are ${HANDLE_RULES}`
-  if (RESERVED.has(handle)) return "That handle is reserved."
+  const broken = handleRuleBroken(handle)
+  if (broken === "invalid_handle") return `Handles are ${HANDLE_RULES}`
+  if (broken === "reserved_handle") return "That handle is reserved."
   return null
 }
 

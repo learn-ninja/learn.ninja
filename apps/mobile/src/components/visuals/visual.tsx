@@ -18,7 +18,8 @@ import { MathBlock } from "@/components/math"
 import { Text } from "@/components/ui/text"
 import { VisualFrame } from "@/components/visual-frame"
 import { cn } from "@/lib/utils"
-import { fontSize, LESSON_TEXT_SCALE } from "../../../tokens"
+import { useLessonTextScale } from "@/components/text-size"
+import { fontSize } from "../../../tokens"
 
 import { ChatBlock } from "./chat"
 import { ChessBoard } from "./chess"
@@ -54,6 +55,7 @@ export function Visual({
   plain?: boolean
 }) {
   const { prepared, baseCss, mathSvg, lang } = useLesson()
+  const scale = useLessonTextScale()
   const t = stringsFor(lang)
   const alt = ("alt" in visual ? visual.alt : undefined) ?? label ?? t.visual
   switch (visual.kind) {
@@ -88,7 +90,7 @@ export function Visual({
         <MathBlock
           tex={visual.tex}
           math={mathSvg[mathKey(visual.tex, true)]}
-          fontSize={fontSize.xl[0] * LESSON_TEXT_SCALE}
+          fontSize={fontSize.xl[0] * scale}
           plain={plain}
         />
       )

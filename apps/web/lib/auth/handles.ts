@@ -2,9 +2,9 @@ import { eq, isNull } from "drizzle-orm"
 
 import { user, type Db } from "@workspace/db"
 
-import { normalizeHandle, randomHandleName, RESERVED } from "./handle-rules"
+import { normalizeHandle, randomHandleName, RESERVED } from "@workspace/player-core/handle-rules"
 
-export * from "./handle-rules"
+export * from "@workspace/player-core/handle-rules"
 
 // GitHub users get their login (made unique if taken); everyone else a random one, like
 // "quiet-kitsune". Either can be changed in settings.

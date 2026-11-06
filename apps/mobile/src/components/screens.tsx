@@ -40,6 +40,7 @@ export function LessonScreen({
       return (
         <Intro
           lesson={lesson}
+          t={t}
           meta={
             <MetaLine
               facts={[

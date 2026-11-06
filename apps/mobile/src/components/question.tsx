@@ -22,15 +22,15 @@ import { RichText } from "@/components/rich-text"
 import { Visual } from "@/components/visuals/visual"
 import type { Feedback } from "@/lib/feedback"
 import type { AppAction } from "@/lib/play"
-import { fontSize, LESSON_TEXT_SCALE } from "../../tokens"
+import { fontSize } from "../../tokens"
 
 // One question kata's screen, as the web's QuestionScreen draws it in the player
 // (packages/player/src/lesson-player.tsx): the eyebrow (the warm-up label, how to answer), a
 // scenario's situation, the prompt, the kata's visual, the answer area, and the hint while
 // answering. The feedback itself is in the tray (shell.tsx).
 
-const PROMPT_SIZE = fontSize.lg[0] * LESSON_TEXT_SCALE
-const BODY_SIZE = fontSize.base[0] * LESSON_TEXT_SCALE
+const PROMPT_SIZE = fontSize.lg[0]
+const BODY_SIZE = fontSize.base[0]
 
 /** Instructions above the prompt, only where the interaction isn't obvious (a single pick needs none). */
 function helperFor(kata: QuestionKata, t: Strings): string {
@@ -136,7 +136,7 @@ export function QuestionScreen({
         <View className="rounded-xl border border-border bg-card px-4 py-3 shadow-xs">
           <RichText
             text={kata.situation}
-            size={fontSize.sm[0] * LESSON_TEXT_SCALE}
+            size={fontSize.sm[0]}
             className="text-lesson-sm text-muted-foreground"
           />
         </View>

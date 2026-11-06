@@ -17,4 +17,17 @@ describe("the plural-rules polyfill", () => {
     for (const { code } of UI_LANGUAGES)
       expect(loaded, code).toContain(code.split("-")[0])
   })
+
+  it("has number and relative-time formats for every interface language", () => {
+    const entry = readFileSync(join(__dirname, "../../index.ts"), "utf8")
+    for (const pkg of ["intl-numberformat", "intl-relativetimeformat"]) {
+      const loaded = [
+        ...entry.matchAll(new RegExp(`${pkg}/locale-data/([\\w-]+)\\.js`, "g")),
+      ].map((m) => m[1])
+      for (const { code } of UI_LANGUAGES)
+        expect(loaded, `${pkg} ${code}`).toContain(
+          code === "zh-tw" ? "zh-Hant" : code
+        )
+    }
+  })
 })

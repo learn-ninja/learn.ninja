@@ -16,7 +16,7 @@ import {
   rememberAccount,
   type AccountApi,
 } from "@/lib/auth/browser"
-import { HANDLE_RULES, normalizeHandle } from "@/lib/auth/handle-rules"
+import { HANDLE_RULES, normalizeHandle } from "@workspace/player-core/handle-rules"
 
 import { FormError } from "./form-error"
 

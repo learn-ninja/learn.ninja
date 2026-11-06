@@ -4,13 +4,7 @@ import { eq } from "drizzle-orm"
 
 import { beforeAll, describe, expect, it } from "vitest"
 
-import {
-  account,
-  connectPglite,
-  session,
-  user,
-  type Db,
-} from "@workspace/db"
+import { account, connectPglite, session, user, type Db } from "@workspace/db"
 
 import { publishLesson, claimLesson, type Deps } from "@/lib/publish/handlers"
 import { MemoryRateLimiter } from "@/lib/publish/rate-limit"
@@ -30,6 +24,7 @@ import {
 import { getActor, getActorByKey, InvalidApiKeyError } from "./actor"
 import {
   API_KEY_PREFIX,
+  APP_ORIGIN,
   createAuth,
   MCP_KEY_PREFIX,
   type Auth,
@@ -127,9 +122,61 @@ describe("email codes", () => {
     })
     const body = { email: "spam@example.com", type: "sign-in" as const }
     await limited.api.sendVerificationOTP({ body })
-    await expect(limited.api.sendVerificationOTP({ body })).rejects.toMatchObject(
-      { status: "TOO_MANY_REQUESTS" }
+    await expect(
+      limited.api.sendVerificationOTP({ body })
+    ).rejects.toMatchObject({ status: "TOO_MANY_REQUESTS" })
+  })
+
+  it("signs the iOS app in through its scheme's origin, and trusts no other app's", async () => {
+    // What @better-auth/expo's client sends: no Origin, the app's own as expo-origin, and the
+    // cookie it keeps once it has one.
+    const post = (path: string, body: unknown, origin: string) =>
+      auth.handler(
+        new Request(`${ORIGIN}/api/auth${path}`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "expo-origin": origin,
+          },
+          body: JSON.stringify(body),
+        })
+      )
+    const email = "app@example.com"
+    const sent = await post(
+      "/email-otp/send-verification-otp",
+      { email, type: "sign-in" },
+      APP_ORIGIN
     )
+    expect(sent.status).toBe(200)
+    const signedIn = await post(
+      "/sign-in/email-otp",
+      { email, otp: codes.get(email) },
+      APP_ORIGIN
+    )
+    expect(signedIn.status).toBe(200)
+    const cookie = signedIn.headers
+      .getSetCookie()
+      .map((c) => c.split(";")[0])
+      .join("; ")
+    // The cookie the app keeps names the account on any API request.
+    expect(await getActor(auth, new Headers({ cookie }))).toMatchObject({
+      email,
+    })
+    // Tests skip Better Auth's origin check, so the list it checks against is read instead: the
+    // app's scheme is on it, another app's isn't.
+    const context = await auth.$context
+    expect(context.isTrustedOrigin(APP_ORIGIN)).toBe(true)
+    expect(context.isTrustedOrigin("evil://")).toBe(false)
+  })
+
+  it("serves none of the Expo plugin's social sign-in proxy, which would redirect anywhere", async () => {
+    const res = await auth.handler(
+      new Request(
+        `${ORIGIN}/api/auth/expo-authorization-proxy?authorizationURL=${encodeURIComponent("https://evil.example/login?state=x")}`
+      )
+    )
+    expect(res.status).toBe(404)
+    expect(res.headers.get("location")).toBeNull()
   })
 
   it("stores codes hashed", async () => {
@@ -177,7 +224,10 @@ describe("log-in methods", () => {
       auth,
       new Headers({ cookie: await signIn("new@example.com") })
     )
-    expect(again).toMatchObject({ userId: before!.userId, email: "new@example.com" })
+    expect(again).toMatchObject({
+      userId: before!.userId,
+      email: "new@example.com",
+    })
   })
 
   it("won't change the email to one that another account has", async () => {
@@ -311,7 +361,9 @@ describe("API keys", () => {
       })
     ).rejects.toMatchObject({ status: "FORBIDDEN" })
     // The key still works for everything else.
-    expect(await getActor(auth, new Headers({ "x-api-key": key }))).toMatchObject({
+    expect(
+      await getActor(auth, new Headers({ "x-api-key": key }))
+    ).toMatchObject({
       email: "minter@example.com",
     })
   })
@@ -351,9 +403,9 @@ describe("API keys", () => {
       via: "key",
       limitKey: expect.stringMatching(/^key:/),
     })
-    await expect(getActorByKey(auth, db, terminal.body.key as string)).rejects.toBeInstanceOf(
-      InvalidApiKeyError
-    )
+    await expect(
+      getActorByKey(auth, db, terminal.body.key as string)
+    ).rejects.toBeInstanceOf(InvalidApiKeyError)
     await expect(
       getActor(auth, new Headers({ "x-api-key": key }))
     ).rejects.toBeInstanceOf(InvalidApiKeyError)
@@ -381,7 +433,10 @@ describe("API keys", () => {
       InvalidApiKeyError
     )
     expect(
-      await getActor(auth, new Headers({ "x-api-key": terminal.body.key as string }))
+      await getActor(
+        auth,
+        new Headers({ "x-api-key": terminal.body.key as string })
+      )
     ).toMatchObject({ userId })
   })
 
@@ -490,6 +545,10 @@ describe("handles", () => {
     })
     expect(await setHandle(auth, b, "api")).toMatchObject({
       status: 422,
+      body: { error: "reserved_handle", message: "That handle is reserved." },
+    })
+    expect(await setHandle(auth, b, "ab")).toMatchObject({
+      status: 422,
       body: { error: "invalid_handle" },
     })
     // The same user may keep their own handle.
@@ -549,7 +608,13 @@ describe("handles", () => {
   it("gives accounts without a handle a random one, only with write", async () => {
     await db
       .insert(user)
-      .values(["bf1", "bf2"].map((id) => ({ id, name: id, email: `${id}@example.com` })))
+      .values(
+        ["bf1", "bf2"].map((id) => ({
+          id,
+          name: id,
+          email: `${id}@example.com`,
+        }))
+      )
     const handleOf = async (id: string) =>
       (await db.select().from(user).where(eq(user.id, id)))[0]!.handle
     const dry = await backfillHandles(db)
@@ -557,7 +622,9 @@ describe("handles", () => {
     expect(new Set(dry.map((g) => g.handle)).size).toBe(dry.length)
     expect(await handleOf("bf1")).toBeNull()
     const written = await backfillHandles(db, { write: true })
-    expect(await handleOf("bf1")).toBe(written.find((g) => g.id === "bf1")!.handle)
+    expect(await handleOf("bf1")).toBe(
+      written.find((g) => g.id === "bf1")!.handle
+    )
     expect(await backfillHandles(db)).toEqual([])
   })
 
@@ -605,7 +672,9 @@ describe("with Redis holding sessions", () => {
     })
     await redisLike.$context
     const email = "redis@example.com"
-    await redisLike.api.sendVerificationOTP({ body: { email, type: "sign-in" } })
+    await redisLike.api.sendVerificationOTP({
+      body: { email, type: "sign-in" },
+    })
     const res = await redisLike.api.signInEmailOTP({
       body: { email, otp: codes.get(email)! },
       asResponse: true,
@@ -657,15 +726,23 @@ describe("the reviewers' test account", () => {
     const { reviewLoginFromEnv } = await import("./auth")
     const env = (vars: Record<string, string>) => vars as NodeJS.ProcessEnv
     expect(reviewLoginFromEnv(env({}))).toBeNull()
-    expect(reviewLoginFromEnv(env({ REVIEW_SIGN_IN_EMAIL: "r@example.com" }))).toBeNull()
+    expect(
+      reviewLoginFromEnv(env({ REVIEW_SIGN_IN_EMAIL: "r@example.com" }))
+    ).toBeNull()
     expect(
       reviewLoginFromEnv(
-        env({ REVIEW_SIGN_IN_EMAIL: "r@example.com", REVIEW_SIGN_IN_CODE: "12" })
+        env({
+          REVIEW_SIGN_IN_EMAIL: "r@example.com",
+          REVIEW_SIGN_IN_CODE: "12",
+        })
       )
     ).toBeNull()
     expect(
       reviewLoginFromEnv(
-        env({ REVIEW_SIGN_IN_EMAIL: " R@Example.com ", REVIEW_SIGN_IN_CODE: "123456" })
+        env({
+          REVIEW_SIGN_IN_EMAIL: " R@Example.com ",
+          REVIEW_SIGN_IN_CODE: "123456",
+        })
       )
     ).toEqual({ email: "r@example.com", code: "123456" })
   })

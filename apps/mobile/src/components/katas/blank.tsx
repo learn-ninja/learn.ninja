@@ -13,7 +13,8 @@ import { chipsInGaps } from "@workspace/player-core/state"
 import { Control, MarkBadge, slotStyles, useShake } from "@/components/controls"
 import { Text } from "@/components/ui/text"
 import { cn } from "@/lib/utils"
-import { fontSize, LESSON_TEXT_SCALE } from "../../../tokens"
+import { useLessonTextScale } from "@/components/text-size"
+import { fontSize } from "../../../tokens"
 
 import type { QuestionKataProps } from "./options"
 
@@ -140,8 +141,7 @@ export function BlankKata({
               className={cn(
                 "px-3 py-1",
                 // An outlined slot holds its place, so the other chips don't move.
-                gone &&
-                  cn(slotStyles, "border-dashed bg-transparent")
+                gone && cn(slotStyles, "border-dashed bg-transparent")
               )}
               style={gone ? { backgroundColor: "transparent" } : undefined}
             >
@@ -203,10 +203,11 @@ function Caret() {
     opacity.value = withRepeat(withTiming(0, { duration: 530 }), -1, true)
   }, [opacity, reduced])
   const style = useAnimatedStyle(() => ({ opacity: opacity.value }))
+  const height = fontSize.base[0] * useLessonTextScale()
   return (
     <Animated.View
       className="w-0.5 bg-foreground"
-      style={[{ height: fontSize.base[0] * LESSON_TEXT_SCALE }, style]}
+      style={[{ height }, style]}
     />
   )
 }

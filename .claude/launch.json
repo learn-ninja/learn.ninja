@@ -28,6 +28,20 @@
       "autoPort": true
     },
     {
+      "name": "web-3005",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "-w",
+        "web",
+        "--",
+        "-p",
+        "3005"
+      ],
+      "port": 3005
+    },
+    {
       "name": "storybook",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
