@@ -152,10 +152,18 @@ export const LessonRow = memo(function LessonRow({
               <LikeButton like={like} lang={lang} t={t} />
             </View>
           </View>
+          {/* The preview card, laid out out of sight with the row, so its height is known before
+              the first peek: iOS sizes the lifted preview to the whole screen unless told. */}
+          <View
+            className="absolute start-0 top-0 opacity-0"
+            pointerEvents="none"
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            <RowPreview lesson={lesson} t={t} onHeight={setPreviewHeight} />
+          </View>
         </Pressable>
       </Link.Trigger>
-      {/* iOS sizes the lifted preview to the screen unless told; the card's own height, once
-          laid out, keeps it just the card. */}
       <Link.Preview
         style={{
           width: PREVIEW_WIDTH,
@@ -163,7 +171,7 @@ export const LessonRow = memo(function LessonRow({
           backgroundColor: colors.card.DEFAULT,
         }}
       >
-        <RowPreview lesson={lesson} t={t} onHeight={setPreviewHeight} />
+        <RowPreview lesson={lesson} t={t} />
       </Link.Preview>
       <Link.Menu>
         <Link.MenuAction
@@ -203,14 +211,18 @@ function RowPreview({
 }: {
   lesson: LessonRowData
   t: Strings
-  onHeight: (height: number) => void
+  onHeight?: (height: number) => void
 }) {
   const dir = directionOf(lesson.language)
   return (
     <View
       className="gap-3 bg-card p-6"
       style={{ width: PREVIEW_WIDTH, direction: dir }}
-      onLayout={(e) => onHeight(Math.ceil(e.nativeEvent.layout.height))}
+      onLayout={
+        onHeight
+          ? (e) => onHeight(Math.ceil(e.nativeEvent.layout.height))
+          : undefined
+      }
     >
       <Text className="text-xl font-semibold" style={{ writingDirection: dir }}>
         {lesson.title}
