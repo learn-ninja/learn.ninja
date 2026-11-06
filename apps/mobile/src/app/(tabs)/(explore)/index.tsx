@@ -10,6 +10,7 @@ import {
   Failed,
   Hairline,
   Loading,
+  LogInCard,
   LTR,
 } from "@/components/explore/list-parts"
 import { LessonRow } from "@/components/explore/lesson-row"
@@ -66,7 +67,13 @@ export default function Home() {
         )}
         ItemSeparatorComponent={Hairline}
         ListHeaderComponent={
-          session.state === "out" ? <LogInCard t={t} /> : undefined
+          session.state === "out" ? (
+            <LogInCard
+              title={t.feed.logInTitle}
+              body={t.feed.logInBody}
+              t={t}
+            />
+          ) : undefined
         }
         renderItem={({ item }) => (
           <LessonRow
@@ -213,28 +220,6 @@ function useExplore(account: Account | null) {
 }
 
 /** Logged out: what Explore is, and the way in. */
-function LogInCard({ t }: { t: Strings }) {
-  return (
-    <View className="mx-auto w-full max-w-lg py-6">
-      <View className="gap-4 rounded-xl bg-card p-6 shadow-xs">
-        <View className="gap-2">
-          <Text
-            className="text-2xl font-semibold tracking-tight"
-            accessibilityRole="header"
-          >
-            {t.feed.logInTitle}
-          </Text>
-          <Text className="text-base text-muted-foreground">
-            {t.feed.logInBody}
-          </Text>
-        </View>
-        <Button size="lg" onPress={() => router.push("/sign-in")}>
-          <Text>{t.logIn}</Text>
-        </Button>
-      </View>
-    </View>
-  )
-}
 
 /** The lessons the web app bundles, opened from GET /api/lessons/{slug} without a database. */
 function TestLessons({ t }: { t: Strings }) {

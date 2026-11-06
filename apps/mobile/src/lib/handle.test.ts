@@ -13,6 +13,8 @@ describe("handles", () => {
     expect(handleProblem("ab", t)).toBe(t.account.handleRules)
     // The web's reserved names are caught before asking the server.
     expect(handleProblem("settings", t)).toBe(t.account.handleReserved)
+    // An answer that tidies away to nothing gets the rules, not silence.
+    expect(handleProblem(normalizeHandle("@@ 🥷"), t)).toBe(t.account.handleRules)
   })
 
   it("says why the server refused one", () => {

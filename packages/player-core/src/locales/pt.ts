@@ -338,6 +338,9 @@ export const pt: Translation = {
       "Nomes de usuário têm de 3 a 30 caracteres: letras minúsculas, números e hífens, começando com uma letra ou um número.",
     handleTaken: "Alguém já tem esse nome de usuário.",
     handleReserved: "Esse nome de usuário está reservado.",
+    needsHandleTitle: "Escolha um nome de usuário",
+    needsHandleBody:
+      "Seu perfil, com suas lições e sua sequência, fica no seu nome de usuário. Escolha um em Configurações.",
     save: "Salvar",
     saved: "Salvo",
   },

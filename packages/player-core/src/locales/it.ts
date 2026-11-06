@@ -342,6 +342,9 @@ export const it: Translation = {
       "I nomi utente hanno da 3 a 30 caratteri: lettere minuscole, numeri e trattini, e iniziano con una lettera o un numero.",
     handleTaken: "Qualcuno ha già questo nome utente.",
     handleReserved: "Questo nome utente è riservato.",
+    needsHandleTitle: "Scegli un nome utente",
+    needsHandleBody:
+      "Il tuo profilo, con le tue lezioni e la tua serie, si trova al tuo nome utente. Scegline uno nelle Impostazioni.",
     save: "Salva",
     saved: "Salvato",
   },

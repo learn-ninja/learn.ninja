@@ -316,6 +316,9 @@ export const en: Strings = {
       "Handles are 3 to 30 characters: lowercase letters, numbers, and hyphens, starting with a letter or number.",
     handleTaken: "Someone already has that handle.",
     handleReserved: "That handle is reserved.",
+    needsHandleTitle: "Choose a handle",
+    needsHandleBody:
+      "Your profile, with your lessons and streak, lives at your handle. Choose one in Settings.",
     save: "Save",
     saved: "Saved",
   },
