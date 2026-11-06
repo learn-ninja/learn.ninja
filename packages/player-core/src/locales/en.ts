@@ -328,4 +328,5 @@ export const en: Strings = {
     broken: "This lesson doesn't fit the lesson format.",
     failed: "The lesson didn't load.",
   },
+  offline: "Couldn't reach learn.ninja. Check your connection and try again.",
 }

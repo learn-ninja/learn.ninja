@@ -331,4 +331,6 @@ export const id: Translation = {
     broken: "Pelajaran ini tidak sesuai format pelajaran.",
     failed: "Pelajaran gagal dimuat.",
   },
+  offline:
+    "Tidak bisa terhubung ke learn.ninja. Periksa koneksimu dan coba lagi.",
 }

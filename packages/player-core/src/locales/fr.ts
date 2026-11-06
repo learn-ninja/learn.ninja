@@ -279,8 +279,7 @@ export const fr: Translation = {
     wrongCode: "Ce code n'est pas bon. Vérifie-le ou demandes-en un nouveau.",
     expiredCode: "Ce code a expiré. Demandes-en un nouveau.",
     tooManyTries: "Trop de codes erronés. Demandes-en un nouveau.",
-    tooManyCodes:
-      "Trop de codes envoyés à cette adresse. Réessaie plus tard.",
+    tooManyCodes: "Trop de codes envoyés à cette adresse. Réessaie plus tard.",
     badEmail: "Saisis une adresse e-mail valide.",
     failed: "Une erreur s'est produite. Réessaie.",
     logOut: "Se déconnecter",
@@ -358,4 +357,6 @@ export const fr: Translation = {
     broken: "Cette leçon ne respecte pas le format des leçons.",
     failed: "La leçon ne s'est pas chargée.",
   },
+  offline:
+    "Impossible de joindre learn.ninja. Vérifie ta connexion et réessaie.",
 }

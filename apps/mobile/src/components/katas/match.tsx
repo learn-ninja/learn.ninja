@@ -9,6 +9,7 @@ import {
   Control,
   controlPadding,
   CONTROL_TEXT_SIZE,
+  NO_SHADOW,
   slotStyles,
   useShake,
 } from "@/components/controls"
@@ -125,7 +126,9 @@ export function MatchKata({
           "flex-1 items-center justify-center",
           settled && slotStyles
         )}
-        style={settled ? { backgroundColor: "transparent" } : undefined}
+        style={
+          settled ? { backgroundColor: "transparent", ...NO_SHADOW } : undefined
+        }
       >
         <RichText
           text={text}

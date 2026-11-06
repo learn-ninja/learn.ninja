@@ -327,4 +327,6 @@ export const vi: Translation = {
     broken: "Bài học này không đúng định dạng bài học.",
     failed: "Không tải được bài học.",
   },
+  offline:
+    "Không thể kết nối tới learn.ninja. Hãy kiểm tra kết nối rồi thử lại.",
 }

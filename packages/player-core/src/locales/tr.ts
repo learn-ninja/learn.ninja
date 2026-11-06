@@ -256,8 +256,7 @@ export const tr: Translation = {
     code: "Kod",
     submit: "Giriş yap",
     otherEmail: "Başka bir e-posta kullan",
-    legal:
-      "Devam ederek {terms} ve {privacy} metinlerini kabul etmiş olursun.",
+    legal: "Devam ederek {terms} ve {privacy} metinlerini kabul etmiş olursun.",
     wrongCode: "Bu kod doğru değil. Kontrol et ya da yeni bir kod gönder.",
     expiredCode: "Bu kodun süresi doldu. Yeni bir kod gönder.",
     tooManyTries: "Çok fazla yanlış kod girildi. Yeni bir kod gönder.",
@@ -332,4 +331,5 @@ export const tr: Translation = {
     broken: "Bu ders, ders biçimine uymuyor.",
     failed: "Ders yüklenemedi.",
   },
+  offline: "learn.ninja'ya ulaşılamadı. Bağlantını kontrol edip tekrar dene.",
 }

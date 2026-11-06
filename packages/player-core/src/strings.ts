@@ -345,6 +345,8 @@ export type Strings = {
     broken: string
     failed: string
   }
+  /** The server didn't answer: no connection, or it took too long. In the app, on a lesson or home. */
+  offline: string
 }
 
 /**

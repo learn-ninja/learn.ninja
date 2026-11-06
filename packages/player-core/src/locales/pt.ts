@@ -286,8 +286,7 @@ export const pt: Translation = {
       "Entre para navegar pelo Explore, curtir lições e ver sua sequência no seu perfil.",
     testLessons: "Lições de teste",
     failed: "Isso não carregou.",
-    views: (n) =>
-      p(n, { one: "# visualização", other: "# visualizações" }),
+    views: (n) => p(n, { one: "# visualização", other: "# visualizações" }),
     likes: (n) => p(n, { one: "# curtida", other: "# curtidas" }),
     done: "Concluída",
     minutesLeft: (n) => `Faltam ${n} min`,
@@ -307,7 +306,8 @@ export const pt: Translation = {
     noLessonsOwn:
       "Nenhuma lição ainda. Peça uma ao seu agente; com você conectado, ela fica salva aqui.",
     noLessons: "Nenhuma lição publicada ainda.",
-    noProgress: "As lições que você começar aparecem aqui até você concluí-las.",
+    noProgress:
+      "As lições que você começar aparecem aqui até você concluí-las.",
     noLikesOwn: "As lições que você curtir aparecem aqui.",
     noLikes: "Nenhuma lição curtida ainda.",
     missing: "Ninguém tem este nome de usuário.",
@@ -350,4 +350,6 @@ export const pt: Translation = {
     broken: "Esta lição não segue o formato de lição.",
     failed: "A lição não carregou.",
   },
+  offline:
+    "Não foi possível acessar o learn.ninja. Verifique sua conexão e tente de novo.",
 }

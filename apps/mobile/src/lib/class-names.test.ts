@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest"
 // NativeWind turns a component that gains CSS variables after its first render into another one,
 // and its development warning about that crashed the blank kata (it couldn't print the props).
 // Tailwind 3's shadow utilities are CSS variables, so a class list that adds one on a state change
-// (a used chip, a tried option, a settled match tile) does it. The katas' controls draw no shadow
-// of their own (shadow-xs isn't in Tailwind 3), so they have none to take away.
+// (a used chip, a tried option, a settled match tile) does it. The katas' controls keep their
+// shadow-xs (tailwind.config.js) in every state, so they have none to take away.
 
 const KATAS = join(__dirname, "../components")
 

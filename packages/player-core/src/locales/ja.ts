@@ -320,4 +320,6 @@ export const ja: Translation = {
     broken: "このレッスンはレッスン形式に合っていません。",
     failed: "レッスンを読み込めませんでした。",
   },
+  offline:
+    "learn.ninja に接続できませんでした。接続を確認して、もう一度お試しください。",
 }

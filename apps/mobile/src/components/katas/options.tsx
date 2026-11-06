@@ -10,6 +10,7 @@ import {
   CONTROL_TEXT_SIZE,
   MarkBadge,
   markColor,
+  NO_SHADOW,
   selectedStyles,
 } from "@/components/controls"
 import { RichText } from "@/components/rich-text"
@@ -160,6 +161,7 @@ function OptionRow({
         // Rewound: a dashed outline on nothing, its text struck through.
         tried && "border-dashed bg-transparent"
       )}
+      style={tried ? NO_SHADOW : undefined}
     >
       <View className="min-w-0 flex-1 gap-2">
         {o.text ? (
@@ -223,6 +225,8 @@ function OptionCard({
   return (
     <Control
       selected={selected}
+      mark={mark}
+      markTint={false}
       disabled={disabled}
       onPress={onPress}
       accessibilityLabel={o.text ?? t.optionLabel(String(index + 1))}

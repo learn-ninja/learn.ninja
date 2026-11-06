@@ -10,7 +10,13 @@ import Animated, {
 
 import { chipsInGaps } from "@workspace/player-core/state"
 
-import { Control, MarkBadge, slotStyles, useShake } from "@/components/controls"
+import {
+  Control,
+  MarkBadge,
+  NO_SHADOW,
+  slotStyles,
+  useShake,
+} from "@/components/controls"
 import { Text } from "@/components/ui/text"
 import { cn } from "@/lib/utils"
 import { useLessonTextScale } from "@/components/text-size"
@@ -143,7 +149,11 @@ export function BlankKata({
                 // An outlined slot holds its place, so the other chips don't move.
                 gone && cn(slotStyles, "border-dashed bg-transparent")
               )}
-              style={gone ? { backgroundColor: "transparent" } : undefined}
+              style={
+                gone
+                  ? { backgroundColor: "transparent", ...NO_SHADOW }
+                  : undefined
+              }
             >
               <View
                 onLayout={(e) => {
@@ -187,7 +197,11 @@ function Gap({
         "mx-1 h-7 items-center justify-center rounded-none border-0 border-b-2 bg-transparent",
         waiting ? "border-foreground" : "border-muted-foreground/40"
       )}
-      style={{ width: Math.max(width, 40), backgroundColor: "transparent" }}
+      style={{
+        width: Math.max(width, 40),
+        backgroundColor: "transparent",
+        ...NO_SHADOW,
+      }}
     >
       {waiting ? <Caret /> : null}
     </Control>

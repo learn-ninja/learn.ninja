@@ -11,9 +11,11 @@ import Svg, { Path } from "react-native-svg"
 
 import type { Mark } from "@workspace/player-core/check"
 
+import { useMarkedAnswer } from "@/components/answer-marks"
 import { RichText } from "@/components/rich-text"
+import { useStage } from "@/components/stage-context"
 import { Text } from "@/components/ui/text"
-import { alpha } from "@/lib/color"
+import { alpha, mix } from "@/lib/color"
 import { tap } from "@/lib/haptics"
 import { cn } from "@/lib/utils"
 import { colors, fontSize } from "../../tokens"
@@ -37,6 +39,13 @@ export const controlText = "text-lesson-sm font-medium"
 export const slotStyles =
   "rounded-md border border-dashed border-foreground/20 bg-slot"
 
+/**
+ * No shadow, for a control drawn as a dashed place or a bare line (a used word, a settled pair, a
+ * rewound option, a blank's gap): its fill is clear, and a shadow needs a solid one. A style, not
+ * a class, so the control's classes stay the same from state to state (class-names.test.ts).
+ */
+export const NO_SHADOW = { shadowOpacity: 0 } satisfies ViewStyle
+
 /** The color a checked answer takes: green for correct, yellow for wrong, amber for partly right. */
 export function markColor(mark: Mark): string {
   return mark === "correct"
@@ -46,12 +55,16 @@ export function markColor(mark: Mark): string {
       : colors.feedback.warn
 }
 
-/** A mark outranks the selected colors: a 10% tint inside a border of the color. */
+/**
+ * A mark outranks the selected colors: a 10% tint inside a border of the color. The tint is mixed
+ * into the page's color rather than laid over it, so the control's fill stays solid under its
+ * shadow.
+ */
 export function markStyle(mark: Mark | undefined): ViewStyle | undefined {
   if (!mark) return undefined
   return {
     borderColor: markColor(mark),
-    backgroundColor: alpha(markColor(mark), 0.1),
+    backgroundColor: mix(markColor(mark), 10, colors.background),
   }
 }
 
@@ -60,11 +73,14 @@ export const CONTROL_TEXT_SIZE = fontSize.sm[0]
 
 /**
  * An answer control: an option row, a chip, a tile. It takes a light tap as it's pressed, shows
- * selection with the primary border, and after checking takes its mark's color.
+ * selection with the primary border, and after checking takes its mark's color (unless `markTint`
+ * is off: an option card colors only its border, itself). A marked control is one the player keeps
+ * in view when the feedback opens (answer-marks.tsx).
  */
 export function Control({
   selected = false,
   mark,
+  markTint = true,
   disabled = false,
   onPress,
   className,
@@ -75,6 +91,7 @@ export function Control({
 }: {
   selected?: boolean
   mark?: Mark
+  markTint?: boolean
   disabled?: boolean
   onPress?: () => void
   className?: string
@@ -83,11 +100,16 @@ export function Control({
   accessibilityLabel?: string
   hitSlop?: number
 }) {
+  const ref = useMarkedAnswer(mark)
+  // The mark is a color and an icon: VoiceOver hears it as words after the control's label.
+  const word = useStage().markWord(mark)
   return (
     <Pressable
+      ref={ref}
       accessibilityRole="button"
       accessibilityState={{ selected, disabled, checked: selected }}
       accessibilityLabel={accessibilityLabel}
+      accessibilityValue={word ? { text: word } : undefined}
       disabled={disabled}
       hitSlop={hitSlop}
       onPress={() => {
@@ -99,7 +121,7 @@ export function Control({
         selected && selectedStyles,
         className
       )}
-      style={[markStyle(mark), style]}
+      style={[markTint ? markStyle(mark) : undefined, style]}
     >
       {children}
     </Pressable>

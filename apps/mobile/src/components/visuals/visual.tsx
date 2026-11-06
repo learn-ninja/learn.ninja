@@ -46,6 +46,7 @@ export function Visual({
   turns,
   label,
   plain = false,
+  width,
 }: {
   visual: VisualSpec
   hotspots?: HotspotControl
@@ -53,6 +54,8 @@ export function Visual({
   turns?: ChatTurn[]
   label?: string
   plain?: boolean
+  /** The width an HTML visual is laid out at, when its place fixes it (an order item). */
+  width?: number
 }) {
   const { prepared, baseCss, mathSvg, lang } = useLesson()
   const scale = useLessonTextScale()
@@ -71,6 +74,7 @@ export function Visual({
           plain={plain}
           hotspots={hotspots}
           label={t.picked}
+          width={width}
         />
       )
     case "code":

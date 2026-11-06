@@ -35,12 +35,14 @@ import {
   loadProgress,
   saveProgress,
 } from "@workspace/player-core/progress"
+import type { Mark } from "@workspace/player-core/check"
 import type { State } from "@workspace/player-core/state"
 import { challengeFor, parseChallenge } from "@workspace/player-core/challenge"
 import { directionOf, uiLanguageFor } from "@workspace/player-core/strings"
 
 import { createLinePicker } from "@workspace/player-core/voices"
 
+import { AnswerMarksContext } from "@/components/answer-marks"
 import { DirectionView, type Direction } from "@/components/direction"
 import { LessonContext } from "@/components/lesson-context"
 import { LessonMenu } from "@/components/lesson-menu"
@@ -63,6 +65,9 @@ import {
   sendToApi,
   type LoadedLesson,
 } from "@/lib/api"
+import { createAnswerMarks, revealBy } from "@/lib/answer-marks"
+import { markWord } from "@/lib/mark-words"
+import { OfflineError } from "@/lib/api-fetch"
 import { API_BASE_URL } from "@/lib/config"
 import { feedbackFor } from "@/lib/feedback"
 import { result as resultHaptic, tap as tapHaptic } from "@/lib/haptics"
@@ -86,6 +91,7 @@ import { effectsOn, speaks } from "@/lib/voice"
 import { visualDocument } from "@/lib/visual-frame"
 import { cn } from "@/lib/utils"
 import { measureAhead } from "@/lib/visual-height"
+import { visualsAhead } from "@/lib/visuals-ahead"
 import { useHandoff } from "../../../modules/handoff"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
@@ -95,8 +101,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 type Load =
   | { state: "loading" }
-  /** `retry`: asking again could help (no connection, a server error), unlike a lesson that's gone. */
-  | { state: "error"; status: number; retry: boolean }
+  /**
+   * `retry`: asking again could help (no connection, a server error), unlike a lesson that's gone.
+   * `offline`: the server couldn't be reached, or didn't answer in time.
+   */
+  | { state: "error"; status: number; retry: boolean; offline: boolean }
   | { state: "ready"; data: LoadedLesson }
 
 /** Back to where the lesson was opened from, or home when it was opened by a link. */
@@ -130,6 +139,7 @@ export default function LessonRoute() {
             state: "error",
             status: e instanceof LessonError ? e.status : 0,
             retry: !(e instanceof LessonError) || e.status >= 500,
+            offline: e instanceof OfflineError,
           })
       )
     return () => {
@@ -147,11 +157,13 @@ export default function LessonRoute() {
   const message =
     load.state !== "error"
       ? ""
-      : load.status === 404 || load.status === 410
-        ? t.lessonErrors.missing
-        : load.status === 422
-          ? t.lessonErrors.broken
-          : t.lessonErrors.failed
+      : load.offline
+        ? t.offline
+        : load.status === 404 || load.status === 410
+          ? t.lessonErrors.missing
+          : load.status === 422
+            ? t.lessonErrors.broken
+            : t.lessonErrors.failed
   return (
     <DirectionView dir={dir} className="flex-1 bg-background">
       <Stack.Screen options={{ headerShown: false }} />
@@ -217,23 +229,25 @@ function Player({
   useEffect(() => sync?.update(state), [sync, state])
   useEffect(() => () => sync?.close(), [sync])
 
-  // The next screen's HTML visual is measured while this one is read, so it opens at its height.
+  // The next screen's HTML visuals (a concept's, a question's, its option cards and order items, a
+  // hotspot's parts) are measured while this one is read, so they open at their height.
   const { width: windowWidth } = useWindowDimensions()
   const ahead = state.items[state.index + 1]
-  const aheadVisual = ahead?.kind === "concept" ? ahead.kata.visual : undefined
   useEffect(() => {
-    if (aheadVisual?.kind !== "html" || aheadVisual.height) return
-    measureAhead(
-      visualDocument({
-        html: aheadVisual.html,
-        css: aheadVisual.css,
-        baseCss: data.baseCss,
-        visualsCss: data.prepared.visualsCss,
-      }),
-      `${API_BASE_URL}/`,
-      windowWidth
-    )
-  }, [aheadVisual, data.baseCss, data.prepared.visualsCss, windowWidth])
+    for (const v of visualsAhead(ahead, windowWidth))
+      measureAhead(
+        visualDocument({
+          html: v.html,
+          css: v.css,
+          height: v.height,
+          baseCss: data.baseCss,
+          visualsCss: data.prepared.visualsCss,
+        }),
+        `${API_BASE_URL}/`,
+        v.width,
+        { height: !v.height, spots: v.spots }
+      )
+  }, [ahead, data.baseCss, data.prepared.visualsCss, windowWidth])
   const item = state.items[state.index]!
   // The player's own words: the language the learner chose in the menu, else the lesson's (the
   // web's rule; the lesson's is loaded with it, in fetchLesson). The screen runs its way.
@@ -318,6 +332,37 @@ function Player({
     if (sfx) preloadEffects(["vanish"])
   }, [sfx])
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null)
+  // The window the screens scroll in, and how far they're scrolled.
+  const windowRef = useRef<ComponentRef<typeof View>>(null)
+  const scrollY = useRef(0)
+  // After a check the tray grows to show the feedback, which can cover the marked answers: once it
+  // has settled, the lowest of them scrolls back into view (the web's phone layout does the same).
+  // Why? adding the explanation grows the tray again, so it runs then too.
+  const answerMarks = useMemo(() => createAnswerMarks(), [])
+  const reduced = useReducedMotion()
+  useEffect(() => {
+    if (!q?.result || q.phase === "answering") return
+    let live = true
+    const timer = setTimeout(() => {
+      void answerMarks.lowest().then((low) => {
+        const view = windowRef.current
+        if (!live || !low || !view) return
+        view.measureInWindow((_x, top, _w, height) => {
+          // Clear of the tray by a gap, but never past the answer's own top.
+          const overlap = revealBy(low, { top, height })
+          if (live && overlap > 0)
+            scrollRef.current?.scrollTo({
+              y: scrollY.current + overlap,
+              animated: !reduced,
+            })
+        })
+      })
+    }, 250)
+    return () => {
+      live = false
+      clearTimeout(timer)
+    }
+  }, [q?.result, q?.phase, whyOpen, answerMarks, reduced])
 
   // The clock starts when the learner leaves the intro and stops at the wrap-up.
   const [clock, setClock] = useState<{ start?: number; end?: number }>({})
@@ -348,10 +393,7 @@ function Player({
   // (expo-router preloads the route), and a peeked lesson isn't an opened one.
   const focused = useIsFocused()
   // Handoff: while the lesson is open, a nearby Mac or iPad offers its web page.
-  useHandoff(
-    focused ? lessonLink(API_BASE_URL, data.path) : null,
-    lesson.title
-  )
+  useHandoff(focused ? lessonLink(API_BASE_URL, data.path) : null, lesson.title)
   // The app icon's Continue quick action opens this lesson until it's finished.
   const { slugId } = useLocalSearchParams<{ slugId: string }>()
   useLastLesson(`/l/${slugId}`, lesson.title, item.kind === "wrap", focused)
@@ -377,8 +419,9 @@ function Player({
       onShare,
       uiLang: ui,
       challenge,
+      markWord: (mark: Mark | undefined) => markWord(t, mark),
     }),
-    [ninja, vanishing, streak, streakScreen, sfx, onShare, ui, challenge]
+    [ninja, vanishing, streak, streakScreen, sfx, onShare, ui, challenge, t]
   )
 
   // When this screen came up: a quick second tap of Continue lands on nothing (screen-guard.ts).
@@ -408,6 +451,7 @@ function Player({
   // Each new screen starts at the top (the wrap-up after the streak screen too).
   useLayoutEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false })
+    scrollY.current = 0
   }, [state.index, streakScreen])
 
   const whyLabel = feedback.why?.everyPath ? t.everyPath : t.why
@@ -448,7 +492,7 @@ function Player({
           t={t}
         />
         {/* The window: on a phone, edge to edge between two hairlines. */}
-        <View className="flex-1">
+        <View ref={windowRef} className="flex-1">
           {/* Phase 3: the smoke behind the intro; without the ninja it follows the title up. */}
           {item.kind === "intro" ? (
             <Aura shift={ninja === "off" ? -54 : 0} vanishing={vanishing} />
@@ -457,6 +501,10 @@ function Player({
             ref={scrollRef}
             // The header and tray already keep clear of the notch and the home bar.
             contentInsetAdjustmentBehavior="never"
+            onScroll={(e) => {
+              scrollY.current = e.nativeEvent.contentOffset.y
+            }}
+            scrollEventThrottle={16}
             className={cn(
               "flex-1 border-border",
               trayShown ? "border-y" : "border-t"
@@ -487,18 +535,20 @@ function Player({
               >
                 <LessonContext value={lessonContext}>
                   <StageContext value={stage}>
-                    <LessonScreen
-                      // Each screen is its own: two katas of a kind in a row (an order after an order,
-                      // two sorts in the fix round) mustn't share what the first one kept.
-                      key={`${state.run}:${state.index}`}
-                      data={data}
-                      item={item}
-                      state={state}
-                      dispatch={dispatch}
-                      feedback={feedback}
-                      whyOpen={whyOpen}
-                      t={t}
-                    />
+                    <AnswerMarksContext value={answerMarks}>
+                      <LessonScreen
+                        // Each screen is its own: two katas of a kind in a row (an order after an order,
+                        // two sorts in the fix round) mustn't share what the first one kept.
+                        key={`${state.run}:${state.index}`}
+                        data={data}
+                        item={item}
+                        state={state}
+                        dispatch={dispatch}
+                        feedback={feedback}
+                        whyOpen={whyOpen}
+                        t={t}
+                      />
+                    </AnswerMarksContext>
                   </StageContext>
                 </LessonContext>
               </DirectionView>
