@@ -13,6 +13,7 @@ import type { Mark } from "@workspace/player-core/check"
 
 import { useMarkedAnswer } from "@/components/answer-marks"
 import { RichText } from "@/components/rich-text"
+import { useStage } from "@/components/stage-context"
 import { Text } from "@/components/ui/text"
 import { alpha } from "@/lib/color"
 import { tap } from "@/lib/haptics"
@@ -89,12 +90,15 @@ export function Control({
   hitSlop?: number
 }) {
   const ref = useMarkedAnswer(mark)
+  // The mark is a color and an icon: VoiceOver hears it as words after the control's label.
+  const word = useStage().markWord(mark)
   return (
     <Pressable
       ref={ref}
       accessibilityRole="button"
       accessibilityState={{ selected, disabled, checked: selected }}
       accessibilityLabel={accessibilityLabel}
+      accessibilityValue={word ? { text: word } : undefined}
       disabled={disabled}
       hitSlop={hitSlop}
       onPress={() => {

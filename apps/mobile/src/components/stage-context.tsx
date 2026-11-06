@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react"
 
 import type { Challenge } from "@workspace/player-core/challenge"
+import type { Mark } from "@workspace/player-core/check"
 import type { NinjaLevel } from "@workspace/player-core/strings"
 
 import type { Streak } from "@/lib/streak"
@@ -23,6 +24,8 @@ export interface Stage {
   uiLang: string
   /** The score a friend sent with the link (?c= and ?by=), when it still fits the lesson. */
   challenge?: Challenge
+  /** A checked answer's mark in words, for VoiceOver, in the player's language (lib/mark-words.ts). */
+  markWord: (mark: Mark | undefined) => string | undefined
 }
 
 export const StageContext = createContext<Stage>({
@@ -33,6 +36,7 @@ export const StageContext = createContext<Stage>({
   sound: false,
   onShare: null,
   uiLang: "en",
+  markWord: () => undefined,
 })
 
 export const useStage = () => useContext(StageContext)

@@ -15,6 +15,7 @@ import { alpha } from "@/lib/color"
 import { API_BASE_URL } from "@/lib/config"
 import { tap } from "@/lib/haptics"
 import { overlaysFor } from "@/lib/spots"
+import { useStage } from "@/components/stage-context"
 import { cn } from "@/lib/utils"
 import {
   navigationGuard,
@@ -93,6 +94,7 @@ export function VisualFrame({
   width?: number
 }) {
   const source = useVisualSource({ html, css, height, baseCss, visualsCss })
+  const { markWord } = useStage()
   const interactive = Boolean(hotspots)
   // The frame's own width once it's laid out. Until then: the width it's given, or for a frame in
   // its own window the column's (visual-widths.ts), so a visual measured ahead opens at its height
@@ -220,6 +222,12 @@ export function VisualFrame({
               key={s.id}
               accessibilityRole="button"
               accessibilityLabel={s.label}
+              // A checked part's mark, in words after its name.
+              accessibilityValue={
+                markWord(hotspots.marks[s.id])
+                  ? { text: markWord(hotspots.marks[s.id]) }
+                  : undefined
+              }
               accessibilityState={{
                 selected: hotspots.selected.includes(s.id),
                 disabled: hotspots.disabled,

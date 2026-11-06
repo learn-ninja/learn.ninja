@@ -35,6 +35,7 @@ import {
   loadProgress,
   saveProgress,
 } from "@workspace/player-core/progress"
+import type { Mark } from "@workspace/player-core/check"
 import type { State } from "@workspace/player-core/state"
 import { challengeFor, parseChallenge } from "@workspace/player-core/challenge"
 import { directionOf, uiLanguageFor } from "@workspace/player-core/strings"
@@ -65,6 +66,7 @@ import {
   type LoadedLesson,
 } from "@/lib/api"
 import { createAnswerMarks, revealBy } from "@/lib/answer-marks"
+import { markWord } from "@/lib/mark-words"
 import { API_BASE_URL } from "@/lib/config"
 import { feedbackFor } from "@/lib/feedback"
 import { result as resultHaptic, tap as tapHaptic } from "@/lib/haptics"
@@ -410,8 +412,9 @@ function Player({
       onShare,
       uiLang: ui,
       challenge,
+      markWord: (mark: Mark | undefined) => markWord(t, mark),
     }),
-    [ninja, vanishing, streak, streakScreen, sfx, onShare, ui, challenge]
+    [ninja, vanishing, streak, streakScreen, sfx, onShare, ui, challenge, t]
   )
 
   // When this screen came up: a quick second tap of Continue lands on nothing (screen-guard.ts).
