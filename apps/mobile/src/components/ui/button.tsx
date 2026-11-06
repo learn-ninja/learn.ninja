@@ -1,6 +1,8 @@
 // From React Native Reusables (https://reactnativereusables.com, MIT), NativeWind flavor; the shape
 // follows Nova as the web does (rounded-lg buttons); the outline variant drops its shadow, which a
-// translucent fill can't cast on iOS (and which doesn't show on the dark background).
+// translucent fill can't cast on iOS (and which doesn't show on the dark background). For the same
+// reason a filled button shows its press by fading (opacity), not with a translucent fill under
+// its shadow.
 
 import { TextClassContext } from "@/components/ui/text"
 import { cn } from "@/lib/utils"
@@ -18,11 +20,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: cn(
-          "bg-primary shadow-sm shadow-black/5 active:bg-primary/90",
+          "bg-primary shadow-sm shadow-black/5 active:opacity-90",
           Platform.select({ web: "hover:bg-primary/90" })
         ),
         destructive: cn(
-          "bg-destructive shadow-sm shadow-black/5 active:bg-destructive/90 dark:bg-destructive/60",
+          "bg-destructive shadow-sm shadow-black/5 active:opacity-90 dark:bg-destructive/60",
           Platform.select({
             web: "hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
           })
@@ -34,7 +36,7 @@ const buttonVariants = cva(
           })
         ),
         secondary: cn(
-          "bg-secondary shadow-sm shadow-black/5 active:bg-secondary/80",
+          "bg-secondary shadow-sm shadow-black/5 active:opacity-80",
           Platform.select({ web: "hover:bg-secondary/80" })
         ),
         ghost: cn(

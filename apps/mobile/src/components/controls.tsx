@@ -15,7 +15,7 @@ import { useMarkedAnswer } from "@/components/answer-marks"
 import { RichText } from "@/components/rich-text"
 import { useStage } from "@/components/stage-context"
 import { Text } from "@/components/ui/text"
-import { alpha } from "@/lib/color"
+import { alpha, mix } from "@/lib/color"
 import { tap } from "@/lib/haptics"
 import { cn } from "@/lib/utils"
 import { colors, fontSize } from "../../tokens"
@@ -39,6 +39,13 @@ export const controlText = "text-lesson-sm font-medium"
 export const slotStyles =
   "rounded-md border border-dashed border-foreground/20 bg-slot"
 
+/**
+ * No shadow, for a control drawn as a dashed place or a bare line (a used word, a settled pair, a
+ * rewound option, a blank's gap): its fill is clear, and a shadow needs a solid one. A style, not
+ * a class, so the control's classes stay the same from state to state (class-names.test.ts).
+ */
+export const NO_SHADOW = { shadowOpacity: 0 } satisfies ViewStyle
+
 /** The color a checked answer takes: green for correct, yellow for wrong, amber for partly right. */
 export function markColor(mark: Mark): string {
   return mark === "correct"
@@ -48,12 +55,16 @@ export function markColor(mark: Mark): string {
       : colors.feedback.warn
 }
 
-/** A mark outranks the selected colors: a 10% tint inside a border of the color. */
+/**
+ * A mark outranks the selected colors: a 10% tint inside a border of the color. The tint is mixed
+ * into the page's color rather than laid over it, so the control's fill stays solid under its
+ * shadow.
+ */
 export function markStyle(mark: Mark | undefined): ViewStyle | undefined {
   if (!mark) return undefined
   return {
     borderColor: markColor(mark),
-    backgroundColor: alpha(markColor(mark), 0.1),
+    backgroundColor: mix(markColor(mark), 10, colors.background),
   }
 }
 
