@@ -187,7 +187,7 @@ export const LessonRow = memo(function LessonRow({
         <Link.MenuAction
           title={like.liked ? t.liked : t.like}
           icon={like.liked ? "heart.fill" : "heart"}
-          onPress={like.toggle}
+          onPress={() => like.toggle()}
         />
         <Link.MenuAction
           title={t.share}
