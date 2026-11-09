@@ -343,6 +343,10 @@ export const pt: Translation = {
       "Seu perfil, com suas lições e sua sequência, fica no seu nome de usuário. Escolha um em Configurações.",
     save: "Salvar",
     saved: "Salvo",
+    deleteAccount: "Excluir conta",
+    deleteWarning:
+      "Isso exclui sua conta e tudo o que há nela para sempre: suas lições, perfil, curtidas, lições concluídas, progresso, sequência e chaves. Não dá para desfazer. Digite seu e-mail para confirmar.",
+    deleteMismatch: "Esse não é o e-mail da sua conta.",
   },
   lessonErrors: {
     missing:

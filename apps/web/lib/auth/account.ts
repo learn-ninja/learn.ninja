@@ -1,8 +1,10 @@
 import { APIError } from "better-auth/api"
-import { and, desc, eq, isNull, max } from "drizzle-orm"
+import { and, desc, eq, inArray, isNull, max, sql } from "drizzle-orm"
 
 import {
   account,
+  lesson,
+  like,
   oauthAccessToken,
   oauthClient,
   oauthConsent,
@@ -12,6 +14,7 @@ import {
 
 import type { Reply } from "@/lib/publish/handlers"
 import { mcpPath } from "@/lib/publish/paths"
+import { atomically } from "@/lib/publish/store"
 
 import type { Actor } from "./actor"
 import { MCP_KEY_PERMISSIONS, MCP_KEY_PREFIX, type Auth } from "./auth"
@@ -367,4 +370,72 @@ export async function githubLinkedAt(
     .from(account)
     .where(and(eq(account.userId, userId), eq(account.providerId, "github")))
   return row ? row.createdAt.toISOString() : null
+}
+
+// ---------- deleting the account ----------
+
+/**
+ * DELETE /api/account with { confirm: "<the account's email>" }: deletes the account and everything
+ * it owns, for good. The email, typed again, is the confirmation (the iOS app's prompt and the
+ * settings page's dialog ask for it); a code isn't, since the store reviewers' account never gets
+ * one by email. Only a logged-in session may do it, never an API key, so a leaked key can publish
+ * but not wipe an account.
+ *
+ * The lessons go first (their owner column is set null on delete, which would leave them online as
+ * never-expiring anonymous lessons), with their tags, likes, finishes, progress, and reports by
+ * cascade. Then Better Auth deletes the user, its sessions (Redis too), and log-ins; the database
+ * cascades the rest: API keys, OAuth apps, tokens and consents, the avatar, likes, finishes,
+ * progress, and activity days. Their likes come off the other lessons' counts first. The session
+ * is ended first, so the reply clears the cookie.
+ */
+export async function deleteAccount(
+  auth: Auth,
+  db: Db,
+  actor: Actor,
+  headers: Headers,
+  confirm: unknown
+): Promise<Reply> {
+  if (actor.viaApiKey) {
+    return {
+      status: 403,
+      body: {
+        ok: false,
+        error: "forbidden",
+        message: "Delete your account from the website or the app, logged in.",
+      },
+    }
+  }
+  const typed = typeof confirm === "string" ? confirm.trim().toLowerCase() : ""
+  if (typed !== actor.email.toLowerCase()) {
+    return {
+      status: 400,
+      body: {
+        ok: false,
+        error: "confirm_mismatch",
+        message: "Type your account's email to confirm.",
+      },
+    }
+  }
+  const { headers: signedOut } = await auth.api.signOut({
+    headers,
+    returnHeaders: true,
+  })
+  await atomically(db, (db) => [
+    db
+      .update(lesson)
+      .set({ likes: sql`greatest(${lesson.likes} - 1, 0)` })
+      .where(
+        inArray(
+          lesson.id,
+          db
+            .select({ id: like.lessonId })
+            .from(like)
+            .where(eq(like.userId, actor.userId))
+        )
+      ),
+    db.delete(lesson).where(eq(lesson.ownerId, actor.userId)),
+  ])
+  const ctx = await auth.$context
+  await ctx.internalAdapter.deleteUser(actor.userId)
+  return { status: 200, body: { ok: true, deleted: true }, headers: signedOut }
 }

@@ -349,6 +349,10 @@ export const it: Translation = {
       "Il tuo profilo, con le tue lezioni e la tua serie, si trova al tuo nome utente. Scegline uno nelle Impostazioni.",
     save: "Salva",
     saved: "Salvato",
+    deleteAccount: "Elimina account",
+    deleteWarning:
+      "Questo elimina per sempre il tuo account e tutto ciò che contiene: le tue lezioni, il profilo, i mi piace, le lezioni completate, i progressi, la serie e le chiavi. Non si può annullare. Scrivi la tua email per confermare.",
+    deleteMismatch: "Questa non è l’email del tuo account.",
   },
   lessonErrors: {
     missing:

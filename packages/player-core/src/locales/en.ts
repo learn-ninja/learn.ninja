@@ -321,6 +321,10 @@ export const en: Strings = {
       "Your profile, with your lessons and streak, lives at your handle. Choose one in Settings.",
     save: "Save",
     saved: "Saved",
+    deleteAccount: "Delete account",
+    deleteWarning:
+      "This deletes your account and everything in it for good: your lessons, profile, likes, finished lessons, progress, streak, and keys. It can't be undone. Type your email to confirm.",
+    deleteMismatch: "That isn't your account's email.",
   },
   lessonErrors: {
     missing:

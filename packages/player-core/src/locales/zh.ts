@@ -307,6 +307,10 @@ export const zh: Translation = {
       "你的个人主页（包括课程和连续记录）就在你的用户名下。请在设置中选一个。",
     save: "保存",
     saved: "已保存",
+    deleteAccount: "删除账号",
+    deleteWarning:
+      "这会永久删除你的账号及其中的一切：你的课程、个人资料、点赞、已完成的课程、进度、连续记录和密钥。此操作无法撤销。请输入你的邮箱以确认。",
+    deleteMismatch: "这不是你账号的邮箱。",
   },
   lessonErrors: {
     missing: "这里没有课程：它在发布 7 天后已过期，或者链接有误。",

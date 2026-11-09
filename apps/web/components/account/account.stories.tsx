@@ -17,6 +17,7 @@ import { ApiKeys } from "./api-keys"
 import { AvatarForm } from "./avatar-form"
 import { ConnectChat } from "./connect-chat"
 import { ConnectedApps } from "./connected-apps"
+import { DeleteAccount } from "./delete-account"
 import { AuthHeading, AuthPanel, LegalConsent } from "./auth-panel"
 import { ConsentForm } from "./consent-form"
 import { HandleForm } from "./handle-form"
@@ -67,6 +68,10 @@ const fakeApi = (over: Partial<AccountApi> = {}): AccountApi => ({
   },
   async signOut() {
     await wait()
+  },
+  async deleteAccount() {
+    await wait()
+    return {}
   },
   async listKeys() {
     return KEYS
@@ -390,6 +395,35 @@ export const ConnectedAppsFails: Story = {
         disconnectApp: async () => {
           await wait()
           return { error: "Log in again to disconnect an app." }
+        },
+      })}
+    />
+  ),
+}
+
+export const DeleteAccountButton: Story = {
+  name: "Delete account",
+  render: () => (
+    <DeleteAccount
+      email="ada@example.com"
+      api={fakeApi()}
+      navigate={navigate}
+    />
+  ),
+}
+
+export const DeleteAccountFails: Story = {
+  name: "Delete account, server refuses",
+  render: () => (
+    <DeleteAccount
+      email="ada@example.com"
+      navigate={navigate}
+      api={fakeApi({
+        deleteAccount: async () => {
+          await wait()
+          return {
+            error: "Something went wrong on the server. Try again in a minute.",
+          }
         },
       })}
     />

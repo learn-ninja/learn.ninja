@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy" updated="2026-11-03">
+    <LegalPage title="Privacy" updated="2026-11-09">
       <p>
         {SITE.name} is a free tool that works without an account. This page
         lists everything it stores and for how long. It is short because there
@@ -102,7 +102,14 @@ export default function PrivacyPage() {
 
       <h2>Deleting your account</h2>
       <p>
-        Contact us and we will delete your account, its keys, and its lessons.
+        Delete your account yourself, at any time, from Settings on the website
+        or in the iOS app: type your email to confirm, and it is gone at once.
+        That deletes the account and everything tied to it: your lessons
+        (their links stop working), profile and picture, likes, finished
+        lessons and progress, streak, API keys, and the chat apps connected to
+        it. It can&apos;t be undone. What you played without logging in stays
+        in your browser or on your phone until you clear it. If you can&apos;t
+        log in, contact us and we will delete it for you.
       </p>
 
       <h2>Contact</h2>
