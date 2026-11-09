@@ -246,7 +246,9 @@ describe("deleting the account", () => {
     ).toHaveLength(1)
   })
 
-  it("answers a signed-out request with 401", async () => {
+  // The route builds the app's own auth, which creates and migrates a fresh database first:
+  // a few seconds while the rest of the suite runs beside it.
+  it("answers a signed-out request with 401", { timeout: 30_000 }, async () => {
     const res = await DELETE(
       new Request("http://localhost:3000/api/account", {
         method: "DELETE",
