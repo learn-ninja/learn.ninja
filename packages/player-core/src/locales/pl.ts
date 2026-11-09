@@ -387,4 +387,11 @@ export const pl: Translation = {
     "Nie udało się połączyć z learn.ninja. Sprawdź połączenie i spróbuj ponownie.",
   offlineCopy: "Offline: odtwarzana jest kopia zapisana na tym telefonie",
   onThisPhone: "Zapisane na tym telefonie",
+  reminders: {
+    endTitle: "Twoja seria kończy się dziś w nocy",
+    endBody: "Jedna krótka lekcja ją podtrzyma.",
+    restTitle: "Dziś jeszcze bez lekcji",
+    restBody: "Jeśli ją pominiesz, dziś w nocy zużyjesz dzień odpoczynku.",
+    setting: "Przypomnienia o serii",
+  },
 }

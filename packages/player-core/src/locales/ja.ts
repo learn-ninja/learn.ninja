@@ -324,4 +324,11 @@ export const ja: Translation = {
     "learn.ninja に接続できませんでした。接続を確認して、もう一度お試しください。",
   offlineCopy: "オフライン：この端末に保存したコピーを再生中",
   onThisPhone: "この端末に保存済み",
+  reminders: {
+    endTitle: "今夜で連続記録が途切れます",
+    endBody: "短いレッスンを1つで続けられます。",
+    restTitle: "今日はまだレッスンがありません",
+    restBody: "休むと今夜、休息日を1日使います。",
+    setting: "連続記録のリマインダー",
+  },
 }

@@ -360,4 +360,11 @@ export const it: Translation = {
     "Impossibile raggiungere learn.ninja. Controlla la connessione e riprova.",
   offlineCopy: "Offline: è in riproduzione la copia salvata su questo telefono",
   onThisPhone: "Salvate su questo telefono",
+  reminders: {
+    endTitle: "La tua serie finisce stanotte",
+    endBody: "Una breve lezione la tiene viva.",
+    restTitle: "Ancora nessuna lezione oggi",
+    restBody: "Se la salti, stanotte usi un giorno di riposo.",
+    setting: "Promemoria della serie",
+  },
 }

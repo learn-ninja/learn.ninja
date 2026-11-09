@@ -77,6 +77,7 @@ import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
 import { useSession } from "@/lib/session"
 import { forgetLastLesson, useLastLesson } from "@/lib/quick-actions"
+import { askForReminders } from "@/lib/reminders"
 import { askForReviewAt } from "@/lib/review"
 import { lessonLink } from "@/lib/share"
 import { shareChallenge, shareLesson } from "@/lib/share-sheet"
@@ -587,8 +588,15 @@ function Player({
                 onPress={() => {
                   tapHaptic()
                   leaveStreak()
-                  // A week, a month, a hundred days: the moment to ask for a rating.
-                  if (streak) void askForReviewAt(streak.streak.current)
+                  // A week, a month, a hundred days: the moment to ask for a rating. Otherwise,
+                  // the first time, for the evening reminder that keeps the streak going.
+                  void (
+                    streak
+                      ? askForReviewAt(streak.streak.current)
+                      : Promise.resolve(false)
+                  ).then((asked) => {
+                    if (!asked) void askForReminders()
+                  })
                 }}
               />
             ) : feedback.primary ? (

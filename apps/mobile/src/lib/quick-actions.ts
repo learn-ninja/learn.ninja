@@ -52,7 +52,8 @@ export function quickActionItems(
   ]
 }
 
-function readLast(): LastLesson | null {
+/** The lesson last left unfinished, if any: Continue's, and where a streak reminder opens. */
+export function readLast(): LastLesson | null {
   try {
     const raw = Storage.getItemSync(LAST)
     const last: unknown = raw ? JSON.parse(raw) : null

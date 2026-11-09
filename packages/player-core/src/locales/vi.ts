@@ -331,4 +331,11 @@ export const vi: Translation = {
     "Không thể kết nối tới learn.ninja. Hãy kiểm tra kết nối rồi thử lại.",
   offlineCopy: "Ngoại tuyến: đang mở bản lưu trên điện thoại này",
   onThisPhone: "Đã lưu trên điện thoại này",
+  reminders: {
+    endTitle: "Chuỗi của bạn kết thúc tối nay",
+    endBody: "Một bài học ngắn sẽ giữ nó tiếp tục.",
+    restTitle: "Hôm nay chưa có bài học nào",
+    restBody: "Nếu bỏ qua, tối nay sẽ dùng một ngày nghỉ.",
+    setting: "Nhắc nhở chuỗi",
+  },
 }

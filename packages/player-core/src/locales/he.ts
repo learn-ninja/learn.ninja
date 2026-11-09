@@ -361,4 +361,11 @@ export const he: Translation = {
   offline: "אי אפשר להגיע ל-learn.ninja. כדאי לבדוק את החיבור ולנסות שוב.",
   offlineCopy: "אופליין: מוצג העותק השמור בטלפון הזה",
   onThisPhone: "שמורים בטלפון הזה",
+  reminders: {
+    endTitle: "הרצף שלך נגמר הלילה",
+    endBody: "שיעור קצר אחד ישמור עליו.",
+    restTitle: "עוד אין שיעור היום",
+    restBody: "אם תדלגו, הלילה ינוצל יום מנוחה.",
+    setting: "תזכורות רצף",
+  },
 }

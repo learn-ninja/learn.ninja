@@ -351,6 +351,16 @@ export type Strings = {
   offlineCopy: string
   /** Over the lessons kept on the phone, shown on home when learn.ninja can't be reached. */
   onThisPhone: string
+  /** The app's evening reminder when the streak is at stake, and its switch in Settings. */
+  reminders: {
+    /** No rest day left: missing today ends the streak. */
+    endTitle: string
+    endBody: string
+    /** A rest day saved: missing today spends it. */
+    restTitle: string
+    restBody: string
+    setting: string
+  }
 }
 
 /**

@@ -351,4 +351,11 @@ export const es: Translation = {
     "No se pudo conectar con learn.ninja. Revisa tu conexión e inténtalo de nuevo.",
   offlineCopy: "Sin conexión: se reproduce la copia guardada en este teléfono",
   onThisPhone: "Guardadas en este teléfono",
+  reminders: {
+    endTitle: "Tu racha termina esta noche",
+    endBody: "Una lección corta la mantiene viva.",
+    restTitle: "Hoy aún no hay lección",
+    restBody: "Si la saltas, esta noche gastas un día de descanso.",
+    setting: "Recordatorios de racha",
+  },
 }

@@ -361,4 +361,11 @@ export const fr: Translation = {
     "Impossible de joindre learn.ninja. Vérifie ta connexion et réessaie.",
   offlineCopy: "Hors ligne : la copie enregistrée sur ce téléphone est lue",
   onThisPhone: "Enregistrées sur ce téléphone",
+  reminders: {
+    endTitle: "Ta série s'arrête ce soir",
+    endBody: "Une courte leçon suffit à la garder.",
+    restTitle: "Pas encore de leçon aujourd'hui",
+    restBody: "Si tu passes, ce soir utilise un jour de repos.",
+    setting: "Rappels de série",
+  },
 }

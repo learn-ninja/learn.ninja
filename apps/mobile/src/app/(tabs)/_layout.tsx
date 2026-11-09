@@ -1,6 +1,7 @@
 import { NativeTabs } from "expo-router/native-tabs"
 
 import { QuickActionsEffect } from "@/lib/quick-actions"
+import { RemindersEffect } from "@/lib/reminders"
 import { useAppStrings } from "@/lib/use-strings"
 import { colors } from "../../../tokens"
 
@@ -13,6 +14,7 @@ export default function TabsLayout() {
   return (
     <>
       <QuickActionsEffect />
+      <RemindersEffect />
       <NativeTabs
         // The app's language's direction for the tab bar and, through UIKit's traits, everything
         // under it: each tab's bar and its large title mirror at once, without a relaunch.

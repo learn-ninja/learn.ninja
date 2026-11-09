@@ -6,6 +6,7 @@ import {
   Picker,
   Section,
   Text,
+  Toggle,
 } from "@expo/ui/swift-ui"
 import { foregroundStyle, pickerStyle, tag } from "@expo/ui/swift-ui/modifiers"
 import { router, Stack } from "expo-router"
@@ -20,6 +21,7 @@ import {
 
 import { API_BASE_URL } from "@/lib/config"
 import { handleProblem, normalizeHandle } from "@/lib/handle"
+import { remindersSwitched } from "@/lib/reminders"
 import { selection, tap } from "@/lib/haptics"
 import { saveHandle } from "@/lib/save-handle"
 import { signOut, useSession } from "@/lib/session"
@@ -30,14 +32,15 @@ import { colors } from "../../../../tokens"
 // The account's settings on iOS (settings.tsx is the rest of the platforms'), from the gear on
 // your own profile, as iOS's own Settings draws a page:
 // a grouped form (SwiftUI's, through @expo/ui) with who's logged in and the handle, the app's
-// language as a menu of the player's languages, and Log out in red, confirmed first. The handle
+// language as a menu of the player's languages, the streak reminder's switch, and Log out in red,
+// confirmed first. The handle
 // is changed in the system's text prompt and saved as the web's settings save it
 // (PATCH /api/account).
 
 export default function Settings() {
   const { t, lang, dir } = useAppStrings()
   const session = useSession()
-  const [, update] = usePreferences()
+  const [prefs, update] = usePreferences()
   // Set once this screen's Log out takes it off the stack itself, so the effect below doesn't pop
   // a second screen (the profile under it, from Explore) as the session ends mid-transition.
   const leaving = useRef(false)
@@ -100,6 +103,19 @@ export default function Settings() {
               </Picker>
             </Section>
           ) : null}
+          <Section>
+            {/* The evening streak reminder (reminders.ts): on until switched off. */}
+            <Toggle
+              label={t.reminders.setting}
+              systemImage="bell"
+              isOn={prefs.reminders !== false}
+              onIsOnChange={(on) => {
+                selection()
+                update({ reminders: on })
+                void remindersSwitched(on)
+              }}
+            />
+          </Section>
           <Section>
             <Button
               role="destructive"
