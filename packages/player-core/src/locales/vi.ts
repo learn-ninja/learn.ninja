@@ -320,6 +320,10 @@ export const vi: Translation = {
       "Hồ sơ của bạn, với các bài học và chuỗi ngày, nằm ở tên người dùng của bạn. Hãy chọn một tên trong Cài đặt.",
     save: "Lưu",
     saved: "Đã lưu",
+    deleteAccount: "Xóa tài khoản",
+    deleteWarning:
+      "Thao tác này xóa vĩnh viễn tài khoản của bạn và mọi thứ trong đó: bài học, hồ sơ, lượt thích, bài học đã hoàn thành, tiến độ, chuỗi ngày và khóa. Không thể hoàn tác. Nhập email của bạn để xác nhận.",
+    deleteMismatch: "Đó không phải email của tài khoản bạn.",
   },
   lessonErrors: {
     missing:

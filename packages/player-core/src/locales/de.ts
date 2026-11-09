@@ -351,6 +351,10 @@ export const de: Translation = {
       "Dein Profil mit deinen Lektionen und deiner Serie liegt unter deinem Nutzernamen. Wähle einen in den Einstellungen.",
     save: "Speichern",
     saved: "Gespeichert",
+    deleteAccount: "Konto löschen",
+    deleteWarning:
+      "Damit werden dein Konto und alles darin endgültig gelöscht: deine Lektionen, dein Profil, Likes, abgeschlossene Lektionen, Fortschritt, Serie und Schlüssel. Das lässt sich nicht rückgängig machen. Gib zur Bestätigung deine E-Mail-Adresse ein.",
+    deleteMismatch: "Das ist nicht die E-Mail-Adresse deines Kontos.",
   },
   lessonErrors: {
     missing:

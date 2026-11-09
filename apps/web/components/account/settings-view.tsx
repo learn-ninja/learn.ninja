@@ -11,6 +11,7 @@ import { ApiKeys } from "./api-keys"
 import { AvatarForm } from "./avatar-form"
 import { ConnectChat } from "./connect-chat"
 import { ConnectedApps } from "./connected-apps"
+import { DeleteAccount } from "./delete-account"
 import { HandleForm } from "./handle-form"
 import { LogInMethods } from "./log-in-methods"
 import { SettingsSection } from "./settings-section"
@@ -18,7 +19,8 @@ import { SettingsSection } from "./settings-section"
 
 /**
  * The settings page's content: the profile, how you log in, then what can publish to the account (chat apps that
- * logged in, the personal MCP URL, API keys). `api` is the fake server in Storybook.
+ * logged in, the personal MCP URL, API keys), and deleting the account. `api` is the fake server in
+ * Storybook.
  */
 export function SettingsView({
   email,
@@ -98,6 +100,16 @@ export function SettingsView({
         description="For publishing from the terminal."
       >
         <ApiKeys initial={keys} api={api} />
+      </SettingsSection>
+
+      <Separator />
+
+      <SettingsSection
+        id="delete"
+        title="Delete account"
+        description="Your account and everything in it, for good."
+      >
+        <DeleteAccount email={email} api={api} />
       </SettingsSection>
     </div>
   )

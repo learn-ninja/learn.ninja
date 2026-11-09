@@ -338,6 +338,12 @@ export type Strings = {
     needsHandleBody: string
     save: string
     saved: string
+    /** Settings' destructive item (app and web), and the title of its confirmation. */
+    deleteAccount: string
+    /** The confirmation's body: what goes, that it can't be undone, and to type the email. */
+    deleteWarning: string
+    /** The typed email isn't the account's. */
+    deleteMismatch: string
   }
   /** Why a lesson didn't open in the app. */
   lessonErrors: {

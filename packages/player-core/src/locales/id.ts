@@ -324,6 +324,10 @@ export const id: Translation = {
       "Profilmu, dengan pelajaran dan streak-mu, ada di nama penggunamu. Pilih satu di Pengaturan.",
     save: "Simpan",
     saved: "Tersimpan",
+    deleteAccount: "Hapus akun",
+    deleteWarning:
+      "Ini menghapus akunmu dan semua isinya untuk selamanya: pelajaran, profil, suka, pelajaran yang selesai, progres, streak, dan kunci. Tindakan ini tidak bisa dibatalkan. Ketik emailmu untuk mengonfirmasi.",
+    deleteMismatch: "Itu bukan email akunmu.",
   },
   lessonErrors: {
     missing:

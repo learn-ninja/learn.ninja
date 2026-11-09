@@ -342,6 +342,10 @@ export const nl: Translation = {
       "Je profiel, met je lessen en je reeks, staat op je gebruikersnaam. Kies er een in Instellingen.",
     save: "Opslaan",
     saved: "Opgeslagen",
+    deleteAccount: "Account verwijderen",
+    deleteWarning:
+      "Hiermee worden je account en alles erin definitief verwijderd: je lessen, profiel, likes, afgeronde lessen, voortgang, reeks en sleutels. Dit kan niet ongedaan worden gemaakt. Typ je e-mailadres om te bevestigen.",
+    deleteMismatch: "Dat is niet het e-mailadres van je account.",
   },
   lessonErrors: {
     missing:

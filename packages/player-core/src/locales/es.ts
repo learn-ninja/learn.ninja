@@ -340,6 +340,10 @@ export const es: Translation = {
       "Tu perfil, con tus lecciones y tu racha, está en tu nombre de usuario. Elige uno en Ajustes.",
     save: "Guardar",
     saved: "Guardado",
+    deleteAccount: "Eliminar cuenta",
+    deleteWarning:
+      "Esto elimina tu cuenta y todo lo que contiene para siempre: tus lecciones, perfil, me gusta, lecciones terminadas, progreso, racha y claves. No se puede deshacer. Escribe tu correo para confirmar.",
+    deleteMismatch: "Ese no es el correo de tu cuenta.",
   },
   lessonErrors: {
     missing:

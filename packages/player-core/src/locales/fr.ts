@@ -350,6 +350,10 @@ export const fr: Translation = {
       "Ton profil, avec tes leçons et ta série, se trouve à ton pseudo. Choisis-en un dans les Réglages.",
     save: "Enregistrer",
     saved: "Enregistré",
+    deleteAccount: "Supprimer le compte",
+    deleteWarning:
+      "Cela supprime définitivement votre compte et tout son contenu : vos leçons, votre profil, vos j’aime, les leçons terminées, la progression, la série et les clés. C’est irréversible. Saisissez votre e-mail pour confirmer.",
+    deleteMismatch: "Ce n’est pas l’e-mail de votre compte.",
   },
   lessonErrors: {
     missing:

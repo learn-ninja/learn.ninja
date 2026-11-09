@@ -62,6 +62,7 @@ No third-party analytics, advertising or tracking SDKs. Data not linked to an ac
 - **Sign-in:** the app logs in with a 6-digit code sent by email. Reviewers can't read our email, so give them the fixed review log-in: the email in `REVIEW_SIGN_IN_EMAIL` and the code in `REVIEW_SIGN_IN_CODE` on Vercel (the same account Anthropic's directory reviewers use; `apps/web/lib/auth/auth.ts`). Put the values in App Store Connect's sign-in fields only, never in the repo.
 - **Something to open:** no account is needed to play. Signed out, the home screen lists the sample lessons; signed in, Explore lists kept lessons. A kept lesson link (learn.ninja/l/…) in the notes shows a shared link opening in the app.
 - **The reminder** only appears after a first finished lesson, on an evening when the streak is at stake.
+- **Deleting the account:** Profile → the gear → Delete account, then type the account's email in the prompt. Deleting the review account is fine: the fixed log-in makes it again, empty, on the next sign-in (Anthropic's reviewers then find it without lessons).
 - **The widget:** long-press the app icon, or add "learn.ninja" from the widget gallery.
 
 ## Screenshots
@@ -70,6 +71,5 @@ No third-party analytics, advertising or tracking SDKs. Data not linked to an ac
 
 ## Open before submitting for review (not for TestFlight)
 
-1. **Account deletion in the app** (guideline 5.1.1(v)). The app lets people make an account, so it must let them delete it from inside the app. Today the privacy policy says to contact us. Needs a server endpoint and a Settings item.
-2. **Reporting and blocking in Explore** (guideline 1.2, user-generated content). The web has Report on a lesson; the app has none yet (a phase 4 gap). Apple asks for a way to report content and to block abusive people.
-3. **The font** (San Francisco or Inter), item 7 in `plans/ios-app-bugs.md`.
+1. **Reporting and blocking in Explore** (guideline 1.2, user-generated content). The web has Report on a lesson; the app has none yet (a phase 4 gap). Apple asks for a way to report content and to block abusive people.
+2. **The font** (San Francisco or Inter), item 7 in `plans/ios-app-bugs.md`.

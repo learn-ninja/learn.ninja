@@ -78,7 +78,9 @@ Next: **TestFlight**, which needs Colin's accounts. In order:
 4. **The first build**: `npx eas-cli build -p ios --profile production` in `apps/mobile`. EAS asks to log in to Apple and makes the certificates, the provisioning profiles for the app and the widget, and the App Group. Then `npx eas-cli submit -p ios --latest` sends it to App Store Connect, and it shows in TestFlight after Apple's processing (internal testers need no review).
 5. **On a real iPhone** (the first TestFlight install): what the simulator couldn't show, listed under "On a real iPhone" below, plus the reminder at 19:00, the widget on the lock screen and over midnight, and universal links.
 
-Before **App Store review** (not TestFlight): account deletion inside the app (guideline 5.1.1(v)), reporting and blocking in Explore (1.2), and the font (San Francisco, or Inter to match the web's line breaks, item 7 in `plans/ios-app-bugs.md`). `apps/mobile/store/listing.md` lists them. The first release is iPhone only (`supportsTablet: false`, decided 2026-11-09).
+Account deletion (guideline 5.1.1(v)) is in: Settings' red Delete account (iOS's prompt, with the email typed again to confirm; the web's settings have the same) calls `DELETE /api/account`, which deletes the user, their lessons, and everything tied to them, and the app forgets the session and goes home. A session only, never an API key; no email code, since the review account never gets one.
+
+Before **App Store review** (not TestFlight): reporting and blocking in Explore (1.2), and the font (San Francisco, or Inter to match the web's line breaks, item 7 in `plans/ios-app-bugs.md`). `apps/mobile/store/listing.md` lists them. The first release is iPhone only (`supportsTablet: false`, decided 2026-11-09).
 
 Not done:
 
