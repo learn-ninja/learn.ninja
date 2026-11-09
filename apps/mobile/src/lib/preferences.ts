@@ -15,6 +15,8 @@ export interface Preferences {
   sound?: "on" | "off"
   /** The ninja's character (Sensei until changed). */
   ninja?: NinjaLevel
+  /** The app's evening streak reminder (on once iOS allows it, until switched off in Settings). App only. */
+  reminders?: boolean
 }
 
 /** What the preferences are read from and written to: expo-sqlite's kv-store, or a map in tests. */
@@ -43,6 +45,8 @@ export function readPreferences(storage: PreferenceStorage): Preferences {
       delete out.ninja
     if (out.sound !== undefined && out.sound !== "on" && out.sound !== "off")
       delete out.sound
+    if (out.reminders !== undefined && typeof out.reminders !== "boolean")
+      delete out.reminders
     return out as Preferences
   } catch {
     return {}

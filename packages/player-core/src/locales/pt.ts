@@ -354,4 +354,11 @@ export const pt: Translation = {
     "Não foi possível acessar o learn.ninja. Verifique sua conexão e tente de novo.",
   offlineCopy: "Offline: reproduzindo a cópia salva neste celular",
   onThisPhone: "Salvas neste celular",
+  reminders: {
+    endTitle: "Sua sequência termina hoje à noite",
+    endBody: "Uma lição curta a mantém viva.",
+    restTitle: "Nenhuma lição hoje ainda",
+    restBody: "Se pular, esta noite gasta um dia de descanso.",
+    setting: "Lembretes de sequência",
+  },
 }

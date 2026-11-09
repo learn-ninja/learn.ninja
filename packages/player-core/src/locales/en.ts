@@ -331,4 +331,11 @@ export const en: Strings = {
   offline: "Couldn't reach learn.ninja. Check your connection and try again.",
   offlineCopy: "Offline: playing the copy saved on this phone",
   onThisPhone: "Saved on this phone",
+  reminders: {
+    endTitle: "Your streak ends tonight",
+    endBody: "One short lesson keeps it going.",
+    restTitle: "No lesson yet today",
+    restBody: "Skip it and tonight uses a rest day.",
+    setting: "Streak reminders",
+  },
 }

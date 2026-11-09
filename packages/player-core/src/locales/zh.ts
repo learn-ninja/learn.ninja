@@ -316,4 +316,11 @@ export const zh: Translation = {
   offline: "无法连接到 learn.ninja。请检查网络连接后重试。",
   offlineCopy: "离线：正在播放保存在这部手机上的副本",
   onThisPhone: "保存在这部手机上",
+  reminders: {
+    endTitle: "你的连续记录今晚就要中断",
+    endBody: "上一节短课就能延续下去。",
+    restTitle: "今天还没上课",
+    restBody: "跳过的话，今晚会用掉一天休息日。",
+    setting: "连续记录提醒",
+  },
 }

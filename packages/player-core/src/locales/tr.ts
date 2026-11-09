@@ -334,4 +334,11 @@ export const tr: Translation = {
   offline: "learn.ninja'ya ulaşılamadı. Bağlantını kontrol edip tekrar dene.",
   offlineCopy: "Çevrimdışı: bu telefonda kayıtlı kopya oynatılıyor",
   onThisPhone: "Bu telefonda kayıtlı",
+  reminders: {
+    endTitle: "Serin bu gece bitiyor",
+    endBody: "Kısa bir ders onu sürdürür.",
+    restTitle: "Bugün henüz ders yok",
+    restBody: "Atlarsan bu gece bir dinlenme günü harcanır.",
+    setting: "Seri hatırlatıcıları",
+  },
 }

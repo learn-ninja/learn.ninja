@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import { deviceStorage } from "./progress-storage"
+import { rescheduleReminders } from "./reminders"
 import { localDay, recordFinish, type Streak } from "./streak"
 
 /**
@@ -28,11 +29,14 @@ export function useStreak({
       setSeen(false)
       return
     }
-    if (kept.current?.run !== run)
+    if (kept.current?.run !== run) {
       kept.current = {
         run,
         streak: recordFinish(deviceStorage, { today: localDay(), id }),
       }
+      // Today's lesson is done: tonight's reminder goes, and the coming days' move on.
+      if (kept.current.streak.lit) void rescheduleReminders()
+    }
     setStreak(kept.current.streak)
   }, [atWrap, run, id])
   return {

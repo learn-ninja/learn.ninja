@@ -353,4 +353,11 @@ export const nl: Translation = {
     "Kan learn.ninja niet bereiken. Controleer je verbinding en probeer het opnieuw.",
   offlineCopy: "Offline: de kopie op deze telefoon wordt afgespeeld",
   onThisPhone: "Opgeslagen op deze telefoon",
+  reminders: {
+    endTitle: "Je reeks eindigt vannacht",
+    endBody: "Eén korte les houdt hem gaande.",
+    restTitle: "Vandaag nog geen les",
+    restBody: "Sla je over, dan kost vannacht een rustdag.",
+    setting: "Reeksherinneringen",
+  },
 }

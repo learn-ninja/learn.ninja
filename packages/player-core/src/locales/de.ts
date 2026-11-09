@@ -362,4 +362,11 @@ export const de: Translation = {
     "learn.ninja ist nicht erreichbar. Prüfe deine Verbindung und versuch es noch mal.",
   offlineCopy: "Offline: Die auf diesem Handy gespeicherte Kopie läuft",
   onThisPhone: "Auf diesem Handy gespeichert",
+  reminders: {
+    endTitle: "Deine Serie endet heute Nacht",
+    endBody: "Eine kurze Lektion hält sie am Leben.",
+    restTitle: "Heute noch keine Lektion",
+    restBody: "Lässt du sie aus, kostet dich die Nacht einen Ruhetag.",
+    setting: "Serien-Erinnerungen",
+  },
 }

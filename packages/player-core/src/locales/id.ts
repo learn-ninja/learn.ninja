@@ -335,4 +335,11 @@ export const id: Translation = {
     "Tidak bisa terhubung ke learn.ninja. Periksa koneksimu dan coba lagi.",
   offlineCopy: "Offline: memutar salinan yang tersimpan di ponsel ini",
   onThisPhone: "Tersimpan di ponsel ini",
+  reminders: {
+    endTitle: "Streak-mu berakhir malam ini",
+    endBody: "Satu pelajaran singkat menjaganya tetap menyala.",
+    restTitle: "Belum ada pelajaran hari ini",
+    restBody: "Kalau dilewati, malam ini memakai satu hari istirahat.",
+    setting: "Pengingat streak",
+  },
 }

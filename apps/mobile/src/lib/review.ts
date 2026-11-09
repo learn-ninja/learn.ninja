@@ -31,17 +31,22 @@ function askedSoFar(): number[] {
   }
 }
 
-/** Asks for a rating if a streak of `days` is a milestone not asked at yet. */
-export async function askForReviewAt(days: number): Promise<void> {
+/**
+ * Asks for a rating if a streak of `days` is a milestone not asked at yet. Resolves to whether it
+ * asked, so the streak reminder's permission doesn't ask on the same moment.
+ */
+export async function askForReviewAt(days: number): Promise<boolean> {
   const asked = askedSoFar()
-  if (!shouldAskForReview(days, asked)) return
+  if (!shouldAskForReview(days, asked)) return false
   try {
-    if (!(await StoreReview.hasAction())) return
+    if (!(await StoreReview.hasAction())) return false
     Storage.setItemSync(ASKED, JSON.stringify([...asked, days]))
     // After the wrap-up has come in, so the prompt doesn't land on the moving screen.
     await new Promise((resolve) => setTimeout(resolve, 800))
     await StoreReview.requestReview()
+    return true
   } catch {
     // No prompt: nothing to do.
+    return false
   }
 }

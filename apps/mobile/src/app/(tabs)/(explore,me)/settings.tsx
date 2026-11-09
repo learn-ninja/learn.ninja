@@ -1,6 +1,6 @@
 import { router, Stack } from "expo-router"
 import { useEffect, useState, type ReactNode } from "react"
-import { Alert, Pressable, ScrollView, View } from "react-native"
+import { Alert, Pressable, ScrollView, Switch, View } from "react-native"
 
 import {
   UI_LANGUAGES,
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Text } from "@/components/ui/text"
 import { API_BASE_URL } from "@/lib/config"
 import { handleProblem, normalizeHandle } from "@/lib/handle"
+import { remindersSwitched } from "@/lib/reminders"
 import { selection, tap } from "@/lib/haptics"
 import { saveHandle } from "@/lib/save-handle"
 import { signOut, useSession } from "@/lib/session"
@@ -48,6 +49,7 @@ export default function Settings() {
           <HandleField current={account.handle ?? ""} t={t} />
         </Section>
         {UI_TRANSLATIONS ? <LanguageSection current={lang} t={t} /> : null}
+        <RemindersRow t={t} />
         <Button variant="outline" size="lg" onPress={() => confirmLogOut(t)}>
           <LogOutIcon />
           <Text>{t.signIn.logOut}</Text>
@@ -172,4 +174,24 @@ function confirmLogOut(t: Strings) {
       },
     },
   ])
+}
+
+/** The evening streak reminder's switch (reminders.ts): on until switched off. */
+function RemindersRow({ t }: { t: Strings }) {
+  const [prefs, update] = usePreferences()
+  const on = prefs.reminders !== false
+  return (
+    <View className="flex-row items-center justify-between gap-4 rounded-xl bg-card p-4 shadow-xs">
+      <Text className="flex-1 text-sm font-medium">{t.reminders.setting}</Text>
+      <Switch
+        value={on}
+        accessibilityLabel={t.reminders.setting}
+        onValueChange={(next) => {
+          selection()
+          update({ reminders: next })
+          void remindersSwitched(next)
+        }}
+      />
+    </View>
+  )
 }
