@@ -401,4 +401,6 @@ export const ar: Translation = {
     failed: "تعذّر تحميل الدرس.",
   },
   offline: "تعذّر الوصول إلى learn.ninja. تحقّق من اتصالك وحاول مرة أخرى.",
+  offlineCopy: "دون اتصال: تُشغَّل النسخة المحفوظة على هذا الهاتف",
+  onThisPhone: "محفوظة على هذا الهاتف",
 }

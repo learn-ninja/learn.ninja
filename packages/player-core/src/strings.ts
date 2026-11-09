@@ -347,6 +347,10 @@ export type Strings = {
   }
   /** The server didn't answer: no connection, or it took too long. In the app, on a lesson or home. */
   offline: string
+  /** In the lesson menu: the lesson opened from the copy kept on the phone, with no connection. */
+  offlineCopy: string
+  /** Over the lessons kept on the phone, shown on home when learn.ninja can't be reached. */
+  onThisPhone: string
 }
 
 /**

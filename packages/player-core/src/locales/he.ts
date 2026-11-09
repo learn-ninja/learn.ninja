@@ -359,4 +359,6 @@ export const he: Translation = {
     failed: "השיעור לא נטען.",
   },
   offline: "אי אפשר להגיע ל-learn.ninja. כדאי לבדוק את החיבור ולנסות שוב.",
+  offlineCopy: "אופליין: מוצג העותק השמור בטלפון הזה",
+  onThisPhone: "שמורים בטלפון הזה",
 }

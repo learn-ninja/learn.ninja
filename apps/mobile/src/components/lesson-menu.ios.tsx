@@ -53,6 +53,7 @@ const SIZES: readonly TextSize[] = ["sm", "md", "lg"]
 export function LessonMenu({
   title,
   expiresAt,
+  offline,
   lessonLanguage,
   uiLanguage,
   prefs,
@@ -64,6 +65,8 @@ export function LessonMenu({
   title: string
   /** When a published lesson's link stops working, for the line under the title. */
   expiresAt?: number | null
+  /** Opened from the copy kept on the phone, with no connection: said under the title. */
+  offline?: boolean
   lessonLanguage: string
   /** The player's language now (the learner's choice, else the lesson's). */
   uiLanguage: string
@@ -108,6 +111,7 @@ export function LessonMenu({
           modifiers={[accessibilityLabel(t.lessonMenu)]}
         >
           <Section title={title}>
+            {offline ? <Text>{t.offlineCopy}</Text> : null}
             {left ? <Text>{t.expires[left.unit](left.count)}</Text> : null}
             <Button
               label={t.share}

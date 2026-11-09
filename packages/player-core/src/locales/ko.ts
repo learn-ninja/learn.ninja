@@ -321,4 +321,6 @@ export const ko: Translation = {
   },
   offline:
     "learn.ninja에 연결할 수 없어요. 연결 상태를 확인하고 다시 시도해 주세요.",
+  offlineCopy: "오프라인: 이 휴대폰에 저장된 사본을 재생 중",
+  onThisPhone: "이 휴대폰에 저장됨",
 }

@@ -329,4 +329,6 @@ export const vi: Translation = {
   },
   offline:
     "Không thể kết nối tới learn.ninja. Hãy kiểm tra kết nối rồi thử lại.",
+  offlineCopy: "Ngoại tuyến: đang mở bản lưu trên điện thoại này",
+  onThisPhone: "Đã lưu trên điện thoại này",
 }

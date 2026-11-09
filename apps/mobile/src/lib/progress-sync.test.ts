@@ -5,6 +5,7 @@ import type { State } from "@workspace/player-core/state"
 
 import {
   createProgressSync,
+  reconnected,
   resetSignedOut,
   signedIn,
   type Send,
@@ -131,7 +132,10 @@ describe("syncing progress to the server", () => {
     signedIn()
     await vi.waitFor(() => expect(sent).toHaveLength(3))
     // The finish follows the progress it came after, so only the finish goes again.
-    expect(sent[2]).toMatchObject({ path: "/api/lessons/abc/complete", method: "POST" })
+    expect(sent[2]).toMatchObject({
+      path: "/api/lessons/abc/complete",
+      method: "POST",
+    })
     signedIn()
     await new Promise((r) => setTimeout(r, 10))
     expect(sent).toHaveLength(3)
@@ -184,5 +188,35 @@ describe("syncing progress to the server", () => {
     pending.shift()!()
     await vi.waitFor(() => expect(started).toHaveLength(3))
     expect(started[2]).toMatch(/^POST \/api\/lessons\/abc\/complete/)
+  })
+
+  it("sends what didn't get through once the connection is back", async () => {
+    const offline: Send = vi.fn(async () => {
+      throw new Error("no connection")
+    })
+    let link = offline
+    const sync = createProgressSync("abc", (path, init) => link(path, init))
+    sync.update(at(1))
+    sync.update(at(6))
+    await new Promise((r) => setTimeout(r, 10))
+    expect(sent).toHaveLength(0)
+    link = send
+    reconnected()
+    await vi.waitFor(() => expect(sent).toHaveLength(1))
+    // The finish carries the progress: only it is sent.
+    expect(sent[0]).toMatchObject({ path: "/api/lessons/abc/complete" })
+    reconnected()
+    await new Promise((r) => setTimeout(r, 10))
+    expect(sent).toHaveLength(1)
+  })
+
+  it("sends nothing on reconnecting while signed out", async () => {
+    status = 401
+    const sync = createProgressSync("abc", send)
+    sync.update(at(1))
+    await vi.waitFor(() => expect(sent).toHaveLength(1))
+    reconnected()
+    await new Promise((r) => setTimeout(r, 10))
+    expect(sent).toHaveLength(1)
   })
 })

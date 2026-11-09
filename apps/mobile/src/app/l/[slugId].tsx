@@ -480,6 +480,7 @@ function Player({
             <LessonMenu
               title={lesson.title}
               expiresAt={data.expiresAt}
+              offline={data.offline}
               lessonLanguage={lesson.language}
               uiLanguage={ui}
               prefs={prefs}

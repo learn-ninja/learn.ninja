@@ -332,4 +332,6 @@ export const tr: Translation = {
     failed: "Ders yüklenemedi.",
   },
   offline: "learn.ninja'ya ulaşılamadı. Bağlantını kontrol edip tekrar dene.",
+  offlineCopy: "Çevrimdışı: bu telefonda kayıtlı kopya oynatılıyor",
+  onThisPhone: "Bu telefonda kayıtlı",
 }

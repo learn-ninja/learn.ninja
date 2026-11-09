@@ -358,4 +358,6 @@ export const it: Translation = {
   },
   offline:
     "Impossibile raggiungere learn.ninja. Controlla la connessione e riprova.",
+  offlineCopy: "Offline: è in riproduzione la copia salvata su questo telefono",
+  onThisPhone: "Salvate su questo telefono",
 }

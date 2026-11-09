@@ -53,6 +53,7 @@ type Page = "main" | "ninja" | "size" | "language"
 export function LessonMenu({
   title,
   expiresAt,
+  offline,
   lessonLanguage,
   uiLanguage,
   prefs,
@@ -64,6 +65,8 @@ export function LessonMenu({
   title: string
   /** When a published lesson's link stops working, for the line under the title. */
   expiresAt?: number | null
+  /** Opened from the copy kept on the phone, with no connection: said under the title. */
+  offline?: boolean
   lessonLanguage: string
   /** The player's language now (the learner's choice, else the lesson's). */
   uiLanguage: string
@@ -141,6 +144,11 @@ export function LessonMenu({
                     <Text numberOfLines={2} className="text-sm font-medium">
                       {title}
                     </Text>
+                    {offline ? (
+                      <Text className="text-xs text-muted-foreground">
+                        {t.offlineCopy}
+                      </Text>
+                    ) : null}
                     {left ? (
                       <Text className="text-xs text-muted-foreground">
                         {t.expires[left.unit](left.count)}

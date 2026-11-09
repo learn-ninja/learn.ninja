@@ -322,4 +322,6 @@ export const ja: Translation = {
   },
   offline:
     "learn.ninja に接続できませんでした。接続を確認して、もう一度お試しください。",
+  offlineCopy: "オフライン：この端末に保存したコピーを再生中",
+  onThisPhone: "この端末に保存済み",
 }

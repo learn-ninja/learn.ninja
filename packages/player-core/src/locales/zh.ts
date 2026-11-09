@@ -314,4 +314,6 @@ export const zh: Translation = {
     failed: "课程加载失败。",
   },
   offline: "无法连接到 learn.ninja。请检查网络连接后重试。",
+  offlineCopy: "离线：正在播放保存在这部手机上的副本",
+  onThisPhone: "保存在这部手机上",
 }
