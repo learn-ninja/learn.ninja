@@ -54,7 +54,7 @@ Rows 15 to 20 were fixed on 2026-11-06, after phase 4, on `claude/ios-bug-pass-f
 3. **Fixed, row 16.** The marked answer could sit under the tray.
 4. **Fixed, row 17.** The offline error was raw.
 5. **Fixed, row 18.** VoiceOver didn't hear a checked answer's mark.
-6. **iPad and App Store**: `supportsTablet: true` with portrait only. App Store validation requires an iPad app to support all four orientations for multitasking or to set `UIRequiresFullScreen`. Decide before phase 5's TestFlight.
+6. **Decided 2026-11-09: iPhone only.** `supportsTablet: true` with portrait only would fail App Store validation (an iPad app must support all four orientations for multitasking or set `UIRequiresFullScreen`), so the first release sets `supportsTablet: false`.
 7. **The font is San Francisco, the web's is Inter**, so lines break differently (the intro's title fits one line in the app and wraps on the web). A design call: SF is native; Inter would match.
 8. **Fixed, row 19.** `shadow-xs` didn't exist in Tailwind 3.
 9. **Fixed, row 20.** Order kata layout shifts.
