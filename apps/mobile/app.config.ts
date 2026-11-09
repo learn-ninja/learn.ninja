@@ -34,6 +34,9 @@ export function apiFor(profile: Profile) {
  */
 export const LINK_DOMAINS = ["applinks:learn.ninja"]
 
+/** The App Group the app shares with its widget; src/lib/widget-snapshot.ts writes to the same one. */
+export const APP_GROUP = "group.ninja.learn.app"
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const api = apiFor(profileOf())
   return {
@@ -52,6 +55,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // orientation or run full screen, and the player is portrait only.
       supportsTablet: false,
       associatedDomains: LINK_DOMAINS,
+      // Shared with the home screen widget (targets/widget), which reads the streak the app
+      // writes there (src/lib/widget.ts).
+      entitlements: { "com.apple.security.application-groups": [APP_GROUP] },
       ...(api.localNetworking
         ? {
             infoPlist: {
@@ -71,6 +77,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       "expo-router",
+      // The Apple targets in targets/ (the widget), added to the generated Xcode project.
+      "@bacons/apple-targets",
       "expo-secure-store",
       // Right to left when the device's language is (I18nManager.isRTL at launch); a screen in
       // another direction than the app's sets its own (src/components/direction.tsx).

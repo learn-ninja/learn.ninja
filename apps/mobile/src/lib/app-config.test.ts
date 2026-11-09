@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import config, { apiFor, profileOf } from "../../app.config"
+import config, { APP_GROUP, apiFor, profileOf } from "../../app.config"
+import { APP_GROUP as WRITTEN_TO } from "./widget-snapshot"
 
 const build = (EAS_BUILD_PROFILE?: string) => {
   const before = process.env.EAS_BUILD_PROFILE
@@ -38,5 +39,12 @@ describe("app config", () => {
       expect(app.extra?.apiBaseUrl).toBe("https://learn.ninja")
       expect(app.ios?.infoPlist).toBeUndefined()
     }
+  })
+
+  it("shares one App Group between the app, its widget, and what the app writes", () => {
+    expect(WRITTEN_TO).toBe(APP_GROUP)
+    expect(
+      build().ios?.entitlements?.["com.apple.security.application-groups"]
+    ).toEqual([APP_GROUP])
   })
 })

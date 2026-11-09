@@ -5,21 +5,15 @@ import { useEffect } from "react"
 
 import type { Strings } from "@workspace/player-core/strings"
 
+import { LAST, readLast, type LastLesson } from "./last-lesson"
 import { useAppStrings } from "./use-strings"
+import { refreshWidget } from "./widget"
 
 // The app icon's quick actions (press and hold it on the home screen): Continue, with the lesson
 // last left unfinished under it, then Explore and Profile, in the app's language and with the
 // system's symbols. The last lesson is kept on the device, so the actions are set again in the
 // right language at each launch; finishing that lesson takes Continue away, and so does opening it
 // once it's gone (expired, deleted, or another account's).
-
-export interface LastLesson {
-  /** The app's route for it, /l/{slugId}. */
-  href: string
-  title: string
-}
-
-const LAST = "learn:last-lesson"
 
 export function quickActionItems(
   t: Strings,
@@ -52,26 +46,10 @@ export function quickActionItems(
   ]
 }
 
-/** The lesson last left unfinished, if any: Continue's, and where a streak reminder opens. */
-export function readLast(): LastLesson | null {
-  try {
-    const raw = Storage.getItemSync(LAST)
-    const last: unknown = raw ? JSON.parse(raw) : null
-    return last &&
-      typeof last === "object" &&
-      "href" in last &&
-      "title" in last &&
-      typeof last.href === "string" &&
-      typeof last.title === "string"
-      ? { href: last.href, title: last.title }
-      : null
-  } catch {
-    return null
-  }
-}
-
 function setItems(t: Strings, last: LastLesson | null) {
   void QuickActions.setItems(quickActionItems(t, last)).catch(() => {})
+  // The medium widget's Continue is the same lesson.
+  refreshWidget(t)
 }
 
 /**

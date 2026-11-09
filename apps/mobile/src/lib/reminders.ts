@@ -8,10 +8,11 @@ import type { Strings } from "@workspace/player-core/strings"
 
 import { readPreferences } from "./preferences"
 import { deviceStorage } from "./progress-storage"
-import { readLast } from "./quick-actions"
+import { readLast } from "./last-lesson"
 import { planReminders } from "./reminder-plan"
 import { localDay, readDays } from "./streak"
 import { useAppStrings } from "./use-strings"
+import { refreshWidget } from "./widget"
 
 // The evening streak reminder, as local notifications the app schedules itself: no server, no
 // account, and the phone's own time zone. Each time something could change the plan (a finish, the
@@ -42,6 +43,8 @@ export function rescheduleReminders(): Promise<void> {
   scheduling = scheduling.then(async () => {
     const t = strings
     if (!t) return
+    // The widget shows the same days ahead, so it's written again on the same occasions.
+    refreshWidget(t)
     try {
       await Notifications.cancelAllScheduledNotificationsAsync()
       if (!(await allowed())) return
