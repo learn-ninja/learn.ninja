@@ -48,7 +48,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     backgroundColor: "#121212",
     ios: {
       bundleIdentifier: "ninja.learn.app",
-      supportsTablet: true,
+      // iPhone only for the first release: an iPad app must support every
+      // orientation or run full screen, and the player is portrait only.
+      supportsTablet: false,
       associatedDomains: LINK_DOMAINS,
       ...(api.localNetworking
         ? {
