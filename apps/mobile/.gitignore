@@ -41,3 +41,5 @@ example
 # generated native folders
 /ios
 /android
+# the widget's colors, images and icon, made from targets/*/expo-target.config.js on prebuild
+/targets/*/Assets.xcassets

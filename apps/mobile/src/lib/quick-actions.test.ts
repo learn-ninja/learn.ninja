@@ -6,6 +6,7 @@ vi.mock("expo-quick-actions", () => ({}))
 vi.mock("expo-quick-actions/router", () => ({}))
 vi.mock("expo-sqlite/kv-store", () => ({ Storage: {} }))
 vi.mock("./use-strings", () => ({}))
+vi.mock("./widget", () => ({ refreshWidget: () => {} }))
 
 import { quickActionItems } from "./quick-actions"
 
