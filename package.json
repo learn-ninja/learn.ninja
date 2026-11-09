@@ -37,8 +37,8 @@
   ],
   "overrides": {
     "mdast-util-to-markdown": "2.1.2",
-    "@joshwooding/vite-plugin-react-docgen-typescript": {
-      "glob": "^14.0.2"
-    }
+    "@xmldom/xmldom@~0.7.0": "^0.8.15",
+    "glob": "^14.0.4",
+    "minimatch": "^11.0.5"
   }
 }
