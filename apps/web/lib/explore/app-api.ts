@@ -15,6 +15,7 @@ import { liveViewCounts } from "./handlers"
 import {
   activityDays,
   completedAt,
+  hasBlocked,
   lessonsInProgress,
   lessonsLikedBy,
   lessonsOwnedBy,
@@ -118,6 +119,7 @@ export async function exploreFeed(
   const rows = await listLessons(deps.db, "new", FEED_PAGE_SIZE + 1, {
     now,
     before,
+    viewerId: req.actor?.userId,
   })
   const page = rows.slice(0, FEED_PAGE_SIZE)
   const last = page.at(-1)
@@ -150,6 +152,8 @@ export interface ProfileReply {
   }
   /** Whether it's the viewer's own: then `lessons` is everything they own, and `inProgress` is set. */
   own: boolean
+  /** Whether the viewer blocked this person: then `lessons` and `likes` are empty. */
+  blocked: boolean
   lessons: LessonSummary[]
   inProgress: InProgress[] | null
   likes: LessonSummary[]
@@ -177,15 +181,27 @@ export async function profileFeed(
   const handle = normalizeHandle(req.handle)
   const profile = handle ? await profileByHandle(deps.db, handle, now) : null
   if (!profile) return NO_PROFILE
-  const own = req.actor?.userId === profile.id
+  const viewerId = req.actor?.userId
+  const own = viewerId === profile.id
+  const blocked =
+    !own && viewerId ? await hasBlocked(deps.db, viewerId, profile.id) : false
   const [owned, started, liked, days] = await Promise.all([
     own ? lessonsOwnedBy(deps.db, profile.id) : null,
     own ? lessonsInProgress(deps.db, profile.id, now) : null,
-    lessonsLikedBy(deps.db, profile.id, { listedOnly: !own, now }),
+    blocked
+      ? []
+      : lessonsLikedBy(deps.db, profile.id, {
+          listedOnly: !own,
+          now,
+          viewerId,
+        }),
     activityDays(deps.db, profile.id),
   ])
   const tz = isTimeZone(req.tz) ? req.tz : "UTC"
-  const lessons = await withLiveViews(owned ?? profile.lessons, deps)
+  const lessons = await withLiveViews(
+    owned ?? (blocked ? [] : profile.lessons),
+    deps
+  )
   const ids = [...lessons, ...(started ?? []), ...liked].map((l) => l.id)
   const body: ProfileReply = {
     ok: true,
@@ -199,6 +215,7 @@ export async function profileFeed(
       likes: profile.likes,
     },
     own,
+    blocked,
     lessons,
     inProgress: started,
     likes: liked,

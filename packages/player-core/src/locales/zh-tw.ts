@@ -268,6 +268,30 @@ export const zhTw: Translation = {
     hidden: "已隱藏",
     profile: "你的個人檔案",
   },
+  moderation: {
+    report: "檢舉課程",
+    reportTitle: "檢舉這堂課",
+    reportBody:
+      "告訴我們哪裡有問題，檢舉會直接送到 learn.ninja 的營運團隊。違反條款的課程會從 Explore 中移除。",
+    sendReport: "送出檢舉",
+    reportEmpty: "請先說明哪裡有問題。",
+    reportSentTitle: "謝謝",
+    reportSentBody: "檢舉已送出，會有人查看。",
+    block: (name) => "封鎖 " + name,
+    blockTitle: (name) => "要封鎖 " + name + " 嗎？",
+    blockBody:
+      "此人的課程將不再於 Explore 和個人頁面中顯示給你。對方不會收到通知，你可以在設定中解除封鎖。",
+    blockConfirm: "封鎖",
+    unblock: "解除封鎖",
+    unblockTitle: (name) => "要解除封鎖 " + name + " 嗎？",
+    unblockBody: "此人的課程會重新在 Explore 和個人頁面中顯示給你。",
+    blockedTitle: "已封鎖的人",
+    blockedNone:
+      "還沒有。從課程選單或個人頁面封鎖某人後，其課程就不會再顯示給你。",
+    blockedProfile: "你已封鎖此人，因此看不到其課程。",
+    failed: "沒有成功，請再試一次。",
+    done: "完成",
+  },
   profile: {
     tab: "個人檔案",
     lessons: "課程",

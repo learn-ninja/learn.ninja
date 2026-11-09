@@ -14,6 +14,7 @@ import { useDirection } from "@/components/direction"
 import { Text } from "@/components/ui/text"
 import { lessonParam, type LessonRowData, type Viewer } from "@/lib/feed"
 import { compact, rowBadge, rowTime, wedge } from "@/lib/lesson-row"
+import { askReport, confirmBlock } from "@/lib/moderation"
 import { deviceStorage } from "@/lib/progress-storage"
 import { shareLesson } from "@/lib/share-sheet"
 import { colors } from "../../../tokens"
@@ -45,6 +46,8 @@ export const LessonRow = memo(function LessonRow({
   const time = rowTime(lesson, viewer, local)
   const badge = rowBadge(lesson, viewerId)
   const author = lesson.author
+  // Someone else's lesson: it can be reported, and its maker blocked.
+  const theirs = author !== null && author.id !== viewerId
   const now = Date.now()
   const [previewHeight, setPreviewHeight] = useState<number>()
   const like = useLike({
@@ -55,7 +58,7 @@ export const LessonRow = memo(function LessonRow({
   })
   return (
     // iOS's peek and pop: pressing and holding a row lifts a preview of the lesson with a menu
-    // (like, share, the maker's profile); a tap opens it. asChild hands the link's press to the
+    // (like, share, the maker's profile, then report it or block its maker); a tap opens it. asChild hands the link's press to the
     // row's Pressable (through Link.Trigger); without it the link wraps the row in a Text whose
     // press the Pressable takes first, and a tap does nothing.
     <Link href={{ pathname: "/l/[slugId]", params: { slugId: param } }} asChild>
@@ -205,6 +208,23 @@ export const LessonRow = memo(function LessonRow({
               })
             }
           />
+        ) : null}
+        {author && theirs ? (
+          <Link.Menu inline title="">
+            <Link.MenuAction
+              title={t.moderation.report}
+              icon="flag"
+              onPress={() =>
+                askReport({ id: lesson.id, path: `/l/${param}` }, t)
+              }
+            />
+            <Link.MenuAction
+              title={t.moderation.block(`⁨${author.handle ?? author.name}⁩`)}
+              icon="hand.raised"
+              destructive
+              onPress={() => confirmBlock(author, viewer?.signedIn ?? false, t)}
+            />
+          </Link.Menu>
         ) : null}
       </Link.Menu>
     </Link>

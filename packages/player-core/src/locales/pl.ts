@@ -326,6 +326,32 @@ export const pl: Translation = {
     hidden: "Ukryta",
     profile: "Twój profil",
   },
+  moderation: {
+    report: "Zgłoś lekcję",
+    reportTitle: "Zgłoś tę lekcję",
+    reportBody:
+      "Napisz, co jest nie tak, a trafi to prosto do zespołu learn.ninja. Lekcje łamiące zasady są usuwane z Explore.",
+    sendReport: "Wyślij zgłoszenie",
+    reportEmpty: "Najpierw napisz, co jest nie tak.",
+    reportSentTitle: "Dzięki",
+    reportSentBody: "Twoje zgłoszenie jest w drodze. Ktoś się temu przyjrzy.",
+    block: (name) => "Zablokuj " + name,
+    blockTitle: (name) => "Zablokować " + name + "?",
+    blockBody:
+      "Lekcje tej osoby przestaną ci się pokazywać w Explore i na profilach. Ta osoba nie dostanie powiadomienia, a odblokować ją możesz w Ustawieniach.",
+    blockConfirm: "Zablokuj",
+    unblock: "Odblokuj",
+    unblockTitle: (name) => "Odblokować " + name + "?",
+    unblockBody:
+      "Lekcje tej osoby znów będą ci się pokazywać w Explore i na profilach.",
+    blockedTitle: "Zablokowane osoby",
+    blockedNone:
+      "Nikt. Zablokuj kogoś z menu lekcji lub z jego profilu, a jego lekcje przestaną ci się pokazywać.",
+    blockedProfile:
+      "Ta osoba jest przez ciebie zablokowana, więc nie widzisz jej lekcji.",
+    failed: "Nie udało się. Spróbuj jeszcze raz.",
+    done: "Gotowe",
+  },
   profile: {
     tab: "Profil",
     lessons: "Lekcje",

@@ -24,6 +24,7 @@ import { handleProblem, normalizeHandle } from "@/lib/handle"
 import { remindersSwitched } from "@/lib/reminders"
 import { deleteAccount } from "@/lib/delete-account"
 import { selection, tap } from "@/lib/haptics"
+import { confirmUnblock, useBlocked } from "@/lib/moderation"
 import { saveHandle } from "@/lib/save-handle"
 import { signOut, useSession } from "@/lib/session"
 import { usePreferences } from "@/lib/use-preferences"
@@ -33,9 +34,10 @@ import { colors } from "../../../../tokens"
 // The account's settings on iOS (settings.tsx is the rest of the platforms'), from the gear on
 // your own profile, as iOS's own Settings draws a page:
 // a grouped form (SwiftUI's, through @expo/ui) with who's logged in and the handle, the app's
-// language as a menu of the player's languages, the streak reminder's switch, Log out in red,
-// confirmed first, and Delete account, confirmed in the system's prompt with the email typed again
-// (App Store guideline 5.1.1(v): an app that makes accounts deletes them too). The handle
+// language as a menu of the player's languages, the streak reminder's switch, the people blocked
+// (each unblocked with a tap, confirmed), Log out in red, confirmed first, and Delete account,
+// confirmed in the system's prompt with the email typed again (App Store guideline 5.1.1(v): an
+// app that makes accounts deletes them too). The handle
 // is changed in the system's text prompt and saved as the web's settings save it
 // (PATCH /api/account).
 
@@ -43,6 +45,7 @@ export default function Settings() {
   const { t, lang, dir } = useAppStrings()
   const session = useSession()
   const [prefs, update] = usePreferences()
+  const blocked = useBlocked()
   // Set once this screen's Log out takes it off the stack itself, so the effect below doesn't pop
   // a second screen (the profile under it, from Explore) as the session ends mid-transition.
   const leaving = useRef(false)
@@ -118,6 +121,32 @@ export default function Settings() {
               }}
             />
           </Section>
+          {blocked ? (
+            // The people blocked from a lesson's menu, a row's, or their profile, each with Unblock.
+            <Section
+              title={t.moderation.blockedTitle}
+              footer={
+                blocked.length ? undefined : (
+                  <Text>{t.moderation.blockedNone}</Text>
+                )
+              }
+            >
+              {blocked.map((person) => (
+                <Button
+                  key={person.id}
+                  onPress={() => confirmUnblock(person, t)}
+                >
+                  <LabeledContent label={person.handle ?? person.name}>
+                    <Text
+                      modifiers={[foregroundStyle(colors.muted.foreground)]}
+                    >
+                      {t.moderation.unblock}
+                    </Text>
+                  </LabeledContent>
+                </Button>
+              ))}
+            </Section>
+          ) : null}
           <Section>
             <Button
               role="destructive"

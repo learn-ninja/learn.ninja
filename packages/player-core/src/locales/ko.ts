@@ -274,6 +274,30 @@ export const ko: Translation = {
     hidden: "숨겨짐",
     profile: "내 프로필",
   },
+  moderation: {
+    report: "레슨 신고",
+    reportTitle: "이 레슨 신고",
+    reportBody:
+      "무엇이 문제인지 알려 주시면 learn.ninja 운영팀에 바로 전달됩니다. 약관을 어긴 레슨은 Explore에서 내려갑니다.",
+    sendReport: "신고 보내기",
+    reportEmpty: "먼저 무엇이 문제인지 알려 주세요.",
+    reportSentTitle: "감사합니다",
+    reportSentBody: "신고가 전송되었습니다. 담당자가 확인할 거예요.",
+    block: (name) => name + " 차단",
+    blockTitle: (name) => name + " 님을 차단할까요?",
+    blockBody:
+      "이 사람의 레슨이 Explore과 프로필에서 더 이상 보이지 않습니다. 상대에게는 알리지 않으며, 설정에서 차단을 해제할 수 있습니다.",
+    blockConfirm: "차단",
+    unblock: "차단 해제",
+    unblockTitle: (name) => name + " 님의 차단을 해제할까요?",
+    unblockBody: "이 사람의 레슨이 Explore과 프로필에서 다시 보입니다.",
+    blockedTitle: "차단한 사람",
+    blockedNone:
+      "없음. 레슨 메뉴나 프로필에서 차단하면 그 사람의 레슨이 더 이상 보이지 않습니다.",
+    blockedProfile: "이 사람을 차단해서 레슨이 보이지 않습니다.",
+    failed: "실패했어요. 다시 시도해 주세요.",
+    done: "완료",
+  },
   profile: {
     tab: "프로필",
     lessons: "레슨",

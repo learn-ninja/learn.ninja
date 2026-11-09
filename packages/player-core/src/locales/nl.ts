@@ -296,6 +296,32 @@ export const nl: Translation = {
     hidden: "Verborgen",
     profile: "Je profiel",
   },
+  moderation: {
+    report: "Les melden",
+    reportTitle: "Deze les melden",
+    reportBody:
+      "Zeg wat er mis is en het gaat rechtstreeks naar het team achter learn.ninja. Lessen die de voorwaarden schenden, worden uit Explore gehaald.",
+    sendReport: "Melding versturen",
+    reportEmpty: "Zeg eerst wat er mis is.",
+    reportSentTitle: "Bedankt",
+    reportSentBody: "Je melding is onderweg. Iemand kijkt ernaar.",
+    block: (name) => name + " blokkeren",
+    blockTitle: (name) => name + " blokkeren?",
+    blockBody:
+      "Hun lessen worden niet meer aan je getoond in Explore en op profielen. Ze krijgen het niet te horen, en je kunt ze deblokkeren in Instellingen.",
+    blockConfirm: "Blokkeren",
+    unblock: "Deblokkeren",
+    unblockTitle: (name) => name + " deblokkeren?",
+    unblockBody:
+      "Hun lessen worden weer aan je getoond in Explore en op profielen.",
+    blockedTitle: "Geblokkeerde mensen",
+    blockedNone:
+      "Niemand. Blokkeer iemand via het menu van een les of hun profiel, en hun lessen verdwijnen voor jou.",
+    blockedProfile:
+      "Je hebt deze persoon geblokkeerd, dus je ziet hun lessen niet.",
+    failed: "Dat lukte niet. Probeer het opnieuw.",
+    done: "Klaar",
+  },
   profile: {
     tab: "Profiel",
     lessons: "Lessen",

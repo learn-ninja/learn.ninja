@@ -75,6 +75,7 @@ import { reducer, start, type AppAction } from "@/lib/play"
 import { settled } from "@/lib/screen-guard"
 import { deviceStorage } from "@/lib/progress-storage"
 import { createProgressSync } from "@/lib/progress-sync"
+import { askReport, confirmBlock } from "@/lib/moderation"
 import { useSession } from "@/lib/session"
 import { forgetLastLesson, useLastLesson } from "@/lib/quick-actions"
 import { askForReminders } from "@/lib/reminders"
@@ -390,6 +391,8 @@ function Player({
         : undefined,
   })
   const by = session.state === "in" ? session.account.handle : null
+  const viewerId = session.state === "in" ? session.account.id : undefined
+  const author = data.author ?? null
   // Only while the lesson is on screen: a row's peek in Explore loads this screen out of sight
   // (expo-router preloads the route), and a peeked lesson isn't an opened one.
   const focused = useIsFocused()
@@ -488,6 +491,23 @@ function Player({
               onPrefs={updatePrefs}
               onShare={() => void shareLesson(lesson.title, data.path)}
               onRestart={() => dispatch({ type: "restart" })}
+              moderation={
+                // Someone else's published lesson: report it, or block its maker and leave it.
+                author && author.id !== viewerId
+                  ? {
+                      name: `⁨${author.handle ?? ""}⁩`,
+                      onReport: () =>
+                        askReport({ id: data.id, path: data.path }, t),
+                      onBlock: () =>
+                        confirmBlock(
+                          author,
+                          session.state === "in",
+                          t,
+                          closeLesson
+                        ),
+                    }
+                  : undefined
+              }
               t={t}
             />
           }

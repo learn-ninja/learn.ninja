@@ -24,6 +24,8 @@ export interface ReadDeps {
   withCharts?: (lesson: Lesson, prepared: Prepared) => Prepared
   /** The lesson's formulas drawn as SVG, for a player that can't show KaTeX's HTML (math-svg.ts). */
   drawMath?: (prepared: Prepared) => Record<string, MathSvg>
+  /** The owner's handle, so the app's lesson menu can name who it would block. */
+  handleOf?: (ownerId: string) => Promise<string | null>
 }
 
 export interface LessonReply {
@@ -43,6 +45,10 @@ export interface LessonReply {
   /** Milliseconds since the epoch; null for lessons that don't expire (owned, or bundled). */
   expiresAt: number | null
   updatedAt: number | null
+  /** Who kept it (the lesson menu's Report and Block); null for anonymous and bundled lessons. */
+  author: { id: string; handle: string | null } | null
+  /** In Explore and on the owner's profile: owned, public, and not hidden. */
+  listed: boolean
 }
 
 const NOT_FOUND: Reply = {
@@ -81,6 +87,8 @@ export async function readLesson(
       visualsCssUrl: deps.visualsCssUrl,
       expiresAt: null,
       updatedAt: null,
+      author: null,
+      listed: false,
     }
     return { status: 200, body: { ...body } }
   }
@@ -104,6 +112,13 @@ export async function readLesson(
     visualsCssUrl: deps.visualsCssUrl,
     expiresAt: record.expiresAt,
     updatedAt: record.updatedAt ?? null,
+    author: record.ownerId
+      ? {
+          id: record.ownerId,
+          handle: (await deps.handleOf?.(record.ownerId)) ?? null,
+        }
+      : null,
+    listed: record.ownerId !== null && record.visibility === "public",
   }
   return { status: 200, body: { ...body } }
 }

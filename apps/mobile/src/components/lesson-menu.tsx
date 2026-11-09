@@ -18,8 +18,10 @@ import { hasVoice } from "@workspace/player-core/voices"
 import { DirectionView, useDirection } from "@/components/direction"
 import {
   BackIcon,
+  BanIcon,
   CheckIcon,
   EllipsisIcon,
+  FlagIcon,
   GlobeIcon,
   RestartIcon,
   ShareIcon,
@@ -60,6 +62,7 @@ export function LessonMenu({
   onPrefs,
   onShare,
   onRestart,
+  moderation,
   t,
 }: {
   title: string
@@ -74,6 +77,8 @@ export function LessonMenu({
   onPrefs: (patch: Partial<Preferences>) => void
   onShare: () => void
   onRestart: () => void
+  /** Someone else's published lesson: Report it, or Block its maker (`name`, isolated). */
+  moderation?: { name: string; onReport: () => void; onBlock: () => void }
   t: Strings
 }) {
   const [open, setOpen] = useState(false)
@@ -217,6 +222,21 @@ export function LessonMenu({
                         onPrefs({ sound: sound ? "off" : "on" })
                       }}
                     />
+                  ) : null}
+                  {moderation ? (
+                    <>
+                      <Separator />
+                      <Row
+                        icon={<FlagIcon />}
+                        label={t.moderation.report}
+                        onPress={() => close(moderation.onReport)}
+                      />
+                      <Row
+                        icon={<BanIcon color={colors.destructive.DEFAULT} />}
+                        label={t.moderation.block(moderation.name)}
+                        onPress={() => close(moderation.onBlock)}
+                      />
+                    </>
                   ) : null}
                 </Animated.View>
               ) : (

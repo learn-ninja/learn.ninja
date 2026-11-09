@@ -64,6 +64,7 @@ No third-party analytics, advertising or tracking SDKs. Data not linked to an ac
 - **The reminder** only appears after a first finished lesson, on an evening when the streak is at stake.
 - **Deleting the account:** Profile → the gear → Delete account, then type the account's email in the prompt. Deleting the review account is fine: the fixed log-in makes it again, empty, on the next sign-in (Anthropic's reviewers then find it without lessons).
 - **The widget:** long-press the app icon, or add "learn.ninja" from the widget gallery.
+- **Reporting and blocking** (guideline 1.2): press and hold a lesson in Explore or on a profile, or open a lesson's "…" menu, for Report lesson and Block {handle}; a profile has Block in its bar, and Settings lists the people blocked with Unblock. A report emails us with the lesson's link; a blocked person's lessons leave Explore and profiles for the blocker at once.
 
 ## Screenshots
 
@@ -71,5 +72,4 @@ No third-party analytics, advertising or tracking SDKs. Data not linked to an ac
 
 ## Open before submitting for review (not for TestFlight)
 
-1. **Reporting and blocking in Explore** (guideline 1.2, user-generated content). The web has Report on a lesson; the app has none yet (a phase 4 gap). Apple asks for a way to report content and to block abusive people.
-2. **The font** (San Francisco or Inter), item 7 in `plans/ios-app-bugs.md`.
+1. **The font** (San Francisco or Inter), item 7 in `plans/ios-app-bugs.md`.

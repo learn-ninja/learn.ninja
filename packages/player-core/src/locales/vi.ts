@@ -281,6 +281,32 @@ export const vi: Translation = {
     hidden: "Bị ẩn",
     profile: "Hồ sơ của bạn",
   },
+  moderation: {
+    report: "Báo cáo bài học",
+    reportTitle: "Báo cáo bài học này",
+    reportBody:
+      "Hãy cho biết có gì sai, báo cáo sẽ đến thẳng đội ngũ learn.ninja. Bài học vi phạm điều khoản sẽ bị gỡ khỏi Explore.",
+    sendReport: "Gửi báo cáo",
+    reportEmpty: "Hãy cho biết có gì sai trước đã.",
+    reportSentTitle: "Cảm ơn",
+    reportSentBody: "Báo cáo của bạn đã được gửi. Sẽ có người xem xét.",
+    block: (name) => "Chặn " + name,
+    blockTitle: (name) => "Chặn " + name + "?",
+    blockBody:
+      "Bài học của người này sẽ không còn hiện với bạn trong Explore và trên hồ sơ. Họ không được báo, và bạn có thể bỏ chặn trong Cài đặt.",
+    blockConfirm: "Chặn",
+    unblock: "Bỏ chặn",
+    unblockTitle: (name) => "Bỏ chặn " + name + "?",
+    unblockBody:
+      "Bài học của người này sẽ hiện lại với bạn trong Explore và trên hồ sơ.",
+    blockedTitle: "Người đã chặn",
+    blockedNone:
+      "Chưa có ai. Chặn ai đó từ menu của bài học hoặc hồ sơ của họ, và bài học của họ sẽ không còn hiện với bạn.",
+    blockedProfile:
+      "Bạn đã chặn người này nên bài học của họ không hiện với bạn.",
+    failed: "Không thành công. Hãy thử lại.",
+    done: "Xong",
+  },
   profile: {
     tab: "Hồ sơ",
     lessons: "Bài học",

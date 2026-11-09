@@ -6,6 +6,7 @@ import {
   renameLesson,
   setVisibility,
 } from "@/lib/explore/handlers"
+import { authorOf } from "@/lib/explore/queries"
 import { exploreDepsFor } from "@/lib/explore/request"
 import { updateLesson } from "@/lib/publish/handlers"
 import { getRateLimiter } from "@/lib/publish/rate-limit"
@@ -13,7 +14,7 @@ import { drawLessonMath } from "@/lib/publish/math-svg"
 import { readLesson } from "@/lib/publish/read"
 import { actorFor, clientKey, depsFor } from "@/lib/publish/request"
 import { respond, SIGN_IN_REQUIRED } from "@/lib/publish/respond"
-import { getLessonStore } from "@/lib/publish/store"
+import { getDb, getLessonStore } from "@/lib/publish/store"
 
 // GET /api/lessons/{id}: the lesson and its prepared output as JSON, for the app (lib/publish/read.ts).
 // {id} is a lesson id, its "{slug}-{id}" link segment, or a bundled test lesson's slug.
@@ -39,6 +40,8 @@ export async function GET(req: Request, { params }: Params) {
         visualsCssUrl:
           process.env.NEXT_PUBLIC_VISUALS_CSS ?? "/lesson-visuals.css",
         bundled: async (slug) => preparedBundled(slug),
+        handleOf: async (ownerId) =>
+          (await authorOf(await getDb(), ownerId))?.handle ?? null,
       }
     )
   )

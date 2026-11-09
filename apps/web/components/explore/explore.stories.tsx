@@ -18,6 +18,9 @@ import { LessonMenuView } from "./lesson-menu"
 import { LessonRow } from "./lesson-row"
 import { LikeButton } from "./like-button"
 import { ProfileTabs } from "./profile-tabs"
+import { BlockedPeople } from "@/components/account/blocked-people"
+
+import { BlockDialog } from "./block-dialog"
 import { ReportDialog } from "./report-dialog"
 
 // Explore's rows and controls with a fake server: likes go through, a report with "fail" in it
@@ -54,6 +57,14 @@ const fakeApi: ExploreApi = {
       : { title }
   },
   async remove() {
+    await wait()
+    return {}
+  },
+  async block(userId) {
+    await wait()
+    return userId.includes("fail") ? { error: "Nobody has this account." } : {}
+  },
+  async unblock() {
     await wait()
     return {}
   },
@@ -446,6 +457,55 @@ export const Report: Story = {
       </>
     )
   },
+}
+
+export const Block: Story = {
+  name: "Block dialog",
+  render: function Render() {
+    const [open, setOpen] = React.useState(true)
+    return (
+      <>
+        <Button variant="outline" onPress={() => setOpen(true)}>
+          Block ada
+        </Button>
+        <BlockDialog
+          person={{ id: "ada", handle: "ada" }}
+          isOpen={open}
+          onOpenChange={setOpen}
+          onDone={() => {}}
+          api={fakeApi}
+        />
+      </>
+    )
+  },
+}
+
+export const Blocked: Story = {
+  name: "Blocked people (Settings)",
+  render: () => (
+    <div className="mx-auto flex max-w-xl flex-col gap-8">
+      <BlockedPeople
+        api={fakeApi}
+        initial={[
+          {
+            id: "ada",
+            handle: "ada",
+            name: "Ada",
+            image: PORTRAIT,
+            blockedAt: Date.now() - 2 * DAY,
+          },
+          {
+            id: "grace",
+            handle: "grace",
+            name: "Grace",
+            image: null,
+            blockedAt: Date.now() - 40 * DAY,
+          },
+        ]}
+      />
+      <BlockedPeople api={fakeApi} initial={[]} />
+    </div>
+  ),
 }
 
 export const OwnProfileTabs: Story = {

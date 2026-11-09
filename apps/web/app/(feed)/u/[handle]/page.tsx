@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 
 import { UserAvatar } from "@/components/account/user-avatar"
 import { ActivityGrid } from "@/components/explore/activity-grid"
+import { BlockButton } from "@/components/explore/block-dialog"
 import { LessonFeed } from "@/components/explore/lesson-feed"
 import { ProfileTabs } from "@/components/explore/profile-tabs"
 import { buildGrid, localDay } from "@/lib/activity/activity"
@@ -13,6 +14,7 @@ import { cachedProfile } from "@/lib/explore/cache"
 import {
   activityDays,
   completedAt,
+  hasBlocked,
   lessonsInProgress,
   lessonsLikedBy,
   lessonsOwnedBy,
@@ -57,14 +59,22 @@ export default async function ProfilePage({ params }: Props) {
   if (!profile) notFound()
   const own = actor?.userId === profile.id
   const db = await getDb()
+  // Someone the viewer blocked shows them no lessons, only the way to unblock.
+  const blocked =
+    actor && !own ? await hasBlocked(db, actor.userId, profile.id) : false
   const [owned, started, likedLessons, days] = await Promise.all([
     own ? lessonsOwnedBy(db, profile.id) : null,
     own ? lessonsInProgress(db, profile.id) : null,
-    lessonsLikedBy(db, profile.id, { listedOnly: !own }),
+    blocked
+      ? []
+      : lessonsLikedBy(db, profile.id, {
+          listedOnly: !own,
+          viewerId: actor?.userId,
+        }),
     activityDays(db, profile.id),
   ])
   const grid = buildGrid(days, localDay(new Date(), tz))
-  const lessons = owned ?? profile.lessons
+  const lessons = owned ?? (blocked ? [] : profile.lessons)
   const ids = [...lessons, ...(started ?? []), ...likedLessons].map((l) => l.id)
   const [liked, completed] = actor
     ? await Promise.all([
@@ -104,6 +114,14 @@ export default async function ProfilePage({ params }: Props) {
           </h1>
           <span aria-hidden="true">·</span>
           <span>Joined {joined}</span>
+          {actor && !own ? (
+            <span className="ms-auto">
+              <BlockButton
+                person={{ id: profile.id, handle: profile.handle }}
+                blocked={blocked}
+              />
+            </span>
+          ) : null}
         </div>
         {profile.bio ? (
           <p className="max-w-xl text-base text-pretty">{profile.bio}</p>
@@ -120,7 +138,9 @@ export default async function ProfilePage({ params }: Props) {
             <Empty>
               {own
                 ? "No lessons yet. Ask your agent for one; logged in, it's saved here."
-                : "No listed lessons yet."}
+                : blocked
+                  ? "You blocked this person, so their lessons don't show for you."
+                  : "No listed lessons yet."}
             </Empty>
           ),
         }}
@@ -144,7 +164,11 @@ export default async function ProfilePage({ params }: Props) {
             <LessonFeed lessons={likedLessons} viewer={viewer} />
           ) : (
             <Empty>
-              {own ? "Lessons you like show up here." : "No liked lessons yet."}
+              {own
+                ? "Lessons you like show up here."
+                : blocked
+                  ? "You blocked this person."
+                  : "No liked lessons yet."}
             </Empty>
           ),
         }}

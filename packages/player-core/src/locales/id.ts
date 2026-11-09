@@ -284,6 +284,31 @@ export const id: Translation = {
     hidden: "Disembunyikan",
     profile: "Profilmu",
   },
+  moderation: {
+    report: "Laporkan pelajaran",
+    reportTitle: "Laporkan pelajaran ini",
+    reportBody:
+      "Ceritakan masalahnya dan laporan langsung sampai ke tim learn.ninja. Pelajaran yang melanggar ketentuan dikeluarkan dari Explore.",
+    sendReport: "Kirim laporan",
+    reportEmpty: "Ceritakan dulu masalahnya.",
+    reportSentTitle: "Terima kasih",
+    reportSentBody: "Laporanmu sedang dikirim. Akan ada yang memeriksanya.",
+    block: (name) => "Blokir " + name,
+    blockTitle: (name) => "Blokir " + name + "?",
+    blockBody:
+      "Pelajarannya tidak akan tampil lagi untukmu di Explore dan di profil. Dia tidak diberi tahu, dan kamu bisa membuka blokirnya di Pengaturan.",
+    blockConfirm: "Blokir",
+    unblock: "Buka blokir",
+    unblockTitle: (name) => "Buka blokir " + name + "?",
+    unblockBody: "Pelajarannya tampil lagi untukmu di Explore dan di profil.",
+    blockedTitle: "Orang yang diblokir",
+    blockedNone:
+      "Belum ada. Blokir seseorang dari menu pelajaran atau profilnya, dan pelajarannya tidak akan tampil lagi untukmu.",
+    blockedProfile:
+      "Kamu memblokir orang ini, jadi pelajarannya tidak tampil untukmu.",
+    failed: "Gagal. Coba lagi.",
+    done: "Selesai",
+  },
   profile: {
     tab: "Profil",
     lessons: "Pelajaran",
