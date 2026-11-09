@@ -359,4 +359,6 @@ export const fr: Translation = {
   },
   offline:
     "Impossible de joindre learn.ninja. Vérifie ta connexion et réessaie.",
+  offlineCopy: "Hors ligne : la copie enregistrée sur ce téléphone est lue",
+  onThisPhone: "Enregistrées sur ce téléphone",
 }

@@ -329,4 +329,6 @@ export const en: Strings = {
     failed: "The lesson didn't load.",
   },
   offline: "Couldn't reach learn.ninja. Check your connection and try again.",
+  offlineCopy: "Offline: playing the copy saved on this phone",
+  onThisPhone: "Saved on this phone",
 }

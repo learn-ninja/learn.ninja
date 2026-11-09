@@ -351,4 +351,6 @@ export const nl: Translation = {
   },
   offline:
     "Kan learn.ninja niet bereiken. Controleer je verbinding en probeer het opnieuw.",
+  offlineCopy: "Offline: de kopie op deze telefoon wordt afgespeeld",
+  onThisPhone: "Opgeslagen op deze telefoon",
 }

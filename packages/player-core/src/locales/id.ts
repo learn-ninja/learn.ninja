@@ -333,4 +333,6 @@ export const id: Translation = {
   },
   offline:
     "Tidak bisa terhubung ke learn.ninja. Periksa koneksimu dan coba lagi.",
+  offlineCopy: "Offline: memutar salinan yang tersimpan di ponsel ini",
+  onThisPhone: "Tersimpan di ponsel ini",
 }

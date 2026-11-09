@@ -27,7 +27,11 @@ const finishDelivered = new Set<string>()
 export const deliveredFinish = (id: string) => finishDelivered.has(id)
 
 /** The lessons open now, so signing in can send what each one missed. */
-const open = new Set<{ id: string; holdsFinish: () => boolean; resend: () => void }>()
+const open = new Set<{
+  id: string
+  holdsFinish: () => boolean
+  resend: () => void
+}>()
 
 /** Whether an open lesson `id` holds a finish it will send itself once signed in. */
 export const syncHoldsFinish = (id: string) =>
@@ -92,7 +96,7 @@ export function createProgressSync(id: string, send: Send) {
       const entry = (progress = { body: counted, landed: false })
       queue(() => post("progress", "PUT", entry))
     },
-    /** After signing in: sends the progress and the finish the server didn't take, in that order. */
+    /** After signing in or reconnecting: sends the progress and the finish the server didn't take, in that order. */
     resend() {
       if (progress && !progress.landed && !finish) {
         const entry = progress
@@ -115,6 +119,15 @@ export function createProgressSync(id: string, send: Send) {
 /** The app signed in: requests go out again, and every open lesson sends what the server missed. */
 export function signedIn() {
   signedOut = false
+  for (const sync of open) sync.resend()
+}
+
+/**
+ * The connection came back: every open lesson sends what didn't get through while it was gone. Nothing
+ * goes out while the server has said the app is signed out; signing in sends it then.
+ */
+export function reconnected() {
+  if (signedOut) return
   for (const sync of open) sync.resend()
 }
 

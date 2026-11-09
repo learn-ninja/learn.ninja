@@ -338,4 +338,6 @@ export const hi: Translation = {
   },
   offline:
     "learn.ninja तक नहीं पहुँच पाए। अपना कनेक्शन जाँचें और फिर से कोशिश करें।",
+  offlineCopy: "ऑफ़लाइन: इस फ़ोन पर सेव की गई कॉपी चल रही है",
+  onThisPhone: "इस फ़ोन पर सेव",
 }

@@ -1,10 +1,11 @@
+import { addNetworkStateListener } from "expo-network"
 import { useEffect } from "react"
 
 import { sendToApi } from "./api"
 import { authClient, forgetSessionLocally } from "./auth-client"
 import { sendFinishes } from "./finishes"
 import { deviceStorage } from "./progress-storage"
-import { signedIn } from "./progress-sync"
+import { reconnected, signedIn } from "./progress-sync"
 
 // Who's signed in, from Better Auth's session (kept in the keychain by its Expo client, checked with
 // the server on launch and when the app comes back to the front).
@@ -71,6 +72,22 @@ export function SessionEffects() {
     if (!id) return
     signedIn()
     void sendFinishes(deviceStorage, sendToApi)
+  }, [id])
+  // Back online after a lesson played offline: what didn't get through goes now, not at the next
+  // sign-in or launch.
+  useEffect(() => {
+    let online = true
+    const sub = addNetworkStateListener(
+      ({ isConnected, isInternetReachable }) => {
+        const now = isConnected !== false && isInternetReachable !== false
+        if (now && !online) {
+          reconnected()
+          if (id) void sendFinishes(deviceStorage, sendToApi)
+        }
+        online = now
+      }
+    )
+    return () => sub.remove()
   }, [id])
   return null
 }

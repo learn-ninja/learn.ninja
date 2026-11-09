@@ -9,6 +9,8 @@ import { validateLesson, type Lesson } from "@workspace/spec"
 import { createApiFetch, OfflineError } from "./api-fetch"
 import { sessionCookie } from "./auth-client"
 import { API_BASE_URL } from "./config"
+import { cachedLesson, cacheLesson, forgetCachedLesson } from "./lesson-cache"
+import { deviceStorage } from "./progress-storage"
 import type { Send } from "./progress-sync"
 import { loadVisualsCss } from "./visuals-css"
 
@@ -24,6 +26,8 @@ export interface LoadedLesson {
   baseCss: string
   /** When a published lesson's link stops working (ms since epoch); null once it's kept. */
   expiresAt: number | null
+  /** The copy kept on this phone, played because learn.ninja couldn't be reached. */
+  offline?: boolean
 }
 
 /** A request to the API, signed in when the app is (the session cookie rides along). */
@@ -58,6 +62,29 @@ export class LessonError extends Error {
 export async function fetchLesson(
   param: string,
   base = API_BASE_URL
+): Promise<LoadedLesson> {
+  try {
+    const data = await requestLesson(param, base)
+    cacheLesson(deviceStorage, param, data)
+    return data
+  } catch (e) {
+    // No connection: the copy this phone kept, if there is one. A lesson the server says is gone
+    // is gone here too.
+    if (e instanceof OfflineError) {
+      const kept = cachedLesson(deviceStorage, param)
+      if (kept) return kept
+    } else if (
+      e instanceof LessonError &&
+      (e.status === 404 || e.status === 410)
+    )
+      forgetCachedLesson(deviceStorage, param)
+    throw e
+  }
+}
+
+async function requestLesson(
+  param: string,
+  base: string
 ): Promise<LoadedLesson> {
   const res = await createApiFetch({ base, cookie: sessionCookie })(
     `/api/lessons/${encodeURIComponent(param)}`

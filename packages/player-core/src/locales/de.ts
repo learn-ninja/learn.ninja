@@ -360,4 +360,6 @@ export const de: Translation = {
   },
   offline:
     "learn.ninja ist nicht erreichbar. Prüfe deine Verbindung und versuch es noch mal.",
+  offlineCopy: "Offline: Die auf diesem Handy gespeicherte Kopie läuft",
+  onThisPhone: "Auf diesem Handy gespeichert",
 }

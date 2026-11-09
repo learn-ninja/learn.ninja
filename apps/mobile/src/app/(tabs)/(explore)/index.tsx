@@ -14,6 +14,7 @@ import {
   LTR,
 } from "@/components/explore/list-parts"
 import { LessonRow } from "@/components/explore/lesson-row"
+import { SavedLessons } from "@/components/explore/saved-lessons"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { fetchTestLessons, type TestLesson } from "@/lib/api"
@@ -90,10 +91,13 @@ export default function Home() {
             feed.state === "loading" ? (
             <Loading />
           ) : feed.state === "error" ? (
-            <Failed
-              message={feed.offline ? t.offline : t.feed.failed}
-              retry={{ label: t.tryAgain, onPress: retry }}
-            />
+            <>
+              <Failed
+                message={feed.offline ? t.offline : t.feed.failed}
+                retry={{ label: t.tryAgain, onPress: retry }}
+              />
+              {feed.offline ? <SavedLessons t={t} /> : null}
+            </>
           ) : (
             <Empty>{t.feed.empty}</Empty>
           )
@@ -255,10 +259,13 @@ function TestLessons({ t }: { t: Strings }) {
   }, [attempt])
   if (lessons && "error" in lessons)
     return (
-      <Failed
-        message={lessons.error === "offline" ? t.offline : t.feed.failed}
-        retry={{ label: t.tryAgain, onPress: () => setAttempt((n) => n + 1) }}
-      />
+      <>
+        <Failed
+          message={lessons.error === "offline" ? t.offline : t.feed.failed}
+          retry={{ label: t.tryAgain, onPress: () => setAttempt((n) => n + 1) }}
+        />
+        {lessons.error === "offline" ? <SavedLessons t={t} /> : null}
+      </>
     )
   if (!lessons?.length) return null
   return (
