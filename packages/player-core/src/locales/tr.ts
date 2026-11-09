@@ -324,6 +324,10 @@ export const tr: Translation = {
       "Derslerin ve serinle profilin, kullanıcı adının adresinde. Ayarlar'dan bir tane seç.",
     save: "Kaydet",
     saved: "Kaydedildi",
+    deleteAccount: "Hesabı sil",
+    deleteWarning:
+      "Bu, hesabını ve içindeki her şeyi kalıcı olarak siler: derslerin, profilin, beğenilerin, bitirdiğin dersler, ilerlemen, serin ve anahtarların. Geri alınamaz. Onaylamak için e-postanı yaz.",
+    deleteMismatch: "Bu, hesabının e-postası değil.",
   },
   lessonErrors: {
     missing:

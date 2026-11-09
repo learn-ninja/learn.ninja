@@ -40,6 +40,8 @@ export interface AccountApi {
   uploadAvatar(file: File): Promise<Outcome & { image?: string }>
   removeAvatar(): Promise<Outcome>
   signOut(): Promise<void>
+  /** Deletes the account and everything it owns, for good; `confirm` is its email, typed again. */
+  deleteAccount(confirm: string): Promise<Outcome>
   listKeys(): Promise<KeySummary[]>
   createKey(name: string): Promise<Outcome & { key?: NewKey }>
   deleteKey(id: string): Promise<Outcome>
@@ -138,6 +140,13 @@ export const accountApi: AccountApi = {
   },
   async signOut() {
     await authClient.signOut()
+  },
+  async deleteAccount(confirm) {
+    const reply = await call("/api/account", {
+      method: "DELETE",
+      body: JSON.stringify({ confirm }),
+    })
+    return reply.ok ? {} : { error: reply.message }
   },
   async listKeys() {
     const reply = await call<{ keys: KeySummary[] }>("/api/keys")

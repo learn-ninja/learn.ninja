@@ -376,6 +376,10 @@ export const pl: Translation = {
       "Twój profil z lekcjami i serią jest pod twoją nazwą użytkownika. Wybierz ją w Ustawieniach.",
     save: "Zapisz",
     saved: "Zapisano",
+    deleteAccount: "Usuń konto",
+    deleteWarning:
+      "To na zawsze usunie Twoje konto i wszystko, co się w nim znajduje: lekcje, profil, polubienia, ukończone lekcje, postępy, serię i klucze. Tego nie da się cofnąć. Wpisz swój e-mail, aby potwierdzić.",
+    deleteMismatch: "To nie jest e-mail Twojego konta.",
   },
   lessonErrors: {
     missing:

@@ -22,6 +22,7 @@ import {
 import { API_BASE_URL } from "@/lib/config"
 import { handleProblem, normalizeHandle } from "@/lib/handle"
 import { remindersSwitched } from "@/lib/reminders"
+import { deleteAccount } from "@/lib/delete-account"
 import { selection, tap } from "@/lib/haptics"
 import { saveHandle } from "@/lib/save-handle"
 import { signOut, useSession } from "@/lib/session"
@@ -32,8 +33,9 @@ import { colors } from "../../../../tokens"
 // The account's settings on iOS (settings.tsx is the rest of the platforms'), from the gear on
 // your own profile, as iOS's own Settings draws a page:
 // a grouped form (SwiftUI's, through @expo/ui) with who's logged in and the handle, the app's
-// language as a menu of the player's languages, the streak reminder's switch, and Log out in red,
-// confirmed first. The handle
+// language as a menu of the player's languages, the streak reminder's switch, Log out in red,
+// confirmed first, and Delete account, confirmed in the system's prompt with the email typed again
+// (App Store guideline 5.1.1(v): an app that makes accounts deletes them too). The handle
 // is changed in the system's text prompt and saved as the web's settings save it
 // (PATCH /api/account).
 
@@ -127,6 +129,13 @@ export default function Settings() {
               }
             />
           </Section>
+          <Section>
+            <Button
+              role="destructive"
+              label={t.account.deleteAccount}
+              onPress={() => confirmDelete(t, leaving)}
+            />
+          </Section>
         </Form>
       </Host>
     </>
@@ -178,4 +187,40 @@ function confirmLogOut(t: Strings, onLeave: () => void) {
       },
     },
   ])
+}
+
+/**
+ * Delete the account, after the system's prompt says what goes and that it can't be undone, with
+ * the email typed in it to confirm; then back to the home, logged out. A wrong email or a failure
+ * says so and leaves everything as it was.
+ */
+function confirmDelete(t: Strings, leaving: { current: boolean }) {
+  Alert.prompt(
+    t.account.deleteAccount,
+    t.account.deleteWarning,
+    [
+      { text: t.cancel, style: "cancel" },
+      {
+        text: t.account.deleteAccount,
+        style: "destructive",
+        onPress: async (typed?: string) => {
+          tap()
+          // Set before the session ends (deleteAccount forgets it), so the effect above doesn't pop
+          // a screen of its own while this one leaves.
+          leaving.current = true
+          const problem = await deleteAccount(typed ?? "", t)
+          if (problem) {
+            leaving.current = false
+            Alert.alert(t.account.deleteAccount, problem)
+            return
+          }
+          if (router.canGoBack()) router.back()
+          router.replace("/")
+        },
+      },
+    ],
+    "plain-text",
+    "",
+    "email-address"
+  )
 }

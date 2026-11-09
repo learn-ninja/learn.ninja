@@ -312,6 +312,10 @@ export const ko: Translation = {
       "레슨과 연속 기록이 담긴 프로필은 핸들 주소에 있어요. 설정에서 하나 정하세요.",
     save: "저장",
     saved: "저장됨",
+    deleteAccount: "계정 삭제",
+    deleteWarning:
+      "계정과 그 안의 모든 것이 영구적으로 삭제됩니다: 레슨, 프로필, 좋아요, 완료한 레슨, 진행 상황, 연속 기록, 키. 되돌릴 수 없습니다. 확인을 위해 이메일을 입력하세요.",
+    deleteMismatch: "계정의 이메일과 일치하지 않습니다.",
   },
   lessonErrors: {
     missing:

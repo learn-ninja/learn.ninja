@@ -16,6 +16,7 @@ import { Text } from "@/components/ui/text"
 import { API_BASE_URL } from "@/lib/config"
 import { handleProblem, normalizeHandle } from "@/lib/handle"
 import { remindersSwitched } from "@/lib/reminders"
+import { deleteAccount } from "@/lib/delete-account"
 import { selection, tap } from "@/lib/haptics"
 import { saveHandle } from "@/lib/save-handle"
 import { signOut, useSession } from "@/lib/session"
@@ -25,7 +26,7 @@ import { useAppStrings } from "@/lib/use-strings"
 // The account's settings off iOS (settings.ios.tsx draws iOS's own form, with SwiftUI and the
 // system's text prompt, neither of which Android has): the same page in React Native, as phase 4
 // had it. Who's logged in, the handle in a text field (saved as the web's settings save it), the
-// app's language, and Log out, confirmed first.
+// app's language, Log out, confirmed first, and Delete account, confirmed with the email typed again.
 
 export default function Settings() {
   const { t, lang, dir } = useAppStrings()
@@ -54,6 +55,7 @@ export default function Settings() {
           <LogOutIcon />
           <Text>{t.signIn.logOut}</Text>
         </Button>
+        <DeleteAccountSection email={account.email} t={t} />
       </ScrollView>
     </DirectionView>
   )
@@ -193,5 +195,59 @@ function RemindersRow({ t }: { t: Strings }) {
         }}
       />
     </View>
+  )
+}
+
+/**
+ * Delete account: what goes and that it can't be undone, a field for the email typed again, and the
+ * button in red, which works once the email matches. Back to the home, logged out, once it's gone.
+ */
+function DeleteAccountSection({ email, t }: { email: string; t: Strings }) {
+  const [typed, setTyped] = useState("")
+  const [busy, setBusy] = useState(false)
+  const [problem, setProblem] = useState<string | null>(null)
+  const matches = typed.trim().toLowerCase() === email.toLowerCase()
+  const remove = async () => {
+    tap()
+    setBusy(true)
+    setProblem(null)
+    const refused = await deleteAccount(typed, t)
+    setBusy(false)
+    if (refused) return setProblem(refused)
+    router.dismissAll()
+    router.replace("/")
+  }
+  return (
+    <Section title={t.account.deleteAccount}>
+      <Text className="text-sm text-muted-foreground">
+        {t.account.deleteWarning}
+      </Text>
+      <Input
+        // Uncontrolled, as the handle's field: a controlled field drops keys typed quickly.
+        onChangeText={setTyped}
+        placeholder={email}
+        accessibilityLabel={t.signIn.email}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+        editable={!busy}
+        style={{ writingDirection: "ltr" }}
+      />
+      {problem ? (
+        <Text
+          className="text-sm text-destructive"
+          accessibilityLiveRegion="polite"
+        >
+          {problem}
+        </Text>
+      ) : null}
+      <Button
+        variant="destructive"
+        disabled={busy || !matches}
+        onPress={() => void remove()}
+      >
+        <Text>{t.account.deleteAccount}</Text>
+      </Button>
+    </Section>
   )
 }

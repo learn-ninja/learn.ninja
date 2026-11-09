@@ -307,6 +307,10 @@ export const zhTw: Translation = {
       "你的個人檔案（含課程與連續紀錄）就在你的帳號名稱底下。請在設定中選一個。",
     save: "儲存",
     saved: "已儲存",
+    deleteAccount: "刪除帳號",
+    deleteWarning:
+      "這會永久刪除你的帳號及其中的一切：你的課程、個人檔案、按讚、完成的課程、進度、連續紀錄和金鑰。此操作無法復原。請輸入你的電子郵件以確認。",
+    deleteMismatch: "這不是你帳號的電子郵件。",
   },
   lessonErrors: {
     missing: "這裡沒有課程：它在發布 7 天後已過期，或者連結有誤。",
