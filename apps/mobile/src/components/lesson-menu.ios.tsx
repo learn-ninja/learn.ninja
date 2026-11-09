@@ -60,6 +60,7 @@ export function LessonMenu({
   onPrefs,
   onShare,
   onRestart,
+  moderation,
   t,
 }: {
   title: string
@@ -74,6 +75,8 @@ export function LessonMenu({
   onPrefs: (patch: Partial<Preferences>) => void
   onShare: () => void
   onRestart: () => void
+  /** Someone else's published lesson: Report it, or Block its maker (`name`, isolated). */
+  moderation?: { name: string; onReport: () => void; onBlock: () => void }
   t: Strings
 }) {
   const dir = useDirection()
@@ -179,6 +182,22 @@ export function LessonMenu({
               isOn={sound}
               onIsOnChange={(on) => pick({ sound: on ? "on" : "off" })}
             />
+          ) : null}
+          {moderation ? (
+            <>
+              <Divider />
+              <Button
+                label={t.moderation.report}
+                systemImage="flag"
+                onPress={moderation.onReport}
+              />
+              <Button
+                label={t.moderation.block(moderation.name)}
+                systemImage="hand.raised"
+                role="destructive"
+                onPress={moderation.onBlock}
+              />
+            </>
           ) : null}
         </Menu>
       </Host>

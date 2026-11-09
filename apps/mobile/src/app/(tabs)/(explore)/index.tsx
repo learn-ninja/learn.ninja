@@ -21,6 +21,7 @@ import { fetchTestLessons, type TestLesson } from "@/lib/api"
 import { OfflineError } from "@/lib/api-fetch"
 import { fetchExplore, type LessonRowData, type Viewer } from "@/lib/feed"
 import { mergeFirstPage } from "@/lib/feed-merge"
+import { onBlockChange } from "@/lib/moderation"
 import { useSession, type Account } from "@/lib/session"
 import { tap } from "@/lib/haptics"
 import { useAppStrings } from "@/lib/use-strings"
@@ -188,6 +189,20 @@ function useExplore(account: Account | null) {
       }
     },
     [signedIn]
+  )
+
+  // Someone blocked: their lessons leave at once, the pages scrolled through included. Unblocked:
+  // the feed starts over, so theirs come back in their places.
+  useEffect(
+    () =>
+      onBlockChange(({ userId, blocked }) => {
+        if (!blocked) return void refresh()
+        setFeed((f) => ({
+          ...f,
+          lessons: f.lessons.filter((l) => l.author?.id !== userId),
+        }))
+      }),
+    [refresh]
   )
 
   // Fresh each time the feed comes back into view: a lesson just finished shows Done.

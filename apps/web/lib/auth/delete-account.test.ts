@@ -246,9 +246,8 @@ describe("deleting the account", () => {
     ).toHaveLength(1)
   })
 
-  // The route builds the app's own auth, which creates and migrates a fresh database first:
-  // a few seconds while the rest of the suite runs beside it.
-  it("answers a signed-out request with 401", { timeout: 30_000 }, async () => {
+  // The real route, which starts its own database on first use: slower than the default 5 s on CI.
+  it("answers a signed-out request with 401", async () => {
     const res = await DELETE(
       new Request("http://localhost:3000/api/account", {
         method: "DELETE",
@@ -257,5 +256,5 @@ describe("deleting the account", () => {
     )
     expect(res.status).toBe(401)
     expect(await res.json()).toMatchObject({ error: "sign_in_required" })
-  })
+  }, 30_000)
 })

@@ -275,6 +275,31 @@ export const en: Strings = {
     hidden: "Hidden",
     profile: "Your profile",
   },
+  moderation: {
+    report: "Report lesson",
+    reportTitle: "Report this lesson",
+    reportBody:
+      "Say what's wrong and it goes straight to the people who run learn.ninja. Lessons that break the terms are taken out of Explore.",
+    sendReport: "Send report",
+    reportEmpty: "Say what's wrong first.",
+    reportSentTitle: "Thanks",
+    reportSentBody: "Your report is on its way. Someone will take a look.",
+    block: (name) => "Block " + name,
+    blockTitle: (name) => "Block " + name + "?",
+    blockBody:
+      "Their lessons stop showing for you in Explore and on profiles. They aren't told, and you can unblock them in Settings.",
+    blockConfirm: "Block",
+    unblock: "Unblock",
+    unblockTitle: (name) => "Unblock " + name + "?",
+    unblockBody: "Their lessons show for you again in Explore and on profiles.",
+    blockedTitle: "Blocked people",
+    blockedNone:
+      "Nobody. Block someone from a lesson's menu or their profile, and their lessons stop showing for you.",
+    blockedProfile:
+      "You blocked this person, so their lessons don't show for you.",
+    failed: "That didn't go through. Try again.",
+    done: "Done",
+  },
   profile: {
     tab: "Profile",
     lessons: "Lessons",

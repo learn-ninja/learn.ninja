@@ -68,6 +68,8 @@ export interface ProfileData {
     joinedAt: number
   }
   own: boolean
+  /** Whether the learner blocked this person: then `lessons` and `likes` are empty. */
+  blocked?: boolean
   lessons: LessonRowData[]
   inProgress: LessonRowData[] | null
   likes: LessonRowData[]

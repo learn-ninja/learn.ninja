@@ -293,6 +293,31 @@ export const es: Translation = {
     hidden: "Oculta",
     profile: "Tu perfil",
   },
+  moderation: {
+    report: "Denunciar lección",
+    reportTitle: "Denunciar esta lección",
+    reportBody:
+      "Cuéntanos qué pasa y llegará directamente al equipo de learn.ninja. Las lecciones que incumplen los términos se retiran de Explore.",
+    sendReport: "Enviar denuncia",
+    reportEmpty: "Primero cuéntanos qué pasa.",
+    reportSentTitle: "Gracias",
+    reportSentBody: "Tu denuncia está en camino. Alguien la revisará.",
+    block: (name) => "Bloquear a " + name,
+    blockTitle: (name) => "¿Bloquear a " + name + "?",
+    blockBody:
+      "Sus lecciones dejarán de aparecerte en Explore y en los perfiles. No se le avisa, y puedes desbloquearlo en Ajustes.",
+    blockConfirm: "Bloquear",
+    unblock: "Desbloquear",
+    unblockTitle: (name) => "¿Desbloquear a " + name + "?",
+    unblockBody:
+      "Sus lecciones vuelven a aparecerte en Explore y en los perfiles.",
+    blockedTitle: "Personas bloqueadas",
+    blockedNone:
+      "Nadie. Bloquea a alguien desde el menú de una lección o su perfil, y sus lecciones dejarán de aparecerte.",
+    blockedProfile: "Bloqueaste a esta persona, así que no ves sus lecciones.",
+    failed: "No se pudo. Inténtalo de nuevo.",
+    done: "Listo",
+  },
   profile: {
     tab: "Perfil",
     lessons: "Lecciones",

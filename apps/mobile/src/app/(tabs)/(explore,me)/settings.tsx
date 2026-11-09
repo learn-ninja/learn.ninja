@@ -18,6 +18,7 @@ import { handleProblem, normalizeHandle } from "@/lib/handle"
 import { remindersSwitched } from "@/lib/reminders"
 import { deleteAccount } from "@/lib/delete-account"
 import { selection, tap } from "@/lib/haptics"
+import { confirmUnblock, useBlocked } from "@/lib/moderation"
 import { saveHandle } from "@/lib/save-handle"
 import { signOut, useSession } from "@/lib/session"
 import { usePreferences } from "@/lib/use-preferences"
@@ -26,7 +27,8 @@ import { useAppStrings } from "@/lib/use-strings"
 // The account's settings off iOS (settings.ios.tsx draws iOS's own form, with SwiftUI and the
 // system's text prompt, neither of which Android has): the same page in React Native, as phase 4
 // had it. Who's logged in, the handle in a text field (saved as the web's settings save it), the
-// app's language, Log out, confirmed first, and Delete account, confirmed with the email typed again.
+// app's language, the reminder, the people blocked, Log out, confirmed first, and Delete account,
+// confirmed with the email typed again.
 
 export default function Settings() {
   const { t, lang, dir } = useAppStrings()
@@ -51,6 +53,7 @@ export default function Settings() {
         </Section>
         {UI_TRANSLATIONS ? <LanguageSection current={lang} t={t} /> : null}
         <RemindersRow t={t} />
+        <BlockedSection t={t} />
         <Button variant="outline" size="lg" onPress={() => confirmLogOut(t)}>
           <LogOutIcon />
           <Text>{t.signIn.logOut}</Text>
@@ -176,6 +179,39 @@ function confirmLogOut(t: Strings) {
       },
     },
   ])
+}
+
+/** The people the learner blocked, each with Unblock (confirmed first). */
+function BlockedSection({ t }: { t: Strings }) {
+  const blocked = useBlocked()
+  if (!blocked) return null
+  return (
+    <Section title={t.moderation.blockedTitle}>
+      {blocked.length ? (
+        blocked.map((person) => (
+          <View
+            key={person.id}
+            className="flex-row items-center justify-between gap-3"
+          >
+            <Text
+              numberOfLines={1}
+              className="shrink text-sm font-medium"
+              style={{ writingDirection: "ltr" }}
+            >
+              {person.handle ?? person.name}
+            </Text>
+            <Button variant="outline" onPress={() => confirmUnblock(person, t)}>
+              <Text>{t.moderation.unblock}</Text>
+            </Button>
+          </View>
+        ))
+      ) : (
+        <Text className="text-sm text-muted-foreground">
+          {t.moderation.blockedNone}
+        </Text>
+      )}
+    </Section>
+  )
 }
 
 /** The evening streak reminder's switch (reminders.ts): on until switched off. */

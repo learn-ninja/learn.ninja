@@ -8,12 +8,14 @@ import {
   isNotNull,
   isNull,
   lt,
+  notExists,
   or,
   sql,
 } from "drizzle-orm"
 
 import {
   activityDay,
+  block,
   completion,
   lesson,
   lessonProgress,
@@ -212,6 +214,22 @@ export const listed = (now: number) =>
     live(now)
   )
 
+/**
+ * Leaves out the lessons of people `viewerId` blocked; nothing when there's no viewer. Served by
+ * block's primary key (blocker, blocked).
+ */
+export function notBlockedBy(db: Db, viewerId: string | undefined) {
+  if (!viewerId) return undefined
+  return notExists(
+    db
+      .select({ one: sql`1` })
+      .from(block)
+      .where(
+        and(eq(block.blockerId, viewerId), eq(block.blockedId, lesson.ownerId))
+      )
+  )
+}
+
 function orderFor(sort: ExploreSort, now: number) {
   switch (sort) {
     case "new":
@@ -235,6 +253,8 @@ export interface ExploreFilter {
   now?: number
   /** New only: the lessons after this one in the list (older, or as old with a smaller id), for paging. */
   before?: { createdAt: number; id: string }
+  /** The signed-in viewer, whose blocked people's lessons are left out. */
+  viewerId?: string
 }
 
 /** The Explore list for one tab, optionally narrowed to a subject and a tag. */
@@ -242,7 +262,7 @@ export async function listLessons(
   db: Db,
   sort: ExploreSort,
   limit: number,
-  { subject, tag, now = Date.now(), before }: ExploreFilter = {}
+  { subject, tag, now = Date.now(), before, viewerId }: ExploreFilter = {}
 ): Promise<LessonSummary[]> {
   const after = before && sort === "new" ? new Date(before.createdAt) : null
   const rows = await db
@@ -252,6 +272,7 @@ export async function listLessons(
     .where(
       and(
         listed(now),
+        notBlockedBy(db, viewerId),
         // Served by lesson_subject_idx, which is on this same expression.
         subject ? eq(field("subject"), subject) : undefined,
         tag
@@ -410,7 +431,13 @@ export async function lessonsLikedBy(
   {
     listedOnly = false,
     now = Date.now(),
-  }: { listedOnly?: boolean; now?: number } = {}
+    viewerId,
+  }: {
+    listedOnly?: boolean
+    now?: number
+    /** The signed-in viewer, whose blocked people's lessons are left out. */
+    viewerId?: string
+  } = {}
 ): Promise<LessonSummary[]> {
   const rows = await db
     .select(columns)
@@ -420,7 +447,8 @@ export async function lessonsLikedBy(
     .where(
       and(
         eq(like.userId, userId),
-        listedOnly ? listed(now) : and(eq(lesson.hidden, false), live(now))
+        listedOnly ? listed(now) : and(eq(lesson.hidden, false), live(now)),
+        notBlockedBy(db, viewerId)
       )
     )
     .orderBy(desc(like.createdAt), desc(lesson.id))
@@ -462,6 +490,61 @@ export async function lessonsInProgress(
     ...toSummary(row),
     progress: { done: row.done, total: row.total },
   }))
+}
+
+/** Whether `blockerId` has blocked `blockedId`. */
+export async function hasBlocked(
+  db: Db,
+  blockerId: string,
+  blockedId: string
+): Promise<boolean> {
+  const [row] = await db
+    .select({ one: sql`1` })
+    .from(block)
+    .where(and(eq(block.blockerId, blockerId), eq(block.blockedId, blockedId)))
+    .limit(1)
+  return Boolean(row)
+}
+
+/** The ids of everyone `blockerId` has blocked, for lists read from the cache (the Explore page). */
+export async function blockedIds(
+  db: Db,
+  blockerId: string
+): Promise<Set<string>> {
+  const rows = await db
+    .select({ id: block.blockedId })
+    .from(block)
+    .where(eq(block.blockerId, blockerId))
+  return new Set(rows.map((r) => r.id))
+}
+
+/** Someone the user blocked, as Settings lists them. */
+export interface BlockedPerson {
+  id: string
+  handle: string | null
+  name: string
+  image: string | null
+  blockedAt: number
+}
+
+/** Everyone the user blocked, most recently blocked first. */
+export async function blockedPeople(
+  db: Db,
+  blockerId: string
+): Promise<BlockedPerson[]> {
+  const rows = await db
+    .select({
+      id: user.id,
+      handle: user.handle,
+      name: user.name,
+      image: user.image,
+      at: block.createdAt,
+    })
+    .from(block)
+    .innerJoin(user, eq(user.id, block.blockedId))
+    .where(eq(block.blockerId, blockerId))
+    .orderBy(desc(block.createdAt))
+  return rows.map(({ at, ...r }) => ({ ...r, blockedAt: at.getTime() }))
 }
 
 /** A lesson owner's public name, for the lesson page. */

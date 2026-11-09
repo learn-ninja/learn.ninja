@@ -274,6 +274,30 @@ export const ja: Translation = {
     hidden: "非表示",
     profile: "プロフィール",
   },
+  moderation: {
+    report: "レッスンを報告",
+    reportTitle: "このレッスンを報告",
+    reportBody:
+      "問題を書いてください。learn.ninjaの運営チームに直接届きます。規約に違反するレッスンはExploreから外されます。",
+    sendReport: "報告を送信",
+    reportEmpty: "まず問題を書いてください。",
+    reportSentTitle: "ありがとうございます",
+    reportSentBody: "報告を送りました。担当者が確認します。",
+    block: (name) => name + "をブロック",
+    blockTitle: (name) => name + "をブロックしますか？",
+    blockBody:
+      "この人のレッスンはExploreやプロフィールに表示されなくなります。相手には通知されず、設定でブロックを解除できます。",
+    blockConfirm: "ブロック",
+    unblock: "ブロックを解除",
+    unblockTitle: (name) => name + "のブロックを解除しますか？",
+    unblockBody: "この人のレッスンがExploreやプロフィールに再び表示されます。",
+    blockedTitle: "ブロック中の人",
+    blockedNone:
+      "まだいません。レッスンのメニューやプロフィールからブロックすると、その人のレッスンは表示されなくなります。",
+    blockedProfile: "この人をブロックしているため、レッスンは表示されません。",
+    failed: "うまくいきませんでした。もう一度お試しください。",
+    done: "完了",
+  },
   profile: {
     tab: "プロフィール",
     lessons: "レッスン",

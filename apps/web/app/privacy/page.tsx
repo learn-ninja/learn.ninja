@@ -39,7 +39,7 @@ export default function PrivacyPage() {
           fixes instead of the whole lesson again. Then it is deleted.
         </li>
         <li>
-          <strong>Likes, completions, and reports.</strong> Liking a lesson
+          <strong>Likes, completions, reports, and blocks.</strong> Liking a lesson
           stores that your account liked it. Once you have a handle, the listed
           lessons you liked show on your profile. Finishing a lesson while
           logged in stores when you first finished it, so Explore can mark it
@@ -47,7 +47,8 @@ export default function PrivacyPage() {
           activity grid. A lesson you leave midway while logged in stores how
           far you got, until you finish it. Reporting a lesson stores the reason
           and a hash of your IP address, never the address itself, and emails
-          the report to us.
+          the report to us. Blocking someone stores who you blocked, so their
+          lessons stay out of what you see; they aren&apos;t told.
         </li>
         <li>
           <strong>Your account, if you make one.</strong> Your email address,

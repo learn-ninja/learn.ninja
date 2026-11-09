@@ -106,6 +106,15 @@ export default async function PublishedLessonPage({
         progressKey={`l/${slugId}`}
         lessonId={record.id}
         canReport={listed && !isOwner}
+        blockAuthor={
+          signedIn && !isOwner && record.ownerId
+            ? {
+                id: record.ownerId,
+                handle: author?.handle ?? null,
+                name: author?.name,
+              }
+            : undefined
+        }
         recordCompletion={signedIn}
         account={account}
         currentStreak={currentStreak ?? undefined}

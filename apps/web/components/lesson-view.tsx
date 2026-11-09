@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { FlagIcon, SettingsIcon } from "lucide-react"
+import { BanIcon, FlagIcon, SettingsIcon } from "lucide-react"
 
 import {
   LessonPlayer,
@@ -16,6 +16,10 @@ import { DropdownMenuItem } from "@workspace/ui/components/dropdown-menu"
 import { useAccount } from "@/components/account/account-link"
 import { AccountMenuItems } from "@/components/account/account-menu"
 import { LessonAccount } from "@/components/account/lesson-account"
+import {
+  BlockDialog,
+  type BlockTarget,
+} from "@/components/explore/block-dialog"
 import { ReportDialog } from "@/components/explore/report-dialog"
 import { FeedbackButton } from "@/components/feedback/feedback-button"
 import { GitHubStars } from "@/components/site/github-stars"
@@ -42,6 +46,8 @@ export interface LessonViewProps extends LessonPlayerProps {
   lessonId?: string
   /** Whether to offer "Report lesson" in the lesson menu: listed lessons, to anyone but their owner. */
   canReport?: boolean
+  /** The lesson's maker, when a logged-in viewer who isn't them could block them from the lesson menu. */
+  blockAuthor?: BlockTarget
   /** When the viewer owns the lesson: how it's listed, with a way to their profile's list once they have a handle. */
   owner?: { visibility: Visibility; hidden: boolean; handle: string | null }
   /**
@@ -70,6 +76,7 @@ export interface LessonViewProps extends LessonPlayerProps {
 export function LessonView({
   lessonId,
   canReport = false,
+  blockAuthor,
   owner,
   recordCompletion = false,
   likes,
@@ -83,6 +90,7 @@ export function LessonView({
   const [lantern, setLantern] = React.useState(currentStreak)
   const [urlLanguage, setUrlLanguage] = React.useState<string>()
   const [reportOpen, setReportOpen] = React.useState(false)
+  const [blockOpen, setBlockOpen] = React.useState(false)
   // Kept here, not in the wrap-up, so a replay's wrap-up shows the like the last one made.
   const [like, setLike] = React.useState(likes)
   // Likewise a publish from the wrap-up, which the lesson menu then shows too.
@@ -126,7 +134,7 @@ export function LessonView({
   // there's nothing to add, or the player draws a separator over an empty group.
   const yourLessons = owner?.handle ? `/u/${owner.handle}` : null
   const menuItems =
-    lessonId && (yourLessons || canReport) ? (
+    lessonId && (yourLessons || canReport || blockAuthor) ? (
       <>
         {yourLessons ? (
           <DropdownMenuItem href={yourLessons}>
@@ -138,6 +146,15 @@ export function LessonView({
           <DropdownMenuItem onAction={() => setReportOpen(true)}>
             <FlagIcon />
             Report lesson
+          </DropdownMenuItem>
+        ) : null}
+        {blockAuthor ? (
+          <DropdownMenuItem onAction={() => setBlockOpen(true)}>
+            <BanIcon />
+            <span>
+              Block{" "}
+              <bdi dir="ltr">{blockAuthor.handle ?? blockAuthor.name}</bdi>
+            </span>
           </DropdownMenuItem>
         ) : null}
       </>
@@ -259,6 +276,15 @@ export function LessonView({
           id={lessonId}
           isOpen={reportOpen}
           onOpenChange={setReportOpen}
+        />
+      ) : null}
+      {blockAuthor ? (
+        <BlockDialog
+          person={blockAuthor}
+          isOpen={blockOpen}
+          onOpenChange={setBlockOpen}
+          // Out of the lesson they chose not to see, to Explore without them.
+          onDone={() => window.location.assign("/explore")}
         />
       ) : null}
     </>

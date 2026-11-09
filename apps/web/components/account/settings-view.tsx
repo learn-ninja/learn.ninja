@@ -6,9 +6,12 @@ import type {
   McpConnection,
 } from "@/lib/auth/account"
 import type { AccountApi } from "@/lib/auth/browser"
+import type { ExploreApi } from "@/lib/explore/browser"
+import type { BlockedPerson } from "@/lib/explore/queries"
 
 import { ApiKeys } from "./api-keys"
 import { AvatarForm } from "./avatar-form"
+import { BlockedPeople } from "./blocked-people"
 import { ConnectChat } from "./connect-chat"
 import { ConnectedApps } from "./connected-apps"
 import { DeleteAccount } from "./delete-account"
@@ -16,11 +19,10 @@ import { HandleForm } from "./handle-form"
 import { LogInMethods } from "./log-in-methods"
 import { SettingsSection } from "./settings-section"
 
-
 /**
  * The settings page's content: the profile, how you log in, then what can publish to the account (chat apps that
- * logged in, the personal MCP URL, API keys), and deleting the account. `api` is the fake server in
- * Storybook.
+ * logged in, the personal MCP URL, API keys), the people you blocked, and deleting the account.
+ * `api` and `exploreApi` are the fake server in Storybook.
  */
 export function SettingsView({
   email,
@@ -31,7 +33,9 @@ export function SettingsView({
   apps,
   connection,
   keys,
+  blocked = [],
   api,
+  exploreApi,
 }: {
   email: string
   /** When GitHub was linked (null if it isn't), or null for no GitHub row at all. */
@@ -42,7 +46,10 @@ export function SettingsView({
   apps: ConnectedApp[]
   connection: McpConnection | null
   keys: KeySummary[]
+  /** The people the user blocked, most recently first. */
+  blocked?: BlockedPerson[]
   api?: AccountApi
+  exploreApi?: ExploreApi
 }) {
   return (
     <div className="flex flex-col gap-8 md:gap-10">
@@ -100,6 +107,16 @@ export function SettingsView({
         description="For publishing from the terminal."
       >
         <ApiKeys initial={keys} api={api} />
+      </SettingsSection>
+
+      <Separator />
+
+      <SettingsSection
+        id="blocked"
+        title="Blocked people"
+        description="Their lessons don't show for you."
+      >
+        <BlockedPeople initial={blocked} api={exploreApi} />
       </SettingsSection>
 
       <Separator />
