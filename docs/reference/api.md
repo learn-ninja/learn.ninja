@@ -40,7 +40,7 @@ When the checker tidied something that didn't stop the publish, the reply also h
 GET /api/lessons/{id}
 ```
 
-Returns `200` with `{ "ok": true, "id": "…", "path": "/l/…", "lesson": { … }, "prepared": { … }, "visualsCssUrl": "/lesson-visuals.css?v=…", "expiresAt": …, "updatedAt": … }`: the lesson as stored (upgraded to the current spec) and what was prepared for it at publish time (formulas, code tokens, charts, diagrams, molecules, and the visuals' CSS), for a player that isn't the web page. `visualsCssUrl` is the stylesheet every HTML visual loads first (Basecoat and the theme), with a hash of its content, so a player can fetch it once per version. `{id}` is the lesson's id or the whole `{slug}-{id}` part of its link. The slug of a bundled test lesson (like `button-hierarchy`, played at `/lessons/button-hierarchy`) works too, with `expiresAt: null`. A lesson that doesn't exist, has expired, or was hidden after a report is `404 not_found`. No authentication.
+Returns `200` with `{ "ok": true, "id": "…", "path": "/l/…", "lesson": { … }, "prepared": { … }, "visualsCssUrl": "/lesson-visuals.css?v=…", "expiresAt": …, "updatedAt": …, "author": { "id": "…", "handle": "…" }, "listed": true }`: the lesson as stored (upgraded to the current spec) and what was prepared for it at publish time (formulas, code tokens, charts, diagrams, molecules, and the visuals' CSS), for a player that isn't the web page. `visualsCssUrl` is the stylesheet every HTML visual loads first (Basecoat and the theme), with a hash of its content, so a player can fetch it once per version. `{id}` is the lesson's id or the whole `{slug}-{id}` part of its link. The slug of a bundled test lesson (like `button-hierarchy`, played at `/lessons/button-hierarchy`) works too, with `expiresAt: null`. `author` is who kept the lesson (`null` for an anonymous or bundled one), and `listed` says whether it shows in Explore. A lesson that doesn't exist, has expired, or was hidden after a report is `404 not_found`. No authentication.
 
 ## List the test lessons
 
@@ -99,6 +99,16 @@ Content-Type: application/json
 ```
 
 The body is `{ "reason": "…" }`, up to 1,000 characters. No account needed; 5 reports an hour from one place. The report goes to the people who run learn.ninja with the link and the reason, and only a hash of the reporter's address is kept. Returns `201`. Lessons that break the [terms](https://learn.ninja/terms) are taken out of Explore and profiles; their owner can still open the link.
+
+## Block someone
+
+```http
+GET /api/blocks
+POST /api/blocks
+DELETE /api/blocks/{userId}
+```
+
+Blocking someone takes their lessons out of your Explore and the Likes tabs you read, and their profile shows you none of their lessons. They aren't told. `POST` with `{ "userId": "…" }` (a lesson's `author.id`) blocks them, `DELETE` unblocks them, and `GET` returns `{ "ok": true, "blocked": [{ "id": "…", "handle": "…", "name": "…", "image": …, "blockedAt": … }] }`, most recent first. Each needs a session cookie or an API key. Blocking yourself is `400`, and an account that doesn't exist is `404`. Repeating a block or an unblock changes nothing.
 
 ## Views
 

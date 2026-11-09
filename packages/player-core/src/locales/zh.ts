@@ -268,6 +268,30 @@ export const zh: Translation = {
     hidden: "已隐藏",
     profile: "你的个人主页",
   },
+  moderation: {
+    report: "举报课程",
+    reportTitle: "举报这节课",
+    reportBody:
+      "告诉我们哪里有问题，举报会直接送到 learn.ninja 的运营团队。违反条款的课程会从 Explore 中移除。",
+    sendReport: "发送举报",
+    reportEmpty: "请先说明哪里有问题。",
+    reportSentTitle: "谢谢",
+    reportSentBody: "举报已发送，会有人查看。",
+    block: (name) => "屏蔽 " + name,
+    blockTitle: (name) => "要屏蔽 " + name + " 吗？",
+    blockBody:
+      "此人的课程将不再在 Explore 和个人主页中显示给你。对方不会收到通知，你可以在设置中解除屏蔽。",
+    blockConfirm: "屏蔽",
+    unblock: "解除屏蔽",
+    unblockTitle: (name) => "要解除屏蔽 " + name + " 吗？",
+    unblockBody: "此人的课程会重新在 Explore 和个人主页中显示给你。",
+    blockedTitle: "已屏蔽的人",
+    blockedNone:
+      "还没有。从课程菜单或个人主页屏蔽某人后，其课程就不会再显示给你。",
+    blockedProfile: "你已屏蔽此人，因此看不到其课程。",
+    failed: "没有成功，请重试。",
+    done: "完成",
+  },
   profile: {
     tab: "个人资料",
     lessons: "课程",

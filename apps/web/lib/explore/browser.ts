@@ -1,6 +1,6 @@
 import type { Visibility } from "./queries"
 
-// What the like button, the report dialog, the owner's row menu, and the owner's lesson list call
+// What the like button, the report and block dialogs, the owner's row menu, and the owner's lesson list call
 // from the browser. The
 // components take it as a prop so Storybook can hand them a fake.
 
@@ -24,6 +24,9 @@ export interface ExploreApi {
   ): Promise<Outcome & { visibility?: Visibility }>
   rename(id: string, title: string): Promise<Outcome & { title?: string }>
   remove(id: string): Promise<Outcome>
+  /** Blocks or unblocks a person by their user id (lib/explore/blocks.ts). */
+  block(userId: string): Promise<Outcome>
+  unblock(userId: string): Promise<Outcome>
 }
 
 async function call<T extends object>(
@@ -79,6 +82,19 @@ export const exploreApi: ExploreApi = {
   },
   async remove(id) {
     const reply = await call(`/api/lessons/${id}`, { method: "DELETE" })
+    return reply.ok ? {} : { error: reply.message }
+  },
+  async block(userId) {
+    const reply = await call(`/api/blocks`, {
+      method: "POST",
+      body: JSON.stringify({ userId }),
+    })
+    return reply.ok ? {} : { error: reply.message }
+  },
+  async unblock(userId) {
+    const reply = await call(`/api/blocks/${encodeURIComponent(userId)}`, {
+      method: "DELETE",
+    })
     return reply.ok ? {} : { error: reply.message }
   },
 }

@@ -104,6 +104,19 @@ export const EllipsisIcon = (p: IconProps) => (
   </Icon>
 )
 
+export const FlagIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" />
+  </Icon>
+)
+
+export const BanIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <Circle cx={12} cy={12} r={10} />
+    <Path d="M4.929 4.929 19.07 19.071" />
+  </Icon>
+)
+
 export const CheckIcon = (p: IconProps) => (
   <Icon {...p}>
     <Path d="M20 6 9 17l-5-5" />

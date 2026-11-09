@@ -12,7 +12,7 @@ import {
 } from "@/lib/explore/cache"
 import { greetingFor, localHour } from "@/lib/explore/greeting"
 import { liveViewCounts } from "@/lib/explore/handlers"
-import { completedAt, likedIds } from "@/lib/explore/queries"
+import { blockedIds, completedAt, likedIds } from "@/lib/explore/queries"
 import { getDb } from "@/lib/publish/store"
 import { SITE } from "@/lib/site"
 
@@ -31,7 +31,7 @@ export const dynamic = "force-dynamic"
 // is big enough to need them. Narrowing by subject or tag is there too (cachedLessons takes both);
 // nothing links to it until tags are governed well enough to show (plans/subjects-and-tags.md).
 export default async function ExplorePage() {
-  const [actor, lessons, h] = await Promise.all([
+  const [actor, cached, h] = await Promise.all([
     currentActor(),
     cachedLessons("new"),
     headers(),
@@ -41,8 +41,13 @@ export default async function ExplorePage() {
     localHour(new Date(), h.get("x-vercel-ip-timezone"))
   )
   flushViewsLater()
-  const ids = lessons.map((l) => l.id)
   const db = await getDb()
+  // The list is everyone's, from the cache; the people the viewer blocked come out of it here.
+  const blocked = actor ? await blockedIds(db, actor.userId) : null
+  const lessons = blocked?.size
+    ? cached.filter((l) => !l.author || !blocked.has(l.author.id))
+    : cached
+  const ids = lessons.map((l) => l.id)
   const [views, liked, completed] = await Promise.all([
     liveViewCounts(ids, { db, views: await getViewCounter() }),
     actor ? likedIds(db, actor.userId, ids) : new Set<string>(),

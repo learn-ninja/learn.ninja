@@ -335,6 +335,30 @@ export const ar: Translation = {
     hidden: "مخفي",
     profile: "ملفك الشخصي",
   },
+  moderation: {
+    report: "الإبلاغ عن الدرس",
+    reportTitle: "الإبلاغ عن هذا الدرس",
+    reportBody:
+      "اكتب ما المشكلة وسيصل مباشرة إلى فريق learn.ninja. تُزال الدروس المخالفة للشروط من Explore.",
+    sendReport: "إرسال البلاغ",
+    reportEmpty: "اكتب ما المشكلة أولًا.",
+    reportSentTitle: "شكرًا",
+    reportSentBody: "بلاغك في طريقه. سيطّلع عليه أحد.",
+    block: (name) => "حظر " + name,
+    blockTitle: (name) => "حظر " + name + "؟",
+    blockBody:
+      "لن تظهر لك دروسه بعد الآن في Explore ولا في الملفات الشخصية. لن يُبلَّغ بذلك، ويمكنك إلغاء الحظر من الإعدادات.",
+    blockConfirm: "حظر",
+    unblock: "إلغاء الحظر",
+    unblockTitle: (name) => "إلغاء حظر " + name + "؟",
+    unblockBody: "ستظهر لك دروسه من جديد في Explore وفي الملفات الشخصية.",
+    blockedTitle: "المحظورون",
+    blockedNone:
+      "لا أحد. احظر شخصًا من قائمة درس أو من ملفه الشخصي، ولن تظهر لك دروسه بعد ذلك.",
+    blockedProfile: "لقد حظرت هذا الشخص، لذا لا تظهر لك دروسه.",
+    failed: "لم ينجح ذلك. حاول مرة أخرى.",
+    done: "تم",
+  },
   profile: {
     tab: "الملف الشخصي",
     lessons: "الدروس",

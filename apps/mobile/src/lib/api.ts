@@ -28,6 +28,8 @@ export interface LoadedLesson {
   expiresAt: number | null
   /** The copy kept on this phone, played because learn.ninja couldn't be reached. */
   offline?: boolean
+  /** Who kept it, for the menu's Report and Block; null for anonymous and bundled lessons (and copies kept before it was sent). */
+  author?: { id: string; handle: string | null } | null
 }
 
 /** A request to the API, signed in when the app is (the session cookie rides along). */
@@ -98,6 +100,7 @@ async function requestLesson(
     mathSvg?: Record<string, MathSvg>
     visualsCssUrl?: string
     expiresAt?: number | null
+    author?: { id: string; handle: string | null } | null
     message?: string
   } | null
   if (!res.ok || !body?.ok)
@@ -124,6 +127,7 @@ async function requestLesson(
     prepared: body.prepared ?? emptyPrepared,
     mathSvg: body.mathSvg ?? {},
     expiresAt: body.expiresAt ?? null,
+    author: body.author ?? null,
   }
 }
 

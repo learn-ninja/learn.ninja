@@ -559,6 +559,28 @@ export const report = pgTable(
   (t) => [index("report_lesson_id_idx").on(t.lessonId)]
 )
 
+/**
+ * One person blocking another: the blocked person's lessons stop showing to the blocker in
+ * Explore and in profiles' Likes, and their profile shows the blocker nothing but the way to
+ * unblock. The blocked person isn't told. Goes with either account.
+ */
+export const block = pgTable(
+  "block",
+  {
+    blockerId: text("blocker_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    blockedId: text("blocked_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: time("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.blockerId, t.blockedId] }),
+    index("block_blocked_id_idx").on(t.blockedId),
+  ]
+)
+
 // ---------- drafts ----------
 
 /**

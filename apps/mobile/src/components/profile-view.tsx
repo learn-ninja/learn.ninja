@@ -1,5 +1,5 @@
 import { router, Stack, useFocusEffect } from "expo-router"
-import { useCallback, useState, type ReactElement } from "react"
+import { useCallback, useEffect, useState, type ReactElement } from "react"
 import { FlatList, Pressable, RefreshControl, View } from "react-native"
 
 import type { Strings } from "@workspace/player-core/strings"
@@ -18,6 +18,7 @@ import {
 import { Text } from "@/components/ui/text"
 import { FeedError, fetchProfile, type ProfileData } from "@/lib/feed"
 import { selection, tap } from "@/lib/haptics"
+import { confirmBlock, confirmUnblock, onBlockChange } from "@/lib/moderation"
 import { useSession } from "@/lib/session"
 import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
@@ -78,6 +79,8 @@ export function ProfileView({
       )
     }
   }, [handle])
+  // A block or unblock anywhere (this profile's menu, a row's) changes what it shows.
+  useEffect(() => onBlockChange(() => void refresh()), [refresh])
   // Fresh when it comes back into view: a lesson just finished moves from In progress.
   useFocusEffect(
     useCallback(() => {
@@ -96,15 +99,17 @@ export function ProfileView({
         : data.likes
   const empty = !data
     ? ""
-    : tab === "lessons"
-      ? data.own
-        ? t.profile.noLessonsOwn
-        : t.profile.noLessons
-      : tab === "progress"
-        ? t.profile.noProgress
-        : data.own
-          ? t.profile.noLikesOwn
-          : t.profile.noLikes
+    : data.blocked
+      ? t.moderation.blockedProfile
+      : tab === "lessons"
+        ? data.own
+          ? t.profile.noLessonsOwn
+          : t.profile.noLessons
+        : tab === "progress"
+          ? t.profile.noProgress
+          : data.own
+            ? t.profile.noLikesOwn
+            : t.profile.noLikes
 
   return (
     <DirectionProvider value={dir}>
@@ -120,6 +125,19 @@ export function ProfileView({
             onPress={() => router.push("/settings")}
           >
             {t.settings}
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      ) : data && session.state === "in" ? (
+        // Someone else's profile: block them, or unblock them.
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button
+            onPress={() =>
+              data.blocked
+                ? confirmUnblock(data.profile, t)
+                : confirmBlock(data.profile, true, t)
+            }
+          >
+            {data.blocked ? t.moderation.unblock : t.moderation.blockConfirm}
           </Stack.Toolbar.Button>
         </Stack.Toolbar>
       ) : null}

@@ -297,6 +297,33 @@ export type Strings = {
     /** The header's way to the learner's own profile. */
     profile: string
   }
+  /**
+   * Reporting a lesson and blocking its maker, in the app's lesson menu, a row's long-press menu,
+   * a profile, and Settings (App Store guideline 1.2). `name` is a handle, isolated by the caller.
+   */
+  moderation: {
+    report: string
+    reportTitle: string
+    reportBody: string
+    sendReport: string
+    reportEmpty: string
+    reportSentTitle: string
+    reportSentBody: string
+    block: (name: string) => string
+    blockTitle: (name: string) => string
+    blockBody: string
+    blockConfirm: string
+    unblock: string
+    unblockTitle: (name: string) => string
+    unblockBody: string
+    /** Settings' list of the people the learner blocked, and what it says when there are none. */
+    blockedTitle: string
+    blockedNone: string
+    /** On the profile of someone the learner blocked, in place of their lessons. */
+    blockedProfile: string
+    failed: string
+    done: string
+  }
   /** A person's profile, as the web's /u/{handle} has it. */
   profile: {
     /** The app's tab with the learner's own profile. */

@@ -284,6 +284,32 @@ export const tr: Translation = {
     hidden: "Gizlenmiş",
     profile: "Profilin",
   },
+  moderation: {
+    report: "Dersi bildir",
+    reportTitle: "Bu dersi bildir",
+    reportBody:
+      "Neyin yanlış olduğunu yaz, doğrudan learn.ninja ekibine gitsin. Şartları ihlal eden dersler Explore'dan kaldırılır.",
+    sendReport: "Bildirimi gönder",
+    reportEmpty: "Önce neyin yanlış olduğunu yaz.",
+    reportSentTitle: "Teşekkürler",
+    reportSentBody: "Bildirimin yolda. Biri göz atacak.",
+    block: (name) => name + " kişisini engelle",
+    blockTitle: (name) => name + " engellensin mi?",
+    blockBody:
+      "Bu kişinin dersleri artık sana Explore'da ve profillerde gösterilmez. Kişiye haber verilmez, engeli Ayarlar'dan kaldırabilirsin.",
+    blockConfirm: "Engelle",
+    unblock: "Engeli kaldır",
+    unblockTitle: (name) => name + " kişisinin engeli kaldırılsın mı?",
+    unblockBody:
+      "Bu kişinin dersleri sana Explore'da ve profillerde yeniden gösterilir.",
+    blockedTitle: "Engellenen kişiler",
+    blockedNone:
+      "Kimse yok. Birini bir dersin menüsünden ya da profilinden engelle, dersleri artık sana gösterilmez.",
+    blockedProfile:
+      "Bu kişiyi engelledin, bu yüzden dersleri sana gösterilmiyor.",
+    failed: "Olmadı. Tekrar dene.",
+    done: "Tamam",
+  },
   profile: {
     tab: "Profil",
     lessons: "Dersler",
