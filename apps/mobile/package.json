@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "tokens": "node scripts/build-tokens.mjs",
-    "smoke": "node scripts/build-smoke.mjs"
+    "smoke": "node scripts/build-smoke.mjs",
+    "store:screenshots": "node scripts/store-screenshots.mjs"
   },
   "dependencies": {
     "@bacons/apple-targets": "^5.0.0",
