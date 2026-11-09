@@ -43,7 +43,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: "learn.ninja",
     slug: "learn-ninja",
-    version: "0.0.1",
+    // The App Store version; the build number is EAS's (eas.json: remote, raised on each production build).
+    version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "learnninja",
@@ -54,6 +55,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // iPhone only for the first release: an iPad app must support every
       // orientation or run full screen, and the player is portrait only.
       supportsTablet: false,
+      // No encryption beyond HTTPS: answers App Store Connect's export compliance question.
+      config: { usesNonExemptEncryption: false },
+      // The reasons the app (and its widget) read UserDefaults, for Apple's privacy manifest: its
+      // own settings (CA92.1), and the App Group it shares with the widget (1C8F.1). The Expo
+      // modules bring their own manifests.
+      privacyManifests: {
+        NSPrivacyTracking: false,
+        NSPrivacyAccessedAPITypes: [
+          {
+            NSPrivacyAccessedAPIType:
+              "NSPrivacyAccessedAPICategoryUserDefaults",
+            NSPrivacyAccessedAPITypeReasons: ["CA92.1", "1C8F.1"],
+          },
+        ],
+      },
       associatedDomains: LINK_DOMAINS,
       // Shared with the home screen widget (targets/widget), which reads the streak the app
       // writes there (src/lib/widget.ts).
