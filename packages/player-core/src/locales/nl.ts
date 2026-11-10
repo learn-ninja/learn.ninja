@@ -257,7 +257,7 @@ export const nl: Translation = {
   terms: "Voorwaarden",
   signIn: {
     title: "Inloggen",
-    body: "Blader door Explore, geef lessen een like en bewaar je reeks en afgeronde lessen op je profiel.",
+    body: "Geef lessen een like en bewaar je reeks en afgeronde lessen op je profiel.",
     email: "E-mail",
     sendCode: "Mail me een code",
     noPassword: "We mailen je een code. Geen wachtwoord.",

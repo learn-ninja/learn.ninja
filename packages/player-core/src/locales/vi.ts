@@ -243,7 +243,7 @@ export const vi: Translation = {
   terms: "Điều khoản",
   signIn: {
     title: "Đăng nhập",
-    body: "Xem Explore, thích bài học, và lưu chuỗi ngày học cùng các bài đã học xong vào hồ sơ của bạn.",
+    body: "Thích bài học và lưu chuỗi ngày học cùng các bài đã học xong vào hồ sơ của bạn.",
     email: "Email",
     sendCode: "Gửi mã qua email cho tôi",
     noPassword: "Chúng tôi sẽ gửi mã qua email cho bạn. Không cần mật khẩu.",

@@ -231,7 +231,7 @@ export const zhTw: Translation = {
   terms: "條款",
   signIn: {
     title: "登入",
-    body: "瀏覽 Explore、喜歡課程，並把連續紀錄和完成的課程保留在你的個人檔案。",
+    body: "喜歡課程，並把連續紀錄和完成的課程保留在你的個人檔案。",
     email: "電子郵件",
     sendCode: "用電子郵件寄驗證碼給我",
     noPassword: "我們會用電子郵件寄驗證碼給你，不需要密碼。",

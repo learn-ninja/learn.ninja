@@ -246,7 +246,7 @@ export const tr: Translation = {
   terms: "Koşullar",
   signIn: {
     title: "Giriş yap",
-    body: "Explore'a göz at, dersleri beğen, serini ve bitirdiğin dersleri profilinde tut.",
+    body: "Dersleri beğen, serini ve bitirdiğin dersleri profilinde tut.",
     email: "E-posta",
     sendCode: "Bana kod gönder",
     noPassword: "Sana e-postayla bir kod göndereceğiz. Şifre yok.",

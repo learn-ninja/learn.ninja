@@ -257,7 +257,7 @@ export const pt: Translation = {
   terms: "Termos",
   signIn: {
     title: "Entrar",
-    body: "Navegue pelo Explore, curta lições e mantenha sua sequência e suas lições concluídas no seu perfil.",
+    body: "Curta lições e mantenha sua sequência e suas lições concluídas no seu perfil.",
     email: "E-mail",
     sendCode: "Me envie um código",
     noPassword: "Vamos enviar um código por e-mail. Sem senha.",

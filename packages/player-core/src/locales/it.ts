@@ -262,7 +262,7 @@ export const it: Translation = {
   terms: "Termini",
   signIn: {
     title: "Accedi",
-    body: "Sfoglia Explore, metti mi piace alle lezioni e tieni la tua serie e le lezioni finite nel tuo profilo.",
+    body: "Metti mi piace alle lezioni e tieni la tua serie e le lezioni finite nel tuo profilo.",
     email: "Email",
     sendCode: "Inviami un codice",
     noPassword: "Ti mandiamo un codice via email. Niente password.",

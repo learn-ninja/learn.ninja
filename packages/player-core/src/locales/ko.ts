@@ -235,7 +235,7 @@ export const ko: Translation = {
   terms: "이용약관",
   signIn: {
     title: "로그인",
-    body: "Explore를 둘러보고, 레슨에 좋아요를 누르고, 연속 기록과 완료한 레슨을 프로필에 남겨 보세요.",
+    body: "레슨에 좋아요를 누르고, 연속 기록과 완료한 레슨을 프로필에 남겨 보세요.",
     email: "이메일",
     sendCode: "이메일로 코드 받기",
     noPassword: "이메일로 코드를 보내 드려요. 비밀번호는 필요 없어요.",

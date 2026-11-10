@@ -237,7 +237,7 @@ export const en: Strings = {
   terms: "Terms",
   signIn: {
     title: "Log in",
-    body: "Browse Explore, like lessons, and keep your streak and finished lessons on your profile.",
+    body: "Like lessons and keep your streak and finished lessons on your profile.",
     email: "Email",
     sendCode: "Email me a code",
     noPassword: "We'll email you a code. No password.",

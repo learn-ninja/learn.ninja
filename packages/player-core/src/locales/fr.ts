@@ -264,7 +264,7 @@ export const fr: Translation = {
   terms: "Conditions",
   signIn: {
     title: "Se connecter",
-    body: "Parcours Explore, aime des leçons, et garde ta série et tes leçons terminées sur ton profil.",
+    body: "Aime des leçons et garde ta série et tes leçons terminées sur ton profil.",
     email: "E-mail",
     sendCode: "M'envoyer un code",
     noPassword: "On t'envoie un code par e-mail. Pas de mot de passe.",

@@ -275,7 +275,7 @@ export const pl: Translation = {
   terms: "Regulamin",
   signIn: {
     title: "Zaloguj się",
-    body: "Przeglądaj Explore, polub lekcje i zachowaj serię oraz ukończone lekcje w swoim profilu.",
+    body: "Polub lekcje i zachowaj serię oraz ukończone lekcje w swoim profilu.",
     email: "E-mail",
     sendCode: "Wyślij mi kod",
     noPassword: "Wyślemy ci kod e-mailem. Bez hasła.",

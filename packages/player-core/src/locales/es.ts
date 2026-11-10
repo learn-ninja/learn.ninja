@@ -254,7 +254,7 @@ export const es: Translation = {
   terms: "Términos",
   signIn: {
     title: "Iniciar sesión",
-    body: "Navega por Explore, dale me gusta a lecciones y guarda tu racha y tus lecciones terminadas en tu perfil.",
+    body: "Dale me gusta a lecciones y guarda tu racha y tus lecciones terminadas en tu perfil.",
     email: "Correo electrónico",
     sendCode: "Envíame un código",
     noPassword: "Te enviaremos un código por correo. Sin contraseña.",

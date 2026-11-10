@@ -24,8 +24,9 @@ import { colors } from "../../../../tokens"
 
 // The app's home: Explore, as the web's /explore lists it, logged in or out: the newest lessons
 // people kept and shared, a page at a time, pulled down to refresh, with the heart on each row
-// (logged out, the heart and the block action lead to logging in). The test lessons are in the
-// Dev tab, which only development builds show.
+// (logged out, the heart and the block action lead to logging in). Logged out there's no tab bar
+// (the tabs' layout), so the title is the app's name and Log in sits at the top. The test lessons
+// are in the Dev tab, which only development builds show.
 
 export default function Home() {
   const { t, lang, dir } = useAppStrings()
@@ -38,7 +39,11 @@ export default function Home() {
   return (
     <DirectionProvider value={dir}>
       {/* The system's bar: a large title that shrinks into it as the feed scrolls (TabStack). */}
-      <Stack.Screen options={{ title: t.feed.title }} />
+      <Stack.Screen
+        options={{
+          title: session.state === "out" ? "learn.ninja" : t.feed.title,
+        }}
+      />
       {session.state === "out" ? (
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button onPress={() => router.push("/sign-in")}>

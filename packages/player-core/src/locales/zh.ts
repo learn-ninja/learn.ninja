@@ -231,7 +231,7 @@ export const zh: Translation = {
   terms: "条款",
   signIn: {
     title: "登录",
-    body: "浏览 Explore、喜欢课程，并把连续记录和完成的课程保存在你的个人主页。",
+    body: "喜欢课程，并把连续记录和完成的课程保存在你的个人主页。",
     email: "邮箱",
     sendCode: "把验证码发到我的邮箱",
     noPassword: "我们会通过邮件发送验证码，无需密码。",

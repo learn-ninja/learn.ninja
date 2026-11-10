@@ -263,7 +263,7 @@ export const de: Translation = {
   terms: "Nutzungsbedingungen",
   signIn: {
     title: "Anmelden",
-    body: "Stöbere in Explore, like Lektionen und behalte deine Serie und deine abgeschlossenen Lektionen in deinem Profil.",
+    body: "Like Lektionen und behalte deine Serie und deine abgeschlossenen Lektionen in deinem Profil.",
     email: "E-Mail",
     sendCode: "Code per E-Mail senden",
     noPassword: "Wir schicken dir einen Code per E-Mail. Kein Passwort.",

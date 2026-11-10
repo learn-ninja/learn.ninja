@@ -246,7 +246,7 @@ export const id: Translation = {
   terms: "Ketentuan",
   signIn: {
     title: "Masuk",
-    body: "Jelajahi Explore, sukai pelajaran, dan simpan runtunan serta pelajaran yang sudah selesai di profilmu.",
+    body: "Sukai pelajaran dan simpan runtunan serta pelajaran yang sudah selesai di profilmu.",
     email: "Email",
     sendCode: "Kirim kode ke email saya",
     noPassword: "Kami akan mengirim kode ke emailmu. Tanpa kata sandi.",
