@@ -35,7 +35,7 @@ export function apiFor(profile: Profile) {
 export const LINK_DOMAINS = ["applinks:learn.ninja"]
 
 /** The App Group the app shares with its widget; src/lib/widget-snapshot.ts writes to the same one. */
-export const APP_GROUP = "group.ninja.learn.app"
+export const APP_GROUP = "group.ninja.learn.ios"
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const api = apiFor(profileOf())
@@ -43,6 +43,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: "learn.ninja",
     slug: "learn-ninja",
+    // The Expo account that owns the project (its builds and credentials on EAS).
+    owner: "uxcel",
     // The App Store version; the build number is EAS's (eas.json: remote, raised on each production build).
     version: "1.0.0",
     orientation: "portrait",
@@ -51,7 +53,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: "dark",
     backgroundColor: "#121212",
     ios: {
-      bundleIdentifier: "ninja.learn.app",
+      // Not ninja.learn.app: Apple has that one registered to another team. The widget's is this
+      // plus ".widget" (@bacons/apple-targets). Fixed for good once the app is on the App Store.
+      bundleIdentifier: "ninja.learn.ios",
+      // The Apple developer team that signs the app and its widget (@bacons/apple-targets needs
+      // it). Public, like the bundle ID: the site's apple-app-site-association names it too
+      // (APPLE_TEAM_ID on Vercel, the same value).
+      appleTeamId: "UQ889F3ARK",
       // iPhone only for the first release: an iPad app must support every
       // orientation or run full screen, and the player is portrait only.
       supportsTablet: false,
@@ -109,6 +117,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ],
     ],
     experiments: { reactCompiler: true },
-    extra: { apiBaseUrl: api.baseUrl },
+    extra: {
+      apiBaseUrl: api.baseUrl,
+      // The project on EAS (https://expo.dev/accounts/uxcel/projects/learn-ninja), written by
+      // `eas init`. Public: it names the project, it doesn't grant access to it.
+      eas: { projectId: "e33ffa4d-ed50-4235-8625-5ab9900a28cc" },
+    },
   }
 }
