@@ -109,10 +109,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ["expo-localization", { supportsRTL: true }],
       [
         "expo-splash-screen",
+        // The ninja on a white disc, as the app icon (scripts/build-splash.mjs), which
+        // src/components/splash.tsx takes over from and blows away in smoke. The size and color
+        // are src/lib/splash.ts's (Expo can't import it here; a test keeps them the same).
         {
           backgroundColor: "#121212",
           image: "./assets/images/splash-icon.png",
-          imageWidth: 76,
+          imageWidth: 120,
         },
       ],
     ],

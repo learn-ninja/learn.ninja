@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import config, { APP_GROUP, apiFor, profileOf } from "../../app.config"
+import { SPLASH_BACKGROUND, SPLASH_SIZE } from "./splash"
 import { APP_GROUP as WRITTEN_TO } from "./widget-snapshot"
 
 const build = (EAS_BUILD_PROFILE?: string) => {
@@ -46,5 +47,13 @@ describe("app config", () => {
     expect(
       build().ios?.entitlements?.["com.apple.security.application-groups"]
     ).toEqual([APP_GROUP])
+  })
+
+  it("draws the launch screen's mark where the handoff takes over from it", () => {
+    const splash = build().plugins?.find(
+      (p) => Array.isArray(p) && p[0] === "expo-splash-screen"
+    ) as [string, { backgroundColor: string; imageWidth: number }]
+    expect(splash[1].imageWidth).toBe(SPLASH_SIZE)
+    expect(splash[1].backgroundColor).toBe(SPLASH_BACKGROUND)
   })
 })

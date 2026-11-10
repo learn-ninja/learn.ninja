@@ -37,6 +37,7 @@ An LLM turns any input into one short, interactive lesson (Duolingo/Brilliant-st
 - `npm run handles:backfill -w web`: gives every account without a handle a random one (dry run; `-- --write` applies)
 - `npm run bento -w web`: redraw the home page bento's lesson visuals (`apps/web/components/home/bento-visuals.generated.json`) with the player's own renderers after changing `apps/web/lib/bento-visuals.ts` (a test fails if it's stale)
 - `npm run share -w web`: re-render the share images in `brand/` (GitHub social preview, X banner, square post) from the link preview card in `apps/web/lib/og.tsx`
+- `npm run splash -w mobile`: re-render the iOS launch screen's mark (`apps/mobile/assets/images/splash-icon.png`) from `apps/web/app/icon.svg` after changing the icon; a native rebuild picks it up
 - `npm run tokens -w mobile`: regenerate the app's design tokens (`apps/mobile/tokens.ts`) from the `.dark` block of `packages/ui/src/styles/globals.css` after changing the theme (a test fails if it's stale)
 - Add shadcn components from `apps/web`: `npx shadcn@latest add <name>` (they land in `packages/ui`)
 
