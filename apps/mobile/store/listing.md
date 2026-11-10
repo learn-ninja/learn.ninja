@@ -1,6 +1,6 @@
 # App Store listing
 
-What goes into App Store Connect for the iOS app (`ninja.learn.app`). Character limits are Apple's; each field is under its limit. English first; other languages can follow once the English listing has been through review.
+What goes into App Store Connect for the iOS app (`ninja.learn.ios`). Character limits are Apple's; each field is under its limit. English first; other languages can follow once the English listing has been through review.
 
 ## App information
 

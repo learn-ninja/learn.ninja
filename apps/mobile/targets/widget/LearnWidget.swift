@@ -34,7 +34,7 @@ struct Snapshot: Decodable {
 }
 
 enum Store {
-  static let group = "group.ninja.learn.app"
+  static let group = "group.ninja.learn.ios"
   static let key = "widget"
 
   static func read() -> Snapshot? {

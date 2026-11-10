@@ -8,7 +8,7 @@ describe("the apple-app-site-association file", () => {
       applinks: {
         details: [
           {
-            appIDs: ["ABCDE12345.ninja.learn.app"],
+            appIDs: ["ABCDE12345.ninja.learn.ios"],
             components: [{ "/": "/l/*" }, { "/": "/u/*" }],
           },
         ],

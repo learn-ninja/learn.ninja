@@ -35,7 +35,7 @@ export function apiFor(profile: Profile) {
 export const LINK_DOMAINS = ["applinks:learn.ninja"]
 
 /** The App Group the app shares with its widget; src/lib/widget-snapshot.ts writes to the same one. */
-export const APP_GROUP = "group.ninja.learn.app"
+export const APP_GROUP = "group.ninja.learn.ios"
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const api = apiFor(profileOf())
@@ -53,7 +53,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: "dark",
     backgroundColor: "#121212",
     ios: {
-      bundleIdentifier: "ninja.learn.app",
+      // Not ninja.learn.app: Apple has that one registered to another team. The widget's is this
+      // plus ".widget" (@bacons/apple-targets). Fixed for good once the app is on the App Store.
+      bundleIdentifier: "ninja.learn.ios",
       // The Apple developer team that signs the app and its widget (@bacons/apple-targets needs
       // it). Public, like the bundle ID: the site's apple-app-site-association names it too
       // (APPLE_TEAM_ID on Vercel, the same value).

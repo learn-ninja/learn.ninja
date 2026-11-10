@@ -11,7 +11,7 @@ import { streakAhead } from "./streak-ahead"
 // right for a week without the app opening; a finish, a launch or a new language writes it again.
 
 /** The App Group the app and the widget share (app.config.ts and targets/widget). */
-export const APP_GROUP = "group.ninja.learn.app"
+export const APP_GROUP = "group.ninja.learn.ios"
 /** The key the snapshot is written under in the App Group's defaults. */
 export const SNAPSHOT_KEY = "widget"
 
