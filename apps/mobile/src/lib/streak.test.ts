@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest"
 
 import { addDays } from "@workspace/player-core/streak"
 
+import { refreshAccountDays } from "./account-days"
 import {
+  ACCOUNT_DAYS_KEY,
   currentStreak,
   DAYS_KEY,
   FINISHED_PREFIX,
+  forgetAccountDays,
+  keepAccountDays,
   localDay,
   readDays,
   recordFinish,
@@ -19,6 +23,7 @@ function memory(days?: string[]) {
     map,
     getItem: (k: string) => map.get(k) ?? null,
     setItem: (k: string, v: string) => void map.set(k, v),
+    removeItem: (k: string) => void map.delete(k),
   }
 }
 
@@ -128,6 +133,84 @@ describe("the day streak on the device", () => {
   it("counts days on the device's own clock", () => {
     expect(localDay(new Date(2026, 0, 5, 23, 59))).toBe("2026-01-05")
     expect(localDay(new Date(2026, 11, 31, 0, 1))).toBe("2026-12-31")
+  })
+})
+
+describe("the signed-in account's streak", () => {
+  // The tester's case: four days in a row on the web, then a lesson in the app on the fifth. The
+  // streak screen showed day 1 from the device's own (empty) days.
+  const web = [day(0), day(1), day(2), day(3)]
+
+  it("carries on the account's streak, not the device's", () => {
+    const storage = memory()
+    keepAccountDays(storage, { user: "ada", days: web, today: day(4) })
+    const { streak, lit } = recordFinish(storage, { today: day(4) })
+    expect(lit).toBe(true)
+    expect(streak.current).toBe(5)
+    // The device's own days are left alone: they're the logged-out streak.
+    expect(storage.map.has(DAYS_KEY)).toBe(false)
+    expect(readDays(storage)).toEqual([...web, day(4)])
+  })
+
+  it("lights nothing when the account already learned today, on the web", () => {
+    const storage = memory()
+    keepAccountDays(storage, { user: "ada", days: [...web, day(4)], today: day(4) })
+    const { streak, lit } = recordFinish(storage, { today: day(4) })
+    expect(lit).toBe(false)
+    expect(streak.current).toBe(5)
+  })
+
+  it("matches the profile's walk, rest days included", () => {
+    const storage = memory()
+    // Day 2 missed on the account: a rest day covers it, and it doesn't count.
+    keepAccountDays(storage, { user: "ada", days: [day(0), day(1), day(3)], today: day(4) })
+    const { streak } = recordFinish(storage, { today: day(4) })
+    expect(streak.current).toBe(4)
+    expect(streak.days.find((d) => d.day === day(2))?.state).toBe("rest")
+  })
+
+  it("keeps this week's finishes the server hasn't got yet, and only for the same account", () => {
+    const storage = memory()
+    keepAccountDays(storage, { user: "ada", days: web, today: day(4) })
+    recordFinish(storage, { today: day(4) })
+    // The server answers before the finish landed: today stays.
+    keepAccountDays(storage, { user: "ada", days: web, today: day(4) })
+    expect(readDays(storage).at(-1)).toBe(day(4))
+    // Another account's days replace them all.
+    keepAccountDays(storage, { user: "bob", days: [day(1)], today: day(4) })
+    expect(readDays(storage)).toEqual([day(1)])
+    // A pending finish over a week old is the server's to have refused.
+    keepAccountDays(storage, { user: "bob", days: [], today: day(9) })
+    expect(readDays(storage)).toEqual([])
+  })
+
+  it("is the device's own again after signing out", () => {
+    const storage = memory([day(3)])
+    keepAccountDays(storage, { user: "ada", days: web, today: day(4) })
+    expect(forgetAccountDays(storage)).toBe(true)
+    expect(storage.map.has(ACCOUNT_DAYS_KEY)).toBe(false)
+    expect(readDays(storage)).toEqual([day(3)])
+    expect(forgetAccountDays(storage)).toBe(false)
+  })
+
+  it("keeps the server's days, and what the device had when the server can't answer", async () => {
+    const storage = memory()
+    const today = day(4)
+    expect(
+      await refreshAccountDays("ada", {
+        storage,
+        today,
+        get: async () => ({ status: 200, days: [...web, "nope"] }),
+      })
+    ).toBe(true)
+    expect(readDays(storage)).toEqual(web)
+    for (const get of [
+      async () => ({ status: 401 }),
+      async () => ({ status: 500 }),
+      async () => Promise.reject(new Error("offline")),
+    ])
+      expect(await refreshAccountDays("ada", { storage, today, get })).toBe(false)
+    expect(readDays(storage)).toEqual(web)
   })
 })
 

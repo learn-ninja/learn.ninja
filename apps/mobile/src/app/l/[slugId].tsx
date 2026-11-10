@@ -389,6 +389,8 @@ function Player({
       data.path.startsWith("/l/") && session.state === "out"
         ? data.id
         : undefined,
+    // Signed in, the streak screen carries on the account's streak, as the profile shows it.
+    user: session.state === "in" ? session.account.id : undefined,
   })
   const by = session.state === "in" ? session.account.handle : null
   const viewerId = session.state === "in" ? session.account.id : undefined

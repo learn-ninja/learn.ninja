@@ -224,3 +224,23 @@ export async function profileFeed(
   }
   return { status: 200, body: body as unknown as Record<string, unknown> }
 }
+
+/**
+ * GET /api/account/days: the days the signed-in learner finished a lesson, oldest first, each in
+ * the time zone the finish was counted in (completeLesson). The app walks its streak from them with
+ * the same rules as the profile (@workspace/player-core/streak), so the lanterns it lights at the
+ * end of a lesson carry on the streak the learner has on the web, and match their profile.
+ */
+export async function accountDays(
+  req: { actor: Actor },
+  deps: Pick<AppApiDeps, "db">
+): Promise<Reply> {
+  const rows = await activityDays(deps.db, req.actor.userId)
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      days: rows.filter((r) => r.lessons > 0).map((r) => r.day),
+    },
+  }
+}

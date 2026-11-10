@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 
+import { refreshAccountDays } from "./account-days"
+import { getAccountDays } from "./api"
 import { deviceStorage } from "./progress-storage"
 import { rescheduleReminders } from "./reminders"
 import { localDay, recordFinish, type Streak } from "./streak"
@@ -8,18 +10,30 @@ import { localDay, recordFinish, type Streak } from "./streak"
  * The finish, kept once per run as the wrap-up arrives (a restart's finish is a new one), and the
  * streak it left. `id` is a published lesson's, kept for sign-in; a bundled lesson has none. While
  * the streak screen is up (the day's first finish), `streakScreen` is true until `leaveStreak`.
+ * Signed in (`user`), the streak is the account's: its days are asked for again as the lesson
+ * opens, so a lesson finished on the web today, or the streak kept there, counts here too.
  */
 export function useStreak({
   atWrap,
   run,
   id,
+  user,
 }: {
   atWrap: boolean
   run: number
   id?: string
+  user?: string
 }) {
   const [streak, setStreak] = useState<Streak | null>(null)
   const [seen, setSeen] = useState(false)
+  useEffect(() => {
+    if (user)
+      void refreshAccountDays(user, {
+        storage: deviceStorage,
+        get: getAccountDays,
+        today: localDay(),
+      })
+  }, [user])
   // Kept per run, so an effect run twice (React's development check) doesn't record it again and
   // lose the lighting.
   const kept = useRef<{ run: number; streak: Streak } | null>(null)
