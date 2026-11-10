@@ -6,18 +6,20 @@ import { useEffect } from "react"
 import type { Strings } from "@workspace/player-core/strings"
 
 import { LAST, readLast, type LastLesson } from "./last-lesson"
+import { useSession } from "./session"
 import { useAppStrings } from "./use-strings"
 import { refreshWidget } from "./widget"
 
 // The app icon's quick actions (press and hold it on the home screen): Continue, with the lesson
-// last left unfinished under it, then Explore and Profile, in the app's language and with the
-// system's symbols. The last lesson is kept on the device, so the actions are set again in the
+// last left unfinished under it, then Explore and (logged in) Profile, in the app's language and
+// with the system's symbols. The last lesson is kept on the device, so the actions are set again in the
 // right language at each launch; finishing that lesson takes Continue away, and so does opening it
 // once it's gone (expired, deleted, or another account's).
 
 export function quickActionItems(
   t: Strings,
-  last: LastLesson | null
+  last: LastLesson | null,
+  signedIn: boolean
 ): QuickActions.Action[] {
   return [
     ...(last
@@ -37,17 +39,26 @@ export function quickActionItems(
       icon: "symbol:safari",
       params: { href: "/" },
     },
-    {
-      id: "profile",
-      title: t.profile.tab,
-      icon: "symbol:person.crop.circle",
-      params: { href: "/me" },
-    },
+    ...(signedIn
+      ? [
+          {
+            id: "profile",
+            title: t.profile.tab,
+            icon: "symbol:person.crop.circle",
+            params: { href: "/me" },
+          },
+        ]
+      : []),
   ]
 }
 
+/** Whether Profile is offered: the session, as QuickActionsEffect last saw it. */
+let withProfile = false
+
 function setItems(t: Strings, last: LastLesson | null) {
-  void QuickActions.setItems(quickActionItems(t, last)).catch(() => {})
+  void QuickActions.setItems(quickActionItems(t, last, withProfile)).catch(
+    () => {}
+  )
   // The medium widget's Continue is the same lesson.
   refreshWidget(t)
 }
@@ -58,7 +69,14 @@ function setItems(t: Strings, last: LastLesson | null) {
  */
 export function QuickActionsEffect() {
   const { t } = useAppStrings()
-  useEffect(() => setItems(t, readLast()), [t])
+  const session = useSession()
+  // Still checking who's signed in: leave the actions as the last launch set them.
+  const signedIn = session.state === "loading" ? null : session.state === "in"
+  useEffect(() => {
+    if (signedIn === null) return
+    withProfile = signedIn
+    setItems(t, readLast())
+  }, [t, signedIn])
   useQuickActionRouting()
   return null
 }

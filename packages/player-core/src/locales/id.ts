@@ -246,7 +246,7 @@ export const id: Translation = {
   terms: "Ketentuan",
   signIn: {
     title: "Masuk",
-    body: "Jelajahi Explore, sukai pelajaran, dan simpan runtunan serta pelajaran yang sudah selesai di profilmu.",
+    body: "Sukai pelajaran dan simpan runtunan serta pelajaran yang sudah selesai di profilmu.",
     email: "Email",
     sendCode: "Kirim kode ke email saya",
     noPassword: "Kami akan mengirim kode ke emailmu. Tanpa kata sandi.",
@@ -269,9 +269,6 @@ export const id: Translation = {
     title: "Explore",
     empty:
       "Belum ada apa-apa di sini. Jadilah yang pertama: minta pelajaran ke agen AI kamu dan bilang untuk menyimpannya.",
-    logInTitle: "Pelajaran yang disimpan dan dibagikan orang",
-    logInBody:
-      "Masuk untuk menjelajahi Explore, menyukai pelajaran, dan melihat runtunanmu di profilmu.",
     testLessons: "Pelajaran uji",
     failed: "Gagal dimuat.",
     views: (n) => `${n} tayangan`,

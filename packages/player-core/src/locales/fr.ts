@@ -264,7 +264,7 @@ export const fr: Translation = {
   terms: "Conditions",
   signIn: {
     title: "Se connecter",
-    body: "Parcours Explore, aime des leçons, et garde ta série et tes leçons terminées sur ton profil.",
+    body: "Aime des leçons et garde ta série et tes leçons terminées sur ton profil.",
     email: "E-mail",
     sendCode: "M'envoyer un code",
     noPassword: "On t'envoie un code par e-mail. Pas de mot de passe.",
@@ -288,9 +288,6 @@ export const fr: Translation = {
     title: "Explore",
     empty:
       "Rien ici pour l'instant. Sois le premier : demande une leçon à ton agent et dis-lui de la garder.",
-    logInTitle: "Des leçons gardées et partagées",
-    logInBody:
-      "Connecte-toi pour parcourir Explore, aimer des leçons et voir ta série sur ton profil.",
     testLessons: "Leçons de test",
     failed: "Le chargement a échoué.",
     views: (n) => p(n, { one: "# vue", other: "# vues" }),

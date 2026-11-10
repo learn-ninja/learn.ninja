@@ -2,20 +2,26 @@ import { NativeTabs } from "expo-router/native-tabs"
 
 import { QuickActionsEffect } from "@/lib/quick-actions"
 import { RemindersEffect } from "@/lib/reminders"
+import { useSession } from "@/lib/session"
 import { useAppStrings } from "@/lib/use-strings"
 import { colors } from "../../../tokens"
 
 // The app's two places, as the system's tab bar (Liquid Glass on iOS 26 and later): Explore, and
 // the learner's own profile. A second tap on a tab scrolls it to the top or pops it to its root,
 // as every iOS app's tabs do. The bar runs the app's language's way. Lessons and the log-in open over the tabs (the root layout).
+// Logged out, there's no bar: Explore is the whole app, with Log in at its top, and the profile
+// tab (which would only ask to log in) sends anyone who lands on it back there.
 
 export default function TabsLayout() {
   const { t, dir } = useAppStrings()
+  const session = useSession()
   return (
     <>
       <QuickActionsEffect />
       <RemindersEffect />
       <NativeTabs
+        // Hidden rather than taken out, so logging in or out keeps Explore where it was.
+        hidden={session.state === "out"}
         // The app's language's direction for the tab bar and, through UIKit's traits, everything
         // under it: each tab's bar and its large title mirror at once, without a relaunch.
         unstable_nativeProps={{ direction: dir }}

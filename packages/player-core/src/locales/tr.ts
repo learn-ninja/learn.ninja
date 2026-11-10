@@ -246,7 +246,7 @@ export const tr: Translation = {
   terms: "Koşullar",
   signIn: {
     title: "Giriş yap",
-    body: "Explore'a göz at, dersleri beğen, serini ve bitirdiğin dersleri profilinde tut.",
+    body: "Dersleri beğen, serini ve bitirdiğin dersleri profilinde tut.",
     email: "E-posta",
     sendCode: "Bana kod gönder",
     noPassword: "Sana e-postayla bir kod göndereceğiz. Şifre yok.",
@@ -269,9 +269,6 @@ export const tr: Translation = {
     title: "Explore",
     empty:
       "Burada henüz bir şey yok. İlk sen ol: ajanından bir ders iste ve onu saklamasını söyle.",
-    logInTitle: "İnsanların saklayıp paylaştığı dersler",
-    logInBody:
-      "Explore'a göz atmak, dersleri beğenmek ve serini profilinde görmek için giriş yap.",
     testLessons: "Test dersleri",
     failed: "Bu yüklenemedi.",
     views: (n) => p(n, { one: "# görüntülenme", other: "# görüntülenme" }),

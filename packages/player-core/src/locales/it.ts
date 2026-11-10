@@ -262,7 +262,7 @@ export const it: Translation = {
   terms: "Termini",
   signIn: {
     title: "Accedi",
-    body: "Sfoglia Explore, metti mi piace alle lezioni e tieni la tua serie e le lezioni finite nel tuo profilo.",
+    body: "Metti mi piace alle lezioni e tieni la tua serie e le lezioni finite nel tuo profilo.",
     email: "Email",
     sendCode: "Inviami un codice",
     noPassword: "Ti mandiamo un codice via email. Niente password.",
@@ -287,9 +287,6 @@ export const it: Translation = {
     title: "Explore",
     empty:
       "Non c'è ancora niente. Sii il primo: chiedi una lezione al tuo agente e digli di tenerla.",
-    logInTitle: "Lezioni che le persone hanno tenuto e condiviso",
-    logInBody:
-      "Accedi per sfogliare Explore, mettere mi piace alle lezioni e vedere la tua serie nel tuo profilo.",
     testLessons: "Lezioni di prova",
     failed: "Il caricamento non è riuscito.",
     views: (n) =>

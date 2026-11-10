@@ -254,7 +254,7 @@ export const es: Translation = {
   terms: "Términos",
   signIn: {
     title: "Iniciar sesión",
-    body: "Navega por Explore, dale me gusta a lecciones y guarda tu racha y tus lecciones terminadas en tu perfil.",
+    body: "Dale me gusta a lecciones y guarda tu racha y tus lecciones terminadas en tu perfil.",
     email: "Correo electrónico",
     sendCode: "Envíame un código",
     noPassword: "Te enviaremos un código por correo. Sin contraseña.",
@@ -278,9 +278,6 @@ export const es: Translation = {
     title: "Explore",
     empty:
       "Aquí no hay nada todavía. Sé el primero: pídele una lección a tu agente y dile que la guarde.",
-    logInTitle: "Lecciones que la gente guardó y compartió",
-    logInBody:
-      "Inicia sesión para ver Explore, dar me gusta a lecciones y ver tu racha en tu perfil.",
     testLessons: "Lecciones de prueba",
     failed: "No se pudo cargar.",
     views: (n) => p(n, { one: "# vista", other: "# vistas" }),

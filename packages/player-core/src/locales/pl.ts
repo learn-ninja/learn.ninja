@@ -275,7 +275,7 @@ export const pl: Translation = {
   terms: "Regulamin",
   signIn: {
     title: "Zaloguj się",
-    body: "Przeglądaj Explore, polub lekcje i zachowaj serię oraz ukończone lekcje w swoim profilu.",
+    body: "Polub lekcje i zachowaj serię oraz ukończone lekcje w swoim profilu.",
     email: "E-mail",
     sendCode: "Wyślij mi kod",
     noPassword: "Wyślemy ci kod e-mailem. Bez hasła.",
@@ -299,9 +299,6 @@ export const pl: Translation = {
     title: "Explore",
     empty:
       "Na razie nic tu nie ma. Bądź pierwszy: poproś swojego agenta o lekcję i powiedz, żeby ją zachował.",
-    logInTitle: "Lekcje, które inni zachowali i udostępnili",
-    logInBody:
-      "Zaloguj się, aby przeglądać Explore, polubić lekcje i widzieć swoją serię w profilu.",
     testLessons: "Lekcje testowe",
     failed: "Nie udało się załadować.",
     views: (n) =>

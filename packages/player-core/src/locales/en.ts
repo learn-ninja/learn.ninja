@@ -237,7 +237,7 @@ export const en: Strings = {
   terms: "Terms",
   signIn: {
     title: "Log in",
-    body: "Browse Explore, like lessons, and keep your streak and finished lessons on your profile.",
+    body: "Like lessons and keep your streak and finished lessons on your profile.",
     email: "Email",
     sendCode: "Email me a code",
     noPassword: "We'll email you a code. No password.",
@@ -260,9 +260,6 @@ export const en: Strings = {
     title: "Explore",
     empty:
       "Nothing here yet. Be the first: ask your agent for a lesson and say keep it.",
-    logInTitle: "Lessons people kept and shared",
-    logInBody:
-      "Log in to browse Explore, like lessons, and see your streak on your profile.",
     testLessons: "Test lessons",
     failed: "This didn't load.",
     views: (n) => p(n, { one: "# view", other: "# views" }),

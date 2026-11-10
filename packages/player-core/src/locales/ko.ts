@@ -235,7 +235,7 @@ export const ko: Translation = {
   terms: "이용약관",
   signIn: {
     title: "로그인",
-    body: "Explore를 둘러보고, 레슨에 좋아요를 누르고, 연속 기록과 완료한 레슨을 프로필에 남겨 보세요.",
+    body: "레슨에 좋아요를 누르고, 연속 기록과 완료한 레슨을 프로필에 남겨 보세요.",
     email: "이메일",
     sendCode: "이메일로 코드 받기",
     noPassword: "이메일로 코드를 보내 드려요. 비밀번호는 필요 없어요.",
@@ -259,9 +259,6 @@ export const ko: Translation = {
     title: "Explore",
     empty:
       "아직 아무것도 없어요. 첫 번째가 되어 보세요. 에이전트에게 레슨을 요청하고 남겨 달라고 하세요.",
-    logInTitle: "사람들이 남기고 공유한 레슨",
-    logInBody:
-      "로그인하면 Explore를 둘러보고, 레슨에 좋아요를 누르고, 프로필에서 연속 기록을 볼 수 있어요.",
     testLessons: "테스트 레슨",
     failed: "불러오지 못했어요.",
     views: (n) => `조회 ${n}회`,

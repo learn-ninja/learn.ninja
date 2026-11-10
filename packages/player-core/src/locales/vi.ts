@@ -243,7 +243,7 @@ export const vi: Translation = {
   terms: "Điều khoản",
   signIn: {
     title: "Đăng nhập",
-    body: "Xem Explore, thích bài học, và lưu chuỗi ngày học cùng các bài đã học xong vào hồ sơ của bạn.",
+    body: "Thích bài học và lưu chuỗi ngày học cùng các bài đã học xong vào hồ sơ của bạn.",
     email: "Email",
     sendCode: "Gửi mã qua email cho tôi",
     noPassword: "Chúng tôi sẽ gửi mã qua email cho bạn. Không cần mật khẩu.",
@@ -266,9 +266,6 @@ export const vi: Translation = {
     title: "Explore",
     empty:
       "Chưa có gì ở đây. Hãy là người đầu tiên: nhờ AI agent của bạn tạo một bài học và bảo nó giữ lại.",
-    logInTitle: "Những bài học mọi người đã giữ lại và chia sẻ",
-    logInBody:
-      "Đăng nhập để xem Explore, thích bài học, và xem chuỗi ngày học trên hồ sơ của bạn.",
     testLessons: "Bài học thử nghiệm",
     failed: "Không tải được.",
     views: (n) => `${n} lượt xem`,

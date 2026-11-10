@@ -231,7 +231,7 @@ export const zhTw: Translation = {
   terms: "條款",
   signIn: {
     title: "登入",
-    body: "瀏覽 Explore、喜歡課程，並把連續紀錄和完成的課程保留在你的個人檔案。",
+    body: "喜歡課程，並把連續紀錄和完成的課程保留在你的個人檔案。",
     email: "電子郵件",
     sendCode: "用電子郵件寄驗證碼給我",
     noPassword: "我們會用電子郵件寄驗證碼給你，不需要密碼。",
@@ -253,9 +253,6 @@ export const zhTw: Translation = {
     title: "Explore",
     empty:
       "這裡還沒有任何內容。來當第一個吧：請你的 AI 助理做一堂課，並說要保留它。",
-    logInTitle: "大家保留並分享的課程",
-    logInBody:
-      "登入後就能瀏覽 Explore、喜歡課程，並在個人檔案查看你的連續紀錄。",
     testLessons: "測試課程",
     failed: "載入失敗。",
     views: (n) => `${n} 次觀看`,

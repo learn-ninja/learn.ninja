@@ -234,7 +234,7 @@ export const ja: Translation = {
   terms: "利用規約",
   signIn: {
     title: "ログイン",
-    body: "Explore を見たり、レッスンにいいねしたり、連続記録と完了したレッスンをプロフィールに残したりできます。",
+    body: "レッスンにいいねしたり、連続記録と完了したレッスンをプロフィールに残したりできます。",
     email: "メールアドレス",
     sendCode: "コードをメールで受け取る",
     noPassword: "コードをメールでお送りします。パスワードは不要です。",
@@ -259,9 +259,6 @@ export const ja: Translation = {
     title: "Explore",
     empty:
       "まだ何もありません。最初の一人になりましょう。エージェントにレッスンを頼んで、残してと伝えてください。",
-    logInTitle: "みんなが残して共有したレッスン",
-    logInBody:
-      "ログインすると、Explore を見たり、レッスンにいいねしたり、プロフィールで連続記録を確認したりできます。",
     testLessons: "テスト用レッスン",
     failed: "読み込めませんでした。",
     views: (n) => `${n}回表示`,

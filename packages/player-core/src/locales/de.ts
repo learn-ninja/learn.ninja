@@ -263,7 +263,7 @@ export const de: Translation = {
   terms: "Nutzungsbedingungen",
   signIn: {
     title: "Anmelden",
-    body: "Stöbere in Explore, like Lektionen und behalte deine Serie und deine abgeschlossenen Lektionen in deinem Profil.",
+    body: "Like Lektionen und behalte deine Serie und deine abgeschlossenen Lektionen in deinem Profil.",
     email: "E-Mail",
     sendCode: "Code per E-Mail senden",
     noPassword: "Wir schicken dir einen Code per E-Mail. Kein Passwort.",
@@ -289,9 +289,6 @@ export const de: Translation = {
     title: "Explore",
     empty:
       "Hier ist noch nichts. Sei der Erste: Bitte deinen Agenten um eine Lektion und sag ihm, er soll sie behalten.",
-    logInTitle: "Lektionen, die andere behalten und geteilt haben",
-    logInBody:
-      "Melde dich an, um in Explore zu stöbern, Lektionen zu liken und deine Serie in deinem Profil zu sehen.",
     testLessons: "Testlektionen",
     failed: "Laden fehlgeschlagen.",
     views: (n) => p(n, { one: "# Aufruf", other: "# Aufrufe" }),
