@@ -269,9 +269,6 @@ export const id: Translation = {
     title: "Explore",
     empty:
       "Belum ada apa-apa di sini. Jadilah yang pertama: minta pelajaran ke agen AI kamu dan bilang untuk menyimpannya.",
-    logInTitle: "Pelajaran yang disimpan dan dibagikan orang",
-    logInBody:
-      "Masuk untuk menjelajahi Explore, menyukai pelajaran, dan melihat runtunanmu di profilmu.",
     testLessons: "Pelajaran uji",
     failed: "Gagal dimuat.",
     views: (n) => `${n} tayangan`,

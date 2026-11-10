@@ -259,9 +259,6 @@ export const ko: Translation = {
     title: "Explore",
     empty:
       "아직 아무것도 없어요. 첫 번째가 되어 보세요. 에이전트에게 레슨을 요청하고 남겨 달라고 하세요.",
-    logInTitle: "사람들이 남기고 공유한 레슨",
-    logInBody:
-      "로그인하면 Explore를 둘러보고, 레슨에 좋아요를 누르고, 프로필에서 연속 기록을 볼 수 있어요.",
     testLessons: "테스트 레슨",
     failed: "불러오지 못했어요.",
     views: (n) => `조회 ${n}회`,

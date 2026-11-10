@@ -275,9 +275,6 @@ export type Strings = {
   feed: {
     title: string
     empty: string
-    /** The home for a learner who isn't logged in: a call to log in over the test lessons. */
-    logInTitle: string
-    logInBody: string
     /** The bundled lessons, for development builds. */
     testLessons: string
     failed: string

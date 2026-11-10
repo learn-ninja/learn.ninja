@@ -1,8 +1,6 @@
-import { Link, router, Stack, useFocusEffect } from "expo-router"
+import { router, Stack, useFocusEffect } from "expo-router"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native"
-
-import type { Strings } from "@workspace/player-core/strings"
+import { ActivityIndicator, FlatList, RefreshControl } from "react-native"
 
 import { DirectionProvider } from "@/components/direction"
 import {
@@ -10,14 +8,10 @@ import {
   Failed,
   Hairline,
   Loading,
-  LogInCard,
   LTR,
 } from "@/components/explore/list-parts"
 import { LessonRow } from "@/components/explore/lesson-row"
 import { SavedLessons } from "@/components/explore/saved-lessons"
-import { Button } from "@/components/ui/button"
-import { Text } from "@/components/ui/text"
-import { fetchTestLessons, type TestLesson } from "@/lib/api"
 import { OfflineError } from "@/lib/api-fetch"
 import { fetchExplore, type LessonRowData, type Viewer } from "@/lib/feed"
 import { mergeFirstPage } from "@/lib/feed-merge"
@@ -28,24 +22,23 @@ import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
 import { colors } from "../../../../tokens"
 
-// The app's home. Signed in, it's Explore, as the web's /explore lists it: the newest lessons
-// people kept and shared, a page at a time, pulled down to refresh, with the heart on each row.
-// Signed out, it's the call to log in, with the test lessons the web app bundles (examples/)
-// under it to play without an account. Development builds keep the test lessons at the foot of
-// Explore too.
+// The app's home: Explore, as the web's /explore lists it, logged in or out: the newest lessons
+// people kept and shared, a page at a time, pulled down to refresh, with the heart on each row
+// (logged out, the heart and the block action lead to logging in). The test lessons are in the
+// Dev tab, which only development builds show.
 
 export default function Home() {
   const { t, lang, dir } = useAppStrings()
   const session = useSession()
   const account = session.state === "in" ? session.account : null
-  const { feed, refresh, retry, loadMore } = useExplore(account)
+  const { feed, refresh, retry, loadMore } = useExplore(
+    session.state === "loading" ? undefined : account
+  )
   const [refreshing, setRefreshing] = useState(false)
   return (
     <DirectionProvider value={dir}>
       {/* The system's bar: a large title that shrinks into it as the feed scrolls (TabStack). */}
-      <Stack.Screen
-        options={{ title: account ? t.feed.title : "learn.ninja" }}
-      />
+      <Stack.Screen options={{ title: t.feed.title }} />
       {session.state === "out" ? (
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button onPress={() => router.push("/sign-in")}>
@@ -61,23 +54,14 @@ export default function Home() {
         className="flex-1"
         style={LTR}
         contentContainerStyle={{ direction: dir }}
-        data={account && feed.state === "ready" ? feed.lessons : []}
+        data={feed.state === "ready" ? feed.lessons : []}
         contentInsetAdjustmentBehavior="automatic"
         keyExtractor={(l) => l.id}
         contentContainerClassName={cn(
           "px-4 pb-12",
-          (!account || feed.state !== "ready") && "grow"
+          feed.state !== "ready" && "grow"
         )}
         ItemSeparatorComponent={Hairline}
-        ListHeaderComponent={
-          session.state === "out" ? (
-            <LogInCard
-              title={t.feed.logInTitle}
-              body={t.feed.logInBody}
-              t={t}
-            />
-          ) : undefined
-        }
         renderItem={({ item }) => (
           <LessonRow
             lesson={item}
@@ -88,8 +72,7 @@ export default function Home() {
           />
         )}
         ListEmptyComponent={
-          session.state === "out" ? undefined : session.state === "loading" ||
-            feed.state === "loading" ? (
+          feed.state === "loading" ? (
             <Loading />
           ) : feed.state === "error" ? (
             <>
@@ -106,30 +89,20 @@ export default function Home() {
         onEndReached={() => void loadMore()}
         onEndReachedThreshold={0.5}
         refreshControl={
-          account ? (
-            <RefreshControl
-              refreshing={refreshing}
-              tintColor={colors.muted.foreground}
-              onRefresh={async () => {
-                // A light tap as the pull catches, as iOS's own lists give one.
-                tap()
-                setRefreshing(true)
-                await refresh()
-                setRefreshing(false)
-              }}
-            />
-          ) : undefined
+          <RefreshControl
+            refreshing={refreshing}
+            tintColor={colors.muted.foreground}
+            onRefresh={async () => {
+              // A light tap as the pull catches, as iOS's own lists give one.
+              tap()
+              setRefreshing(true)
+              await refresh()
+              setRefreshing(false)
+            }}
+          />
         }
         ListFooterComponent={
-          <>
-            {account && feed.next ? (
-              <ActivityIndicator className="py-6" />
-            ) : null}
-            {/* Logged out, or in a development build: the bundled test lessons to play. */}
-            {session.state === "out" || (account && __DEV__) ? (
-              <TestLessons t={t} />
-            ) : null}
-          </>
+          <>{feed.next ? <ActivityIndicator className="py-6" /> : null}</>
         }
       />
     </DirectionProvider>
@@ -147,14 +120,17 @@ type Feed = {
 
 const START: Feed = { lessons: [], next: null, state: "loading" }
 
-/** Explore's pages for the logged-in account; nothing (and no requests) while logged out. */
-function useExplore(account: Account | null) {
+/**
+ * Explore's pages, for the logged-in account or for anyone. `undefined` while the session is still
+ * being read: no requests yet, so the first page knows what the viewer liked and finished.
+ */
+function useExplore(account: Account | null | undefined) {
   const [feed, setFeed] = useState<Feed>(START)
   const loadingMore = useRef(false)
-  const signedIn = account !== null
+  const ready = account !== undefined
 
-  // Logging out (or in as someone else) starts the feed over.
-  const id = account?.id ?? null
+  // Logging in or out (or in as someone else) starts the feed over.
+  const id = account === undefined ? undefined : (account?.id ?? null)
   const [shown, setShown] = useState(id)
   if (shown !== id) {
     setShown(id)
@@ -167,7 +143,7 @@ function useExplore(account: Account | null) {
    */
   const refresh = useCallback(
     async (merge = false) => {
-      if (!signedIn) return
+      if (!ready) return
       try {
         const page = await fetchExplore()
         setFeed((f) =>
@@ -188,7 +164,7 @@ function useExplore(account: Account | null) {
         )
       }
     },
-    [signedIn]
+    [ready, id]
   )
 
   // Someone blocked: their lessons leave at once, the pages scrolled through included. Unblocked:
@@ -213,7 +189,7 @@ function useExplore(account: Account | null) {
   )
 
   const loadMore = async () => {
-    if (!signedIn || !feed.next || loadingMore.current) return
+    if (!ready || !feed.next || loadingMore.current) return
     loadingMore.current = true
     try {
       const page = await fetchExplore(feed.next)
@@ -243,62 +219,4 @@ function useExplore(account: Account | null) {
   }
 
   return { feed, refresh: () => refresh(), retry, loadMore }
-}
-
-/** Logged out: what Explore is, and the way in. */
-
-/**
- * The lessons the web app bundles, opened from GET /api/lessons/{slug} without a database. When
- * they don't load, it says why (the server out of reach, or failing) with a way to ask again.
- */
-function TestLessons({ t }: { t: Strings }) {
-  const [lessons, setLessons] = useState<
-    TestLesson[] | { error: "offline" | "failed" } | null
-  >(null)
-  const [attempt, setAttempt] = useState(0)
-  useEffect(() => {
-    let live = true
-    setLessons(null)
-    fetchTestLessons()
-      .then((l) => live && setLessons(l))
-      .catch(
-        (e: unknown) =>
-          live &&
-          setLessons({
-            error: e instanceof OfflineError ? "offline" : "failed",
-          })
-      )
-    return () => {
-      live = false
-    }
-  }, [attempt])
-  if (lessons && "error" in lessons)
-    return (
-      <>
-        <Failed
-          message={lessons.error === "offline" ? t.offline : t.feed.failed}
-          retry={{ label: t.tryAgain, onPress: () => setAttempt((n) => n + 1) }}
-        />
-        {lessons.error === "offline" ? <SavedLessons t={t} /> : null}
-      </>
-    )
-  if (!lessons?.length) return null
-  return (
-    <View className="gap-3 pt-8">
-      <Text className="text-sm font-medium text-muted-foreground">
-        {t.feed.testLessons}
-      </Text>
-      {lessons.map((l) => (
-        <Link
-          key={l.slug}
-          href={{ pathname: "/l/[slugId]", params: { slugId: l.slug } }}
-          asChild
-        >
-          <Button variant="outline" size="lg" className="justify-start">
-            <Text numberOfLines={1}>{l.title}</Text>
-          </Button>
-        </Link>
-      ))}
-    </View>
-  )
 }
