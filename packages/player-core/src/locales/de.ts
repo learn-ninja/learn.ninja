@@ -273,6 +273,9 @@ export const de: Translation = {
     code: "Code",
     submit: "Anmelden",
     otherEmail: "Andere E-Mail verwenden",
+    github: "Weiter mit GitHub",
+    or: "oder",
+    githubFailed: "Die Anmeldung mit GitHub hat nicht geklappt. Versuch es noch mal.",
     legal:
       "Wenn du fortfährst, stimmst du den {terms} zu und akzeptierst die Hinweise zum {privacy}.",
     wrongCode:

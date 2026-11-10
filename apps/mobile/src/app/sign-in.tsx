@@ -1,29 +1,41 @@
 import { router, Stack } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { useRef, useState, type ComponentRef } from "react"
-import { Pressable, ScrollView, TextInput, View } from "react-native"
+import { Platform, Pressable, ScrollView, TextInput, View } from "react-native"
 import { KeyboardAvoidingView } from "react-native-keyboard-controller"
 
 import type { Strings } from "@workspace/player-core/strings"
 
 import { DirectionView } from "@/components/direction"
+import { GitHubLogo } from "@/components/icons"
 import { CloseButton } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Text } from "@/components/ui/text"
 import { authClient } from "@/lib/auth-client"
 import { API_BASE_URL } from "@/lib/config"
+import { canUseGitHub } from "@/lib/github-callback"
+import { logInWithGitHub } from "@/lib/github-sign-in"
 import { result } from "@/lib/haptics"
 import { looksLikeEmail, signInError } from "@/lib/sign-in-errors"
 import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
-// Log in with a six-digit email code, as the web's /login does (apps/web/components/account/
-// login-form.tsx): the email first, then the code, with the same words and errors. GitHub stays on
-// the website. The screen is a sheet over whatever opened it, and closes itself once signed in.
+// Log in with GitHub or a six-digit email code, as the web's /login does (apps/web/components/
+// account/login-form.tsx): GitHub above, then the email and the code, with the same words and
+// errors. GitHub opens the system's sign-in sheet (src/lib/github-sign-in.ts), on iOS 17.4 and
+// later. The screen is a sheet over whatever opened it, and closes itself once signed in.
 
 const CODE_LENGTH = 6
+
+/** The sheet's https ending needs iOS 17.4; older iPhones log in with a code. */
+const GITHUB = canUseGitHub(Platform.Version, API_BASE_URL)
+
+function close() {
+  if (router.canGoBack()) router.back()
+  else router.replace("/")
+}
 
 export default function SignIn() {
   const { t, dir } = useAppStrings()
@@ -68,8 +80,22 @@ export default function SignIn() {
     }
     // The system's success and error taps, as iOS's own code fields give them.
     result(true)
-    if (router.canGoBack()) router.back()
-    else router.replace("/")
+    close()
+  }
+
+  async function github() {
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    const outcome = await logInWithGitHub().catch(() => "failed" as const)
+    setBusy(false)
+    if (outcome === "cancelled") return
+    if (outcome === "failed") {
+      result(false)
+      return setError(s.githubFailed)
+    }
+    result(true)
+    close()
   }
 
   return (
@@ -80,12 +106,7 @@ export default function SignIn() {
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <Stack.Screen options={{ headerShown: false }} />
         <View className="h-14 flex-row items-center px-4">
-          <CloseButton
-            label={t.cancel}
-            onPress={() =>
-              router.canGoBack() ? router.back() : router.replace("/")
-            }
-          />
+          <CloseButton label={t.cancel} onPress={close} />
         </View>
         <ScrollView
           keyboardShouldPersistTaps="handled"
@@ -95,6 +116,30 @@ export default function SignIn() {
             {step === "email" ? (
               <>
                 <Heading title={s.title}>{s.body}</Heading>
+                {GITHUB ? (
+                  <View className="w-full gap-4">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      disabled={busy}
+                      onPress={() => void github()}
+                    >
+                      <GitHubLogo />
+                      <Text>{s.github}</Text>
+                    </Button>
+                    <View
+                      className="flex-row items-center gap-3"
+                      accessibilityElementsHidden
+                      importantForAccessibility="no-hide-descendants"
+                    >
+                      <View className="h-px flex-1 bg-border" />
+                      <Text className="text-sm text-muted-foreground">
+                        {s.or}
+                      </Text>
+                      <View className="h-px flex-1 bg-border" />
+                    </View>
+                  </View>
+                ) : null}
                 <View className="w-full gap-3">
                   <Input
                     // Uncontrolled: a controlled field drops keys typed quickly (autofill, paste).
@@ -110,7 +155,7 @@ export default function SignIn() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
-                    autoFocus
+                    autoFocus={!GITHUB}
                     returnKeyType="send"
                     onSubmitEditing={() => void sendCode()}
                     editable={!busy}

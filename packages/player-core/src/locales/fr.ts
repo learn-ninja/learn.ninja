@@ -274,6 +274,9 @@ export const fr: Translation = {
     code: "Code",
     submit: "Se connecter",
     otherEmail: "Utiliser une autre adresse",
+    github: "Continuer avec GitHub",
+    or: "ou",
+    githubFailed: "La connexion avec GitHub n'a pas marché. Réessaie.",
     legal:
       "En continuant, tu acceptes les {terms} et la politique de {privacy}.",
     wrongCode: "Ce code n'est pas bon. Vérifie-le ou demandes-en un nouveau.",

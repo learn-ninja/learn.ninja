@@ -22,6 +22,7 @@ import { SITE } from "@/lib/site"
 import { getRateLimiter, type RateLimiter } from "@/lib/publish/rate-limit"
 import { getDb } from "@/lib/publish/store"
 
+import { appGitHub } from "./app-github"
 import { codeSenderFromEnv, type CodeSender } from "./email"
 import {
   findByHandle,
@@ -33,8 +34,8 @@ import {
 } from "./handles"
 import { authStorageFromEnv } from "./storage"
 
-// Better Auth: GitHub (website only) and a six-digit email code
-// (website and terminal), API keys for the terminal, sessions cached in a cookie and kept in Redis.
+// Better Auth: GitHub (website, and the iOS app through ./app-github) and a six-digit email code
+// (website, app and terminal), API keys for the terminal, sessions cached in a cookie and kept in Redis.
 // Users live in our Postgres through the Drizzle adapter (packages/db has the tables). It is also
 // the OAuth 2.1 server chat apps log in through (`mcp`, below): the MCP server at /mcp answers a
 // `keep_lesson` call from a logged-out app with a 401, the app sends the user to /login and
@@ -207,9 +208,10 @@ export function createAuth(deps: AuthDeps) {
     trustedOrigins: [APP_ORIGIN],
     secondaryStorage: storage,
     // The jwt plugin's /token hands out a session JWT; chat apps get theirs from /oauth2/token.
-    // The expo plugin's /expo-authorization-proxy is for social sign-in from the app, which signs
-    // in with email codes only: left on, it redirects anywhere and sets the signed OAuth state
-    // cookie from its query (an open redirect, and a way to plant a GitHub sign-in).
+    // The expo plugin's /expo-authorization-proxy is its way to social sign-in from the app: left
+    // on, it redirects anywhere and sets the signed OAuth state cookie from its query (an open
+    // redirect, and a way to plant a GitHub sign-in). The app logs in with GitHub through
+    // ./app-github instead.
     disabledPaths: ["/token", "/expo-authorization-proxy"],
     session: {
       freshAge: FRESH_SESSION_SECONDS,
@@ -293,6 +295,7 @@ export function createAuth(deps: AuthDeps) {
       }),
       // The iOS app: it keeps the session cookie itself and sends it on every request.
       expo(),
+      ...(github ? [appGitHub()] : []),
       apiKey({
         defaultPrefix: API_KEY_PREFIX,
         // The publish routes read x-api-key as a session.
@@ -372,6 +375,8 @@ export function createAuth(deps: AuthDeps) {
         "/sign-in/email-otp": { window: 60, max: 6 },
         "/email-otp/request-email-change": { window: 60, max: 3 },
         "/email-otp/change-email": { window: 60, max: 6 },
+        "/app/github/start": { window: 60, max: 10 },
+        "/app/github/redeem": { window: 60, max: 10 },
       },
     },
     databaseHooks: {
