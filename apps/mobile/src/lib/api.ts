@@ -6,6 +6,7 @@ import {
 import { loadLanguage } from "@workspace/player-core/strings"
 import { validateLesson, type Lesson } from "@workspace/spec"
 
+import type { GetDays } from "./account-days"
 import { createApiFetch, OfflineError } from "./api-fetch"
 import { sessionCookie } from "./auth-client"
 import { API_BASE_URL } from "./config"
@@ -139,6 +140,13 @@ export const sendToApi: Send = async (path, { method, body }) => {
     body,
   })
   return { status: res.status }
+}
+
+/** The signed-in account's learning days (GET /api/account/days), for the streak (account-days.ts). */
+export const getAccountDays: GetDays = async () => {
+  const res = await apiFetch("/api/account/days")
+  const body = (await readJson(res)) as { ok?: boolean; days?: unknown } | null
+  return { status: res.status, days: body?.ok ? body.days : undefined }
 }
 
 export interface TestLesson {
