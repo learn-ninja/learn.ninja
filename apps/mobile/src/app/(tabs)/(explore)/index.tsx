@@ -1,8 +1,6 @@
-import { Link, router, Stack, useFocusEffect } from "expo-router"
+import { router, Stack, useFocusEffect } from "expo-router"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native"
-
-import type { Strings } from "@workspace/player-core/strings"
+import { ActivityIndicator, FlatList, RefreshControl } from "react-native"
 
 import { DirectionProvider } from "@/components/direction"
 import {
@@ -14,9 +12,6 @@ import {
 } from "@/components/explore/list-parts"
 import { LessonRow } from "@/components/explore/lesson-row"
 import { SavedLessons } from "@/components/explore/saved-lessons"
-import { Button } from "@/components/ui/button"
-import { Text } from "@/components/ui/text"
-import { fetchTestLessons, type TestLesson } from "@/lib/api"
 import { OfflineError } from "@/lib/api-fetch"
 import { fetchExplore, type LessonRowData, type Viewer } from "@/lib/feed"
 import { mergeFirstPage } from "@/lib/feed-merge"
@@ -27,11 +22,11 @@ import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
 import { colors } from "../../../../tokens"
 
-// The app's home: Explore, as the web's /explore lists it, the newest lessons people kept and
-// shared, a page at a time, pulled down to refresh, with the heart on each row. Logged out it's
-// the same feed (anyone may read it, on the web too) under the learn.ninja title, with Log in at
-// the top and no tab bar; the heart, Report, and Block ask to log in when pressed. Development
-// builds keep the test lessons the web app bundles (examples/) at the foot.
+// The app's home: Explore, as the web's /explore lists it, logged in or out: the newest lessons
+// people kept and shared, a page at a time, pulled down to refresh, with the heart on each row
+// (logged out, the heart and the block action lead to logging in). Logged out there's no tab bar
+// (the tabs' layout), so the title is the app's name and Log in sits at the top. The test lessons
+// are in the Dev tab, which only development builds show.
 
 export default function Home() {
   const { t, lang, dir } = useAppStrings()
@@ -45,7 +40,9 @@ export default function Home() {
     <DirectionProvider value={dir}>
       {/* The system's bar: a large title that shrinks into it as the feed scrolls (TabStack). */}
       <Stack.Screen
-        options={{ title: account ? t.feed.title : "learn.ninja" }}
+        options={{
+          title: session.state === "out" ? "learn.ninja" : t.feed.title,
+        }}
       />
       {session.state === "out" ? (
         <Stack.Toolbar placement="right">
@@ -97,28 +94,20 @@ export default function Home() {
         onEndReached={() => void loadMore()}
         onEndReachedThreshold={0.5}
         refreshControl={
-          session.state !== "loading" ? (
-            <RefreshControl
-              refreshing={refreshing}
-              tintColor={colors.muted.foreground}
-              onRefresh={async () => {
-                // A light tap as the pull catches, as iOS's own lists give one.
-                tap()
-                setRefreshing(true)
-                await refresh()
-                setRefreshing(false)
-              }}
-            />
-          ) : undefined
+          <RefreshControl
+            refreshing={refreshing}
+            tintColor={colors.muted.foreground}
+            onRefresh={async () => {
+              // A light tap as the pull catches, as iOS's own lists give one.
+              tap()
+              setRefreshing(true)
+              await refresh()
+              setRefreshing(false)
+            }}
+          />
         }
         ListFooterComponent={
-          <>
-            {feed.next ? <ActivityIndicator className="py-6" /> : null}
-            {/* Development builds: the bundled test lessons to play. */}
-            {__DEV__ && session.state !== "loading" ? (
-              <TestLessons t={t} />
-            ) : null}
-          </>
+          <>{feed.next ? <ActivityIndicator className="py-6" /> : null}</>
         }
       />
     </DirectionProvider>
@@ -137,8 +126,8 @@ type Feed = {
 const START: Feed = { lessons: [], next: null, state: "loading" }
 
 /**
- * Explore's pages, as the account sees them (what it liked and finished) or as anyone does when
- * `account` is null; `undefined` while the session is still being checked, with no requests yet.
+ * Explore's pages, for the logged-in account or for anyone. `undefined` while the session is still
+ * being read: no requests yet, so the first page knows what the viewer liked and finished.
  */
 function useExplore(account: Account | null | undefined) {
   const [feed, setFeed] = useState<Feed>(START)
@@ -180,7 +169,7 @@ function useExplore(account: Account | null | undefined) {
         )
       }
     },
-    [ready]
+    [ready, id]
   )
 
   // Someone blocked: their lessons leave at once, the pages scrolled through included. Unblocked:
@@ -235,60 +224,4 @@ function useExplore(account: Account | null | undefined) {
   }
 
   return { feed, refresh: () => refresh(), retry, loadMore }
-}
-
-/**
- * The lessons the web app bundles, opened from GET /api/lessons/{slug} without a database. When
- * they don't load, it says why (the server out of reach, or failing) with a way to ask again.
- */
-function TestLessons({ t }: { t: Strings }) {
-  const [lessons, setLessons] = useState<
-    TestLesson[] | { error: "offline" | "failed" } | null
-  >(null)
-  const [attempt, setAttempt] = useState(0)
-  useEffect(() => {
-    let live = true
-    setLessons(null)
-    fetchTestLessons()
-      .then((l) => live && setLessons(l))
-      .catch(
-        (e: unknown) =>
-          live &&
-          setLessons({
-            error: e instanceof OfflineError ? "offline" : "failed",
-          })
-      )
-    return () => {
-      live = false
-    }
-  }, [attempt])
-  if (lessons && "error" in lessons)
-    return (
-      <>
-        <Failed
-          message={lessons.error === "offline" ? t.offline : t.feed.failed}
-          retry={{ label: t.tryAgain, onPress: () => setAttempt((n) => n + 1) }}
-        />
-        {lessons.error === "offline" ? <SavedLessons t={t} /> : null}
-      </>
-    )
-  if (!lessons?.length) return null
-  return (
-    <View className="gap-3 pt-8">
-      <Text className="text-sm font-medium text-muted-foreground">
-        {t.feed.testLessons}
-      </Text>
-      {lessons.map((l) => (
-        <Link
-          key={l.slug}
-          href={{ pathname: "/l/[slugId]", params: { slugId: l.slug } }}
-          asChild
-        >
-          <Button variant="outline" size="lg" className="justify-start">
-            <Text numberOfLines={1}>{l.title}</Text>
-          </Button>
-        </Link>
-      ))}
-    </View>
-  )
 }

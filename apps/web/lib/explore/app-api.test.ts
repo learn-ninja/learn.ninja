@@ -17,6 +17,7 @@ import { MemoryRateLimiter } from "@/lib/publish/rate-limit"
 import { PostgresLessonStore } from "@/lib/publish/store"
 
 import {
+  accountDays,
   decodeCursor,
   exploreFeed,
   FEED_PAGE_SIZE,
@@ -262,5 +263,30 @@ describe("the app's profiles", () => {
       )
       expect(reply.status).toBe(404)
     }
+  })
+})
+
+describe("the app's account days", () => {
+  it("lists the days the learner finished a lesson, in the time zone each counted in", async () => {
+    const first = await published("bob")
+    const second = await published("bob")
+    // 1_800_000_000_000 is 2027-01-15 08:00 UTC: still the 14th in Honolulu.
+    await completeLesson(
+      { id: first, userId: "ada", tz: "Pacific/Honolulu" },
+      exploreDeps()
+    )
+    now += 2 * DAY
+    await completeLesson({ id: second, userId: "ada", tz: "UTC" }, exploreDeps())
+    await completeLesson({ id: first, userId: "bob", tz: "UTC" }, exploreDeps())
+    const reply = await accountDays({ actor: ada }, deps)
+    expect(reply).toEqual({
+      status: 200,
+      body: { ok: true, days: ["2027-01-14", "2027-01-17"] },
+    })
+  })
+
+  it("has none for a learner who hasn't finished one", async () => {
+    const reply = await accountDays({ actor: ada }, deps)
+    expect(reply.body).toEqual({ ok: true, days: [] })
   })
 })

@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { KeyboardProvider } from "react-native-keyboard-controller"
 
+import { Splash } from "@/components/splash"
 import { DirectionEffect } from "@/lib/direction-effect"
 import { SessionEffects } from "@/lib/session"
 import { colors } from "../../tokens"
@@ -57,6 +58,8 @@ export default function RootLayout() {
           </Stack>
         </ThemeProvider>
       </KeyboardProvider>
+      {/* Over everything: the launch screen's mark, until it vanishes in smoke. */}
+      <Splash />
     </GestureHandlerRootView>
   )
 }

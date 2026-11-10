@@ -1,11 +1,14 @@
 import { addNetworkStateListener } from "expo-network"
 import { useEffect } from "react"
 
-import { sendToApi } from "./api"
+import { refreshAccountDays } from "./account-days"
+import { getAccountDays, sendToApi } from "./api"
 import { authClient, forgetSessionLocally } from "./auth-client"
 import { sendFinishes } from "./finishes"
 import { deviceStorage } from "./progress-storage"
 import { reconnected, signedIn } from "./progress-sync"
+import { rescheduleReminders } from "./reminders"
+import { forgetAccountDays, localDay } from "./streak"
 
 // Who's signed in, from Better Auth's session (kept in the keychain by its Expo client, checked with
 // the server on launch and when the app comes back to the front).
@@ -63,16 +66,32 @@ export async function signOut() {
 /**
  * Once the app is signed in (on log-in, or on launch with a kept session): the progress sync
  * starts again and every open lesson sends what the server missed, and the finishes kept while
- * logged out go to the profile, as the web's sendFinishes does on a page that's logged in.
+ * logged out go to the profile, as the web's sendFinishes does on a page that's logged in. Then
+ * the streak becomes the account's (account-days.ts), the one the profile shows; signed out, it's
+ * the device's own again. The widget and the reminders follow either way.
  */
 export function SessionEffects() {
   const session = useSession()
   const id = session.state === "in" ? session.account.id : null
+  const out = session.state === "out"
   useEffect(() => {
     if (!id) return
     signedIn()
     void sendFinishes(deviceStorage, sendToApi)
+      .then(() =>
+        refreshAccountDays(id, {
+          storage: deviceStorage,
+          get: getAccountDays,
+          today: localDay(),
+        })
+      )
+      .then((kept) => {
+        if (kept) void rescheduleReminders()
+      })
   }, [id])
+  useEffect(() => {
+    if (out && forgetAccountDays(deviceStorage)) void rescheduleReminders()
+  }, [out])
   // Back online after a lesson played offline: what didn't get through goes now, not at the next
   // sign-in or launch.
   useEffect(() => {

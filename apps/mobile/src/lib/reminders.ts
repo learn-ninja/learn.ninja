@@ -14,11 +14,11 @@ import { localDay, readDays } from "./streak"
 import { useAppStrings } from "./use-strings"
 import { refreshWidget } from "./widget"
 
-// The evening streak reminder, as local notifications the app schedules itself: no server, no
-// account, and the phone's own time zone. Each time something could change the plan (a finish, the
-// app coming to the front, a new language, the switch in Settings), every reminder is cancelled
-// and the coming week's are scheduled again from the learning days on the device
-// (reminder-plan.ts). Permission is asked once, as the learner leaves the streak screen for the
+// The evening streak reminder, as local notifications the app schedules itself: no push server,
+// and the phone's own time zone. Each time something could change the plan (a finish, the app
+// coming to the front, signing in or out, a new language, the switch in Settings), every reminder
+// is cancelled and the coming week's are scheduled again from the streak's learning days (the
+// signed-in account's, else the device's own; streak.ts) (reminder-plan.ts). Permission is asked once, as the learner leaves the streak screen for the
 // first time; never at launch. Tapping one opens the lesson last left unfinished, or Explore.
 
 const ASKED = "learn:reminders-asked"
