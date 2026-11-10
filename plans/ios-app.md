@@ -73,10 +73,10 @@ Done:
 
 Next: **TestFlight**, which needs Colin's accounts. In order:
 
-1. **Apple Developer Program**: the team's ID (Membership details). Set `APPLE_TEAM_ID` on Vercel (production) so `/.well-known/apple-app-site-association` answers and learn.ninja links open the app.
-2. **Expo account**: done 2026-11-10. The project is `@uxcel/learn-ninja` (https://expo.dev/accounts/uxcel/projects/learn-ninja), with `owner` and `extra.eas.projectId` in `app.config.ts`. `ios.appleTeamId` is set too (`UQ889F3ARK`, the Team ID), which `@bacons/apple-targets` needs to sign the widget.
-3. **App Store Connect**: a new app for the bundle ID `ninja.learn.ios` (EAS can create the ID and the App Group `group.ninja.learn.ios` on its first build, with the widget's own `ninja.learn.ios.widget`).
-4. **The first build**: `npx eas-cli build -p ios --profile production` in `apps/mobile`. EAS asks to log in to Apple and makes the certificates, the provisioning profiles for the app and the widget, and the App Group. Then `npx eas-cli submit -p ios --latest` sends it to App Store Connect, and it shows in TestFlight after Apple's processing (internal testers need no review).
+1. **Apple Developer Program**: done 2026-11-10. Team Uxcel, Inc, ID `UQ889F3ARK`, set as `APPLE_TEAM_ID` on Vercel; the site association and Apple's CDN serve it.
+2. **Expo account**: done 2026-11-10. The project is `@uxcel/learn-ninja` (https://expo.dev/accounts/uxcel/projects/learn-ninja), with `owner` and `extra.eas.projectId` in `app.config.ts`, and `ios.appleTeamId`, which `@bacons/apple-targets` needs to sign the widget. Run EAS from `apps/mobile`: at the repo root it finds no config and offers to make a new project.
+3. **Bundle ID**: `ninja.learn.ios`, since Apple has `ninja.learn.app` registered to another team; the widget is `ninja.learn.ios.widget` and the App Group `group.ninja.learn.ios`. Android keeps `ninja.learn.app`.
+4. **First build and TestFlight**: done 2026-11-10. Build 1 of 1.0.0, made by `eas build -p ios --profile production` (EAS made the certificate, both profiles, and the App Group), sent by `eas submit -p ios --latest`, which created the App Store Connect app "learn.ninja" (ID `6832954533`, now `ascAppId` in `eas.json`), an EAS Submit API key, and the internal TestFlight group "Team (Expo)".
 5. **On a real iPhone** (the first TestFlight install): what the simulator couldn't show, listed under "On a real iPhone" below, plus the reminder at 19:00, the widget on the lock screen and over midnight, and universal links.
 
 Account deletion (guideline 5.1.1(v)) is in: Settings' red Delete account (iOS's prompt, with the email typed again to confirm; the web's settings have the same) calls `DELETE /api/account`, which deletes the user, their lessons, and everything tied to them, and the app forgets the session and goes home. A session only, never an API key; no email code, since the review account never gets one.
