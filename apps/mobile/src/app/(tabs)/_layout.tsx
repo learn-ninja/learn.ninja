@@ -6,7 +6,7 @@ import { useAppStrings } from "@/lib/use-strings"
 import { colors } from "../../../tokens"
 
 // The app's two places, as the system's tab bar (Liquid Glass on iOS 26 and later): Explore, and
-// the learner's own profile. A second tap on a tab scrolls it to the top or pops it to its root,
+// the learner's own profile; development builds add a third, Dev, with the test lessons. A second tap on a tab scrolls it to the top or pops it to its root,
 // as every iOS app's tabs do. The bar runs the app's language's way. Lessons and the log-in open over the tabs (the root layout).
 
 export default function TabsLayout() {
@@ -43,6 +43,12 @@ export default function TabsLayout() {
             }}
           />
           <NativeTabs.Trigger.Label>{t.profile.tab}</NativeTabs.Trigger.Label>
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="(dev)" hidden={!__DEV__}>
+          <NativeTabs.Trigger.Icon
+            sf={{ default: "hammer", selected: "hammer.fill" }}
+          />
+          <NativeTabs.Trigger.Label>Dev</NativeTabs.Trigger.Label>
         </NativeTabs.Trigger>
       </NativeTabs>
     </>

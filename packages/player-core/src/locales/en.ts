@@ -260,9 +260,6 @@ export const en: Strings = {
     title: "Explore",
     empty:
       "Nothing here yet. Be the first: ask your agent for a lesson and say keep it.",
-    logInTitle: "Lessons people kept and shared",
-    logInBody:
-      "Log in to browse Explore, like lessons, and see your streak on your profile.",
     testLessons: "Test lessons",
     failed: "This didn't load.",
     views: (n) => p(n, { one: "# view", other: "# views" }),

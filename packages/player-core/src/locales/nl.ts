@@ -281,9 +281,6 @@ export const nl: Translation = {
     title: "Explore",
     empty:
       "Hier staat nog niets. Wees de eerste: vraag je agent om een les en zeg dat hij hem moet bewaren.",
-    logInTitle: "Lessen die mensen bewaarden en deelden",
-    logInBody:
-      "Log in om door Explore te bladeren, lessen een like te geven en je reeks op je profiel te zien.",
     testLessons: "Testlessen",
     failed: "Dit is niet geladen.",
     views: (n) => p(n, { one: "# weergave", other: "# weergaven" }),

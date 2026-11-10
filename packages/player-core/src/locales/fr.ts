@@ -288,9 +288,6 @@ export const fr: Translation = {
     title: "Explore",
     empty:
       "Rien ici pour l'instant. Sois le premier : demande une leçon à ton agent et dis-lui de la garder.",
-    logInTitle: "Des leçons gardées et partagées",
-    logInBody:
-      "Connecte-toi pour parcourir Explore, aimer des leçons et voir ta série sur ton profil.",
     testLessons: "Leçons de test",
     failed: "Le chargement a échoué.",
     views: (n) => p(n, { one: "# vue", other: "# vues" }),

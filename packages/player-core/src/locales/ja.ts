@@ -259,9 +259,6 @@ export const ja: Translation = {
     title: "Explore",
     empty:
       "まだ何もありません。最初の一人になりましょう。エージェントにレッスンを頼んで、残してと伝えてください。",
-    logInTitle: "みんなが残して共有したレッスン",
-    logInBody:
-      "ログインすると、Explore を見たり、レッスンにいいねしたり、プロフィールで連続記録を確認したりできます。",
     testLessons: "テスト用レッスン",
     failed: "読み込めませんでした。",
     views: (n) => `${n}回表示`,

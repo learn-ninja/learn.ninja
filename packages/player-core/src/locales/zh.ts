@@ -253,9 +253,6 @@ export const zh: Translation = {
     title: "Explore",
     empty:
       "这里还什么都没有。来做第一个吧：让你的 AI 助手生成一节课，并说要保留它。",
-    logInTitle: "大家保留并分享的课程",
-    logInBody:
-      "登录后即可浏览 Explore、喜欢课程，并在个人主页查看你的连续记录。",
     testLessons: "测试课程",
     failed: "加载失败。",
     views: (n) => `${n} 次浏览`,

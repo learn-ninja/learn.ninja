@@ -299,9 +299,6 @@ export const pl: Translation = {
     title: "Explore",
     empty:
       "Na razie nic tu nie ma. Bądź pierwszy: poproś swojego agenta o lekcję i powiedz, żeby ją zachował.",
-    logInTitle: "Lekcje, które inni zachowali i udostępnili",
-    logInBody:
-      "Zaloguj się, aby przeglądać Explore, polubić lekcje i widzieć swoją serię w profilu.",
     testLessons: "Lekcje testowe",
     failed: "Nie udało się załadować.",
     views: (n) =>
