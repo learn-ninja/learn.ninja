@@ -54,6 +54,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     backgroundColor: "#121212",
     ios: {
       bundleIdentifier: "ninja.learn.app",
+      // The Apple developer team that signs the app and its widget (@bacons/apple-targets needs
+      // it). Public, like the bundle ID: the site's apple-app-site-association names it too
+      // (APPLE_TEAM_ID on Vercel, the same value).
+      appleTeamId: "UQ889F3ARK",
       // iPhone only for the first release: an iPad app must support every
       // orientation or run full screen, and the player is portrait only.
       supportsTablet: false,
