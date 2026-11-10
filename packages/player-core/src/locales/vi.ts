@@ -256,6 +256,7 @@ export const vi: Translation = {
     github: "Tiếp tục với GitHub",
     or: "hoặc",
     githubFailed: "Không đăng nhập được bằng GitHub. Hãy thử lại.",
+    appleFailed: "Không đăng nhập được bằng Apple. Hãy thử lại.",
     legal: "Khi tiếp tục, bạn đồng ý với {terms} và {privacy}.",
     wrongCode: "Mã không đúng. Hãy kiểm tra lại, hoặc gửi mã mới.",
     expiredCode: "Mã đã hết hạn. Hãy gửi mã mới.",

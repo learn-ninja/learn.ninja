@@ -267,6 +267,7 @@ export const es: Translation = {
     github: "Continuar con GitHub",
     or: "o",
     githubFailed: "GitHub no te ha dejado entrar. Inténtalo de nuevo.",
+    appleFailed: "Apple no te ha dejado entrar. Inténtalo de nuevo.",
     legal: "Al continuar, aceptas los {terms} y la {privacy}.",
     wrongCode: "Ese código no es correcto. Revísalo o pide uno nuevo.",
     expiredCode: "Ese código caducó. Pide uno nuevo.",

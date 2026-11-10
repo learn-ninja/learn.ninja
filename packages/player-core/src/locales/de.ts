@@ -276,6 +276,7 @@ export const de: Translation = {
     github: "Weiter mit GitHub",
     or: "oder",
     githubFailed: "Die Anmeldung mit GitHub hat nicht geklappt. Versuch es noch mal.",
+    appleFailed: "Die Anmeldung mit Apple hat nicht geklappt. Versuch es noch mal.",
     legal:
       "Wenn du fortfährst, stimmst du den {terms} zu und akzeptierst die Hinweise zum {privacy}.",
     wrongCode:

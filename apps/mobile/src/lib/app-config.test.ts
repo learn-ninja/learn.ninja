@@ -41,6 +41,11 @@ describe("app config", () => {
       )
   })
 
+  it("asks for Sign in with Apple in every build", () => {
+    for (const profile of [undefined, "preview", "production"])
+      expect(build(profile).ios?.usesAppleSignIn).toBe(true)
+  })
+
   it("reads learn.ninja over HTTPS with no exception in preview and production", () => {
     for (const profile of ["preview", "production"]) {
       const app = build(profile)

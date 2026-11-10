@@ -250,6 +250,7 @@ export const en: Strings = {
     github: "Continue with GitHub",
     or: "or",
     githubFailed: "GitHub didn't log you in. Try again.",
+    appleFailed: "Apple didn't log you in. Try again.",
     legal: "By continuing, you agree to the {terms} and {privacy}.",
     wrongCode: "That code isn't right. Check it, or send a new one.",
     expiredCode: "That code expired. Send a new one.",

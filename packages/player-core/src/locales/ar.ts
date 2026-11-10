@@ -286,6 +286,7 @@ export const ar: Translation = {
     github: "المتابعة باستخدام GitHub",
     or: "أو",
     githubFailed: "لم يُسجّل GitHub دخولك. حاول مرة أخرى.",
+    appleFailed: "لم يُسجّل Apple دخولك. حاول مرة أخرى.",
     legal: "بالمتابعة، أنت توافق على {terms} و{privacy}.",
     wrongCode: "هذا الرمز غير صحيح. تحقّق منه، أو أرسل رمزًا جديدًا.",
     expiredCode: "انتهت صلاحية هذا الرمز. أرسل رمزًا جديدًا.",

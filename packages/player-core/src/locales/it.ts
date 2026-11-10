@@ -275,6 +275,7 @@ export const it: Translation = {
     github: "Continua con GitHub",
     or: "oppure",
     githubFailed: "L'accesso con GitHub non è riuscito. Riprova.",
+    appleFailed: "L'accesso con Apple non è riuscito. Riprova.",
     legal: "Continuando, accetti i {terms} e la {privacy}.",
     wrongCode:
       "Questo codice non è giusto. Controllalo o richiedine uno nuovo.",

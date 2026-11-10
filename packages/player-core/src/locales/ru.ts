@@ -297,6 +297,7 @@ export const ru: Translation = {
     github: "Продолжить с GitHub",
     or: "или",
     githubFailed: "Не получилось войти через GitHub. Попробуйте ещё раз.",
+    appleFailed: "Не получилось войти через Apple. Попробуйте ещё раз.",
     legal: "Продолжая, вы принимаете {terms} и {privacy}.",
     wrongCode: "Код неверный. Проверьте его или отправьте новый.",
     expiredCode: "Срок действия кода истёк. Отправьте новый.",

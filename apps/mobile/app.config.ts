@@ -86,6 +86,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         ],
       },
       associatedDomains: [...LINK_DOMAINS, ...CREDENTIAL_DOMAINS],
+      // Sign in with Apple (src/lib/apple-sign-in.ts): the com.apple.developer.applesignin
+      // entitlement, which the App ID on developer.apple.com must have too.
+      usesAppleSignIn: true,
       // Shared with the home screen widget (targets/widget), which reads the streak the app
       // writes there (src/lib/widget.ts).
       entitlements: { "com.apple.security.application-groups": [APP_GROUP] },
