@@ -247,6 +247,7 @@ export const ja: Translation = {
     github: "GitHubで続ける",
     or: "または",
     githubFailed: "GitHubでログインできませんでした。もう一度お試しください。",
+    appleFailed: "Appleでログインできませんでした。もう一度お試しください。",
     legal: "続行すると、{terms}と{privacy}に同意したことになります。",
     wrongCode:
       "コードが正しくありません。確認するか、新しいコードを送ってください。",

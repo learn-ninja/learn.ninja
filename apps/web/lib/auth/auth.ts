@@ -34,8 +34,9 @@ import {
 } from "./handles"
 import { authStorageFromEnv } from "./storage"
 
-// Better Auth: GitHub (website, and the iOS app through ./app-github) and a six-digit email code
-// (website, app and terminal), API keys for the terminal, sessions cached in a cookie and kept in Redis.
+// Better Auth: GitHub (website, and the iOS app through ./app-github), Apple (iOS app only), and a
+// six-digit email code (website, app and terminal), API keys for the terminal, sessions cached in a
+// cookie and kept in Redis.
 // Users live in our Postgres through the Drizzle adapter (packages/db has the tables). It is also
 // the OAuth 2.1 server chat apps log in through (`mcp`, below): the MCP server at /mcp answers a
 // `keep_lesson` call from a logged-out app with a 401, the app sends the user to /login and
@@ -157,6 +158,28 @@ export function githubFromEnv(env = process.env) {
 }
 
 /**
+ * The iOS app's bundle ID (apps/mobile/app.config.ts), which Apple names as the audience of the
+ * identity tokens Sign in with Apple gives the app.
+ */
+export const APPLE_BUNDLE_ID = "ninja.learn.ios"
+
+/**
+ * Sign in with Apple, for the iOS app only (App Store guideline 4.8: an app that offers GitHub
+ * must offer Apple too). The app gets an identity token from iOS and posts it to /sign-in/social
+ * with `idToken`; Better Auth checks its signature against Apple's public keys, its issuer, its
+ * audience (the bundle ID), its age and the nonce, so it needs no secret and is always on. The
+ * browser's redirect flow would need a Services ID and a client secret signed with an Apple key
+ * that expires every six months; the website doesn't offer Apple, and the hook below refuses that
+ * flow (APPLE_APP_ONLY). An account that signed up in the app logs in on the website with a code
+ * to its email, Apple's private relay address included.
+ */
+export const APPLE_APP_ONLY =
+  "Sign in with Apple works in the learn.ninja iOS app. On the website, log in with an email code."
+
+/** The routes that start a social log-in or link, where Apple must come with an identity token. */
+const SOCIAL_ROUTES = new Set(["/sign-in/social", "/link-social"])
+
+/**
  * The signing secret: BETTER_AUTH_SECRET on every Vercel environment, Better Auth's default in
  * development. It also encrypts the private key that signs OAuth tokens, which lives in the jwks
  * table of the one database previews and production share, so every deployment must use the same
@@ -245,16 +268,25 @@ export function createAuth(deps: AuthDeps) {
         },
       },
     },
-    socialProviders: github
-      ? {
-          github: {
-            ...github,
-            mapProfileToUser: async (profile) => ({
-              handle: await freeHandle(deps.db, profile.login),
-            }),
-          },
-        }
-      : {},
+    socialProviders: {
+      ...(github
+        ? {
+            github: {
+              ...github,
+              mapProfileToUser: async (profile) => ({
+                handle: await freeHandle(deps.db, profile.login),
+              }),
+            },
+          }
+        : {}),
+      // Identity tokens from the app only (APPLE_APP_ONLY): the audience is the bundle ID, and
+      // there's no client secret because nothing here talks to Apple but its public keys. Apple
+      // sends the name only on the first sign-in, through the app; a joined account keeps its own.
+      apple: {
+        clientId: APPLE_BUNDLE_ID,
+        appBundleIdentifier: APPLE_BUNDLE_ID,
+      },
+    },
     plugins: [
       emailOTP({
         otpLength: 6,
@@ -324,6 +356,19 @@ export function createAuth(deps: AuthDeps) {
             message: "Make new keys from the website, logged in.",
           })
         }
+        // Apple's browser flow isn't set up (APPLE_APP_ONLY): without an identity token, Better
+        // Auth would try to build Apple's authorize URL and fail on the missing client secret.
+        if (SOCIAL_ROUTES.has(ctx.path)) {
+          const body = ctx.body as
+            | { provider?: unknown; idToken?: unknown }
+            | undefined
+          if (body?.provider === "apple" && !body.idToken) {
+            throw new APIError("BAD_REQUEST", {
+              code: "APPLE_APP_ONLY",
+              message: APPLE_APP_ONLY,
+            })
+          }
+        }
         const logInAgain = Object.hasOwn(LOG_IN_ROUTES, ctx.path)
           ? LOG_IN_ROUTES[ctx.path]
           : undefined
@@ -377,6 +422,7 @@ export function createAuth(deps: AuthDeps) {
         "/email-otp/change-email": { window: 60, max: 6 },
         "/app/github/start": { window: 60, max: 10 },
         "/app/github/redeem": { window: 60, max: 10 },
+        "/sign-in/social": { window: 60, max: 10 },
       },
     },
     databaseHooks: {

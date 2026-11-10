@@ -252,6 +252,7 @@ export const th: Translation = {
     github: "ดำเนินการต่อด้วย GitHub",
     or: "หรือ",
     githubFailed: "เข้าสู่ระบบด้วย GitHub ไม่สำเร็จ ลองอีกครั้ง",
+    appleFailed: "เข้าสู่ระบบด้วย Apple ไม่สำเร็จ ลองอีกครั้ง",
     legal: "เมื่อดำเนินการต่อ แสดงว่าคุณยอมรับ{terms}และ{privacy}",
     wrongCode: "รหัสไม่ถูกต้อง ตรวจสอบอีกครั้ง หรือส่งรหัสใหม่",
     expiredCode: "รหัสหมดอายุแล้ว ส่งรหัสใหม่",

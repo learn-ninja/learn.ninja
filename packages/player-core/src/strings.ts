@@ -263,10 +263,12 @@ export type Strings = {
     otherEmail: string
     /** The GitHub button above the email field. */
     github: string
-    /** Between the GitHub button and the email field. */
+    /** Between the Apple and GitHub buttons and the email field. */
     or: string
     /** GitHub's log-in didn't finish (refused, or the code didn't redeem). */
     githubFailed: string
+    /** Sign in with Apple didn't finish (iOS refused, or the server didn't take its token). */
+    appleFailed: string
     /** The line under the form: {terms} and {privacy} become links named by `terms` and `privacy`. */
     legal: string
     wrongCode: string

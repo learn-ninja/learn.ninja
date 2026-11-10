@@ -261,6 +261,7 @@ export const hi: Translation = {
     github: "GitHub से जारी रखें",
     or: "या",
     githubFailed: "GitHub से लॉग इन नहीं हो पाया। फिर से कोशिश करें।",
+    appleFailed: "Apple से लॉग इन नहीं हो पाया। फिर से कोशिश करें।",
     legal: "जारी रखकर, आप {terms} और {privacy} से सहमत होते हैं।",
     wrongCode: "यह कोड सही नहीं है। इसे जाँचें, या नया कोड भेजें।",
     expiredCode: "इस कोड की समय-सीमा खत्म हो गई। नया कोड भेजें।",

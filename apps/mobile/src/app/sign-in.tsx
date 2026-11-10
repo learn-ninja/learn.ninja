@@ -1,3 +1,4 @@
+import * as AppleAuthentication from "expo-apple-authentication"
 import { router, Stack } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
 import { useRef, useState, type ComponentRef } from "react"
@@ -12,6 +13,7 @@ import { CloseButton } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Text } from "@/components/ui/text"
+import { logInWithApple } from "@/lib/apple-sign-in"
 import { authClient } from "@/lib/auth-client"
 import { API_BASE_URL } from "@/lib/config"
 import { canUseGitHub } from "@/lib/github-callback"
@@ -22,15 +24,19 @@ import { useAppStrings } from "@/lib/use-strings"
 import { cn } from "@/lib/utils"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
-// Log in with GitHub or a six-digit email code, as the web's /login does (apps/web/components/
-// account/login-form.tsx): GitHub above, then the email and the code, with the same words and
-// errors. GitHub opens the system's sign-in sheet (src/lib/github-sign-in.ts), on iOS 17.4 and
-// later. The screen is a sheet over whatever opened it, and closes itself once signed in.
+// Log in with Apple, GitHub or a six-digit email code, as the web's /login does (apps/web/
+// components/account/login-form.tsx): Apple and GitHub above, then the email and the code, with
+// the same words and errors. Apple is the app's alone (App Store guideline 4.8 asks for it beside
+// GitHub; src/lib/apple-sign-in.ts), first and in Apple's own button, as its guidelines ask.
+// GitHub opens the system's sign-in sheet (src/lib/github-sign-in.ts), on iOS 17.4 and later. The
+// screen is a sheet over whatever opened it, and closes itself once signed in.
 
 const CODE_LENGTH = 6
 
 /** The sheet's https ending needs iOS 17.4; older iPhones log in with a code. */
 const GITHUB = canUseGitHub(Platform.Version, API_BASE_URL)
+/** Sign in with Apple is on every iPhone the app runs on (iOS 13 and later). */
+const APPLE = Platform.OS === "ios"
 
 function close() {
   if (router.canGoBack()) router.back()
@@ -83,16 +89,20 @@ export default function SignIn() {
     close()
   }
 
-  async function github() {
+  /** Apple's or GitHub's log-in, which ends signed in, closed by the person, or failed. */
+  async function social(
+    logIn: () => Promise<"signed-in" | "cancelled" | "failed">,
+    failed: string
+  ) {
     if (busy) return
     setBusy(true)
     setError(null)
-    const outcome = await logInWithGitHub().catch(() => "failed" as const)
+    const outcome = await logIn().catch(() => "failed" as const)
     setBusy(false)
     if (outcome === "cancelled") return
     if (outcome === "failed") {
       result(false)
-      return setError(s.githubFailed)
+      return setError(failed)
     }
     result(true)
     close()
@@ -116,17 +126,46 @@ export default function SignIn() {
             {step === "email" ? (
               <>
                 <Heading title={s.title}>{s.body}</Heading>
-                {GITHUB ? (
+                {APPLE || GITHUB ? (
                   <View className="w-full gap-4">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      disabled={busy}
-                      onPress={() => void github()}
-                    >
-                      <GitHubLogo />
-                      <Text>{s.github}</Text>
-                    </Button>
+                    <View className="w-full gap-3">
+                      {APPLE ? (
+                        // Apple's own button, in the system's language: white on the dark app,
+                        // the size and corners of the GitHub button under it.
+                        <AppleAuthentication.AppleAuthenticationButton
+                          buttonType={
+                            AppleAuthentication.AppleAuthenticationButtonType
+                              .CONTINUE
+                          }
+                          buttonStyle={
+                            AppleAuthentication.AppleAuthenticationButtonStyle
+                              .WHITE
+                          }
+                          cornerRadius={8}
+                          style={{
+                            width: "100%",
+                            height: 44,
+                            opacity: busy ? 0.5 : 1,
+                          }}
+                          onPress={() =>
+                            void social(logInWithApple, s.appleFailed)
+                          }
+                        />
+                      ) : null}
+                      {GITHUB ? (
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          disabled={busy}
+                          onPress={() =>
+                            void social(logInWithGitHub, s.githubFailed)
+                          }
+                        >
+                          <GitHubLogo />
+                          <Text>{s.github}</Text>
+                        </Button>
+                      ) : null}
+                    </View>
                     <View
                       className="flex-row items-center gap-3"
                       accessibilityElementsHidden
@@ -155,7 +194,7 @@ export default function SignIn() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
-                    autoFocus={!GITHUB}
+                    autoFocus={!APPLE && !GITHUB}
                     returnKeyType="send"
                     onSubmitEditing={() => void sendCode()}
                     editable={!busy}

@@ -243,6 +243,7 @@ export const zhTw: Translation = {
     github: "使用 GitHub 繼續",
     or: "或",
     githubFailed: "無法使用 GitHub 登入，請再試一次。",
+    appleFailed: "無法使用 Apple 登入，請再試一次。",
     legal: "繼續即表示你同意{terms}和{privacy}。",
     wrongCode: "驗證碼不正確。請檢查，或重新寄一組。",
     expiredCode: "驗證碼已過期，請重新寄一組。",

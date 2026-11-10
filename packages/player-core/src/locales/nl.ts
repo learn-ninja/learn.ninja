@@ -270,6 +270,7 @@ export const nl: Translation = {
     github: "Doorgaan met GitHub",
     or: "of",
     githubFailed: "Inloggen met GitHub is niet gelukt. Probeer het opnieuw.",
+    appleFailed: "Inloggen met Apple is niet gelukt. Probeer het opnieuw.",
     legal: "Door verder te gaan, ga je akkoord met de {terms} en {privacy}.",
     wrongCode: "Die code klopt niet. Controleer hem of stuur een nieuwe.",
     expiredCode: "Die code is verlopen. Stuur een nieuwe.",

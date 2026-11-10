@@ -298,6 +298,7 @@ export const uk: Translation = {
     github: "Продовжити з GitHub",
     or: "або",
     githubFailed: "Не вдалося увійти через GitHub. Спробуйте ще раз.",
+    appleFailed: "Не вдалося увійти через Apple. Спробуйте ще раз.",
     legal: "Продовжуючи, ви приймаєте {terms} і {privacy}.",
     wrongCode: "Код неправильний. Перевірте його або надішліть новий.",
     expiredCode: "Термін дії коду минув. Надішліть новий.",

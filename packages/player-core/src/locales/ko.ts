@@ -248,6 +248,7 @@ export const ko: Translation = {
     github: "GitHub로 계속하기",
     or: "또는",
     githubFailed: "GitHub로 로그인하지 못했어요. 다시 시도해 주세요.",
+    appleFailed: "Apple로 로그인하지 못했어요. 다시 시도해 주세요.",
     legal: "계속하면 {terms} 및 {privacy}에 동의하게 돼요.",
     wrongCode: "코드가 맞지 않아요. 확인하거나 새 코드를 보내 주세요.",
     expiredCode: "코드가 만료됐어요. 새 코드를 보내 주세요.",

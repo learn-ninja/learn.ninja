@@ -275,6 +275,7 @@ export const he: Translation = {
     github: "המשך עם GitHub",
     or: "או",
     githubFailed: "ההתחברות עם GitHub לא הצליחה. כדאי לנסות שוב.",
+    appleFailed: "ההתחברות עם Apple לא הצליחה. כדאי לנסות שוב.",
     legal: "בהמשך, אתם מסכימים ל{terms} ול{privacy}.",
     wrongCode: "הקוד הזה שגוי. בדקו אותו או שלחו קוד חדש.",
     expiredCode: "תוקף הקוד פג. שלחו קוד חדש.",

@@ -259,6 +259,7 @@ export const id: Translation = {
     github: "Lanjutkan dengan GitHub",
     or: "atau",
     githubFailed: "Gagal masuk dengan GitHub. Coba lagi.",
+    appleFailed: "Gagal masuk dengan Apple. Coba lagi.",
     legal: "Dengan melanjutkan, kamu menyetujui {terms} dan {privacy}.",
     wrongCode: "Kode itu salah. Periksa lagi, atau kirim kode baru.",
     expiredCode: "Kode itu sudah kedaluwarsa. Kirim kode baru.",

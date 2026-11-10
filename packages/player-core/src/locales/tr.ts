@@ -259,6 +259,7 @@ export const tr: Translation = {
     github: "GitHub ile devam et",
     or: "veya",
     githubFailed: "GitHub ile giriş yapılamadı. Tekrar dene.",
+    appleFailed: "Apple ile giriş yapılamadı. Tekrar dene.",
     legal: "Devam ederek {terms} ve {privacy} metinlerini kabul etmiş olursun.",
     wrongCode: "Bu kod doğru değil. Kontrol et ya da yeni bir kod gönder.",
     expiredCode: "Bu kodun süresi doldu. Yeni bir kod gönder.",

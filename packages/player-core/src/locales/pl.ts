@@ -288,6 +288,7 @@ export const pl: Translation = {
     github: "Kontynuuj z GitHubem",
     or: "lub",
     githubFailed: "Nie udało się zalogować przez GitHuba. Spróbuj ponownie.",
+    appleFailed: "Nie udało się zalogować przez Apple. Spróbuj ponownie.",
     legal: "Kontynuując, akceptujesz {terms} i {privacy}.",
     wrongCode: "Ten kod jest nieprawidłowy. Sprawdź go albo wyślij nowy.",
     expiredCode: "Ten kod wygasł. Wyślij nowy.",

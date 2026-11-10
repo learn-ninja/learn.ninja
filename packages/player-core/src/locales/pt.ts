@@ -270,6 +270,7 @@ export const pt: Translation = {
     github: "Continuar com o GitHub",
     or: "ou",
     githubFailed: "O login com o GitHub não funcionou. Tente de novo.",
+    appleFailed: "O login com a Apple não funcionou. Tente de novo.",
     legal: "Ao continuar, você concorda com os {terms} e a {privacy}.",
     wrongCode: "Esse código não está certo. Confira ou envie um novo.",
     expiredCode: "Esse código expirou. Envie um novo.",
