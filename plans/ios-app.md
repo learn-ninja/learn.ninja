@@ -74,7 +74,7 @@ Done:
 Next: **TestFlight**, which needs Colin's accounts. In order:
 
 1. **Apple Developer Program**: the team's ID (Membership details). Set `APPLE_TEAM_ID` on Vercel (production) so `/.well-known/apple-app-site-association` answers and learn.ninja links open the app.
-2. **Expo account**: `npx eas-cli@latest login`, then `npx eas-cli init` in `apps/mobile`. It writes `extra.eas.projectId` (and `owner`) into the config: move them into `app.config.ts`, which is a function and can't be written by the CLI.
+2. **Expo account**: done 2026-11-10. The project is `@uxcel/learn-ninja` (https://expo.dev/accounts/uxcel/projects/learn-ninja), with `owner` and `extra.eas.projectId` in `app.config.ts`. Still to add: `ios.appleTeamId` (the same Team ID), which `@bacons/apple-targets` needs to sign the widget.
 3. **App Store Connect**: a new app for the bundle ID `ninja.learn.app` (EAS can create the ID and the App Group `group.ninja.learn.app` on its first build, with the widget's own `ninja.learn.app.LearnWidget`).
 4. **The first build**: `npx eas-cli build -p ios --profile production` in `apps/mobile`. EAS asks to log in to Apple and makes the certificates, the provisioning profiles for the app and the widget, and the App Group. Then `npx eas-cli submit -p ios --latest` sends it to App Store Connect, and it shows in TestFlight after Apple's processing (internal testers need no review).
 5. **On a real iPhone** (the first TestFlight install): what the simulator couldn't show, listed under "On a real iPhone" below, plus the reminder at 19:00, the widget on the lock screen and over midnight, and universal links.

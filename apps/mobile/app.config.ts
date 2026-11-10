@@ -43,6 +43,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: "learn.ninja",
     slug: "learn-ninja",
+    // The Expo account that owns the project (its builds and credentials on EAS).
+    owner: "uxcel",
     // The App Store version; the build number is EAS's (eas.json: remote, raised on each production build).
     version: "1.0.0",
     orientation: "portrait",
@@ -109,6 +111,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ],
     ],
     experiments: { reactCompiler: true },
-    extra: { apiBaseUrl: api.baseUrl },
+    extra: {
+      apiBaseUrl: api.baseUrl,
+      // The project on EAS (https://expo.dev/accounts/uxcel/projects/learn-ninja), written by
+      // `eas init`. Public: it names the project, it doesn't grant access to it.
+      eas: { projectId: "e33ffa4d-ed50-4235-8625-5ab9900a28cc" },
+    },
   }
 }
