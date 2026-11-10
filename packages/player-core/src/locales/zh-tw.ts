@@ -253,9 +253,6 @@ export const zhTw: Translation = {
     title: "Explore",
     empty:
       "這裡還沒有任何內容。來當第一個吧：請你的 AI 助理做一堂課，並說要保留它。",
-    logInTitle: "大家保留並分享的課程",
-    logInBody:
-      "登入後就能瀏覽 Explore、喜歡課程，並在個人檔案查看你的連續紀錄。",
     testLessons: "測試課程",
     failed: "載入失敗。",
     views: (n) => `${n} 次觀看`,

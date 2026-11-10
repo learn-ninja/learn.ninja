@@ -278,9 +278,6 @@ export const es: Translation = {
     title: "Explore",
     empty:
       "Aquí no hay nada todavía. Sé el primero: pídele una lección a tu agente y dile que la guarde.",
-    logInTitle: "Lecciones que la gente guardó y compartió",
-    logInBody:
-      "Inicia sesión para ver Explore, dar me gusta a lecciones y ver tu racha en tu perfil.",
     testLessons: "Lecciones de prueba",
     failed: "No se pudo cargar.",
     views: (n) => p(n, { one: "# vista", other: "# vistas" }),

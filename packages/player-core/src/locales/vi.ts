@@ -266,9 +266,6 @@ export const vi: Translation = {
     title: "Explore",
     empty:
       "Chưa có gì ở đây. Hãy là người đầu tiên: nhờ AI agent của bạn tạo một bài học và bảo nó giữ lại.",
-    logInTitle: "Những bài học mọi người đã giữ lại và chia sẻ",
-    logInBody:
-      "Đăng nhập để xem Explore, thích bài học, và xem chuỗi ngày học trên hồ sơ của bạn.",
     testLessons: "Bài học thử nghiệm",
     failed: "Không tải được.",
     views: (n) => `${n} lượt xem`,

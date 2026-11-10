@@ -287,9 +287,6 @@ export const it: Translation = {
     title: "Explore",
     empty:
       "Non c'è ancora niente. Sii il primo: chiedi una lezione al tuo agente e digli di tenerla.",
-    logInTitle: "Lezioni che le persone hanno tenuto e condiviso",
-    logInBody:
-      "Accedi per sfogliare Explore, mettere mi piace alle lezioni e vedere la tua serie nel tuo profilo.",
     testLessons: "Lezioni di prova",
     failed: "Il caricamento non è riuscito.",
     views: (n) =>
