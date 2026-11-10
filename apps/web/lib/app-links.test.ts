@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { appSiteAssociation } from "./app-links"
 
 describe("the apple-app-site-association file", () => {
-  it("opens lessons and profiles in the app under the Team ID", () => {
+  it("opens lessons and profiles in the app, and names it for log-in, under the Team ID", () => {
     expect(appSiteAssociation(" ABCDE12345 ")).toEqual({
       applinks: {
         details: [
@@ -13,6 +13,7 @@ describe("the apple-app-site-association file", () => {
           },
         ],
       },
+      webcredentials: { apps: ["ABCDE12345.ninja.learn.ios"] },
     })
   })
 

@@ -34,6 +34,13 @@ export function apiFor(profile: Profile) {
  */
 export const LINK_DOMAINS = ["applinks:learn.ninja"]
 
+/**
+ * The site that may end the GitHub log-in sheet (src/lib/github-sign-in.ts): iOS hands the app
+ * https://learn.ninja/app/signed-in only because the site's association names it under
+ * webcredentials (apps/web/lib/app-links.ts).
+ */
+export const CREDENTIAL_DOMAINS = ["webcredentials:learn.ninja"]
+
 /** The App Group the app shares with its widget; src/lib/widget-snapshot.ts writes to the same one. */
 export const APP_GROUP = "group.ninja.learn.ios"
 
@@ -78,7 +85,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           },
         ],
       },
-      associatedDomains: LINK_DOMAINS,
+      associatedDomains: [...LINK_DOMAINS, ...CREDENTIAL_DOMAINS],
       // Shared with the home screen widget (targets/widget), which reads the streak the app
       // writes there (src/lib/widget.ts).
       entitlements: { "com.apple.security.application-groups": [APP_GROUP] },

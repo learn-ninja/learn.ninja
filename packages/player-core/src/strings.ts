@@ -261,6 +261,12 @@ export type Strings = {
     code: string
     submit: string
     otherEmail: string
+    /** The GitHub button above the email field. */
+    github: string
+    /** Between the GitHub button and the email field. */
+    or: string
+    /** GitHub's log-in didn't finish (refused, or the code didn't redeem). */
+    githubFailed: string
     /** The line under the form: {terms} and {privacy} become links named by `terms` and `privacy`. */
     legal: string
     wrongCode: string

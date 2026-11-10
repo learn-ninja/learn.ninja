@@ -272,6 +272,9 @@ export const it: Translation = {
     code: "Codice",
     submit: "Accedi",
     otherEmail: "Usa un'altra email",
+    github: "Continua con GitHub",
+    or: "oppure",
+    githubFailed: "L'accesso con GitHub non è riuscito. Riprova.",
     legal: "Continuando, accetti i {terms} e la {privacy}.",
     wrongCode:
       "Questo codice non è giusto. Controllalo o richiedine uno nuovo.",

@@ -34,6 +34,13 @@ describe("app config", () => {
       )
   })
 
+  it("lets learn.ninja end the GitHub log-in sheet in every build", () => {
+    for (const profile of [undefined, "preview", "production"])
+      expect(build(profile).ios?.associatedDomains).toContain(
+        "webcredentials:learn.ninja"
+      )
+  })
+
   it("reads learn.ninja over HTTPS with no exception in preview and production", () => {
     for (const profile of ["preview", "production"]) {
       const app = build(profile)
