@@ -125,6 +125,9 @@ export const ru: Translation = {
   allFirstTry: (total) =>
     total === 2 ? "Оба с первой попытки" : `Все ${total} с первой попытки`,
   takeaways: "Главное",
+  firstGuess: "Ваша первая догадка",
+  youSaid: "Вы ответили",
+  theAnswer: "Ответ",
   keepLearning: "Продолжайте учиться",
   keepKinds: {
     next: "Дальше",

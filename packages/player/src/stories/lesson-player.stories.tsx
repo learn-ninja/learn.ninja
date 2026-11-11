@@ -221,6 +221,48 @@ const pressHint: Story["play"] = async ({ canvas, userEvent, globals }) => {
 }
 const PHONE = { viewport: { value: "mobile2", isRotated: false } }
 
+/** Picks an option by its text and checks it, in whichever language the toolbar picked. */
+const guess =
+  (text: string): Story["play"] =>
+  async ({ canvas, userEvent, globals }) => {
+    const option = await canvas.findByText(text, {}, { timeout: 10_000 })
+    await userEvent.click(option)
+    await userEvent.click(
+      canvas.getByRole("button", { name: stringsFor(globals.ui ?? "en").check })
+    )
+  }
+
+/**
+ * The warm-up, guessed wrong: the answer is given at once in one line, and the question's reveal
+ * (a chart with the guess and the true value both marked) appears above the answers.
+ */
+export const WarmUpReveal: Story = {
+  name: "Warm-up: answered, with a reveal",
+  args: { lesson: lessons.compound, startAt: "hook" },
+  play: guess("$1,700"),
+}
+/** The same on a phone, where the reveal pushes the answers down and the player scrolls to them. */
+export const WarmUpRevealPhone: Story = {
+  name: "Warm-up: answered, with a reveal, phone",
+  args: { lesson: lessons.compound, startAt: "hook" },
+  globals: { viewport: { value: "mobile2", isRotated: false } },
+  play: guess("$1,700"),
+}
+/** A stepped concept in the player: Continue shows the next step of the body, then moves on. */
+export const SteppedConcept: Story = {
+  name: "Concept: stepped",
+  args: { lesson: lessons.compound, startAt: "c1" },
+}
+/**
+ * A guess before a later concept (`guess: true`): it plays as the warm-up does, with one try, no
+ * score, and its answer in one line, and the concept after it says why.
+ */
+export const GuessBeforeConcept: Story = {
+  name: "Guess before a concept",
+  args: { lesson: lessons.compound, startAt: "g1" },
+  play: guess("The first decade"),
+}
+
 /** A question with a hint, before checking: a Hint pill sits beside Check (H opens it too). */
 export const HintOffered: Story = {
   name: "Hint: offered",
@@ -280,7 +322,13 @@ export const ScenarioStoryMode: Story = {
  * Opens on the wrap-up, as if the lesson was just finished with these outcomes (in play order, the
  * rest first try), by saving that progress for the player to resume. The time isn't known there.
  */
-const atWrap = (lesson: Lesson, key: string, outcomes: Outcome[] = []) => [
+const atWrap = (
+  lesson: Lesson,
+  key: string,
+  outcomes: Outcome[] = [],
+  /** What the learner picked on the warm-up, for the wrap-up's look back at it. */
+  guesses: Record<string, string[]> = {}
+) => [
   () => {
     const items = buildSequence(lesson)
     const state: State = {
@@ -293,6 +341,7 @@ const atWrap = (lesson: Lesson, key: string, outcomes: Outcome[] = []) => [
       fixed: [],
       inFix: false,
       fixQueued: false,
+      guesses,
       question: null,
       run: 0,
     }
@@ -324,6 +373,24 @@ export const WrapUpRough: Story = {
     "missed",
     "second",
   ]),
+}
+
+/**
+ * The wrap-up looks back at the warm-up: its question, what the learner guessed, and, since the
+ * guess missed, the answer. The lesson began by overturning this guess, so it ends on it.
+ */
+export const WrapUpFirstGuess: Story = {
+  name: "Wrap-up: first guess, missed",
+  args: { lesson: lessons.compound, progressKey: "story-wrap-guess" },
+  loaders: atWrap(lessons.compound, "story-wrap-guess", [], { hook: ["a"] }),
+}
+/** A warm-up guessed right shows the guess with a check, and no separate answer row. */
+export const WrapUpFirstGuessRight: Story = {
+  name: "Wrap-up: first guess, right",
+  args: { lesson: lessons.compound, progressKey: "story-wrap-guess-right" },
+  loaders: atWrap(lessons.compound, "story-wrap-guess-right", [], {
+    hook: ["b"],
+  }),
 }
 
 /** A fake like that answers after a moment, as the server would. */

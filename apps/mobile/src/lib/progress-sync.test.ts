@@ -29,6 +29,7 @@ const at = (index: number, run = 0): State => ({
   fixed: [],
   inFix: false,
   fixQueued: false,
+  guesses: {},
   question: null,
   run,
 })

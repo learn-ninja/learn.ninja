@@ -114,6 +114,9 @@ export const ar: Translation = {
       ? "كلاهما في المحاولة الأولى"
       : `كل الأسئلة الـ${total} في المحاولة الأولى`,
   takeaways: "أهم النقاط",
+  firstGuess: "تخمينك الأول",
+  youSaid: "قلت",
+  theAnswer: "الإجابة",
   keepLearning: "واصل التعلّم",
   keepKinds: {
     next: "التالي",

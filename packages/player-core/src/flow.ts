@@ -1,4 +1,9 @@
-import type { ConceptKata, Lesson, QuestionKata } from "@workspace/spec"
+import {
+  isGuess,
+  type ConceptKata,
+  type Lesson,
+  type QuestionKata,
+} from "@workspace/spec"
 
 // The order a lesson plays in, and how the score is counted.
 
@@ -19,7 +24,8 @@ export function buildSequence(lesson: Lesson): Item[] {
     ...lesson.katas.map((kata): Item =>
       kata.type === "concept"
         ? { kind: "concept", kata }
-        : { kind: "question", kata, role: "practice" }
+        : // A guess before its concept plays as the hook does: one try, not scored, answered at once.
+          { kind: "question", kata, role: isGuess(kata) ? "hook" : "practice" }
     ),
     { kind: "question", kata: lesson.challenge, role: "challenge" },
     { kind: "fix" },
@@ -27,13 +33,56 @@ export function buildSequence(lesson: Lesson): Item[] {
   ]
 }
 
+/** The warm-up, looked back on from the wrap-up: what the learner guessed, beside the answer. */
+export interface FirstGuess {
+  prompt: string
+  /** What the learner picked, as its text (a picture option's alt). */
+  said: string[]
+  answer: string[]
+  correct: boolean
+}
+
+/**
+ * The hook's guess and its answer, for the wrap-up: the lesson began by overturning this guess, so
+ * it ends by showing it again. Null when no guess was kept (a save from before guesses were) or an
+ * option has no words to show.
+ */
+export function firstGuess(
+  lesson: Lesson,
+  guesses: Record<string, string[]>
+): FirstGuess | null {
+  const { hook } = lesson
+  const picked = guesses[hook.id]
+  if (!picked?.length) return null
+  const right = hook.type === "choice" ? hook.correct : [hook.correct]
+  const words = (ids: string[]) =>
+    ids.flatMap((id) => {
+      const o = hook.options.find((o) => o.id === id)
+      const text = o?.text ?? (o?.visual && "alt" in o.visual ? o.visual.alt : "")
+      return text ? [text] : []
+    })
+  const said = words(picked)
+  const answer = words(right)
+  if (said.length !== picked.length || answer.length !== right.length)
+    return null
+  return {
+    prompt: hook.prompt,
+    said,
+    answer,
+    correct:
+      picked.length === right.length && picked.every((id) => right.includes(id)),
+  }
+}
+
 /** How a scored question went on its first pass. */
 export type Outcome = "first" | "second" | "missed"
 
-/** Practice and challenge questions count toward the score; the hook and concepts don't. */
+/** Practice and challenge questions count toward the score; the hook, guesses before a concept, and concepts don't. */
 export function scoredQuestions(lesson: Lesson): QuestionKata[] {
   return [
-    ...lesson.katas.filter((b): b is QuestionKata => b.type !== "concept"),
+    ...lesson.katas.filter(
+      (b): b is QuestionKata => b.type !== "concept" && !isGuess(b)
+    ),
     lesson.challenge,
   ]
 }

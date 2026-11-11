@@ -10,6 +10,7 @@ import {
   useState,
   type ComponentRef,
 } from "react"
+import { stepCount } from "@workspace/spec"
 import {
   ActivityIndicator,
   ScrollView,
@@ -297,6 +298,13 @@ function Player({
   // After a right answer, Why? adds the explanation to the feedback; each screen starts closed.
   const [whyOpen, setWhyOpen] = useState(false)
   useEffect(() => setWhyOpen(false), [state.index])
+  // A stepped concept shows one more step of its body per Continue, then leaves like any other.
+  const [conceptStep, setConceptStep] = useState(1)
+  useEffect(() => setConceptStep(1), [state.index, state.run])
+  const stepsLeft =
+    item.kind === "concept" &&
+    item.kata.stepped === true &&
+    conceptStep < stepCount(item.kata.body)
   const feedback = feedbackFor({
     item,
     state,
@@ -365,6 +373,15 @@ function Player({
       clearTimeout(timer)
     }
   }, [q?.result, q?.phase, whyOpen, answerMarks, reduced])
+  // A stepped concept's new step is added at the end of its body, which on a short phone or at a
+  // large text size is under the tray: scroll it into view (a body that fits doesn't move).
+  useEffect(() => {
+    if (conceptStep <= 1) return
+    const frame = requestAnimationFrame(() =>
+      scrollRef.current?.scrollToEnd({ animated: !reduced })
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [conceptStep, reduced])
 
   // The clock starts when the learner leaves the intro and stops at the wrap-up.
   const [clock, setClock] = useState<{ start?: number; end?: number }>({})
@@ -570,6 +587,7 @@ function Player({
                         dispatch={dispatch}
                         feedback={feedback}
                         whyOpen={whyOpen}
+                        steps={conceptStep}
                         t={t}
                       />
                     </AnswerMarksContext>
@@ -585,21 +603,24 @@ function Player({
               feedback.title || feedback.message ? feedback.tone : undefined
             }
             feedback={
-              // The ninja's line and the notes are in the lesson's language, so they run its way.
+              // The ninja's line and the notes are in the lesson's language, so they run its way,
+              // with the lesson's drawn formulas (an explanation's inline math).
               <DirectionView dir={directionOf(lesson.language)}>
-                <TrayFeedback
-                  title={feedback.title}
-                  message={feedback.message}
-                  why={
-                    feedback.why
-                      ? {
-                          label: whyLabel,
-                          open: feedback.why.open,
-                          onPress: () => setWhyOpen((open) => !open),
-                        }
-                      : null
-                  }
-                />
+                <LessonContext value={lessonContext}>
+                  <TrayFeedback
+                    title={feedback.title}
+                    message={feedback.message}
+                    why={
+                      feedback.why
+                        ? {
+                            label: whyLabel,
+                            open: feedback.why.open,
+                            onPress: () => setWhyOpen((open) => !open),
+                          }
+                        : null
+                    }
+                  />
+                </LessonContext>
               </DirectionView>
             }
           >
@@ -626,7 +647,12 @@ function Player({
                 label={feedback.primary.label}
                 variant={feedback.primary.variant}
                 disabled={feedback.primary.disabled}
-                onPress={() => run(feedback.primary!.action)}
+                onPress={() =>
+                  // A stepped concept shows its next step first, then moves on.
+                  stepsLeft
+                    ? setConceptStep((n) => n + 1)
+                    : run(feedback.primary!.action)
+                }
               />
             ) : null}
             {feedback.hint ? (

@@ -92,6 +92,9 @@ export const zh: Translation = {
   allFirstTry: (total) =>
     total === 2 ? "两题都一次答对" : `${total} 题全部一次答对`,
   takeaways: "要点",
+  firstGuess: "你最初的猜测",
+  youSaid: "你的回答",
+  theAnswer: "答案",
   keepLearning: "继续学习",
   keepKinds: {
     next: "接下来",

@@ -110,6 +110,9 @@ export const es: Translation = {
   allFirstTry: (total) =>
     total === 2 ? "Las dos a la primera" : `Las ${total} a la primera`,
   takeaways: "Ideas clave",
+  firstGuess: "Tu primera respuesta",
+  youSaid: "Dijiste",
+  theAnswer: "La respuesta",
   keepLearning: "Sigue aprendiendo",
   keepKinds: {
     next: "Lo siguiente",

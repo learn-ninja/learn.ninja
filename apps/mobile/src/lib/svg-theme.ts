@@ -192,8 +192,9 @@ export function themeSvg(svg: string): ThemedSvg | null {
       ` ${name}="${Math.round(Number(value) * em * 100) / 100}"`
   )
   // paint-order: a label stroked in the page color under its fill. react-native-svg paints the
-  // stroke over the fill, so the halo goes and the label stays legible on its own.
-  xml = xml.replace(/<text\b[^>]*paint-order[^>]*>/g, (tag) =>
+  // stroke over the fill, so the halo goes and the label stays legible on its own. Plot sets it on
+  // the group around a text mark's labels (a chart's point labels), not on each text.
+  xml = xml.replace(/<(?:text|g)\b[^>]*paint-order[^>]*>/g, (tag) =>
     tag
       .replace(/\sstroke(?:-width|-linejoin)?="[^"]*"/g, "")
       .replace(/\spaint-order="[^"]*"/, "")
@@ -219,6 +220,13 @@ export function themeSvg(svg: string): ThemedSvg | null {
     if (!/viewBox=/.test(a)) a += ` viewBox="0 0 ${width} ${height}"`
     return `<svg${a}>`
   })
+  // A chart sets text-anchor="middle" on the root for its labels (a point's label centred over
+  // it); react-native-svg doesn't pass the root's down to its text, but a group's it does.
+  const anchor = root["text-anchor"]
+  if (anchor)
+    xml = xml
+      .replace(/<svg\b[^>]*>/, (open) => `${open}<g text-anchor="${anchor}">`)
+      .replace(/<\/svg>\s*$/, "</g></svg>")
   // Browsers fill in black; react-native-svg too, but a drawing in currentColor needs its color.
   return {
     xml,

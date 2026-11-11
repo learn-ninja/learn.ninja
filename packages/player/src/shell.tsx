@@ -806,7 +806,7 @@ function ShortcutsDialog({
     [["←", "→"], t.shortcutSort, "pair"],
     [["Delete"], t.shortcutUnsort],
     [["D"], t.shortcutTray],
-    [["W"], t.why],
+    [["W"], t.everyPath],
     [["H"], t.hint],
     [["?"], t.shortcutHelp],
   ]

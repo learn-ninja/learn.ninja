@@ -41,7 +41,7 @@ export interface McpDeps extends Deps {
   actor?: McpActor | null
 }
 
-/** The keep sentence the model says once after an anonymous publish, on every surface (steps.md step 6). */
+/** The keep sentence the model says once after an anonymous publish, on every surface (steps.md step 7). */
 export const KEEP_SENTENCE =
   "It lasts 7 days. Say \"keep it\" and I'll save it to your learn.ninja account; you'll log in once."
 
@@ -71,13 +71,14 @@ export const GUIDE_SECTIONS = {
     "steps.md",
     "reference/planning.md",
     "reference/teaching-guide.md",
+    "reference/visuals.md",
     "reference/lesson-format.md",
     "levels/index.md",
     ...LEVELS.map((l) => `levels/${l}.md`),
   ],
   steps: ["steps.md"],
   planning: ["reference/planning.md"],
-  teaching: ["reference/teaching-guide.md"],
+  teaching: ["reference/teaching-guide.md", "reference/visuals.md"],
   format: ["reference/lesson-format.md"],
   levels: ["levels/index.md", ...LEVELS.map((l) => `levels/${l}.md`)],
   schema: ["schema/lesson.schema.json"],

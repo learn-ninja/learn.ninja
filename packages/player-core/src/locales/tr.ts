@@ -105,6 +105,9 @@ export const tr: Translation = {
       ? "İkisi de ilk denemede doğru"
       : `${total} sorunun hepsi ilk denemede doğru`,
   takeaways: "Önemli noktalar",
+  firstGuess: "İlk tahminin",
+  youSaid: "Senin cevabın",
+  theAnswer: "Cevap",
   keepLearning: "Öğrenmeye devam et",
   keepKinds: {
     next: "Sıradaki",

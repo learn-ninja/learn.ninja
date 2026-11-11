@@ -2,6 +2,7 @@ import { View } from "react-native"
 import Svg, { Path } from "react-native-svg"
 
 import {
+  firstGuess,
   runFor,
   scoredQuestions,
   summarize,
@@ -43,11 +44,14 @@ const SEGMENT: Record<Outcome, string> = {
 export function WrapUp({
   lesson,
   results,
+  guesses,
   onRestart,
   t,
 }: {
   lesson: Lesson
   results: Record<string, Outcome>
+  /** What the learner picked on the warm-up, shown again beside the answer. */
+  guesses: Record<string, string[]>
   onRestart: () => void
   t: Strings
 }) {
@@ -123,6 +127,7 @@ export function WrapUp({
         {streak ? (
           <StreakCard streak={streak.streak} lang={uiLang} t={t} />
         ) : null}
+        <FirstGuess lesson={lesson} guesses={guesses} t={t} />
         <Takeaways
           items={lesson.wrapup.takeaways}
           language={lesson.language}
@@ -169,6 +174,68 @@ function Verdict({ first, t }: { first: number; t: Strings }) {
         color={won ? colors.feedback.warn : colors.muted.foreground}
       />
       <Text className="text-sm font-medium">{text}</Text>
+    </View>
+  )
+}
+
+/**
+ * The warm-up, looked back on (the web's FirstGuess): its question, what the learner guessed, and
+ * the answer when the guess missed. Labels in the player's language, the rest in the lesson's.
+ */
+function FirstGuess({
+  lesson,
+  guesses,
+  t,
+}: {
+  lesson: Lesson
+  guesses: Record<string, string[]>
+  t: Strings
+}) {
+  const guess = firstGuess(lesson, guesses)
+  if (!guess) return null
+  const row = (label: string, texts: string[], good: boolean) => (
+    <View className="flex-row gap-3 border-t border-border px-4 py-3">
+      <View className="mt-0.5">
+        <ActionIcon
+          kind={good ? "check" : "x"}
+          color={good ? colors.feedback.good : colors.feedback.warn}
+        />
+      </View>
+      <View className="min-w-0 flex-1 gap-0.5">
+        <Text className="text-sm text-muted-foreground">{label}</Text>
+        {texts.map((text) => (
+          <RichText
+            key={text}
+            text={text}
+            size={fontSize.sm[0]}
+            className="text-lesson-sm font-medium"
+          />
+        ))}
+      </View>
+    </View>
+  )
+  return (
+    <View className="w-full gap-2">
+      <Text
+        className="px-1 text-sm font-medium text-muted-foreground"
+        accessibilityRole="header"
+      >
+        {t.firstGuess}
+      </Text>
+      <DirectionView
+        dir={directionOf(lesson.language)}
+        className="overflow-hidden rounded-xl border border-border bg-card shadow-xs"
+      >
+        <View className="px-4 py-3">
+          <RichText
+            text={guess.prompt}
+            size={fontSize.sm[0]}
+            className="text-lesson-sm text-muted-foreground"
+          />
+        </View>
+        {row(t.youSaid, guess.said, guess.correct)}
+        {guess.correct ? null : row(t.theAnswer, guess.answer, true)}
+      </DirectionView>
     </View>
   )
 }
@@ -222,12 +289,12 @@ function Takeaways({
   )
 }
 
-/** Lucide's Swords, RotateCcw, and Check, at 16 points. */
+/** Lucide's Swords, RotateCcw, Check, and X, at 16 points. */
 function ActionIcon({
   kind,
   color,
 }: {
-  kind: "challenge" | "restart" | "check"
+  kind: "challenge" | "restart" | "check" | "x"
   color: string
 }) {
   const paths = {
@@ -243,6 +310,7 @@ function ActionIcon({
     ],
     restart: ["M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8", "M3 3v5h5"],
     check: ["M20 6 9 17l-5-5"],
+    x: ["M18 6 6 18", "m6 6 12 12"],
   }[kind]
   return (
     <Svg

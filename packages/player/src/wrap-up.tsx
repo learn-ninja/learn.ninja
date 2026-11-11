@@ -8,6 +8,7 @@ import {
   RotateCcwIcon,
   SwordsIcon,
   TrophyIcon,
+  XIcon,
 } from "lucide-react"
 
 import type { Lesson } from "@workspace/spec"
@@ -18,7 +19,12 @@ import { cn } from "@workspace/ui/lib/utils"
 import { challengeLink, challengeResult } from "./challenge"
 import { usePlayer } from "./context"
 import { useCreatorControls } from "./creator"
-import { scoredQuestions, type Outcome, type Summary } from "@workspace/player-core/flow"
+import {
+  firstGuess,
+  scoredQuestions,
+  type Outcome,
+  type Summary,
+} from "@workspace/player-core/flow"
 import { RichText } from "./rich-text"
 import { directionOf, NEXT_KINDS, type NextKind } from "@workspace/player-core/strings"
 
@@ -197,6 +203,59 @@ export function WrapActions({
       </Button>
       {extra}
     </div>
+  )
+}
+
+/**
+ * The warm-up, looked back on: its question, what the learner guessed, and the answer when the
+ * guess missed. The lesson began by overturning this guess, so it ends by showing it once more.
+ * The labels are the interface's; the question and answers read in the lesson's language.
+ */
+export function FirstGuess({
+  lesson,
+  guesses,
+}: {
+  lesson: Lesson
+  guesses: Record<string, string[]>
+}) {
+  const { t } = usePlayer()
+  const guess = firstGuess(lesson, guesses)
+  if (!guess) return null
+  const content = {
+    dir: directionOf(lesson.language),
+    lang: lesson.language,
+  }
+  const row = (label: string, texts: string[], good: boolean) => (
+    <div className="flex gap-3 px-4 py-3 text-sm">
+      {good ? (
+        <CheckIcon
+          aria-hidden="true"
+          className="mt-0.5 size-4 shrink-0 text-green-600"
+        />
+      ) : (
+        <XIcon
+          aria-hidden="true"
+          className="mt-0.5 size-4 shrink-0 text-yellow-500"
+        />
+      )}
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-muted-foreground">{label}</span>
+        {texts.map((text) => (
+          <div key={text} dir={content.dir}>
+            <RichText text={text} lang={content.lang} className="font-medium" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+  return (
+    <WrapSection title={t.firstGuess}>
+      <div {...content} className="px-4 py-3 text-sm text-muted-foreground">
+        <RichText text={guess.prompt} />
+      </div>
+      {row(t.youSaid, guess.said, guess.correct)}
+      {guess.correct ? null : row(t.theAnswer, guess.answer, true)}
+    </WrapSection>
   )
 }
 

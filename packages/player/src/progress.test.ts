@@ -50,6 +50,7 @@ function fresh(): State {
       fixed: [],
       inFix: false,
       fixQueued: false,
+      guesses: {},
       question: null,
       run: 0,
     },

@@ -38,6 +38,8 @@ export interface State {
   fixed: string[]
   inFix: boolean
   fixQueued: boolean
+  /** What the learner picked on each guess (the hook, and a guess before a concept), by kata id: the wrap-up shows the hook's beside the answer. */
+  guesses: Record<string, string[]>
   question: QuestionState | null
   /** How many times the lesson has been restarted; seeds the feedback lines so a replay hears them in a new order. */
   run: number

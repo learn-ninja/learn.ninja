@@ -30,7 +30,9 @@ import { lessons, PlayerFrame } from "./fixtures"
 
 // Every kata, and every question kata in every state. Use the "state" control to switch between
 // idle (interactive), wrong (after a first miss), correct, why (correct with the explanation open),
-// and revealed (after a second miss: the last pick, the answer, and the explanation).
+// and revealed (after a second miss: the last pick, the answer, and the explanation). A question
+// with a `reveal` swaps its visual for it once the answer is in (correct, why, revealed), and a
+// stepped concept has a "steps" control for how much of its body is showing.
 
 type Mode = "idle" | "wrong" | "correct" | "why" | "revealed"
 
@@ -40,6 +42,8 @@ interface HarnessProps {
   wrong?: Answer
   /** Where the "idle" state starts, for a kata shown partway through. */
   start?: Answer
+  /** A stepped concept: how many steps of its body are showing (each Continue shows one more). */
+  steps?: number
   mode: Mode
 }
 
@@ -49,11 +53,12 @@ function seeded(seed = 7) {
   return () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646
 }
 
-function Harness({ kata, wrong, start, mode }: HarnessProps) {
+function Harness({ kata, wrong, start, steps, mode }: HarnessProps) {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-8">
       {kata.type === "concept" ? (
-        <ConceptKata kata={kata} />
+        // Keyed by the step, so the newest one fades in as it does in the player.
+        <ConceptKata key={steps} kata={kata} steps={steps} />
       ) : (
         <Question kata={kata} wrong={wrong!} start={start} mode={mode} />
       )}
@@ -109,6 +114,15 @@ function Question({
       : []
   const phase =
     mode === "idle" ? "answering" : mode === "revealed" ? "revealed" : "feedback"
+  // As in the player (visualShown): the reveal takes the visual's place once the answer is in.
+  const answered = mode === "correct" || mode === "why" || mode === "revealed"
+  const shown =
+    answered &&
+    kata.reveal &&
+    kata.type !== "hotspot" &&
+    kata.type !== "scenario"
+      ? kata.reveal
+      : kata.visual
 
   return (
     <>
@@ -120,9 +134,10 @@ function Question({
           <RichText text={kata.situation} />
         </div>
       ) : null}
-      {kata.visual && kata.type !== "hotspot" ? (
+      {shown && kata.type !== "hotspot" ? (
         <Visual
-          visual={kata.visual}
+          key={shown === kata.reveal ? "reveal" : "visual"}
+          visual={shown}
           turns={scenarioTurns(kata, answer, phase)}
         />
       ) : null}
@@ -179,6 +194,7 @@ const meta = {
     kata: { control: false },
     wrong: { control: false },
     start: { control: false },
+    steps: { table: { disable: true } },
   },
   args: { mode: "idle" },
   render: (args, { globals }) => (
@@ -236,6 +252,35 @@ export const ConceptList: Story = {
     },
   },
   argTypes: noState,
+}
+
+/**
+ * A stepped concept: the body arrives one step per Continue, a step for each paragraph and each
+ * list item. Move "steps" from 1 to 5 to see it build; the title and visual are there from the start.
+ */
+export const ConceptStepped: Story = {
+  name: "Concept, stepped",
+  args: { kata: concept(compound, 0), steps: 3 },
+  argTypes: {
+    ...noState,
+    steps: {
+      table: { disable: false },
+      control: { type: "range", min: 1, max: 5, step: 1 },
+    },
+  },
+}
+
+/**
+ * A question with a reveal: nothing above the answers while answering, then, once the answer is in
+ * (correct, why, or revealed), a chart with the tempting answer and the true one both marked.
+ */
+export const MultipleChoiceReveal: Story = {
+  name: "Multiple Choice, reveal",
+  args: {
+    kata: compound.hook,
+    wrong: { kind: "select", ids: ["a"] },
+    mode: "correct",
+  },
 }
 
 export const MultipleChoice: Story = {

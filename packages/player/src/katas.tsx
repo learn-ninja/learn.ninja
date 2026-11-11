@@ -104,13 +104,21 @@ const optionPanelStyles =
  * Theory: one idea with an optional visual. Nothing to answer. The visual sits under the title, as
  * in a question: the learner sees it first and the body explains it, and a tall one isn't missed below.
  */
-export function ConceptKata({ kata }: { kata: ConceptKataData }) {
+export function ConceptKata({
+  kata,
+  steps,
+}: {
+  kata: ConceptKataData
+  /** A stepped concept: how many steps of the body to show so far. */
+  steps?: number
+}) {
   const title = (
     <h2 className="text-lg font-semibold text-balance">{kata.title}</h2>
   )
   const body = (
     <RichBlocks
       text={kata.body}
+      steps={kata.stepped ? steps : undefined}
       className="text-sm leading-relaxed text-pretty"
     />
   )

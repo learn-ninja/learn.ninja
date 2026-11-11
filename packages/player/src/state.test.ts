@@ -61,6 +61,7 @@ function stateFor(kata: QuestionKata): State {
     fixed: [],
     inFix: false,
     fixQueued: false,
+    guesses: {},
     run: 0,
     question: freshQuestion(item, () => 0.5),
   }
@@ -191,6 +192,7 @@ describe("earned moments", () => {
       fixed: [],
       inFix: false,
       fixQueued: false,
+      guesses: {},
       run: 0,
       question: { ...question, attempts, phase: "feedback" },
     }

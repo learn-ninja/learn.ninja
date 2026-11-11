@@ -117,6 +117,9 @@ export const it: Translation = {
       ? "Entrambe al primo tentativo"
       : `Tutte e ${total} al primo tentativo`,
   takeaways: "Punti chiave",
+  firstGuess: "La tua prima risposta",
+  youSaid: "Hai detto",
+  theAnswer: "La risposta",
   keepLearning: "Continua a imparare",
   keepKinds: {
     next: "Il prossimo",

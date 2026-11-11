@@ -1,4 +1,5 @@
 // NativeWind (Tailwind 3) config. Every value comes from tokens.ts, the app's one design file.
+const { platformSelect } = require("nativewind/theme")
 const { colors, radius, fontSize } = require("./tokens.ts")
 
 const px = (n) => `${n}px`
@@ -86,6 +87,11 @@ module.exports = {
       borderRadius: Object.fromEntries(
         Object.entries(radius).map(([k, v]) => [k, px(v)])
       ),
+      // font-mono (the eyebrow, inline code): Tailwind's default is a CSS font stack, which iOS
+      // can't read, so it fell back to Courier. Menlo, as code-block.tsx; Android's generic face.
+      fontFamily: {
+        mono: platformSelect({ ios: "Menlo", default: "monospace" }),
+      },
       // Text is drawn in the system font (SF Pro, Roboto); math.tsx's FONT_DESCENT assumes it, so
       // adding a font of our own means updating that too.
       // text-sm and the rest, plus lesson-sm and the rest: the same scale inside lesson content,

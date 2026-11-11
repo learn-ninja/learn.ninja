@@ -16,6 +16,7 @@ const atWrap = {
   fixed: [],
   inFix: false,
   fixQueued: false,
+  guesses: {},
   question: null,
   run: 0,
 } as unknown as State

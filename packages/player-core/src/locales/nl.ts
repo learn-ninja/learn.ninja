@@ -112,6 +112,9 @@ export const nl: Translation = {
   allFirstTry: (total) =>
     total === 2 ? "Allebei in één keer goed" : `Alle ${total} in één keer goed`,
   takeaways: "Belangrijkste punten",
+  firstGuess: "Je eerste gok",
+  youSaid: "Jij zei",
+  theAnswer: "Het antwoord",
   keepLearning: "Blijf leren",
   keepKinds: {
     next: "Hierna",

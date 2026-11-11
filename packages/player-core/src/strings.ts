@@ -99,6 +99,10 @@ export type Strings = {
   /** The score line on a perfect run: "All 9 on the first try". */
   allFirstTry: (total: number) => string
   takeaways: string
+  /** The wrap-up's look back at the warm-up: its label, then "You said" and "The answer" before each. */
+  firstGuess: string
+  youSaid: string
+  theAnswer: string
   /** The wrap-up's Keep learning list: what to ask the learner's agent for next. */
   keepLearning: string
   /** Its rows: the lesson's suggested next topic, this topic deeper, or this topic harder. */

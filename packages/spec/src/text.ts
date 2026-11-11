@@ -58,3 +58,28 @@ export function textBlocks(text: string): TextBlock[] {
   }
   return blocks
 }
+
+/** How many steps a stepped concept's body has: one for each paragraph and each list item. */
+export function stepCount(text: string): number {
+  return textBlocks(text).reduce(
+    (n, block) => n + (block.kind === "list" ? block.items.length : 1),
+    0
+  )
+}
+
+/** The first `steps` steps of a body's blocks: whole paragraphs, and a list as far as it has got. */
+export function firstSteps(blocks: TextBlock[], steps: number): TextBlock[] {
+  const out: TextBlock[] = []
+  let left = steps
+  for (const block of blocks) {
+    if (left <= 0) break
+    if (block.kind === "paragraph") {
+      out.push(block)
+      left--
+    } else {
+      out.push({ ...block, items: block.items.slice(0, left) })
+      left -= block.items.length
+    }
+  }
+  return out
+}

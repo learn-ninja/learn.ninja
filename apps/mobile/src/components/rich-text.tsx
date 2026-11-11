@@ -3,7 +3,7 @@ import { View } from "react-native"
 
 import { TOKEN } from "@workspace/player-core/plain-text"
 import { mathKey } from "@workspace/player-core/prepared"
-import { textBlocks } from "@workspace/spec"
+import { firstSteps, textBlocks } from "@workspace/spec"
 
 import { useLesson } from "@/components/lesson-context"
 import { InlineMath } from "@/components/math"
@@ -81,10 +81,19 @@ export function RichText({
 }
 
 /** A concept body: paragraphs and lists, spaced as the web's (gap-2 between blocks, gap-1 between items). */
-export function RichBlocks({ text }: { text: string }) {
+export function RichBlocks({
+  text,
+  steps,
+}: {
+  text: string
+  /** A stepped concept: how many steps to show so far. All of them without it. */
+  steps?: number
+}) {
+  const all = textBlocks(text)
+  const blocks = steps === undefined ? all : firstSteps(all, steps)
   return (
     <View className="gap-2">
-      {textBlocks(text).map((block, i) =>
+      {blocks.map((block, i) =>
         block.kind === "paragraph" ? (
           <RichText key={i} text={block.text} />
         ) : (

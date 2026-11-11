@@ -35,7 +35,7 @@ export interface Feedback {
   tone: Tone
   /** The ninja's line, heading the feedback. */
   title: string | null
-  /** Under his line: a miss's hint, where a scenario pick led, or the explanation. */
+  /** Under his line: a miss's hint, where a scenario pick led, the explanation, or the warm-up's answer. */
   message: string | null
   /** The message's color: green for the explanation or a right pick's outcome, amber otherwise. */
   noteTone: "good" | "warn"
@@ -44,7 +44,7 @@ export interface Feedback {
   primary: TrayAction | null
   /** The Hint toggle beside Check, while it's offered. */
   hint: { open: boolean } | null
-  /** Why? after a right answer (Every path on a scenario), in the feedback card. */
+  /** Every path after a scenario's right answer, in the feedback card. */
   why: { open: boolean; everyPath: boolean } | null
   /** A scenario's brief is on screen: Continue goes on to the question. */
   brief: boolean
@@ -137,9 +137,12 @@ export function feedbackFor({
       if (kata.hint && s.hintOpen) out.hintNote = kata.hint
       if (hintOffered(item, s)) out.hint = { open: s.hintOpen }
     } else if (role === "hook" && r) {
-      // The hook is a guess, so a miss still moves on; the concept after it does the explaining.
+      // The hook is a guess, so a miss still moves on. The note gives the answer in a line, right or
+      // wrong (a guess only helps once it's answered); the concept after it says why.
       out.tone = r.correct ? "good" : "warn"
       out.title = say(r.correct ? "goodGuess" : "hookMiss")
+      out.message = kata.explanation
+      out.noteTone = "good"
       out.primary = {
         label: t.continue,
         action: { type: "next" },
@@ -148,14 +151,16 @@ export function feedbackFor({
     } else if (s.phase === "feedback" && r?.correct) {
       out.tone = "good"
       out.title = say(earnedMoment(state, item) ?? "praise")
-      out.message = whyOpen ? kata.explanation : story ? outcome(r) : null
+      // A scenario says where the pick led, and Every path opens the rest with the explanation.
+      // Any other right answer gets its explanation at once: it may have been a lucky guess.
+      out.message = !story || whyOpen ? kata.explanation : outcome(r)
       out.noteTone = "good"
       out.primary = {
         label: t.continue,
         action: { type: "next" },
         variant: "success",
       }
-      out.why = { open: whyOpen, everyPath: story }
+      out.why = story ? { open: whyOpen, everyPath: true } : null
     } else if (s.phase === "feedback" && r && story) {
       // What the pick led to, then back to the decision.
       out.tone = "warn"

@@ -398,9 +398,21 @@ const questionBase = {
   id,
   prompt: richText,
   visual: visual.optional(),
+  /**
+   * Shown in place of `visual` once the question is answered right or its answer is revealed: the
+   * same picture with the answer in it (the chart colored by the hidden cause, the code with its
+   * output). Not on a hotspot or a scenario, whose visuals already change.
+   */
+  reveal: visual.optional(),
   hint: richText.optional(),
   explanation: richText,
 }
+
+/**
+ * On a choice or compare in `katas`, right before a concept: a guess asked before that concept
+ * teaches it, as the hook is for the first. Not scored, one try, answered at once.
+ */
+const guess = z.boolean().optional()
 
 const textMistake = z.strictObject({
   answer: z.string().min(1),
@@ -417,6 +429,7 @@ export const choiceKata = z
     options: z.array(option).min(2).max(5),
     correct: z.array(id).min(1),
     multiple: z.boolean(),
+    guess,
   })
   .meta({ id: "ChoiceKata" })
 
@@ -426,6 +439,7 @@ export const compareKata = z
     type: z.literal("compare"),
     options: z.array(option).length(2),
     correct: id,
+    guess,
   })
   .meta({ id: "CompareKata" })
 
@@ -577,6 +591,11 @@ export const conceptKata = z
     /** Rich text with paragraphs (one per line) and lists (two or more "- " or "1. " lines); see text.ts. */
     body: richText,
     visual: visual.optional(),
+    /**
+     * Show the body one step per Continue (each paragraph and each list item is a step), so a
+     * worked example or a procedure builds up instead of arriving at once.
+     */
+    stepped: z.boolean().optional(),
   })
   .meta({ id: "ConceptKata" })
 

@@ -116,6 +116,9 @@ export const fr: Translation = {
       ? "Les deux du premier coup"
       : `Toutes les ${total} du premier coup`,
   takeaways: "À retenir",
+  firstGuess: "Votre première idée",
+  youSaid: "Vous avez dit",
+  theAnswer: "La réponse",
   keepLearning: "Continue d'apprendre",
   keepKinds: {
     next: "La suite",

@@ -24,6 +24,8 @@ interface Kept {
   fixed: string[]
   inFix: boolean
   fixQueued: boolean
+  /** Added later, so an older save has none. */
+  guesses?: Record<string, string[]>
   question: QuestionState | null
   run: number
 }
@@ -222,6 +224,7 @@ function keep(state: State): Kept {
     fixed: state.fixed,
     inFix: state.inFix,
     fixQueued: state.fixQueued,
+    guesses: state.guesses,
     question: state.question,
     run: state.run,
   }
@@ -271,10 +274,16 @@ function restore(kept: unknown, lesson: Lesson): State | null {
       if (questions.has(id) && OUTCOMES.has(outcome))
         results[id] = outcome as Outcome
 
+  const guesses: Record<string, string[]> = {}
+  if (isObject(kept.guesses))
+    for (const [id, ids] of Object.entries(kept.guesses))
+      if (questions.has(id) && Array.isArray(ids)) guesses[id] = strings(ids)
+
   return {
     items,
     index: index as number,
     results,
+    guesses,
     mistakes,
     fixed: strings(kept.fixed),
     inFix: kept.inFix === true,

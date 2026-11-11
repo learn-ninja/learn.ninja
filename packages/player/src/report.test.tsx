@@ -61,6 +61,7 @@ function savedAt(kind: "concept" | "fix" | "wrap") {
     fixed: [],
     inFix: kind === "fix",
     fixQueued: false,
+    guesses: {},
     question: null,
     run: 0,
   }

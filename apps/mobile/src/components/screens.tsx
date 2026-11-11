@@ -23,8 +23,11 @@ export function LessonScreen({
   dispatch,
   feedback,
   whyOpen,
+  steps,
   t,
 }: {
+  /** A stepped concept: how many steps of its body are showing. */
+  steps?: number
   data: LoadedLesson
   item: Item
   state: State
@@ -52,7 +55,7 @@ export function LessonScreen({
         />
       )
     case "concept":
-      return <ConceptKata kata={item.kata} />
+      return <ConceptKata kata={item.kata} steps={steps} />
     case "question":
       return state.question ? (
         <QuestionScreen
@@ -79,6 +82,7 @@ export function LessonScreen({
         <WrapUp
           lesson={lesson}
           results={state.results}
+          guesses={state.guesses}
           onRestart={() => dispatch({ type: "restart" })}
           t={t}
         />

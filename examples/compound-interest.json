@@ -7,7 +7,11 @@
   "level": "beginner",
   "estimatedMinutes": 7,
   "subject": "money",
-  "tags": ["Compound interest", "Investing", "Rule of 72"],
+  "tags": [
+    "Compound interest",
+    "Investing",
+    "Rule of 72"
+  ],
   "hook": {
     "id": "hook",
     "type": "choice",
@@ -28,20 +32,59 @@
         "feedback": "That would take 100% a year, not 10%."
       }
     ],
-    "correct": ["b"],
+    "correct": [
+      "b"
+    ],
     "multiple": false,
-    "explanation": "Each year's interest joins the balance, so the next year earns interest on a bigger amount: about $1,949 after 7 years."
+    "explanation": "Each year's interest joins the balance, so the next year earns interest on a bigger amount: about $1,949 after 7 years.",
+    "reveal": {
+      "kind": "chart",
+      "type": "function",
+      "alt": "Over 7 years, compound interest curves up to about $1,949, while adding $100 a year reaches only $1,700.",
+      "x": {
+        "label": "Years",
+        "min": 0,
+        "max": 7
+      },
+      "y": {
+        "label": "Balance ($)",
+        "min": 1000
+      },
+      "series": [
+        {
+          "expression": "1000 * 1.1^x",
+          "label": "Compound"
+        },
+        {
+          "expression": "1000 + 100x",
+          "label": "$100 a year"
+        }
+      ],
+      "points": [
+        {
+          "x": 7,
+          "y": 1949,
+          "label": "$1,949"
+        },
+        {
+          "x": 7,
+          "y": 1700,
+          "label": "$1,700"
+        }
+      ]
+    }
   },
   "katas": [
     {
       "id": "c1",
       "type": "concept",
       "title": "Interest on interest",
-      "body": "With **compound interest**, each year's interest is added to your balance. Next year you earn interest on that bigger balance, so growth speeds up over time.",
+      "body": "$1,700 is the tempting answer: it adds $100 every year. But with **compound interest**, each year's interest joins the balance, so the next 10% is of a bigger amount.\n1. Year 1: $1,000 + $100 = $1,100\n2. Year 2: $1,100 + $110 = $1,210\n3. Year 3: $1,210 + $121 = $1,331\nEach year adds more than the last, so growth speeds up.",
       "visual": {
         "kind": "math",
         "tex": "A = P(1 + r)^n"
-      }
+      },
+      "stepped": true
     },
     {
       "id": "p1",
@@ -68,7 +111,9 @@
           "feedback": "That's 0.5% a year. 5% is 0.05, so multiply by 1.05."
         }
       ],
-      "correct": ["a"],
+      "correct": [
+        "a"
+      ],
       "multiple": false,
       "hint": "Work out year 1 first, then use that as the new starting amount.",
       "explanation": "Each year's interest joins the balance, so year 2 earns interest on $1,050.\nYear 1: $1,000 × 1.05 = $1,050\nYear 2: $1,050 × 1.05 = $1,102.50"
@@ -82,8 +127,14 @@
       "blanks": [
         {
           "id": "g",
-          "accept": ["1.05"],
-          "choices": ["1.05", "0.05", "1.5"],
+          "accept": [
+            "1.05"
+          ],
+          "choices": [
+            "1.05",
+            "0.05",
+            "1.5"
+          ],
           "mistakes": [
             {
               "answer": "0.05",
@@ -97,6 +148,33 @@
         }
       ],
       "explanation": "Multiplying by 1.05 keeps 100% of the balance and adds 5%."
+    },
+    {
+      "id": "g1",
+      "type": "choice",
+      "guess": true,
+      "prompt": "$1,000 grows at 7% a year for 30 years. Which decade adds the most money?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The first decade",
+          "feedback": "Early on the balance is small, so 7% of it is small too."
+        },
+        {
+          "id": "b",
+          "text": "The third decade"
+        },
+        {
+          "id": "c",
+          "text": "Each adds the same",
+          "feedback": "That would be simple interest: the same amount every year."
+        }
+      ],
+      "correct": [
+        "b"
+      ],
+      "multiple": false,
+      "explanation": "The third: it adds about $3,700, more than the first two decades together."
     },
     {
       "id": "c2",
@@ -130,7 +208,9 @@
           "feedback": "72 is the rule's constant. Divide it by the rate, 6."
         }
       ],
-      "correct": ["a"],
+      "correct": [
+        "a"
+      ],
       "multiple": false,
       "explanation": "72 ÷ 6 = 12 years."
     },
@@ -196,7 +276,9 @@
           "feedback": "It starts in year one; it's just small at first. By year 10, A is already ahead, $1,967 to $1,700."
         }
       ],
-      "correct": ["a"],
+      "correct": [
+        "a"
+      ],
       "multiple": false,
       "explanation": "Compound interest earns interest on past interest, so it adds more each year and the line curves up. Simple interest adds the same $70 every year: a straight line."
     }
@@ -226,7 +308,9 @@
         "feedback": "That's 20% growth. Three years of 8% compounds to about 26%."
       }
     ],
-    "correct": ["a"],
+    "correct": [
+      "a"
+    ],
     "multiple": false,
     "hint": "Multiply by the growth factor once for each year.",
     "explanation": "\\( 5000 \\times 1.08^3 \\approx 6298.56 \\), so the balance is about $6,298.56."

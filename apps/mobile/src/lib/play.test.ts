@@ -11,7 +11,7 @@ import {
   solution,
   type Answer,
 } from "@workspace/player-core/check"
-import { summarize } from "@workspace/player-core/flow"
+import { scoredQuestions, summarize } from "@workspace/player-core/flow"
 import { hintOffered } from "@workspace/player-core/reducer"
 import type { State } from "@workspace/player-core/state"
 import { validateLesson, type Lesson, type QuestionKata } from "@workspace/spec"
@@ -219,9 +219,8 @@ function play(l: Lesson, how: (kata: QuestionKata) => Play): State[] {
 
 describe("every bundled lesson", () => {
   for (const [file, l] of lessons) {
-    const scored = [...l.katas, l.challenge].filter(
-      (k) => k.type !== "concept"
-    ).length
+    // Practice and the challenge; a guess before a concept isn't scored.
+    const scored = scoredQuestions(l).length
 
     it(`${file}: right first time reaches the wrap-up with a full score, skipping the fix round`, () => {
       const states = play(l, () => "first")

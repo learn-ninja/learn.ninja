@@ -153,6 +153,7 @@ function begin(kata: Kata, checked?: Answer): State {
     fixed: [],
     inFix: false,
     fixQueued: false,
+    guesses: {},
     run: 0,
     // Seeded by the kata id: the server and the browser must shuffle the same way.
     question: freshQuestion(item, seeded(kata.id)),

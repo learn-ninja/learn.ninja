@@ -17,8 +17,8 @@ A lesson is one JSON file with four slots: `hook`, `katas`, `challenge`, `wrapup
 | `subject`          | yes      | One of the subjects below, by what the learner will do afterwards. The checker refuses anything else                                                              |
 | `tags`             | yes      | 1–5 short labels as a reader should see them (`"Claude Code"`, `"Compound interest"`), 2–30 characters each; the first is the lesson's label. See Subjects and tags |
 | `source`           | no       | `{ "title": "…", "url": "https://…" }` credit for the material                                                                                                      |
-| `hook`             | yes      | One `choice` or `compare` kata; not scored                                                                                                                         |
-| `katas`           | yes      | The lesson in play order: 1–4 `concept` katas, each followed by 2–4 question katas that practise it; 3–12 question katas in total, at most 20 katas. The first kata is a `concept` |
+| `hook`             | yes      | One `choice` or `compare` kata, asked before any teaching; not scored. Its `explanation` is the answer in one line, shown right after the guess                    |
+| `katas`           | yes      | The lesson in play order: 1–4 `concept` katas, each followed by 2–4 question katas that practise it; 3–12 question katas in total, at most 20 katas. The first kata is a `concept`. A later concept can have one guess right before it (`"guess": true`), which isn't counted |
 | `challenge`        | yes      | One question kata of any type except `number`                                                                                                                      |
 | `wrapup`           | yes      | `{ "takeaways": [2–4 strings], "next": "suggested next lesson" }` (`next` is optional)                                                                              |
 
@@ -69,9 +69,11 @@ Kata ids are unique across the whole lesson, including the hook and the challeng
 
 ## Concept katas
 
-`{ "id", "type": "concept", "title" (≤60 chars), "body" (rich text, ≤80 words), "visual"? }`
+`{ "id", "type": "concept", "title" (≤60 chars), "body" (rich text, ≤80 words), "visual"?, "stepped"? }`
 
 With a visual, the player shows the title, then the visual, then the body, so the body explains what the learner has just seen rather than repeating it. The body is rich text with paragraphs and lists: each line is a paragraph, two or more lines in a row starting with `- ` make a bulleted list, and lines numbered `1. `, `2. `… make a numbered one (in JSON, each line break is `\n`). One marker line on its own stays text, so `1. e4 e5` reads as written. Lists don't nest.
+
+With `"stepped": true` the body shows one step per Continue: each paragraph and each list item is a step, and a stepped body has 2 to 6. The title and visual are there from the start.
 
 ```json
 {
@@ -88,7 +90,9 @@ With a visual, the player shows the title, then the visual, then the body, so th
 
 ## Every question kata
 
-`{ "id", "type", "prompt" (rich text, ≤40 words), "visual"?, "hint"?, "explanation" }` plus the fields for its type.
+`{ "id", "type", "prompt" (rich text, ≤40 words), "visual"?, "reveal"?, "hint"?, "explanation" }` plus the fields for its type.
+
+`reveal` is a second visual (any kind, with its own `alt`) that takes the place of `visual` once the question is answered right or its answer is revealed; on the hook, as soon as the guess is checked. A question with no `visual` can have one too: it appears above the answers. A `hotspot` or `scenario` can't have one.
 
 ## Visuals
 
@@ -231,11 +235,12 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 - `blank` with `"format": "code"` takes a `language` and is usually `"caseSensitive": true`.
 - `blank` options: `numeric` and `tolerance` (number chips compare by value, so "0.5" is "0.50"), and the kata's `caseSensitive` (case is ignored otherwise). Accents always count, since the learner picks the exact chip: _si_ is a fair decoy for _sí_, and `strictAccents` changes nothing while answers are chips.
 - `scenario`: the `situation` is two to four sentences that build up to the decision; the player's ninja tells it one sentence at a time before the question. With a `chat` visual, the options are what the learner says next, and each `outcome` is the other person's reply, which the player adds to the chat after checking. Without a chat, `outcome` is what happened as a result.
+- `choice` and `compare` take `"guess": true` when they sit in `katas` right before a concept: a guess asked before that concept teaches it. It gets one try, isn't scored, shows its `explanation` at once, and doesn't count toward the 2–4 question katas after a concept or the 3–12 in total. Not on the hook (already a guess) or the challenge.
 - `number` katas exist in the spec but aren't allowed in v1.
 
 ## Rules the checker enforces
 
-- Hook is `choice` or `compare`; the first kata is a `concept`; 1–4 concept katas; 2–4 question katas after each concept kata; 3–12 question katas in `katas` in total; at most 20 katas; the challenge is a question kata.
+- Hook is `choice` or `compare`; the first kata is a `concept`; 1–4 concept katas; 2–4 question katas after each concept kata; 3–12 question katas in `katas` in total; at most 20 katas; the challenge is a question kata. A `guess` kata is a `choice` or `compare` in `katas` followed directly by a concept, and isn't counted in those numbers. A `stepped` concept's body has 2–6 steps. A `reveal` isn't on a `hotspot` or `scenario`, and has an `alt` unless it's code or math.
 - Unique ids; every reference points to something real (`correct`, `group`, `alsoAccept`, `[[gap]]` ids, hotspot ids, code hotspot lines, squares on a chess hotspot, countries on a map hotspot).
 - Every `choice` has `multiple`, even when it's `false`; every wrong `choice`/`compare` option has `feedback`; every question kata has an `explanation`; a `choice` has at least one wrong option; a `scenario` has a `best` option and a `situation` of at least two sentences.
 - A right answer can't give itself away by length: at 30 characters or more it stays under 1.5 times the longest wrong option, and in a lesson with 4 or more one-answer text questions it isn't the longest option in most of them.
