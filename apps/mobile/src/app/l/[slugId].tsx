@@ -373,6 +373,15 @@ function Player({
       clearTimeout(timer)
     }
   }, [q?.result, q?.phase, whyOpen, answerMarks, reduced])
+  // A stepped concept's new step is added at the end of its body, which on a short phone or at a
+  // large text size is under the tray: scroll it into view (a body that fits doesn't move).
+  useEffect(() => {
+    if (conceptStep <= 1) return
+    const frame = requestAnimationFrame(() =>
+      scrollRef.current?.scrollToEnd({ animated: !reduced })
+    )
+    return () => cancelAnimationFrame(frame)
+  }, [conceptStep, reduced])
 
   // The clock starts when the learner leaves the intro and stops at the wrap-up.
   const [clock, setClock] = useState<{ start?: number; end?: number }>({})
@@ -594,21 +603,24 @@ function Player({
               feedback.title || feedback.message ? feedback.tone : undefined
             }
             feedback={
-              // The ninja's line and the notes are in the lesson's language, so they run its way.
+              // The ninja's line and the notes are in the lesson's language, so they run its way,
+              // with the lesson's drawn formulas (an explanation's inline math).
               <DirectionView dir={directionOf(lesson.language)}>
-                <TrayFeedback
-                  title={feedback.title}
-                  message={feedback.message}
-                  why={
-                    feedback.why
-                      ? {
-                          label: whyLabel,
-                          open: feedback.why.open,
-                          onPress: () => setWhyOpen((open) => !open),
-                        }
-                      : null
-                  }
-                />
+                <LessonContext value={lessonContext}>
+                  <TrayFeedback
+                    title={feedback.title}
+                    message={feedback.message}
+                    why={
+                      feedback.why
+                        ? {
+                            label: whyLabel,
+                            open: feedback.why.open,
+                            onPress: () => setWhyOpen((open) => !open),
+                          }
+                        : null
+                    }
+                  />
+                </LessonContext>
               </DirectionView>
             }
           >

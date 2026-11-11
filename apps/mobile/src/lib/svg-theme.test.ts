@@ -96,4 +96,22 @@ describe("theming a server-drawn SVG for react-native-svg", () => {
     )!
     expect(out.xml).toContain('<text fill="#fff">A</text>')
   })
+
+  it("hands the root's text-anchor to a group, which react-native-svg passes down", () => {
+    const out = themeSvg(
+      `<svg width="10" height="10" text-anchor="middle"><text>A</text></svg>`
+    )!
+    expect(out.xml).toMatch(
+      /^<svg[^>]*><g text-anchor="middle"><text>A<\/text><\/g><\/svg>$/
+    )
+  })
+
+  it("drops the halo Plot sets on the group around a chart's point labels", () => {
+    const out = themeSvg(
+      `<svg width="10" height="10"><g transform="translate(0,-12)" paint-order="stroke" stroke-linejoin="round" stroke-width="3" stroke="#000" fill="#fff" aria-label="text"><text>$1,949</text></g></svg>`
+    )!
+    expect(out.xml).toContain(
+      '<g transform="translate(0,-12)" fill="#fff" aria-label="text"><text>$1,949</text></g>'
+    )
+  })
 })

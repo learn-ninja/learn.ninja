@@ -797,6 +797,19 @@ function Player({
     item.kind === "concept" &&
     item.kata.stepped === true &&
     conceptStep < stepCount(item.kata.body)
+  // Each step is added at the body's end, which on a short screen is below the fold (under the
+  // action area on a phone): scroll down to it. A body that fits doesn't move.
+  React.useEffect(() => {
+    if (conceptStep <= 1) return
+    const frame = requestAnimationFrame(() => {
+      const el = scrollRef.current
+      el?.scrollTo({
+        top: el.scrollHeight,
+        behavior: reducedMotion() ? "auto" : "smooth",
+      })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [conceptStep])
   const seenConcepts = state.items
     .slice(0, state.index + 1)
     .flatMap((i) => (i.kind === "concept" ? [i.kata] : []))
