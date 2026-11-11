@@ -1,6 +1,6 @@
 # Planning
 
-Before writing, read the user's input once for four choices: **scope** (one lesson or a path), **size**, **reading age**, and, from its own guide, **level** (`levels/index.md`). Usually the request says enough: decide from what they wrote and what they gave you, and tell them your choices after publishing, with an offer to remake.
+Before writing, read the user's input once for four choices: **scope** (one lesson or a path), **size**, **reading age**, and, from its own guide, **level** (`levels/index.md`). Usually the request says enough: decide from what they wrote and what they gave you, and tell them your choices after publishing, with an offer to remake. Then, before any JSON, find the lesson's **turn** (below): it decides the hook, the first concept, the wrong options, and the challenge.
 
 ## When to ask first
 
@@ -47,6 +47,26 @@ A lesson teaches **one core idea**. Find it: the idea everything else in the inp
 
 Stay faithful to the source. If the input is an article, teach what it says; don't add claims it doesn't support.
 
+## The turn
+
+A lesson is remembered when it overturns something the learner believed. Before writing any JSON, write three lines for yourself (they're your plan, not part of the lesson file):
+
+1. **The idea**, in one sentence the learner could say afterwards: "Interest earns interest, so growth speeds up."
+2. **The wrong idea**: what someone at this level believes, or would guess, before the lesson, in their own words: "10% a year for 7 years is 70%." It has to be something people really think, and it should feel reasonable; a silly belief nobody holds overturns nothing. Look where wrong options come from: a rule carried over from where it doesn't apply, two neighbours mixed up, a step skipped, the everyday meaning of a word the field uses differently.
+3. **The case**: one concrete situation where the idea and the wrong idea give different answers: "$1,000 at 10% for 7 years: about $1,700, or about $1,950?"
+
+Then build on them:
+
+- The **hook** asks the case, with the wrong idea among its options.
+- The **first concept** takes the same case and shows why the wrong idea fails.
+- **Wrong options** through the lesson come from the wrong idea and its neighbours, each with feedback that names it.
+- The **challenge** is a new case where the wrong idea is tempting again.
+- One **takeaway** answers the hook in the lesson's new terms.
+
+Finding the wrong idea is the hardest part of the lesson and the one most worth your time. Don't settle for the first that comes to mind: list two or three things a newcomer would get wrong here, and pick the one the idea most directly corrects. If the source names a common mistake, use that.
+
+Some lessons have no belief to overturn: a set of phrases, the steps of a procedure, a list of names. Then plan around the **key exercise** instead: the one thing the learner should be able to do at the end ("greet someone at 9 a.m. in Madrid"). The hook asks for a first try at it that everyday sense can reason about, and the challenge is that exercise done properly in a new setting.
+
 ## Size
 
 Pick the size from how much the input covers, not from the level. Every size has the same rhythm: each concept kata is followed by 2–4 question katas.
@@ -75,7 +95,7 @@ Each lesson's link expires 7 days after it's published, like any lesson.
 Who reads the lesson is separate from how much they know.
 
 - **Adult** is the default.
-- **Child** when the user mentions a child or an age under about 13 ("for my kid", "my 7-year-old", "a class of third graders"). Then: beginner level unless they say otherwise; short sentences and everyday words; examples from a child's world (school, games, pets, food, sport); no sarcasm, idioms, money, or workplace examples unless the topic is about them; visuals that are bright and simple. Fixed bright colours (`bg-amber-400`, `fill-sky-500`) are fine for filled shapes like pizza slices or counters, since they read on light and dark backgrounds; keep text, outlines, and backgrounds on theme colours (`text-foreground`, `border-border`, `bg-muted`).
+- **Child** when the user mentions a child or an age under about 13 ("for my kid", "my 7-year-old", "a class of third graders"). Then: beginner level unless they say otherwise; short sentences and everyday words; examples from a child's world (school, games, pets, food, sport); a hook about something the child has seen or done, so the guess is a real one and never a blind pick (young children learn little from guessing at what they can't reason about); no sarcasm, idioms, money, or workplace examples unless the topic is about them; visuals that are bright and simple. Fixed bright colours (`bg-amber-400`, `fill-sky-500`) are fine for filled shapes like pizza slices or counters, since they read on light and dark backgrounds; keep text, outlines, and backgrounds on theme colours (`text-foreground`, `border-border`, `bg-muted`).
 - **"Explain like I'm 5", "in simple terms", "for a non-expert"** from an adult mean beginner level for an adult reader: plain words and everyday examples, with no talking down.
 
 ## The report line

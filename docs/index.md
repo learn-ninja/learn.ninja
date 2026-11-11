@@ -33,7 +33,7 @@ An agent that can't run commands (a chat app, or an agent on a locked-down host)
 
 - **Connect the MCP server** at `https://learn.ninja/mcp` ([how, for each app](/docs/reference/mcp)). Its `get_guide` tool returns the same steps and guides the skill follows, and `publish_lesson` checks and publishes the lesson. This is the way for Claude.ai, Claude Desktop, ChatGPT, and other chat apps.
 - **Or call the API** directly:
-  1. Fetch the guides: `GET https://learn.ninja/api/skill` returns the steps, the teaching guide, planning, the levels, the [lesson format](/docs/lessons/lesson-format.md), and the [JSON Schema](/schema/lesson.schema.json) as one JSON bundle (see [the API](/docs/reference/api#the-skills-guides)). Follow the steps there as the skill would.
+  1. Fetch the guides: `GET https://learn.ninja/api/skill` returns the steps, the teaching guide, the visuals reference, planning, the levels, the [lesson format](/docs/lessons/lesson-format.md), and the [JSON Schema](/schema/lesson.schema.json) as one JSON bundle (see [the API](/docs/reference/api#the-skills-guides)). Follow the steps there as the skill would.
   2. Write the lesson as JSON.
   3. Publish it with the [API](/docs/reference/api): `POST https://learn.ninja/api/lessons`. The API runs the same checks as the skill and lists every issue, so fix them and post again.
 

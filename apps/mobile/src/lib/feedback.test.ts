@@ -92,7 +92,7 @@ describe("the tray", () => {
     expect(tray(state).primary?.label).toMatch(/left to sort/)
   })
 
-  it("praises a right answer in green, with Why? adding the explanation", () => {
+  it("praises a right answer in green and says why at once, with nothing to press", () => {
     const state = at("choice")
     const kata = kataOf(state)
     const checked = go(
@@ -103,12 +103,10 @@ describe("the tray", () => {
     const f = tray(checked)
     expect(f.tone).toBe("good")
     expect(f.title).toBeTruthy()
-    expect(f.message).toBeNull()
+    expect(f.message).toBe(kata.explanation)
+    expect(f.noteTone).toBe("good")
     expect(f.primary).toMatchObject({ label: "Continue", variant: "success" })
-    expect(f.why).toEqual({ open: false, everyPath: false })
-    const why = tray(checked, true)
-    expect(why.message).toBe(kata.explanation)
-    expect(why.noteTone).toBe("good")
+    expect(f.why).toBeNull()
   })
 
   it("nudges a miss in yellow with the hint, then Try again", () => {
@@ -182,7 +180,7 @@ describe("the tray", () => {
     expect(tray(right).why).toEqual({ open: false, everyPath: true })
   })
 
-  it("colors the hook's guess but moves on either way", () => {
+  it("colors the hook's guess, answers it, and moves on either way", () => {
     const hook = go(start(l), { type: "next" })
     const kata = kataOf(hook)
     if (kata.type !== "choice") throw new Error()
@@ -196,6 +194,14 @@ describe("the tray", () => {
     expect(f.tone).toBe("warn")
     expect(f.primary).toMatchObject({ label: "Continue", variant: "warning" })
     expect(f.why).toBeNull()
+    // The guess is answered at once, right or wrong: the note says what's true.
+    expect(f.message).toBe(kata.explanation)
+    expect(f.noteTone).toBe("good")
+    const right = tray(
+      go(hook, { type: "answer", answer: solution(kata) }, { type: "check" })
+    )
+    expect(right.tone).toBe("good")
+    expect(right.message).toBe(kata.explanation)
   })
 
   it("offers Start on the fix round and leaves the wrap-up's actions to it", () => {

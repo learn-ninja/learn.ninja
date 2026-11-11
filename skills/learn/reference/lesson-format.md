@@ -17,7 +17,7 @@ A lesson is one JSON file with four slots: `hook`, `katas`, `challenge`, `wrapup
 | `subject`          | yes      | One of the subjects below, by what the learner will do afterwards. The checker refuses anything else                                                              |
 | `tags`             | yes      | 1–5 short labels as a reader should see them (`"Claude Code"`, `"Compound interest"`), 2–30 characters each; the first is the lesson's label. See Subjects and tags |
 | `source`           | no       | `{ "title": "…", "url": "https://…" }` credit for the material                                                                                                      |
-| `hook`             | yes      | One `choice` or `compare` kata; not scored                                                                                                                         |
+| `hook`             | yes      | One `choice` or `compare` kata, asked before any teaching; not scored. Its `explanation` is the answer in one line, shown right after the guess                    |
 | `katas`           | yes      | The lesson in play order: 1–4 `concept` katas, each followed by 2–4 question katas that practise it; 3–12 question katas in total, at most 20 katas. The first kata is a `concept` |
 | `challenge`        | yes      | One question kata of any type except `number`                                                                                                                      |
 | `wrapup`           | yes      | `{ "takeaways": [2–4 strings], "next": "suggested next lesson" }` (`next` is optional)                                                                              |

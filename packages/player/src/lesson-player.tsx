@@ -710,8 +710,10 @@ function Player({
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [keyScope])
-  // The ninja's line is in his speech bubble, the rest in a note under the answers. After a right
-  // answer, Why? (or W) adds the explanation note; each new screen starts with it closed.
+  // The ninja's line is in his speech bubble, the rest in a note under the answers. A right answer's
+  // explanation is in that note at once (a right answer may be a lucky guess, and few learners ask).
+  // A scenario's note says where the pick led instead, and Every path (or W) opens the other
+  // outcomes with the explanation; each new screen starts with it closed.
   const [whyOpen, setWhyOpen] = React.useState(false)
   // Extra scroll room under the lesson when the bubble is taller than the space the screen leaves
   // for it. It sits below the centered column, so the lesson itself never moves.
@@ -720,6 +722,7 @@ function Player({
   const canWhy =
     item.kind === "question" &&
     item.role !== "hook" &&
+    item.kata.type === "scenario" &&
     state.question?.phase === "feedback" &&
     state.question.result?.correct === true
   toggleWhy.current = canWhy ? () => setWhyOpen((open) => !open) : null
@@ -731,11 +734,7 @@ function Player({
       ? () => dispatch({ type: "hint" })
       : null
   // Every path makes a scenario's rows taller: scroll them up clear of his bubble.
-  const pathsOpen =
-    canWhy &&
-    whyOpen &&
-    item.kind === "question" &&
-    item.kata.type === "scenario"
+  const pathsOpen = canWhy && whyOpen
   React.useEffect(() => {
     if (!pathsOpen) return
     const frame = requestAnimationFrame(() => {
@@ -1865,7 +1864,7 @@ export function ActionArea({
    * the ninja's speech bubble. A lone demo keeps the explanation and hint in place.
    */
   inBubble?: boolean
-  /** After a right answer, the player's Why?, which adds the explanation to the bubble. */
+  /** After a scenario's right answer, the player's Every path, which opens every outcome and the explanation. */
   why?: { open: boolean; onToggle: () => void } | null
   /** How much taller the bubble stands than the room the screen leaves for it (pb-40), in px. */
   onBubbleRoom?: (px: number) => void
@@ -1995,17 +1994,20 @@ export function ActionArea({
       // A wrong guess also says what it got wrong: the misconception is what the lesson starts from.
       tone = r.correct ? "good" : "warn"
       title = say(r.correct ? "goodGuess" : "hookMiss")
-      // In the player the concept after the warm-up does the explaining, so the bubble says only how it went.
-      message = r.correct || inBubble ? null : missText(r)
-      if (!inBubble) explanation = kata.explanation
+      // In the player the note gives the answer in a line, right or wrong: a guess only helps once
+      // it's answered. The concept after the warm-up says why.
+      message = inBubble ? kata.explanation : r.correct ? null : missText(r)
+      if (inBubble) noteTone = "good"
+      else explanation = kata.explanation
       primary = { ...primary, variant: r.correct ? "success" : "warning" }
     } else if (s.phase === "feedback" && r?.correct) {
       tone = "good"
       title = say(earnedMoment(state, item) ?? "praise")
       explanation = kata.explanation
       // What the pick led to; with Every path open the rows show every outcome, so he says why.
+      // Any other right answer gets its explanation at once, with nothing to press.
       if (story) message = why?.open ? kata.explanation : outcome(r)
-      else if (inBubble && why?.open) message = kata.explanation
+      else if (inBubble) message = kata.explanation
       noteTone = "good"
       primary = { ...primary, variant: "success" }
     } else if (s.phase === "feedback" && r && story) {

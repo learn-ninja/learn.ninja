@@ -10,12 +10,12 @@ For someone who has never done this, or only a little. Assume everyday knowledge
 
 ## Hook
 
-A guess that exposes the everyday intuition the idea corrects, in concrete terms: "A price rises 50%, then falls 50%. Is it back where it started?"
+A guess that exposes the everyday intuition the idea corrects, in concrete terms: "A price rises 50%, then falls 50%. Is it back where it started?" A newcomer must be able to reason toward an answer from everyday life; if they could only pick at random, ask about a more familiar case.
 
 ## Concepts
 
 - Name the idea, state the rule in one sentence, then one worked example with real values. Define every term the moment it appears, and bold the key one.
-- Explain, don't justify: why the rule holds can wait. Skip history, variants, and exceptions.
+- Say why the rule holds in one sentence, tied to the example: the reason is what makes a rule make sense, and a beginner needs it most. Skip history, variants, and exceptions.
 - A visual shows the one thing the rule is about and nothing else.
 
 ## Questions
@@ -36,5 +36,7 @@ The rule and when to use it, in plain words. One can name the next idea.
 ## You've drifted if…
 
 - A term appears before it's explained, or a concept relies on a method it never showed.
+- The hook needs a word or a fact from the field to answer, so the guess is blind.
+- A concept states a rule with no reason, or the reason takes more than a sentence.
 - A wrong option could only be picked by someone who didn't read.
 - The challenge needs an idea the lesson didn't teach, or only restates a concept sentence instead of applying it to a new case.
