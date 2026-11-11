@@ -6,14 +6,19 @@ import { authClient } from "./auth-client"
 
 // Sign in with Apple, natively: iOS's own sheet gives an identity token that Apple signed for this
 // app's bundle ID, and Better Auth's /sign-in/social checks it and answers with a session (the
-// expo plugin keeps its cookie and skips the browser for an idToken sign-in). A random nonce
-// ties the token to this request: its SHA-256 goes to Apple, which puts it in the token, and the
-// nonce itself goes to the server, which hashes it to compare.
+// expo plugin keeps its cookie and skips the browser for an idToken sign-in). A one-time nonce
+// from the server (apps/web/lib/auth/app-apple.ts) ties the token to this sign-in: its SHA-256 goes
+// to Apple, which puts it in the token, and the nonce itself goes back to the server, which spends
+// it and hashes it to compare, so a captured token can't be used again.
 
 export type AppleResult = "signed-in" | "cancelled" | "failed"
 
 export async function logInWithApple(): Promise<AppleResult> {
-  const nonce = Crypto.randomUUID()
+  const issued = await authClient
+    .$fetch<{ nonce: string }>("/app/apple/nonce", { method: "POST" })
+    .catch(() => ({ data: null }))
+  const nonce = issued.data?.nonce
+  if (!nonce) return "failed"
   const hashed = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
     nonce

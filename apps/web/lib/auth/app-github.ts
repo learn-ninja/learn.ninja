@@ -57,14 +57,36 @@ export function challengeOf(verifier: string): string {
 }
 
 /**
- * Where the code goes: the site's own https URL wherever it's served over https (production and
- * previews; only production's host is the app's), the app's scheme on a local http server.
+ * Where the code goes: the site's own https page (only production's host is the app's), or the
+ * app's scheme for a development server on plain http. Never the scheme in production, whatever
+ * protocol a request came in on: any app can claim a scheme, and one that started the log-in
+ * holds the verifier, so a code sent there would be a session for whoever's browser finished it.
  */
-export function appCallbackURL(baseURL: string): string {
+export function appCallbackURL(baseURL: string, production: boolean): string {
   const url = new URL(baseURL)
-  return url.protocol === "https:"
-    ? `${url.origin}${APP_CALLBACK_PATH}`
-    : DEV_CALLBACK
+  if (!production && url.protocol === "http:") return DEV_CALLBACK
+  return `https://${url.host}${APP_CALLBACK_PATH}`
+}
+
+/**
+ * Burns a code the fallback page was shown (app/app/signed-in). The app's sheet takes the URL
+ * before it loads, so a page that loads with a code means the log-in didn't start in this app,
+ * maybe from someone else's link with their challenge: the code shouldn't sit there for anyone to
+ * be talked into sharing.
+ */
+export async function burnAppCode(
+  auth: {
+    $context: Promise<{
+      internalAdapter: {
+        consumeVerificationValue: (identifier: string) => Promise<unknown>
+      }
+    }>
+  },
+  code: string
+): Promise<void> {
+  if (!code || code.length > 64) return
+  const ctx = await auth.$context
+  await ctx.internalAdapter.consumeVerificationValue(identifier(code))
 }
 
 function sameChallenge(verifier: string, challenge: string): boolean {
@@ -73,7 +95,7 @@ function sameChallenge(verifier: string, challenge: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b)
 }
 
-export function appGitHub() {
+export function appGitHub({ production }: { production: boolean }) {
   return {
     id: "app-github",
     endpoints: {
@@ -88,7 +110,7 @@ export function appGitHub() {
             (p) => p.id === "github"
           )
           if (!provider) throw new APIError("NOT_FOUND")
-          const done = appCallbackURL(ctx.context.baseURL)
+          const done = appCallbackURL(ctx.context.baseURL, production)
           // Server-only data that comes back with the state on the callback.
           await addOAuthServerContext({ appChallenge: ctx.query.challenge })
           // generateState reads the callback URLs from a body, as /sign-in/social has one. Both
@@ -169,18 +191,30 @@ export function appGitHub() {
             const created = ctx.context.newSession
             // No session: the callback failed, and already sends the error to the app.
             if (!created) return
-            // The browser was only a way to learn who this is: it doesn't stay logged in.
+            // The browser was only a way to learn who this is: its new session goes. A browser that
+            // was logged in before (the sheet shares Safari's cookies) gets its own session back,
+            // so neither the app's log-in nor someone else's link to /start logs Safari out.
             await ctx.context.internalAdapter.deleteSession(
               created.session.token
             )
-            deleteSessionCookie(ctx)
+            const before = await ctx.getSignedCookie(
+              ctx.context.authCookies.sessionToken.name,
+              ctx.context.secret
+            )
+            const prior =
+              before && before !== created.session.token
+                ? await ctx.context.internalAdapter.findSession(before)
+                : null
+            if (prior && new Date(prior.session.expiresAt) > new Date())
+              await setSessionCookie(ctx, prior)
+            else deleteSessionCookie(ctx)
             const code = randomBytes(32).toString("base64url")
             await ctx.context.internalAdapter.createVerificationValue({
               identifier: identifier(code),
               value: JSON.stringify({ userId: created.user.id, challenge }),
               expiresAt: new Date(Date.now() + APP_CODE_SECONDS * 1000),
             })
-            const to = new URL(appCallbackURL(ctx.context.baseURL))
+            const to = new URL(appCallbackURL(ctx.context.baseURL, production))
             to.searchParams.set("code", code)
             ctx.setHeader("location", to.toString())
           }),
