@@ -205,9 +205,12 @@ export function appGitHub({ production }: { production: boolean }) {
               before && before !== created.session.token
                 ? await ctx.context.internalAdapter.findSession(before)
                 : null
+            // Cleared first either way: the callback's own cookies for the deleted session (its
+            // token and a cookie cache good for 5 minutes) come off the response, not just lose
+            // to later ones. `true` keeps dont_remember, which setSessionCookie reads back.
+            deleteSessionCookie(ctx, true)
             if (prior && new Date(prior.session.expiresAt) > new Date())
               await setSessionCookie(ctx, prior)
-            else deleteSessionCookie(ctx)
             const code = randomBytes(32).toString("base64url")
             await ctx.context.internalAdapter.createVerificationValue({
               identifier: identifier(code),

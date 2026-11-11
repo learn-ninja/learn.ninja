@@ -232,6 +232,15 @@ describe("after the review", () => {
     expect(
       new URL(callback.headers.get("location")!).searchParams.get("code")
     ).toBeTruthy()
+    // Only the browser's own session goes out: the deleted one's token and cookie cache are
+    // taken off the response, not just followed by later cookies.
+    const setTokens = callback.headers
+      .getSetCookie()
+      .filter((c) => /session_(token|data)=[^;]/.test(c))
+    expect(setTokens.filter((c) => /session_token=/.test(c))).toHaveLength(1)
+    expect(
+      setTokens.filter((c) => /session_data=/.test(c)).length
+    ).toBeLessThanOrEqual(1)
     const after = jarAfter(callback, browser)
     const me = await auth.api.getSession({
       headers: new Headers({ cookie: after }),

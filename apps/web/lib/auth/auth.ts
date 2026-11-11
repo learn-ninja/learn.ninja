@@ -187,10 +187,10 @@ export const APPLE_BUNDLE_ID = "ninja.learn.ios"
  * Sign in with Apple, for the iOS app only (App Store guideline 4.8: an app that offers GitHub
  * must offer Apple too). The app gets an identity token from iOS and posts it to /sign-in/social
  * with `idToken`; Better Auth checks its signature against Apple's public keys, its issuer, its
- * audience (the bundle ID), its age and the nonce (a one-time one from ./app-apple), so it needs no secret and is always on. The
- * browser's redirect flow would need a Services ID and a client secret signed with an Apple key
- * that expires every six months; the website doesn't offer Apple, and the hook below refuses that
- * flow (APPLE_APP_ONLY). An account that signed up in the app logs in on the website with a code
+ * audience (the bundle ID), its age and the nonce (a one-time one from ./app-apple), so it needs
+ * no secret and is always on. The browser's redirect flow would need a Services ID and a client
+ * secret signed with an Apple key that expires every six months; the website doesn't offer Apple,
+ * and the hook below refuses that flow (APPLE_APP_ONLY). An account that signed up in the app logs in on the website with a code
  * to its email, Apple's private relay address included.
  */
 export const APPLE_APP_ONLY =
@@ -384,7 +384,8 @@ export function createAuth(deps: AuthDeps) {
         // Auth would try to build Apple's authorize URL and fail on the missing client secret.
         if (SOCIAL_ROUTES.has(ctx.path)) {
           const body = ctx.body as
-            { provider?: unknown; idToken?: unknown } | undefined
+            | { provider?: unknown; idToken?: unknown }
+            | undefined
           if (body?.provider === "apple" && !body.idToken) {
             throw new APIError("BAD_REQUEST", {
               code: "APPLE_APP_ONLY",
