@@ -95,7 +95,9 @@ async function identityToken(options: TokenOptions = {}) {
     .setProtectedHeader({ alg: "RS256", kid: KID })
     .setIssuer(options.issuer ?? "https://appleid.apple.com")
     .setAudience(options.audience ?? APPLE_BUNDLE_ID)
-    .setSubject(options.sub ?? `000123.${randomUUID().replaceAll("-", "")}.0456`)
+    .setSubject(
+      options.sub ?? `000123.${randomUUID().replaceAll("-", "")}.0456`
+    )
     .setIssuedAt()
     .setExpirationTime("10m")
     .sign(options.key ?? applePrivate)
@@ -106,14 +108,31 @@ function signInWithApple(body: unknown) {
   return auth.handler(
     new Request(`${ORIGIN}/api/auth/sign-in/social`, {
       method: "POST",
-      headers: { "content-type": "application/json", "expo-origin": APP_ORIGIN },
+      headers: {
+        "content-type": "application/json",
+        "expo-origin": APP_ORIGIN,
+      },
       body: JSON.stringify(body),
     })
   )
 }
 
+/** A one-time nonce from the server, as the app asks for one before opening Apple's sheet. */
+async function serverNonce(): Promise<string> {
+  const res = await auth.handler(
+    new Request(`${ORIGIN}/api/auth/app/apple/nonce`, {
+      method: "POST",
+      headers: { "expo-origin": APP_ORIGIN },
+    })
+  )
+  expect(res.status).toBe(200)
+  const { nonce } = (await res.json()) as { nonce: string }
+  expect(nonce).toMatch(/^[A-Za-z0-9_-]{43}$/)
+  return nonce
+}
+
 async function appleSignIn(options: TokenOptions & { name?: string } = {}) {
-  const nonce = options.nonce ?? "nonce"
+  const nonce = options.nonce ?? (await serverNonce())
   const token = await identityToken({ ...options, nonce })
   const res = await signInWithApple({
     provider: "apple",
@@ -189,8 +208,10 @@ describe("Sign in with Apple", () => {
   })
 
   it("refuses a token signed with another key, for another app, from another issuer, or with another nonce", async () => {
-    const refused = async (options: TokenOptions, sentNonce = "nonce") => {
-      const token = await identityToken({ nonce: "nonce", ...options })
+    const refused = async (options: TokenOptions, other = false) => {
+      const nonce = await serverNonce()
+      const token = await identityToken({ nonce, ...options })
+      const sentNonce = other ? await serverNonce() : nonce
       const res = await signInWithApple({
         provider: "apple",
         idToken: { token, nonce: sentNonce },
@@ -201,7 +222,31 @@ describe("Sign in with Apple", () => {
     await refused({ key: otherPrivate })
     await refused({ audience: "com.example.other" })
     await refused({ issuer: "https://evil.example" })
-    await refused({}, "a different nonce")
+    await refused({}, true)
+  })
+
+  it("takes each token once, and only with a nonce this server made", async () => {
+    const send = (token: string, nonce?: unknown) =>
+      signInWithApple({
+        provider: "apple",
+        idToken: nonce === undefined ? { token } : { token, nonce },
+      })
+    const nonce = await serverNonce()
+    const token = await identityToken({ nonce })
+    expect((await send(token, nonce)).status).toBe(200)
+    // Replayed with the same nonce: spent.
+    expect((await send(token, nonce)).status).toBe(401)
+
+    const fresh = await serverNonce()
+    const other = await identityToken({ nonce: fresh })
+    // Without a nonce, or with the hash read back out of the token.
+    expect((await send(other)).status).toBe(401)
+    expect((await send(other, sha256(fresh))).status).toBe(401)
+    // A nonce the server never made, shaped like one.
+    const made = "A".repeat(43)
+    expect(
+      (await send(await identityToken({ nonce: made }), made)).status
+    ).toBe(401)
   })
 
   it("refuses Apple's browser flow, which only the app's identity token replaces", async () => {

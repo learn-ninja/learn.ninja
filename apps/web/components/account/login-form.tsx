@@ -36,6 +36,7 @@ export function LoginForm({
   callback,
   title = "Log in",
   description = "Only to keep lessons beyond 7 days. Making and playing them needs no account.",
+  initialError = null,
   api = accountApi,
   navigate = (to) => window.location.assign(to),
 }: {
@@ -46,6 +47,8 @@ export function LoginForm({
   /** The first step's heading and line; the code step has its own. */
   title?: React.ReactNode
   description?: React.ReactNode
+  /** Why GitHub's log-in came back refused (`githubLoginError`), shown until the next try. */
+  initialError?: string | null
   api?: AccountApi
   navigate?: (to: string) => void
 }) {
@@ -53,7 +56,7 @@ export function LoginForm({
   const [email, setEmail] = React.useState("")
   const [code, setCode] = React.useState("")
   const [busy, setBusy] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [error, setError] = React.useState<string | null>(initialError)
 
   const finish = (account: AccountInfo | null) => {
     rememberAccount({

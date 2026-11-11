@@ -7,8 +7,13 @@ import { connectPglite, session, user, type Db } from "@workspace/db"
 
 import { MemoryRateLimiter } from "@/lib/publish/rate-limit"
 
-import { appCallbackURL, challengeOf } from "./app-github"
-import { APP_ORIGIN, createAuth, type Auth } from "./auth"
+import { appCallbackURL, burnAppCode, challengeOf } from "./app-github"
+import {
+  APP_ORIGIN,
+  createAuth,
+  productionHostsFromEnv,
+  type Auth,
+} from "./auth"
 
 // The iOS app's GitHub log-in (app-github.ts) end to end over an in-memory Postgres, with GitHub's
 // token and user endpoints stubbed: the start, the callback's hand-off, and the redeem.
@@ -18,6 +23,8 @@ const API = `${ORIGIN}/api/auth`
 
 let db: Db
 let auth: Auth
+/** The last log-in code "sent" to each address. */
+const codes = new Map<string, string>()
 
 beforeAll(async () => {
   db = await connectPglite()
@@ -28,7 +35,7 @@ beforeAll(async () => {
       GITHUB_CLIENT_ID: "client-id",
       GITHUB_CLIENT_SECRET: "client-secret",
     } as NodeJS.ProcessEnv,
-    sendCode: async () => {},
+    sendCode: async (email, code) => void codes.set(email, code),
     codeLimiter: new MemoryRateLimiter(100),
   })
 }, 30_000)
@@ -53,7 +60,14 @@ function stubGitHub(login: string, email: string) {
           scope: "",
         })
       if (url === "https://api.github.com/user")
-        return json({ id: 4242, login, name: login, email, avatar_url: "" })
+        return json({
+          // One GitHub account per login, so tests don't share one.
+          id: [...login].reduce((n, c) => n * 31 + c.charCodeAt(0), 7) % 1e9,
+          login,
+          name: login,
+          email,
+          avatar_url: "",
+        })
       if (url === "https://api.github.com/user/emails")
         return json([{ email, primary: true, verified: true }])
       return real(input, init)
@@ -67,10 +81,38 @@ const cookiesOf = (res: Response) =>
     .map((c) => c.split(";")[0])
     .join("; ")
 
+/** The cookies a browser keeps after a response: the last of each name, minus cleared ones. */
+function jarAfter(res: Response, before = ""): string {
+  const jar = new Map<string, string>()
+  for (const pair of before.split("; ").filter(Boolean)) {
+    const at = pair.indexOf("=")
+    jar.set(pair.slice(0, at), pair.slice(at + 1))
+  }
+  for (const line of res.headers.getSetCookie()) {
+    const [pair, ...attributes] = line.split(";")
+    const at = pair!.indexOf("=")
+    const name = pair!.slice(0, at)
+    const cleared = attributes.some((a) => /^\s*max-age=0\s*$/i.test(a))
+    if (cleared) jar.delete(name)
+    else jar.set(name, pair!.slice(at + 1))
+  }
+  return [...jar].map(([k, v]) => `${k}=${v}`).join("; ")
+}
+
+/** A browser logged in to the website with an email code. */
+async function webSession(email: string): Promise<string> {
+  await auth.api.sendVerificationOTP({ body: { email, type: "sign-in" } })
+  const res = await auth.api.signInEmailOTP({
+    body: { email, otp: codes.get(email)! },
+    asResponse: true,
+  })
+  return jarAfter(res)
+}
+
 const newVerifier = () => randomBytes(32).toString("base64url")
 
 /** Steps 1 and 2: the sheet's browser starts, goes to GitHub, and comes back. */
-async function throughGitHub(challenge: string) {
+async function throughGitHub(challenge: string, browser = "") {
   const start = await auth.handler(
     new Request(`${API}/app/github/start?challenge=${challenge}`)
   )
@@ -82,7 +124,7 @@ async function throughGitHub(challenge: string) {
   const state = authorize.searchParams.get("state")!
   const callback = await auth.handler(
     new Request(`${API}/callback/github?code=gh-code&state=${state}`, {
-      headers: { cookie: cookiesOf(start) },
+      headers: { cookie: jarAfter(start, browser) },
     })
   )
   return callback
@@ -182,13 +224,105 @@ describe("GitHub log-in for the iOS app", () => {
   })
 })
 
-describe("where the code goes", () => {
-  it("is the site's https page in production, the app's scheme on a local server", () => {
-    expect(appCallbackURL("https://learn.ninja/api/auth")).toBe(
-      "https://learn.ninja/app/signed-in"
-    )
-    expect(appCallbackURL("http://localhost:3000/api/auth")).toBe(
+describe("after the review", () => {
+  it("gives a browser that was logged in its own session back", async () => {
+    const browser = await webSession("safari@example.com")
+    stubGitHub("octo-dee", "dee@github.test")
+    const callback = await throughGitHub(challengeOf(newVerifier()), browser)
+    expect(
+      new URL(callback.headers.get("location")!).searchParams.get("code")
+    ).toBeTruthy()
+    // Only the browser's own session goes out: the deleted one's token and cookie cache are
+    // taken off the response, not just followed by later cookies.
+    const setTokens = callback.headers
+      .getSetCookie()
+      .filter((c) => /session_(token|data)=[^;]/.test(c))
+    expect(setTokens.filter((c) => /session_token=/.test(c))).toHaveLength(1)
+    expect(
+      setTokens.filter((c) => /session_data=/.test(c)).length
+    ).toBeLessThanOrEqual(1)
+    const after = jarAfter(callback, browser)
+    const me = await auth.api.getSession({
+      headers: new Headers({ cookie: after }),
+      query: { disableCookieCache: true },
+    })
+    expect(me?.user.email).toBe("safari@example.com")
+  })
+
+  it("leaves a browser that wasn't logged in logged out", async () => {
+    stubGitHub("octo-eve", "eve@github.test")
+    const callback = await throughGitHub(challengeOf(newVerifier()))
+    const after = jarAfter(callback)
+    expect(after).not.toMatch(/session_token=/)
+  })
+
+  it("burns a code the fallback page was shown", async () => {
+    stubGitHub("octo-fay", "fay@github.test")
+    const verifier = newVerifier()
+    const callback = await throughGitHub(challengeOf(verifier))
+    const code = new URL(callback.headers.get("location")!).searchParams.get(
+      "code"
+    )!
+    await burnAppCode(auth, code)
+    expect((await redeem(code, verifier)).status).toBe(401)
+  })
+
+  it("sends a banned account to the app's error page, not raw JSON", async () => {
+    stubGitHub("octo-gus", "gus@github.test")
+    await throughGitHub(challengeOf(newVerifier()))
+    await db
+      .update(user)
+      .set({ banned: true })
+      .where(eq(user.email, "gus@github.test"))
+    const callback = await throughGitHub(challengeOf(newVerifier()))
+    expect(callback.status).toBe(302)
+    const to = new URL(callback.headers.get("location")!)
+    expect(`${to.protocol}//${to.host}${to.pathname}`).toBe(
       "learnninja://app/signed-in"
     )
+    expect(to.searchParams.get("error")).toBe("ACCOUNT_BANNED")
+    expect(to.searchParams.has("code")).toBe(false)
+  })
+})
+
+describe("where the code goes", () => {
+  it("is the site's https page in production, the app's scheme on a local server", () => {
+    expect(appCallbackURL("https://learn.ninja/api/auth", true)).toBe(
+      "https://learn.ninja/app/signed-in"
+    )
+    expect(appCallbackURL("http://localhost:3000/api/auth", false)).toBe(
+      "learnninja://app/signed-in"
+    )
+    expect(
+      appCallbackURL("https://abc.trycloudflare.com/api/auth", false)
+    ).toBe("https://abc.trycloudflare.com/app/signed-in")
+  })
+
+  it("is never the app's scheme in production, even for a request over http", () => {
+    expect(appCallbackURL("http://learn.ninja/api/auth", true)).toBe(
+      "https://learn.ninja/app/signed-in"
+    )
+  })
+})
+
+describe("the hosts production answers on", () => {
+  it("are the site and this deployment's own Vercel hosts, never all of vercel.app", () => {
+    expect(productionHostsFromEnv({} as NodeJS.ProcessEnv)).toEqual([
+      "learn.ninja",
+      "www.learn.ninja",
+    ])
+    const preview = productionHostsFromEnv({
+      NODE_ENV: "production",
+      VERCEL_URL: "learnninja-abc123-uxcellab.vercel.app",
+      VERCEL_BRANCH_URL: "learnninja-git-feature-uxcellab.vercel.app",
+      VERCEL_PROJECT_PRODUCTION_URL: "learn.ninja",
+    } as NodeJS.ProcessEnv)
+    expect(preview).toEqual([
+      "learn.ninja",
+      "www.learn.ninja",
+      "learnninja-abc123-uxcellab.vercel.app",
+      "learnninja-git-feature-uxcellab.vercel.app",
+    ])
+    expect(preview.some((host) => host.includes("*"))).toBe(false)
   })
 })

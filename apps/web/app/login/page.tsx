@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 
 import { AuthPanel, LegalConsent } from "@/components/account/auth-panel"
 import { LoginForm } from "@/components/account/login-form"
+import { githubLoginError } from "@/lib/auth/login-errors"
 import { githubFromEnv } from "@/lib/auth/auth"
 import { currentActor, oauthResume, safeCallback } from "@/lib/auth/session"
 
@@ -36,6 +37,7 @@ export default async function LoginPage({
       <LoginForm
         github={githubFromEnv() !== null}
         callback={callback}
+        initialError={githubLoginError(params.error)}
         {...(params.signup && { title: "Sign up" })}
         {...(resume && {
           title: "Log in to connect your app",

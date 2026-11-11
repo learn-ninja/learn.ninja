@@ -112,6 +112,9 @@ export const accountApi: AccountApi = {
     const { error } = await authClient.signIn.social({
       provider: "github",
       callbackURL: callback,
+      // A refusal on GitHub's way back (a banned account, an email that already has an account)
+      // comes back to the log-in page with Better Auth's ?error= code, not its own error page.
+      errorCallbackURL: `/login?callback=${encodeURIComponent(callback)}`,
     })
     return error ? { error: error.message ?? FAILED } : {}
   },

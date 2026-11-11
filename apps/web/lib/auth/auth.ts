@@ -22,6 +22,7 @@ import { SITE } from "@/lib/site"
 import { getRateLimiter, type RateLimiter } from "@/lib/publish/rate-limit"
 import { getDb } from "@/lib/publish/store"
 
+import { appApple } from "./app-apple"
 import { appGitHub } from "./app-github"
 import { codeSenderFromEnv, type CodeSender } from "./email"
 import {
@@ -105,6 +106,25 @@ export function publicSiteFromEnv(env = process.env): string {
 }
 
 /**
+ * The hosts a production build answers auth requests on, which Better Auth also trusts as origins
+ * and callback URLs: the site, and this deployment's own Vercel hosts (a preview's branch alias
+ * and deployment URL, which Vercel sets). Never all of *.vercel.app: anyone can deploy there, and
+ * every allowed host is a trusted origin and a place a log-in may redirect to.
+ */
+export function productionHostsFromEnv(env = process.env): string[] {
+  const own = [
+    env.VERCEL_URL,
+    env.VERCEL_BRANCH_URL,
+    env.VERCEL_PROJECT_PRODUCTION_URL,
+  ]
+    .map((host) => host?.trim().toLowerCase())
+    .filter(
+      (host): host is string => Boolean(host) && /^[a-z0-9.-]+$/.test(host!)
+    )
+  return [...new Set(["learn.ninja", "www.learn.ninja", ...own])]
+}
+
+/**
  * The MCP server's canonical URL, which tokens are bound to and the discovery document names. It
  * must be exactly what people paste into their chat app (the plugin takes http only on loopback
  * hosts, so development works too).
@@ -167,10 +187,10 @@ export const APPLE_BUNDLE_ID = "ninja.learn.ios"
  * Sign in with Apple, for the iOS app only (App Store guideline 4.8: an app that offers GitHub
  * must offer Apple too). The app gets an identity token from iOS and posts it to /sign-in/social
  * with `idToken`; Better Auth checks its signature against Apple's public keys, its issuer, its
- * audience (the bundle ID), its age and the nonce, so it needs no secret and is always on. The
- * browser's redirect flow would need a Services ID and a client secret signed with an Apple key
- * that expires every six months; the website doesn't offer Apple, and the hook below refuses that
- * flow (APPLE_APP_ONLY). An account that signed up in the app logs in on the website with a code
+ * audience (the bundle ID), its age and the nonce (a one-time one from ./app-apple), so it needs
+ * no secret and is always on. The browser's redirect flow would need a Services ID and a client
+ * secret signed with an Apple key that expires every six months; the website doesn't offer Apple,
+ * and the hook below refuses that flow (APPLE_APP_ONLY). An account that signed up in the app logs in on the website with a code
  * to its email, Apple's private relay address included.
  */
 export const APPLE_APP_ONLY =
@@ -217,7 +237,7 @@ export function createAuth(deps: AuthDeps) {
     baseURL: env.BETTER_AUTH_URL ?? {
       allowedHosts:
         env.NODE_ENV === "production"
-          ? ["learn.ninja", "www.learn.ninja", "*.vercel.app"]
+          ? productionHostsFromEnv(env)
           : [
               "localhost:*",
               "127.0.0.1:*",
@@ -327,7 +347,11 @@ export function createAuth(deps: AuthDeps) {
       }),
       // The iOS app: it keeps the session cookie itself and sends it on every request.
       expo(),
-      ...(github ? [appGitHub()] : []),
+      ...(github
+        ? [appGitHub({ production: env.NODE_ENV === "production" })]
+        : []),
+      // One-time nonces for the app's Apple identity tokens, spent on /sign-in/social.
+      appApple(),
       apiKey({
         defaultPrefix: API_KEY_PREFIX,
         // The publish routes read x-api-key as a session.
@@ -423,6 +447,7 @@ export function createAuth(deps: AuthDeps) {
         "/app/github/start": { window: 60, max: 10 },
         "/app/github/redeem": { window: 60, max: 10 },
         "/sign-in/social": { window: 60, max: 10 },
+        "/app/apple/nonce": { window: 60, max: 10 },
       },
     },
     databaseHooks: {
@@ -469,7 +494,10 @@ export function createAuth(deps: AuthDeps) {
               .from(user)
               .where(eq(user.id, session.userId))
             if (row?.banned) {
+              // With a code, an OAuth callback sends the refusal to its error page (the app's
+              // /app/signed-in?error=ACCOUNT_BANNED) instead of answering raw JSON.
               throw new APIError("FORBIDDEN", {
+                code: "ACCOUNT_BANNED",
                 message: "This account can't log in.",
               })
             }
