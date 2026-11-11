@@ -109,6 +109,9 @@ export const hi: Translation = {
       ? "दोनों पहली कोशिश में सही"
       : `सभी ${total} पहली कोशिश में सही`,
   takeaways: "मुख्य बातें",
+  firstGuess: "आपका पहला अनुमान",
+  youSaid: "आपने कहा",
+  theAnswer: "उत्तर",
   keepLearning: "सीखते रहें",
   keepKinds: {
     next: "आगे",

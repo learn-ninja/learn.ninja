@@ -121,6 +121,9 @@ export const he: Translation = {
   allFirstTry: (total) =>
     total === 2 ? "שתיהן בניסיון הראשון" : `כל ה־${total} בניסיון הראשון`,
   takeaways: "נקודות מפתח",
+  firstGuess: "הניחוש הראשון שלך",
+  youSaid: "אמרת",
+  theAnswer: "התשובה",
   keepLearning: "להמשיך ללמוד",
   keepKinds: {
     next: "הבא בתור",

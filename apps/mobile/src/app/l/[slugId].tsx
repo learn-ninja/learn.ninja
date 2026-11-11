@@ -10,6 +10,7 @@ import {
   useState,
   type ComponentRef,
 } from "react"
+import { stepCount } from "@workspace/spec"
 import {
   ActivityIndicator,
   ScrollView,
@@ -297,6 +298,13 @@ function Player({
   // After a right answer, Why? adds the explanation to the feedback; each screen starts closed.
   const [whyOpen, setWhyOpen] = useState(false)
   useEffect(() => setWhyOpen(false), [state.index])
+  // A stepped concept shows one more step of its body per Continue, then leaves like any other.
+  const [conceptStep, setConceptStep] = useState(1)
+  useEffect(() => setConceptStep(1), [state.index, state.run])
+  const stepsLeft =
+    item.kind === "concept" &&
+    item.kata.stepped === true &&
+    conceptStep < stepCount(item.kata.body)
   const feedback = feedbackFor({
     item,
     state,
@@ -570,6 +578,7 @@ function Player({
                         dispatch={dispatch}
                         feedback={feedback}
                         whyOpen={whyOpen}
+                        steps={conceptStep}
                         t={t}
                       />
                     </AnswerMarksContext>
@@ -626,7 +635,12 @@ function Player({
                 label={feedback.primary.label}
                 variant={feedback.primary.variant}
                 disabled={feedback.primary.disabled}
-                onPress={() => run(feedback.primary!.action)}
+                onPress={() =>
+                  // A stepped concept shows its next step first, then moves on.
+                  stepsLeft
+                    ? setConceptStep((n) => n + 1)
+                    : run(feedback.primary!.action)
+                }
               />
             ) : null}
             {feedback.hint ? (

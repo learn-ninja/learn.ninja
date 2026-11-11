@@ -172,6 +172,9 @@
         "visual": {
           "$ref": "#/$defs/Visual"
         },
+        "reveal": {
+          "$ref": "#/$defs/Visual"
+        },
         "hint": {
           "type": "string",
           "minLength": 1
@@ -202,6 +205,9 @@
           }
         },
         "multiple": {
+          "type": "boolean"
+        },
+        "guess": {
           "type": "boolean"
         }
       },
@@ -1072,6 +1078,9 @@
         "visual": {
           "$ref": "#/$defs/Visual"
         },
+        "reveal": {
+          "$ref": "#/$defs/Visual"
+        },
         "hint": {
           "type": "string",
           "minLength": 1
@@ -1096,6 +1105,9 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 64
+        },
+        "guess": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -1165,6 +1177,9 @@
         },
         "visual": {
           "$ref": "#/$defs/Visual"
+        },
+        "stepped": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -1188,6 +1203,9 @@
           "minLength": 1
         },
         "visual": {
+          "$ref": "#/$defs/Visual"
+        },
+        "reveal": {
           "$ref": "#/$defs/Visual"
         },
         "hint": {
@@ -1270,6 +1288,9 @@
           "minLength": 1
         },
         "visual": {
+          "$ref": "#/$defs/Visual"
+        },
+        "reveal": {
           "$ref": "#/$defs/Visual"
         },
         "hint": {
@@ -1374,6 +1395,9 @@
         "visual": {
           "$ref": "#/$defs/Visual"
         },
+        "reveal": {
+          "$ref": "#/$defs/Visual"
+        },
         "hint": {
           "type": "string",
           "minLength": 1
@@ -1442,6 +1466,9 @@
           "minLength": 1
         },
         "visual": {
+          "$ref": "#/$defs/Visual"
+        },
+        "reveal": {
           "$ref": "#/$defs/Visual"
         },
         "hint": {
@@ -1588,6 +1615,9 @@
             }
           ]
         },
+        "reveal": {
+          "$ref": "#/$defs/Visual"
+        },
         "hint": {
           "type": "string",
           "minLength": 1
@@ -1637,6 +1667,9 @@
           "minLength": 1
         },
         "visual": {
+          "$ref": "#/$defs/Visual"
+        },
+        "reveal": {
           "$ref": "#/$defs/Visual"
         },
         "hint": {
@@ -1722,6 +1755,9 @@
           "minLength": 1
         },
         "visual": {
+          "$ref": "#/$defs/Visual"
+        },
+        "reveal": {
           "$ref": "#/$defs/Visual"
         },
         "hint": {

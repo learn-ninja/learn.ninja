@@ -99,6 +99,9 @@ export const th: Translation = {
       ? "ถูกตั้งแต่ครั้งแรกทั้งสองข้อ"
       : `ถูกตั้งแต่ครั้งแรกครบทั้ง ${total} ข้อ`,
   takeaways: "ประเด็นสำคัญ",
+  firstGuess: "คำตอบแรกของคุณ",
+  youSaid: "คุณตอบว่า",
+  theAnswer: "คำตอบ",
   keepLearning: "เรียนต่อ",
   keepKinds: {
     next: "ถัดไป",

@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 
 import {
+  stepCount,
   type ConceptKata as ConceptKataData,
   type Lesson,
   type QuestionKata,
@@ -42,6 +43,7 @@ import {
 import {
   earnedMoment,
   explanationShown,
+  visualShown,
   hintOffered,
   missMessage,
   reducer,
@@ -145,6 +147,7 @@ import {
   KeepLogIn,
   KeepLearning,
   RunBar,
+  FirstGuess,
   Takeaways,
   WrapActions,
 } from "./wrap-up"
@@ -787,6 +790,13 @@ function Player({
       dispatch({ type: "next" })
     }, 650)
   }, [whooshOn])
+  // A stepped concept shows one more step of its body per Continue, then leaves like any other.
+  const [conceptStep, setConceptStep] = React.useState(1)
+  React.useEffect(() => setConceptStep(1), [state.index, state.run])
+  const stepsLeft =
+    item.kind === "concept" &&
+    item.kata.stepped === true &&
+    conceptStep < stepCount(item.kata.body)
   const seenConcepts = state.items
     .slice(0, state.index + 1)
     .flatMap((i) => (i.kind === "concept" ? [i.kata] : []))
@@ -1004,6 +1014,7 @@ function Player({
                             : null
                         }
                         paths={canWhy && whyOpen}
+                        steps={conceptStep}
                       />
                     )}
                   </div>
@@ -1022,7 +1033,11 @@ function Player({
                       soundOn &&
                       !(resumed && sameFeedback(state, resumed))
                     }
-                    onConceptDone={leaveConcept}
+                    onConceptDone={
+                      stepsLeft
+                        ? () => setConceptStep((n) => n + 1)
+                        : leaveConcept
+                    }
                     onStart={vanishIntro}
                     onStreakDone={onStreak ? leaveStreak : undefined}
                     onBubbleRoom={setBubbleRoom}
@@ -1250,7 +1265,7 @@ function columnWidth(item: Item): string {
   if (item.kind !== "question") return "max-w-lg"
   const { kata } = item
   const wide =
-    Boolean(kata.visual) ||
+    Boolean(kata.visual ?? kata.reveal) ||
     hasOptionCards(kata) ||
     kata.type === "sort" ||
     kata.type === "match" ||
@@ -1283,12 +1298,15 @@ export function Screen({
   label,
   inBubble = false,
   brief = null,
+  steps,
   paths = false,
 }: {
   lesson: Lesson
   item: Item
   state: State
   dispatch: React.Dispatch<Action>
+  /** A stepped concept: how many steps of its body are showing. */
+  steps?: number
   /** A scenario's brief, while the ninja tells it (the player's story mode). */
   brief?: BriefProps | null
   /** A scenario after the right answer: every option's outcome (Every path, the player's Why?). */
@@ -1339,7 +1357,7 @@ export function Screen({
         // Styled like a question (no card of its own), so the screens read as one lesson.
         <LessonContent language={lesson.language}>
           {label ? <ScreenLabel text={label} className="-mb-4" /> : null}
-          <ConceptKata kata={item.kata} />
+          <ConceptKata kata={item.kata} steps={steps} />
         </LessonContent>
       )
     case "fix":
@@ -1356,6 +1374,7 @@ export function Screen({
         <WrapUp
           lesson={lesson}
           results={state.results}
+          guesses={state.guesses}
           ninja={ninja}
           onRestart={() => dispatch({ type: "restart", lesson })}
         />
@@ -1540,6 +1559,8 @@ function QuestionScreen({
       : []
   // A scenario with a chat plays the pick and its outcome as the next two turns (chat.tsx).
   const chatty = kata.type === "scenario" && kata.visual?.kind === "chat"
+  // The kata's visual, or its reveal once the answer is in.
+  const shown = visualShown(kata, state, role)
   // In the player a pick's outcome is in the note under the answers, so rows show outcomes only
   // for Every path. A lone demo shows them under the picked row and, once revealed, the best one;
   // with a chat, the chat shows them instead.
@@ -1595,12 +1616,21 @@ function QuestionScreen({
           </Button>
         ) : null}
       </h2>
-      {kata.visual && kata.type !== "hotspot" ? (
+      {shown && kata.type !== "hotspot" ? (
         <div className={at(180).className} style={at(180).style}>
-          <Visual
-            visual={kata.visual}
-            turns={scenarioTurns(kata, state.answer, state.phase)}
-          />
+          {/* The reveal takes the visual's place once the answer is in, fading in over it. */}
+          <div
+            key={shown === kata.reveal ? "reveal" : "visual"}
+            className={cn(
+              shown === kata.reveal &&
+                "animate-in duration-500 fade-in motion-reduce:animate-none"
+            )}
+          >
+            <Visual
+              visual={shown}
+              turns={scenarioTurns(kata, state.answer, state.phase)}
+            />
+          </div>
         </div>
       ) : null}
       {kata.type === "choice" ||
@@ -1652,11 +1682,14 @@ function QuestionScreen({
 function WrapUp({
   lesson,
   results,
+  guesses,
   ninja = true,
   onRestart,
 }: {
   lesson: Lesson
   results: Record<string, Outcome>
+  /** What the learner picked on the warm-up, shown again beside the answer. */
+  guesses: Record<string, string[]>
   ninja?: boolean
   onRestart: () => void
 }) {
@@ -1694,6 +1727,7 @@ function WrapUp({
         />
       </div>
       <div className="flex flex-col gap-8">
+        <FirstGuess lesson={lesson} guesses={guesses} />
         <Takeaways items={lesson.wrapup.takeaways} language={lesson.language} />
         <KeepLearning lesson={lesson} />
       </div>

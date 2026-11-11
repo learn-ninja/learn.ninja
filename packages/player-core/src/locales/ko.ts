@@ -95,6 +95,9 @@ export const ko: Translation = {
       ? "두 문제 모두 첫 시도에 정답"
       : `${total}문제 모두 첫 시도에 정답`,
   takeaways: "핵심 정리",
+  firstGuess: "처음 한 추측",
+  youSaid: "내가 고른 답",
+  theAnswer: "정답",
   keepLearning: "계속 배우기",
   keepKinds: {
     next: "다음",

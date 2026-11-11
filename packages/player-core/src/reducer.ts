@@ -1,4 +1,4 @@
-import type { Lesson, QuestionKata } from "@workspace/spec"
+import type { Lesson, QuestionKata, Visual } from "@workspace/spec"
 
 import {
   checkAnswer,
@@ -32,6 +32,7 @@ export function start(lesson: Lesson, startAt?: string, run = 0): State {
     fixed: [],
     inFix: false,
     fixQueued: false,
+    guesses: {},
     question: at < 0 ? null : freshQuestion(items[index], seeded(startAt!)),
     run,
   }
@@ -93,6 +94,24 @@ export function hintOffered(
 /** The explanation opens after "Why?", and by itself once a missed answer is revealed (not for the hook's guess). */
 export function explanationShown(s: QuestionState, role: Role): boolean {
   return s.whyOpen || (s.phase === "revealed" && role !== "hook")
+}
+
+/**
+ * The visual above the answers: the kata's own, or its `reveal` once the answer is in (answered
+ * right, shown after two misses, or, for a guess, as soon as it's checked). A hotspot's visual is
+ * what the learner taps and a scenario's plays the outcome, so neither is swapped.
+ */
+export function visualShown(
+  kata: QuestionKata,
+  s: QuestionState,
+  role: Role
+): Visual | undefined {
+  if (!kata.reveal || kata.type === "hotspot" || kata.type === "scenario")
+    return kata.visual
+  const answered =
+    s.phase === "revealed" ||
+    (role !== "hook" && s.phase === "feedback" && s.result?.correct === true)
+  return answered ? kata.reveal : kata.visual
 }
 
 /** The player's own line for a miss with no lesson-written feedback. */
@@ -256,7 +275,14 @@ export function reducer(state: State, action: Action): State {
       const s = state.question
       const result = checkAnswer(kata, s.answer)
       if (role === "hook")
-        return { ...state, question: { ...s, result, phase: "revealed" } }
+        return {
+          ...state,
+          guesses:
+            s.answer.kind === "select"
+              ? { ...state.guesses, [kata.id]: s.answer.ids }
+              : state.guesses,
+          question: { ...s, result, phase: "revealed" },
+        }
       if (result.correct) {
         const results =
           role === "fix" || kata.id in state.results

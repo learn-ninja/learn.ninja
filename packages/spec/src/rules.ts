@@ -20,9 +20,10 @@ import {
   type Visual,
 } from "./schema"
 import { normalizeTag } from "./tags"
-import { listItem, textBlocks } from "./text"
+import { listItem, stepCount, textBlocks } from "./text"
 import {
   everyVisual,
+  isGuess,
   fractionStep,
   LEVELS,
   LIMITS,
@@ -528,6 +529,25 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
         "teaching",
         `${path}.visual`,
         `This ${visualName(v)} has no "alt". Add one sentence saying what it shows, for people using a screen reader.`
+      )
+  }
+
+  // A reveal takes the visual's place once the question is answered, so it needs its own alt. A
+  // hotspot's visual is what the learner taps and a scenario's plays the outcome, so neither has one.
+  for (const { kata, path } of questions) {
+    const v = kata.reveal
+    if (!v) continue
+    if (kata.type === "hotspot" || kata.type === "scenario")
+      add(
+        "structure",
+        `${path}.reveal`,
+        `A ${kata.type} kata can't have a "reveal": its visual already shows the answer after checking. Remove it.`
+      )
+    else if (v.kind !== "code" && v.kind !== "math" && !v.alt)
+      add(
+        "teaching",
+        `${path}.reveal`,
+        `This reveal's ${visualName(v)} has no "alt". Add one sentence saying what it shows once the answer is in, for people using a screen reader.`
       )
   }
 
@@ -1070,6 +1090,37 @@ function checkRhythm(
   const conceptAt = lesson.katas.flatMap((b, i) =>
     b.type === "concept" ? [i] : []
   )
+  // A stepped concept shows one step per Continue, so it needs a few, and not a tap for every line.
+  lesson.katas.forEach((kata, i) => {
+    if (kata.type !== "concept" || !kata.stepped) return
+    const steps = stepCount(kata.body)
+    if (steps < 2 || steps > 6)
+      add(
+        "structure",
+        `katas[${i}].body`,
+        `Concept kata "${kata.id}" is stepped, but its body has ${steps} ${steps === 1 ? "step" : "steps"}; it needs 2–6. Each paragraph (a line break, "\n") and each list item is a step. Split the body, or remove "stepped".`
+      )
+  })
+  // A guess is asked before the concept that teaches it, so it sits right before one, and it's
+  // practice for neither concept: it doesn't count below.
+  const guessAt = lesson.katas.flatMap((b, i) => (isGuess(b) ? [i] : []))
+  for (const i of guessAt)
+    if (lesson.katas[i + 1]?.type !== "concept")
+      add(
+        "structure",
+        `katas[${i}]`,
+        `Kata "${lesson.katas[i]!.id}" is a guess ("guess": true), so the next kata must be the concept that answers it. Move it right before that concept, or remove "guess".`
+      )
+  for (const [kata, path] of [
+    [lesson.hook, "hook"],
+    [lesson.challenge, "challenge"],
+  ] as const)
+    if (isGuess(kata))
+      add(
+        "structure",
+        `${path}.guess`,
+        `Remove "guess" from the ${path}: it's only for a question in "katas" that comes right before a concept.`
+      )
   if (lesson.katas[0]?.type !== "concept") {
     add(
       "structure",
@@ -1086,7 +1137,8 @@ function checkRhythm(
   }
   conceptAt.forEach((at, n) => {
     const next = conceptAt[n + 1] ?? lesson.katas.length
-    const count = next - at - 1
+    const count =
+      next - at - 1 - guessAt.filter((i) => i > at && i < next).length
     if (count < practicePerConcept.min || count > practicePerConcept.max) {
       const id = lesson.katas[at]!.id
       add(
@@ -1096,7 +1148,8 @@ function checkRhythm(
       )
     }
   })
-  const practiceCount = lesson.katas.length - conceptAt.length
+  const practiceCount =
+    lesson.katas.length - conceptAt.length - guessAt.length
   if (practiceCount < practiceTotal.min || practiceCount > practiceTotal.max) {
     add(
       "structure",

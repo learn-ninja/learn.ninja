@@ -121,6 +121,9 @@ export const pl: Translation = {
       ? "Oba za pierwszym razem"
       : `Wszystkie ${total} za pierwszym razem`,
   takeaways: "Najważniejsze wnioski",
+  firstGuess: "Twój pierwszy strzał",
+  youSaid: "Twoja odpowiedź",
+  theAnswer: "Odpowiedź",
   keepLearning: "Ucz się dalej",
   keepKinds: {
     next: "Dalej",

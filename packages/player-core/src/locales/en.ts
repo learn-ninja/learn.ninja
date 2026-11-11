@@ -94,6 +94,9 @@ export const en: Strings = {
   allFirstTry: (total) =>
     total === 2 ? "Both on the first try" : `All ${total} on the first try`,
   takeaways: "Key takeaways",
+  firstGuess: "Your first guess",
+  youSaid: "You said",
+  theAnswer: "The answer",
   keepLearning: "Keep learning",
   keepKinds: {
     next: "Up next",

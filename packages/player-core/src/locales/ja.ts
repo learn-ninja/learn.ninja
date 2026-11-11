@@ -93,6 +93,9 @@ export const ja: Translation = {
   allFirstTry: (total) =>
     total === 2 ? "2問とも1回目で正解" : `${total}問すべて1回目で正解`,
   takeaways: "ポイント",
+  firstGuess: "最初の予想",
+  youSaid: "あなたの答え",
+  theAnswer: "正解",
   keepLearning: "学び続ける",
   keepKinds: {
     next: "次へ",

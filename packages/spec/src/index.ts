@@ -2,6 +2,7 @@
 export * from "./schema"
 export {
   everyVisual,
+  isGuess,
   fractionStep,
   LEVELS,
   LIMITS,
@@ -30,7 +31,13 @@ export {
   type Box,
   type MapRegion,
 } from "./map"
-export { listItem, textBlocks, type TextBlock } from "./text"
+export {
+  firstSteps,
+  listItem,
+  stepCount,
+  textBlocks,
+  type TextBlock,
+} from "./text"
 export {
   canUpgrade,
   OLD_SPECS,

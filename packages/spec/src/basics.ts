@@ -44,7 +44,14 @@ export function fractionStep(step: number): number | undefined {
   return n >= 2 && n <= 12 && Math.abs(n * step - 1) < 6e-3 ? n : undefined
 }
 
-/** Every visual in the lesson with its path: on katas, on options, and on items. */
+/** A guess asked before the concept that teaches it (`guess: true` on a choice or compare): not scored. */
+export function isGuess(kata: Kata): boolean {
+  return (
+    (kata.type === "choice" || kata.type === "compare") && kata.guess === true
+  )
+}
+
+/** Every visual in the lesson with its path: on katas (a question's `reveal` too), on options, and on items. */
 export function everyVisual(
   lesson: Lesson
 ): { visual: Visual; path: string }[] {
@@ -57,6 +64,8 @@ export function everyVisual(
   for (const { kata, path } of katas) {
     if ("visual" in kata && kata.visual)
       out.push({ visual: kata.visual, path: `${path}.visual` })
+    if ("reveal" in kata && kata.reveal)
+      out.push({ visual: kata.reveal, path: `${path}.reveal` })
     if ("options" in kata)
       kata.options.forEach((o, j) => {
         if ("visual" in o && o.visual)

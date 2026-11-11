@@ -33,6 +33,8 @@ export function chartsIn(
   for (const kata of [lesson.hook, ...lesson.katas, lesson.challenge]) {
     if ("visual" in kata && kata.visual?.kind === "chart")
       out.push({ chart: kata.visual, compact: false })
+    if ("reveal" in kata && kata.reveal?.kind === "chart")
+      out.push({ chart: kata.reveal, compact: false })
     const cards = [
       ...("options" in kata ? kata.options : []),
       ...("items" in kata ? kata.items : []),

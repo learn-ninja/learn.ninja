@@ -43,8 +43,11 @@ describe("visuals", () => {
 
   it("wants alt text on a question's HTML visual", () => {
     const lesson = compound()
-    delete lesson.katas[6].visual.alt
-    expectIssue(lesson, { path: "katas[6].visual", message: /no "alt"/ })
+    const at = lesson.katas.findIndex(
+      (k: { type: string; visual?: unknown }) => k.type !== "concept" && k.visual
+    )
+    delete lesson.katas[at].visual.alt
+    expectIssue(lesson, { path: `katas[${at}].visual`, message: /no "alt"/ })
   })
 
   it("doesn't need alt text on a hotspot visual", () => {
@@ -1850,5 +1853,95 @@ describe("chat visuals", () => {
       path: "challenge.visual",
       message: /This chat has no "alt"/,
     })
+  })
+})
+
+describe("a guess before a concept", () => {
+  // The example has one: g1, right before the second concept (c2).
+  it("is allowed right before a concept, and isn't counted as practice", () => {
+    const l = compound()
+    expect(l.katas[3]).toMatchObject({ id: "g1", guess: true })
+    expect(l.katas[4].type).toBe("concept")
+    expect(validateLesson(l).issues).toEqual([])
+    // c1 has two practice katas and the guess: drop one practice kata, and one is left, not two.
+    l.katas.splice(2, 1)
+    expectIssue(l, {
+      path: "katas[0]",
+      message: /"c1" is followed by 1 question katas/,
+    })
+  })
+
+  it("must be followed by a concept", () => {
+    const l = compound()
+    l.katas[1] = { ...l.katas[1], guess: true }
+    expectIssue(l, {
+      path: "katas[1]",
+      message: /is a guess .* the next kata must be the concept/,
+    })
+  })
+
+  it("isn't for the hook or the challenge", () => {
+    const l = compound()
+    l.hook.guess = true
+    expectIssue(l, { path: "hook.guess", message: /Remove "guess"/ })
+  })
+
+  it("is only for a choice or a compare", () => {
+    const l = compound()
+    l.katas[2] = { ...l.katas[2], guess: true }
+    expectIssue(l, { message: /guess/ })
+  })
+})
+
+describe("a reveal", () => {
+  const chart = {
+    kind: "chart",
+    type: "bar",
+    data: [
+      { x: "Simple", y: 1100 },
+      { x: "Compound", y: 1102.5 },
+    ],
+  }
+
+  it("is a second visual on a question, with its own alt", () => {
+    const l = compound()
+    l.katas[1].reveal = { ...chart, alt: "Compound ends $2.50 ahead." }
+    expect(validateLesson(l).issues).toEqual([])
+    delete l.katas[1].reveal.alt
+    expectIssue(l, { path: "katas[1].reveal", message: /has no "alt"/ })
+  })
+
+  it("is checked like any other visual", () => {
+    const l = compound()
+    l.katas[1].reveal = {
+      kind: "html",
+      alt: "A script.",
+      html: "<script>alert(1)</script>",
+    }
+    expectIssue(l, { path: "katas[1].reveal.html", message: /script/i })
+  })
+
+  it("isn't for a hotspot or a scenario", () => {
+    const l = buttons()
+    const at = l.katas.findIndex((k: { type: string }) => k.type === "hotspot")
+    l.katas[at].reveal = { kind: "math", tex: "1 + 1" }
+    expectIssue(l, {
+      path: `katas[${at}].reveal`,
+      message: /hotspot kata can't have a "reveal"/,
+    })
+  })
+})
+
+describe("a stepped concept", () => {
+  it("shows its body a step at a time, so it needs 2 to 6 steps", () => {
+    const l = compound()
+    l.katas[0].stepped = true
+    l.katas[0].body = "One line only."
+    expectIssue(l, {
+      path: "katas[0].body",
+      message: /is stepped, but its body has 1 step; it needs 2–6/,
+    })
+    l.katas[0].body = "First the rule.\n- Year 1\n- Year 2"
+    expect(validateLesson(l).issues).toEqual([])
   })
 })

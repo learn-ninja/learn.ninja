@@ -102,6 +102,9 @@ export const id: Translation = {
       ? "Keduanya benar di percobaan pertama"
       : `Semua ${total} benar di percobaan pertama`,
   takeaways: "Poin penting",
+  firstGuess: "Tebakan pertamamu",
+  youSaid: "Kamu menjawab",
+  theAnswer: "Jawabannya",
   keepLearning: "Terus belajar",
   keepKinds: {
     next: "Berikutnya",

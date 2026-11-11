@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { textBlocks } from "@workspace/spec"
+import { firstSteps, textBlocks } from "@workspace/spec"
 import { cn } from "@workspace/ui/lib/utils"
 
 import { usePlayer } from "./context"
@@ -94,16 +94,27 @@ export function RichText({
 export function RichBlocks({
   text,
   className,
+  steps,
 }: {
   text: string
   className?: string
+  /** A stepped concept: how many steps to show so far (the newest fades in). All of them without it. */
+  steps?: number
 }) {
+  const all = textBlocks(text)
+  const blocks = steps === undefined ? all : firstSteps(all, steps)
+  // The step just added fades in; the first is there with the screen.
+  const arriving =
+    steps !== undefined && steps > 1
+      ? "animate-in duration-300 fade-in motion-reduce:animate-none"
+      : undefined
   return (
     <div className={cn("flex flex-col gap-2", className)}>
-      {textBlocks(text).map((block, i) => {
+      {blocks.map((block, i) => {
+        const last = i === blocks.length - 1
         if (block.kind === "paragraph")
           return (
-            <p key={i} dir="auto">
+            <p key={i} dir="auto" className={last ? arriving : undefined}>
               <RichText text={block.text} block />
             </p>
           )
@@ -119,7 +130,13 @@ export function RichBlocks({
             )}
           >
             {block.items.map((item, j) => (
-              <li key={j} className="ps-1">
+              <li
+                key={j}
+                className={cn(
+                  "ps-1",
+                  last && j === block.items.length - 1 && arriving
+                )}
+              >
                 <RichText text={item} block />
               </li>
             ))}

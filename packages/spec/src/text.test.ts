@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { textBlocks } from "./text"
+import { firstSteps, stepCount, textBlocks } from "./text"
 
 describe("textBlocks", () => {
   it("makes each line a paragraph", () => {
@@ -47,5 +47,25 @@ describe("textBlocks", () => {
       { kind: "paragraph", text: "*Italic* start" },
       { kind: "paragraph", text: "-5 degrees" },
     ])
+  })
+})
+
+describe("steps", () => {
+  const body = "Start with $1,000.\n1. Year 1: $1,050\n2. Year 2: $1,102.50\nIt speeds up."
+
+  it("counts a step for each paragraph and each list item", () => {
+    expect(stepCount(body)).toBe(4)
+    expect(stepCount("One line.")).toBe(1)
+  })
+
+  it("shows the first steps, a list as far as it has got", () => {
+    const blocks = textBlocks(body)
+    expect(firstSteps(blocks, 1)).toEqual([blocks[0]])
+    expect(firstSteps(blocks, 2)).toEqual([
+      blocks[0],
+      { kind: "list", ordered: true, start: 1, items: ["Year 1: $1,050"] },
+    ])
+    expect(firstSteps(blocks, 3)).toEqual(blocks.slice(0, 2))
+    expect(firstSteps(blocks, 9)).toEqual(blocks)
   })
 })

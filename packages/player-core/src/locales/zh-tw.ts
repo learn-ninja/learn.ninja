@@ -92,6 +92,9 @@ export const zhTw: Translation = {
   allFirstTry: (total) =>
     total === 2 ? "兩題都一次答對" : `${total} 題全部一次答對`,
   takeaways: "重點",
+  firstGuess: "你最初的猜測",
+  youSaid: "你的回答",
+  theAnswer: "答案",
   keepLearning: "繼續學習",
   keepKinds: {
     next: "接下來",

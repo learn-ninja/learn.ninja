@@ -99,6 +99,9 @@ export const vi: Translation = {
       ? "Cả hai câu đều đúng ngay lần đầu"
       : `Cả ${total} câu đều đúng ngay lần đầu`,
   takeaways: "Điểm chính",
+  firstGuess: "Dự đoán đầu tiên của bạn",
+  youSaid: "Bạn đã chọn",
+  theAnswer: "Đáp án",
   keepLearning: "Học tiếp",
   keepKinds: {
     next: "Tiếp theo",

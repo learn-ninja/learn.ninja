@@ -293,6 +293,7 @@ const atWrap = (lesson: Lesson, key: string, outcomes: Outcome[] = []) => [
       fixed: [],
       inFix: false,
       fixQueued: false,
+      guesses: {},
       question: null,
       run: 0,
     }

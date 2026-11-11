@@ -7,6 +7,7 @@ import {
   type Mark,
 } from "@workspace/player-core/check"
 import type { Item } from "@workspace/player-core/flow"
+import { visualShown } from "@workspace/player-core/reducer"
 import type { QuestionState } from "@workspace/player-core/state"
 import type { Strings } from "@workspace/player-core/strings"
 import type { QuestionKata } from "@workspace/spec"
@@ -78,6 +79,8 @@ export function QuestionScreen({
       </View>
     )
   const locked = s.phase !== "answering"
+  // The kata's visual, or its reveal once the answer is in.
+  const shown = visualShown(kata, s, role)
   const paths =
     whyOpen &&
     kata.type === "scenario" &&
@@ -146,9 +149,10 @@ export function QuestionScreen({
         size={PROMPT_SIZE}
         className="text-lesson-lg font-semibold"
       />
-      {kata.visual && kata.type !== "hotspot" ? (
+      {shown && kata.type !== "hotspot" ? (
         <Visual
-          visual={kata.visual}
+          key={shown === kata.reveal ? "reveal" : "visual"}
+          visual={shown}
           turns={scenarioTurns(kata, s.answer, s.phase)}
         />
       ) : null}
