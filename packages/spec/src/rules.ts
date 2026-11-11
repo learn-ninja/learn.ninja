@@ -532,8 +532,9 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
       )
   }
 
-  // A reveal takes the visual's place once the question is answered, so it needs its own alt. A
-  // hotspot's visual is what the learner taps and a scenario's plays the outcome, so neither has one.
+  // A reveal takes the visual's place once the question is answered, so it needs a visual to replace
+  // (one appearing from nothing after Check pushes the answers down) and its own alt. A hotspot's
+  // visual is what the learner taps and a scenario's plays the outcome, so neither has one.
   for (const { kata, path } of questions) {
     const v = kata.reveal
     if (!v) continue
@@ -542,6 +543,12 @@ export function checkLesson(lesson: Lesson, raw: string): Issue[] {
         "structure",
         `${path}.reveal`,
         `A ${kata.type} kata can't have a "reveal": its visual already shows the answer after checking. Remove it.`
+      )
+    else if (!kata.visual)
+      add(
+        "structure",
+        `${path}.reveal`,
+        `A "reveal" takes the place of the question's "visual", and this question has none. Add a "visual" (the same picture without the answer), or remove the reveal.`
       )
     else if (v.kind !== "code" && v.kind !== "math" && !v.alt)
       add(
@@ -1148,8 +1155,7 @@ function checkRhythm(
       )
     }
   })
-  const practiceCount =
-    lesson.katas.length - conceptAt.length - guessAt.length
+  const practiceCount = lesson.katas.length - conceptAt.length - guessAt.length
   if (practiceCount < practiceTotal.min || practiceCount > practiceTotal.max) {
     add(
       "structure",

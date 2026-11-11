@@ -43,8 +43,6 @@ export interface PublishedView {
   viewerHandle: string | null
   /** What the header shows about the visitor; null when nobody is logged in. */
   account: AccountInfo | null
-  /** The logged-in visitor's streak as it stands, for the header's lantern. */
-  currentStreak: DayStreak | null
   /** The streak finishing it will light, for the streak screen; null when it won't light today. */
   streak: DayStreak | null
 }
@@ -71,7 +69,6 @@ export const viewPublished = cache(
         liked: false,
         viewerHandle: actor?.handle ?? null,
         account: accountOf(actor),
-        currentStreak: null,
         streak: null,
       }
     const isOwner = actor !== null && record.ownerId === actor.userId
@@ -86,7 +83,6 @@ export const viewPublished = cache(
         liked: false,
         viewerHandle: actor?.handle ?? null,
         account: accountOf(actor),
-        currentStreak: null,
         streak: null,
       }
     const db = await getDb()
@@ -108,7 +104,6 @@ export const viewPublished = cache(
       liked: liked.has(record.id),
       viewerHandle: actor?.handle ?? null,
       account: accountOf(actor),
-      currentStreak: streaks?.current ?? null,
       streak: streaks?.coming ?? null,
     }
   }

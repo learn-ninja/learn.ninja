@@ -78,7 +78,6 @@ export default async function PublishedLessonPage({
     liked,
     viewerHandle,
     account,
-    currentStreak,
     streak,
   } = view
   const { ui, c, by } = await searchParams
@@ -117,7 +116,6 @@ export default async function PublishedLessonPage({
         }
         recordCompletion={signedIn}
         account={account}
-        currentStreak={currentStreak ?? undefined}
         streak={streak ?? undefined}
         likes={{ likes: record.likes, liked, signedIn }}
         loginHref={`/login?callback=${encodeURIComponent(`/l/${slugId}?like=1`)}`}

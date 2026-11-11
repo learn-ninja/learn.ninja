@@ -116,6 +116,7 @@ import {
   LessonFooter,
   LessonHeader,
   PanelRightFilledIcon,
+  LanguageSetting,
   PlayerSettings,
   PlayerSettingsItems,
   TheoryPanel,
@@ -385,12 +386,11 @@ function LessonInLanguage({
               onPrefs={setPrefs}
               soundOn={prefsLoaded && prefs.sound !== "off"}
               onShortcuts={() => setShortcutsOpen((open) => !open)}
-              // The gear stays away while it would open an empty menu.
+              // The gear holds the theme only, so it stays away without one.
               headerSettings={
-                onThemeChange || UI_TRANSLATIONS ? (
-                  <AppSettings {...appSettings} />
-                ) : undefined
+                onThemeChange ? <AppSettings {...appSettings} /> : undefined
               }
+              languageSetting={<LanguageSetting {...appSettings} />}
               actions={headerActions}
               account={headerAccount}
               phoneMenu={
@@ -501,6 +501,7 @@ function Player({
   soundOn,
   onShortcuts,
   headerSettings,
+  languageSetting,
   actions,
   account,
   phoneMenu,
@@ -526,6 +527,8 @@ function Player({
   onShortcuts: () => void
   /** The app's settings, shown in the header. */
   headerSettings?: React.ReactNode
+  /** The language menu, at the end of the tray. */
+  languageSetting?: React.ReactNode
   /** The app's own buttons, before Share. */
   actions?: React.ReactNode
   /** The app's account controls, last in the header. */
@@ -815,6 +818,29 @@ function Player({
     .flatMap((i) => (i.kind === "concept" ? [i.kata] : []))
   // The ninja lives on the card and reacts to each check: pleased when it's right, sorry when it's not.
   const cardRef = React.useRef<HTMLDivElement>(null)
+  // On phones the header and tray meet the lesson with no line: a fade shows there's more above or
+  // below, once there is. Measured on scroll and whenever the screen or its content changes size.
+  const [edges, setEdges] = React.useState({ above: false, below: false })
+  React.useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const measure = () => {
+      const above = el.scrollTop > 1
+      const below = el.scrollTop + el.clientHeight < el.scrollHeight - 1
+      setEdges((was) =>
+        was.above === above && was.below === below ? was : { above, below }
+      )
+    }
+    measure()
+    el.addEventListener("scroll", measure, { passive: true })
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    if (el.firstElementChild) observer.observe(el.firstElementChild)
+    return () => {
+      el.removeEventListener("scroll", measure)
+      observer.disconnect()
+    }
+  }, [state.index, onStreak])
   const q = state.question
   // Feedback can land on the answers. On phones the tray grows to show it, which can push the marked
   // answers below the fold: once it has settled, bring the last of them back into view. Wider, the
@@ -954,7 +980,7 @@ function Player({
         <div
           className={cn(
             // On phones the tray is as dark as the card: one surface, with the actions at its foot.
-            "relative flex min-w-0 flex-1 overflow-clip border-y bg-muted max-sm:bg-background sm:rounded-4xl sm:border",
+            "relative flex min-w-0 flex-1 overflow-clip bg-muted max-sm:bg-background sm:rounded-4xl sm:border",
             // In a product shot the mock browser frames the window; its own border would double up.
             !chrome && "border-0"
           )}
@@ -1081,6 +1107,21 @@ function Player({
                   <div aria-hidden="true" style={{ height: bubbleRoom }} />
                 ) : null}
               </main>
+              {/* Phones: the fades at the top and bottom edges, in place of lines (see edges). */}
+              <div
+                aria-hidden="true"
+                className={cn(
+                  "pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-linear-to-b from-background to-transparent opacity-0 transition-opacity duration-200 sm:hidden",
+                  edges.above && "opacity-100"
+                )}
+              />
+              <div
+                aria-hidden="true"
+                className={cn(
+                  "pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-linear-to-t from-background to-transparent opacity-0 transition-opacity duration-200 sm:hidden",
+                  edges.below && "opacity-100"
+                )}
+              />
               <VisualsAhead item={state.items[state.index + 1]} />
               {ninja !== "off" ? (
                 <NinjaStage
@@ -1172,6 +1213,7 @@ function Player({
                       onPrefs={onPrefs}
                       t={t}
                     />
+                    {languageSetting}
                     {/* Then help. Theory stays hidden while it's redesigned. */}
                     {SHOW_THEORY ? (
                       <Button
@@ -1278,7 +1320,7 @@ function columnWidth(item: Item): string {
   if (item.kind !== "question") return "max-w-lg"
   const { kata } = item
   const wide =
-    Boolean(kata.visual ?? kata.reveal) ||
+    Boolean(kata.visual) ||
     hasOptionCards(kata) ||
     kata.type === "sort" ||
     kata.type === "match" ||
@@ -2314,10 +2356,11 @@ export function ActionArea({
             // Rewinding: what he said runs back out.
             rewinding &&
               "motion-safe:animate-out motion-safe:fade-out-0 motion-safe:fill-mode-forwards motion-safe:slide-out-to-bottom-2",
-            // In the player the bubble sits above the ninja, behind him, so he jumps in front of it.
-            // Without him it takes his corner.
+            // In the player the bubble sits beside the ninja, 12px after him: at least his height
+            // with its text centered, so a one-line bubble meets him in the middle and a longer
+            // one grows up from his feet. Without him it takes his corner.
             tray && ninja
-              ? "start-4 bottom-17 sm:start-6 sm:bottom-19"
+              ? "start-4 bottom-17 sm:start-19 sm:bottom-6 sm:flex sm:min-h-10 sm:flex-col sm:justify-center"
               : "start-4 bottom-4 sm:start-6 sm:bottom-6",
             toneClass[tone]
           )}

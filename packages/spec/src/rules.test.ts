@@ -44,7 +44,8 @@ describe("visuals", () => {
   it("wants alt text on a question's HTML visual", () => {
     const lesson = compound()
     const at = lesson.katas.findIndex(
-      (k: { type: string; visual?: unknown }) => k.type !== "concept" && k.visual
+      (k: { type: string; visual?: unknown }) =>
+        k.type !== "concept" && k.visual
     )
     delete lesson.katas[at].visual.alt
     expectIssue(lesson, { path: `katas[${at}].visual`, message: /no "alt"/ })
@@ -1905,14 +1906,25 @@ describe("a reveal", () => {
 
   it("is a second visual on a question, with its own alt", () => {
     const l = compound()
+    l.katas[1].visual = { ...chart, alt: "Two bars." }
     l.katas[1].reveal = { ...chart, alt: "Compound ends $2.50 ahead." }
     expect(validateLesson(l).issues).toEqual([])
     delete l.katas[1].reveal.alt
     expectIssue(l, { path: "katas[1].reveal", message: /has no "alt"/ })
   })
 
+  it("takes the place of a visual, so a question without one can't have it", () => {
+    const l = compound()
+    l.katas[1].reveal = { ...chart, alt: "Compound ends $2.50 ahead." }
+    expectIssue(l, {
+      path: "katas[1].reveal",
+      message: /this question has none/,
+    })
+  })
+
   it("is checked like any other visual", () => {
     const l = compound()
+    l.katas[1].visual = { ...chart, alt: "Two bars." }
     l.katas[1].reveal = {
       kind: "html",
       alt: "A script.",

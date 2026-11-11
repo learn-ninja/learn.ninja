@@ -99,14 +99,21 @@ export function explanationShown(s: QuestionState, role: Role): boolean {
 /**
  * The visual above the answers: the kata's own, or its `reveal` once the answer is in (answered
  * right, shown after two misses, or, for a guess, as soon as it's checked). A hotspot's visual is
- * what the learner taps and a scenario's plays the outcome, so neither is swapped.
+ * what the learner taps and a scenario's plays the outcome, so neither is swapped. A reveal with no
+ * visual to replace (in lessons published before the checker refused one) never shows: appearing
+ * from nothing after Check, it pushed the answers down.
  */
 export function visualShown(
   kata: QuestionKata,
   s: QuestionState,
   role: Role
 ): Visual | undefined {
-  if (!kata.reveal || kata.type === "hotspot" || kata.type === "scenario")
+  if (
+    !kata.visual ||
+    !kata.reveal ||
+    kata.type === "hotspot" ||
+    kata.type === "scenario"
+  )
     return kata.visual
   const answered =
     s.phase === "revealed" ||

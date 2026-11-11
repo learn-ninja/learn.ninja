@@ -29,8 +29,9 @@ jobs:
       - run: npx turbo lint typecheck test build
         env:
           NEXT_TELEMETRY_DISABLED: 1
-      # Browser smoke tests against the build above (apps/web/e2e).
-      - run: npx playwright install --with-deps chromium
+      # Browser smoke tests against the build above (apps/web/e2e). No --with-deps: the runner image
+      # already has Chromium's libraries (it ships Chrome), and apt's mirror can be unreachable.
+      - run: npx playwright install chromium
       - run: npm run e2e -w web
       - uses: actions/upload-artifact@v4
         if: failure()

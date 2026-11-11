@@ -192,7 +192,7 @@ export function Explanation({
 /**
  * The player's feedback under the answers, beside the ninja's line: a miss's hint or a scenario's
  * outcome in amber, the explanation in green, and the hint the learner asked for in neutral grey
- * with a lightbulb. The explanation's recipe, led by a filled icon.
+ * with a lightbulb. No box: the icon and the text sit under the answers, aligned to their start.
  */
 export function Note({
   tone,
@@ -206,12 +206,7 @@ export function Note({
   return (
     <div
       className={cn(
-        "flex items-start gap-2.5 rounded-lg border px-4 py-3 text-sm tabular-nums",
-        tone === "good"
-          ? "border-green-600 bg-green-600/10"
-          : tone === "warn"
-            ? "border-yellow-500 bg-yellow-500/10"
-            : "border-border bg-muted",
+        "flex items-start gap-2.5 text-sm tabular-nums",
         className
       )}
     >

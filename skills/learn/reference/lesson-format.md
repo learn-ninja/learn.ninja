@@ -92,7 +92,7 @@ With `"stepped": true` the body shows one step per Continue: each paragraph and 
 
 `{ "id", "type", "prompt" (rich text, ≤40 words), "visual"?, "reveal"?, "hint"?, "explanation" }` plus the fields for its type.
 
-`reveal` is a second visual (any kind, with its own `alt`) that takes the place of `visual` once the question is answered right or its answer is revealed; on the hook, as soon as the guess is checked. A question with no `visual` can have one too: it appears above the answers. A `hotspot` or `scenario` can't have one.
+`reveal` is a second visual (any kind, with its own `alt`) that takes the place of `visual` once the question is answered right or its answer is revealed; on the hook, as soon as the guess is checked. It needs a `visual` to replace: a question without one can't have a reveal. A `hotspot` or `scenario` can't have one.
 
 ## Visuals
 
@@ -240,7 +240,7 @@ Used by `choice` and `compare`: `{ "id", "text"? (rich text), "visual"?, "feedba
 
 ## Rules the checker enforces
 
-- Hook is `choice` or `compare`; the first kata is a `concept`; 1–4 concept katas; 2–4 question katas after each concept kata; 3–12 question katas in `katas` in total; at most 20 katas; the challenge is a question kata. A `guess` kata is a `choice` or `compare` in `katas` followed directly by a concept, and isn't counted in those numbers. A `stepped` concept's body has 2–6 steps. A `reveal` isn't on a `hotspot` or `scenario`, and has an `alt` unless it's code or math.
+- Hook is `choice` or `compare`; the first kata is a `concept`; 1–4 concept katas; 2–4 question katas after each concept kata; 3–12 question katas in `katas` in total; at most 20 katas; the challenge is a question kata. A `guess` kata is a `choice` or `compare` in `katas` followed directly by a concept, and isn't counted in those numbers. A `stepped` concept's body has 2–6 steps. A `reveal` is only on a question with a `visual`, not on a `hotspot` or `scenario`, and has an `alt` unless it's code or math.
 - Unique ids; every reference points to something real (`correct`, `group`, `alsoAccept`, `[[gap]]` ids, hotspot ids, code hotspot lines, squares on a chess hotspot, countries on a map hotspot).
 - Every `choice` has `multiple`, even when it's `false`; every wrong `choice`/`compare` option has `feedback`; every question kata has an `explanation`; a `choice` has at least one wrong option; a `scenario` has a `best` option and a `situation` of at least two sentences.
 - A right answer can't give itself away by length: at 30 characters or more it stays under 1.5 times the longest wrong option, and in a lesson with 4 or more one-answer text questions it isn't the longest option in most of them.

@@ -87,6 +87,16 @@ describe("a reveal", () => {
     expect(visualShown(kata, right.question!, "practice")).toBe(kata.reveal)
   })
 
+  it("never shows without a visual to replace", () => {
+    const bare = { ...kata, visual: undefined } as QuestionKata
+    const right = go(
+      at(lesson),
+      { type: "answer", answer: solution(kata) },
+      { type: "check" }
+    )
+    expect(visualShown(bare, right.question!, "practice")).toBeUndefined()
+  })
+
   it("waits through a miss, and shows once the answer is revealed", () => {
     if (kata.type !== "choice") throw new Error()
     const wrong = kata.options.find((o) => !kata.correct.includes(o.id))!.id
@@ -102,7 +112,11 @@ describe("a reveal", () => {
   })
 
   it("shows on a guess as soon as it's checked", () => {
-    const hook = { ...lesson.hook, reveal: { kind: "math", tex: "c" } } as QuestionKata
+    const hook = {
+      ...lesson.hook,
+      visual: { kind: "math", tex: "a" },
+      reveal: { kind: "math", tex: "c" },
+    } as QuestionKata
     const state = go(start({ ...lesson, hook } as Lesson), { type: "next" })
     if (hook.type !== "choice") throw new Error()
     const wrong = hook.options.find((o) => !hook.correct.includes(o.id))!.id
