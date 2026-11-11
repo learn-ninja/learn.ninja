@@ -15,7 +15,7 @@ import { useMarkedAnswer } from "@/components/answer-marks"
 import { RichText } from "@/components/rich-text"
 import { useStage } from "@/components/stage-context"
 import { Text } from "@/components/ui/text"
-import { alpha, mix } from "@/lib/color"
+import { mix } from "@/lib/color"
 import { tap } from "@/lib/haptics"
 import { cn } from "@/lib/utils"
 import { colors, fontSize } from "../../tokens"
@@ -179,7 +179,7 @@ export function MarkBadge({
 /**
  * The player's feedback under the answers, as the web's Note: a miss's hint or a scenario's
  * outcome in amber, the explanation in green, and the hint the learner asked for in neutral grey
- * with a lightbulb. One line per paragraph, so worked steps stack.
+ * with a lightbulb, with no box around it. One line per paragraph, so worked steps stack.
  */
 export function Note({
   tone,
@@ -197,18 +197,7 @@ export function Note({
         ? colors.feedback.warn
         : colors.border
   return (
-    <View
-      className={cn(
-        "flex-row items-start gap-2.5 rounded-lg border px-4 py-3",
-        tone === "neutral" && "bg-muted",
-        className
-      )}
-      style={
-        tone === "neutral"
-          ? { borderColor: color }
-          : { borderColor: color, backgroundColor: alpha(color, 0.1) }
-      }
-    >
+    <View className={cn("flex-row items-start gap-2.5", className)}>
       {tone === "neutral" ? (
         <LightbulbIcon />
       ) : (

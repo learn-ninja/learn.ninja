@@ -118,6 +118,7 @@ function Question({
   const answered = mode === "correct" || mode === "why" || mode === "revealed"
   const shown =
     answered &&
+    kata.visual &&
     kata.reveal &&
     kata.type !== "hotspot" &&
     kata.type !== "scenario"

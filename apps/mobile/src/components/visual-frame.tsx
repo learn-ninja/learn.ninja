@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { Pressable, useWindowDimensions, View } from "react-native"
+import {
+  AccessibilityInfo,
+  Pressable,
+  useWindowDimensions,
+  View,
+} from "react-native"
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -10,7 +15,6 @@ import Animated, {
 import { WebView } from "react-native-webview"
 
 import type { HotspotControl } from "@/components/visuals/visual"
-import { Text } from "@/components/ui/text"
 import { alpha } from "@/lib/color"
 import { API_BASE_URL } from "@/lib/config"
 import { tap } from "@/lib/haptics"
@@ -88,7 +92,7 @@ export function VisualFrame({
   visualsCss: string
   plain?: boolean
   hotspots?: HotspotControl
-  /** What's picked, in words under the stage (the parts' names), as on the web. */
+  /** What's picked, in words (the parts' names), announced to VoiceOver as it changes. */
   label?: (parts: string) => string
   /** The width the frame is laid out at, when the place it sits in fixes it (an order item). */
   width?: number
@@ -166,6 +170,14 @@ export function VisualFrame({
           .filter((s) => hotspots.selected.includes(s.id))
           .map((s) => s.label)
       : []
+  // What's picked, in words, for VoiceOver only: the marks on the frame show it to everyone else.
+  const said = picked.length && label ? label(picked.join(", ")) : ""
+  const lastSaid = useRef(said)
+  useEffect(() => {
+    if (said === lastSaid.current) return
+    lastSaid.current = said
+    if (said) AccessibilityInfo.announceForAccessibility(said)
+  }, [said])
 
   const frame = (
     <View
@@ -275,18 +287,5 @@ export function VisualFrame({
       {frame}
     </Pressable>
   )
-  if (!hotspots) return stage
-  return (
-    <View className="gap-3">
-      {stage}
-      {/* What's picked, in words: confirms the tap, and screen readers hear it. */}
-      <Text
-        className="text-lesson-sm min-h-5 text-muted-foreground"
-        numberOfLines={1}
-        accessibilityLiveRegion="polite"
-      >
-        {picked.length && label ? label(picked.join(", ")) : ""}
-      </Text>
-    </View>
-  )
+  return stage
 }

@@ -698,6 +698,8 @@ type AppSettingsProps = {
   uiLanguage: string
   onPrefs: (patch: Partial<Preferences>) => void
   t: Strings
+  /** Include the language (the phone menu does; the header's gear leaves it to the tray). */
+  language?: boolean
 }
 
 /** Props for a submenu that picks one of its items. */
@@ -711,7 +713,7 @@ const single = (onPick: (key: string) => void) => ({
   },
 })
 
-/** The app's settings behind a gear in the header: theme and language as submenus. */
+/** The app's settings behind a gear in the header: the theme, as a submenu (language is in the tray). */
 export function AppSettings(props: AppSettingsProps) {
   return (
     <DropdownMenuTrigger>
@@ -720,7 +722,7 @@ export function AppSettings(props: AppSettingsProps) {
       </Button>
       <DropdownMenu placement="bottom end" className="w-auto min-w-44">
         <DropdownMenuGroup aria-label={props.t.settings}>
-          <AppSettingsItems {...props} />
+          <AppSettingsItems {...props} language={false} />
         </DropdownMenuGroup>
       </DropdownMenu>
     </DropdownMenuTrigger>
@@ -734,6 +736,7 @@ export function AppSettingsItems({
   uiLanguage,
   onPrefs,
   t,
+  language: withLanguage = true,
 }: AppSettingsProps) {
   const language = uiLanguageFor(uiLanguage) ?? UI_LANGUAGES[0]
   const ThemeIcon =
@@ -762,7 +765,7 @@ export function AppSettingsItems({
           </DropdownMenuSubContent>
         </DropdownMenuSub>
       ) : null}
-      {UI_TRANSLATIONS ? (
+      {UI_TRANSLATIONS && withLanguage ? (
         <DropdownMenuSub>
           <DropdownMenuSubTrigger textValue={t.language}>
             <GlobeIcon />
@@ -867,9 +870,9 @@ const NINJA_PREVIEW: Record<NinjaLevel, NinjaMood> = {
 }
 
 /**
- * Settings that change how the lesson plays, in the tray. The ninja's sits at the start, under the
- * corner he lives in; text size and sound sit at the end. Sound is his voice, so it shows only in a
- * language he speaks.
+ * Settings that change how the lesson plays, in the tray. The ninja's and sound (his voice) sit at
+ * the start, under the corner he lives in; text size sits at the end, before the language. Sound
+ * shows only in a language he speaks.
  */
 export function PlayerSettings({
   side,
@@ -877,7 +880,7 @@ export function PlayerSettings({
   onPrefs,
   t,
 }: {
-  /** Which end of the tray: the ninja's setting, or text size and sound. */
+  /** Which end of the tray: the ninja's setting and sound, or text size. */
   side: "start" | "end"
   prefs: Preferences
   onPrefs: (patch: Partial<Preferences>) => void
@@ -888,44 +891,70 @@ export function PlayerSettings({
   const ninja = prefs.ninja ?? "sensei"
   if (side === "start")
     return (
-      <NinjaSetting
-        value={ninja}
-        onChange={(ninja) => onPrefs({ ninja })}
-        t={t}
-      />
+      <>
+        <NinjaSetting
+          value={ninja}
+          onChange={(ninja) => onPrefs({ ninja })}
+          t={t}
+        />
+        {hasVoice(lang) ? (
+          <Button
+            variant="ghost"
+            size="lg"
+            className={cn(TRAY_BUTTON, TRAY_GHOST)}
+            aria-label={`${t.sound}: ${sound === "on" ? t.sound : t.muted}`}
+            onPress={() => onPrefs({ sound: sound === "on" ? "off" : "on" })}
+          >
+            {sound === "on" ? <Volume2Icon /> : <VolumeXIcon />}
+            <span className="max-sm:sr-only">
+              {sound === "on" ? t.sound : t.muted}
+            </span>
+          </Button>
+        ) : null}
+      </>
     )
   return (
-    <>
-      <SettingMenu
-        label={t.textSize}
-        icon={<TypeIcon />}
-        value={prefs.textSize}
-        valueLabel={t.sizesShort[prefs.textSize]}
-        defaultValue="md"
-        defaultLabel={t.defaultOption}
-        options={(["sm", "md", "lg"] as const).map((id) => ({
-          id,
-          label: t.sizes[id],
-        }))}
-        onChange={(textSize) => onPrefs({ textSize })}
-        size="lg"
-        className={cn(TRAY_BUTTON, TRAY_GHOST)}
-      />
-      {hasVoice(lang) ? (
-        <Button
-          variant="ghost"
-          size="lg"
-          className={cn(TRAY_BUTTON, TRAY_GHOST)}
-          aria-label={`${t.sound}: ${sound === "on" ? t.sound : t.muted}`}
-          onPress={() => onPrefs({ sound: sound === "on" ? "off" : "on" })}
-        >
-          {sound === "on" ? <Volume2Icon /> : <VolumeXIcon />}
-          <span className="max-sm:sr-only">
-            {sound === "on" ? t.sound : t.muted}
-          </span>
-        </Button>
-      ) : null}
-    </>
+    <SettingMenu
+      label={t.textSize}
+      icon={<TypeIcon />}
+      value={prefs.textSize}
+      valueLabel={t.sizesShort[prefs.textSize]}
+      defaultValue="md"
+      defaultLabel={t.defaultOption}
+      options={(["sm", "md", "lg"] as const).map((id) => ({
+        id,
+        label: t.sizes[id],
+      }))}
+      onChange={(textSize) => onPrefs({ textSize })}
+      size="lg"
+      className={cn(TRAY_BUTTON, TRAY_GHOST)}
+    />
+  )
+}
+
+/** The language of the player's own text, at the end of the tray after text size. */
+export function LanguageSetting({
+  uiLanguage,
+  onPrefs,
+  t,
+}: Pick<AppSettingsProps, "uiLanguage" | "onPrefs" | "t">) {
+  if (!UI_TRANSLATIONS) return null
+  const language = uiLanguageFor(uiLanguage) ?? UI_LANGUAGES[0]
+  return (
+    <SettingMenu
+      label={t.language}
+      icon={<GlobeIcon />}
+      value={language.code}
+      valueLabel={language.label}
+      options={UI_LANGUAGES.map((l) => ({
+        id: l.code,
+        label: l.label,
+        lang: l.code,
+      }))}
+      onChange={(code) => onPrefs({ uiLanguage: code })}
+      size="lg"
+      className={cn(TRAY_BUTTON, TRAY_GHOST)}
+    />
   )
 }
 

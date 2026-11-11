@@ -7,7 +7,6 @@ import {
   LessonPlayer,
   parseChallenge,
   type Challenge,
-  type DayStreak,
   type LessonPlayerProps,
   type NextKind,
 } from "@workspace/player"
@@ -62,8 +61,6 @@ export interface LessonViewProps extends LessonPlayerProps {
   loginHref?: string
   /** The logged-in user, or null when nobody is. Prerendered pages leave it out for the marker cookie. */
   account?: AccountInfo | null
-  /** The logged-in learner's streak as it stands, for the header's lantern. */
-  currentStreak?: DayStreak
 }
 
 /**
@@ -82,12 +79,9 @@ export function LessonView({
   likes,
   loginHref,
   account: knownAccount,
-  currentStreak,
   ...props
 }: LessonViewProps) {
   const account = useAccount(knownAccount)
-  // The lantern as it stands, until this finish lights it alongside the streak screen.
-  const [lantern, setLantern] = React.useState(currentStreak)
   const [urlLanguage, setUrlLanguage] = React.useState<string>()
   const [reportOpen, setReportOpen] = React.useState(false)
   const [blockOpen, setBlockOpen] = React.useState(false)
@@ -181,7 +175,7 @@ export function LessonView({
             {account ? null : <GitHubStars className="max-sm:hidden" />}
           </>
         }
-        headerAccount={<LessonAccount account={account} streak={lantern} />}
+        headerAccount={<LessonAccount account={account} />}
         phoneAccount={
           account ? <AccountMenuItems account={account} /> : undefined
         }
@@ -254,7 +248,6 @@ export function LessonView({
             ? undefined
             : recordCompletion
               ? () => {
-                  if (props.streak) setLantern(props.streak)
                   sentProgress.current = sentProgress.current.then(() =>
                     fetch(`/api/lessons/${lessonId}/complete`, {
                       method: "POST",

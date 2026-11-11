@@ -401,7 +401,8 @@ const questionBase = {
   /**
    * Shown in place of `visual` once the question is answered right or its answer is revealed: the
    * same picture with the answer in it (the chart colored by the hidden cause, the code with its
-   * output). Not on a hotspot or a scenario, whose visuals already change.
+   * output). Only on a question with a `visual` to replace (rules.ts). Not on a hotspot or a
+   * scenario, whose visuals already change.
    */
   reveal: visual.optional(),
   hint: richText.optional(),

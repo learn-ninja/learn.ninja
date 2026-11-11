@@ -386,11 +386,8 @@ function HtmlFrame({
   return (
     <div className="flex flex-col gap-3">
       {stage}
-      {/* What's picked, in words: confirms the tap, and screen readers hear it. */}
-      <p
-        aria-live="polite"
-        className="min-h-5 truncate text-sm text-muted-foreground"
-      >
+      {/* What's picked, in words, for screen readers only: the marks in the frame show it. */}
+      <p aria-live="polite" className="sr-only">
         {picked.length ? t.picked(picked.join(", ")) : ""}
       </p>
     </div>
@@ -686,7 +683,7 @@ function ChessBlock({
 /**
  * A drawing whose every part can be tapped on a hotspot (a board's squares, a map's countries).
  * There it's a group named by its alt on a filled stage, like an HTML hotspot's visual, with the
- * parts picked named under it: that confirms the tap, and screen readers hear it. Elsewhere it's an
+ * parts picked named for screen readers (the marks on the drawing show them). Elsewhere it's an
  * image in a framed box.
  */
 function TappableStage({
@@ -727,10 +724,7 @@ function TappableStage({
   return (
     <div className="flex flex-col gap-3">
       {block}
-      <p
-        aria-live="polite"
-        className="min-h-5 truncate text-sm text-muted-foreground"
-      >
+      <p aria-live="polite" className="sr-only">
         {hotspots.selected.length
           ? t.picked(hotspots.selected.map(name).join(", "))
           : ""}

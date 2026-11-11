@@ -36,43 +36,7 @@
       "b"
     ],
     "multiple": false,
-    "explanation": "Each year's interest joins the balance, so the next year earns interest on a bigger amount: about $1,949 after 7 years.",
-    "reveal": {
-      "kind": "chart",
-      "type": "function",
-      "alt": "Over 7 years, compound interest curves up to about $1,949, while adding $100 a year reaches only $1,700.",
-      "x": {
-        "label": "Years",
-        "min": 0,
-        "max": 7
-      },
-      "y": {
-        "label": "Balance ($)",
-        "min": 1000
-      },
-      "series": [
-        {
-          "expression": "1000 * 1.1^x",
-          "label": "Compound"
-        },
-        {
-          "expression": "1000 + 100x",
-          "label": "$100 a year"
-        }
-      ],
-      "points": [
-        {
-          "x": 7,
-          "y": 1949,
-          "label": "$1,949"
-        },
-        {
-          "x": 7,
-          "y": 1700,
-          "label": "$1,700"
-        }
-      ]
-    }
+    "explanation": "Each year's interest joins the balance, so the next year earns interest on a bigger amount: about $1,949 after 7 years."
   },
   "katas": [
     {
@@ -257,6 +221,42 @@
           {
             "expression": "1000 + 70x",
             "label": "B"
+          }
+        ]
+      },
+      "reveal": {
+        "kind": "chart",
+        "type": "function",
+        "alt": "The same two lines named: compound curves up to about $7,612 after 30 years, while simple interest climbs straight to $3,100.",
+        "x": {
+          "label": "Years",
+          "min": 0,
+          "max": 30
+        },
+        "y": {
+          "label": "Balance ($)",
+          "min": 0
+        },
+        "series": [
+          {
+            "expression": "1000 * 1.07^x",
+            "label": "Compound"
+          },
+          {
+            "expression": "1000 + 70x",
+            "label": "Simple"
+          }
+        ],
+        "points": [
+          {
+            "x": 30,
+            "y": 7612,
+            "label": "$7,612"
+          },
+          {
+            "x": 30,
+            "y": 3100,
+            "label": "$3,100"
           }
         ]
       },
