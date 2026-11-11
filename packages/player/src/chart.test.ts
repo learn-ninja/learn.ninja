@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { ChartVisual } from "@workspace/spec"
 
@@ -7,6 +7,16 @@ import { chartKey } from "@workspace/player-core/prepared"
 
 // Charts are drawn on the server into SVG that carries only theme tokens, so one drawing serves
 // light and dark and the frame runs no script.
+
+// Sampling a curve has a time budget (curve.ts), and a curve over it isn't drawn. On a busy CI
+// runner a cold first evaluation can miss it, so the clock stands still here: these tests are
+// about the drawing. The budget has its own tests in player-core.
+beforeEach(() => {
+  vi.spyOn(performance, "now").mockReturnValue(0)
+})
+afterEach(() => {
+  vi.restoreAllMocks()
+})
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 const scatter: ChartVisual = {
