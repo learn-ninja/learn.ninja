@@ -7,11 +7,12 @@ import {
   CADENCE,
   characterFor,
   createLinePicker,
+  NINJA_VOICE,
   voiceLines,
   type Moment,
 } from "@workspace/player-core/voices"
 
-import { effectsOn, speaks, upcomingVoice, voiceUrl } from "./voice"
+import { speaks, upcomingVoice, voiceUrl } from "./voice"
 
 const BASE = "https://learn.ninja"
 const LEVELS: NinjaLevel[] = ["off", "sensei", "casual", "unhinged"]
@@ -62,14 +63,15 @@ describe("the ninja's voice", () => {
   })
 
   it("speaks only when he's on, unmuted, and in a language he speaks", () => {
-    expect(speaks("sensei", true, "en")).toBe(true)
-    expect(speaks("off", true, "en")).toBe(false)
-    expect(speaks("casual", false, "en")).toBe(false)
-    expect(speaks("casual", true, "de")).toBe(false)
-    // The effects follow the Sound setting, even with him off.
-    expect(effectsOn(true, "en")).toBe(true)
-    expect(effectsOn(false, "en")).toBe(false)
-    expect(effectsOn(true, "ja")).toBe(false)
+    expect(speaks("sensei", true, "en", true)).toBe(true)
+    expect(speaks("off", true, "en", true)).toBe(false)
+    expect(speaks("casual", false, "en", true)).toBe(false)
+    expect(speaks("casual", true, "de", true)).toBe(false)
+  })
+
+  it("stays quiet while his voice is off", () => {
+    expect(speaks("sensei", true, "en", false)).toBe(false)
+    expect(speaks("sensei", true, "en")).toBe(NINJA_VOICE)
   })
 })
 

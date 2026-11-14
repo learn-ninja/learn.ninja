@@ -78,6 +78,13 @@ export type VoiceClips = {
 
 const CLIPS = (voiceClips as VoiceClips).clips
 
+/**
+ * Whether the ninja says his lines out loud. Off for now: the player's sounds are its effects (a
+ * right answer, a miss, the intro's whoosh), and his lines are read, not heard. His clips and the
+ * script that makes them stay, so turning this on brings his voice back, in the footer too.
+ */
+export const NINJA_VOICE: boolean = false
+
 /** Whether the ninja speaks in the player's language. */
 export function hasVoice(lang: string): boolean {
   return Boolean(CLIPS[uiLanguageFor(lang)?.code ?? "en"])

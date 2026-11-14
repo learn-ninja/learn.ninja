@@ -2,6 +2,7 @@ import type { NinjaLevel } from "@workspace/player-core/strings"
 import {
   clipFor,
   hasVoice,
+  NINJA_VOICE,
   nextClips,
   type LinePicker,
 } from "@workspace/player-core/voices"
@@ -32,15 +33,14 @@ export function upcomingVoice(
 }
 
 /**
- * Whether he speaks: he's on, the learner hasn't muted the player, and he has a voice in the
- * lesson's language (only English so far). The sound effects follow the same setting, which the web
- * shows only in a language he speaks.
+ * Whether he speaks: his voice is on at all (NINJA_VOICE, off for now), he's on, the learner hasn't
+ * muted the player, and he has a voice in the lesson's language (only English so far).
  */
-export function speaks(level: NinjaLevel, soundOn: boolean, lang: string) {
-  return level !== "off" && soundOn && hasVoice(lang)
-}
-
-/** Whether the sound effects play: the Sound setting, in a language he speaks, as on the web. */
-export function effectsOn(soundOn: boolean, lang: string) {
-  return soundOn && hasVoice(lang)
+export function speaks(
+  level: NinjaLevel,
+  soundOn: boolean,
+  lang: string,
+  voice: boolean = NINJA_VOICE
+) {
+  return voice && level !== "off" && soundOn && hasVoice(lang)
 }

@@ -13,7 +13,6 @@ import {
   type TextSize,
 } from "@workspace/player-core/strings"
 import { timeLeft } from "@workspace/player-core/time"
-import { hasVoice } from "@workspace/player-core/voices"
 
 import { DirectionView, useDirection } from "@/components/direction"
 import {
@@ -38,7 +37,7 @@ import { colors } from "../../tokens"
 // The lesson's menu, as the web's PhoneMenu holds it on a phone (packages/player/src/shell.tsx):
 // the lesson's title and how long its link has left, Share and Restart, then the player's settings
 // (PlayerSettingsItems and the language menu): the ninja's character, the text size, the player's
-// language, and Sound in a language he speaks. The settings are kept in the web's
+// language, and Sound. The settings are kept in the web's
 // `learn:preferences`, so a choice means the same on both players. On a phone it's a sheet from
 // the bottom, with each setting's choices on a page of their own.
 
@@ -210,19 +209,17 @@ export function LessonMenu({
                       onPress={() => setPage("language")}
                     />
                   ) : null}
-                  {hasVoice(lessonLanguage) ? (
-                    <Row
-                      icon={<SoundIcon on={sound} />}
-                      // The web's Sound item: "Sound", or "Muted" while it's off.
-                      label={sound ? t.sound : t.muted}
-                      role="switch"
-                      checked={sound}
-                      onPress={() => {
-                        tap()
-                        onPrefs({ sound: sound ? "off" : "on" })
-                      }}
-                    />
-                  ) : null}
+                  <Row
+                    icon={<SoundIcon on={sound} />}
+                    // The web's Sound item: "Sound", or "Muted" while it's off.
+                    label={sound ? t.sound : t.muted}
+                    role="switch"
+                    checked={sound}
+                    onPress={() => {
+                      tap()
+                      onPrefs({ sound: sound ? "off" : "on" })
+                    }}
+                  />
                   {moderation ? (
                     <>
                       <Separator />

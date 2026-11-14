@@ -25,7 +25,6 @@ import {
   type TextSize,
 } from "@workspace/player-core/strings"
 import { timeLeft } from "@workspace/player-core/time"
-import { hasVoice } from "@workspace/player-core/voices"
 
 import { useDirection } from "@/components/direction"
 import { selection, tap } from "@/lib/haptics"
@@ -38,7 +37,7 @@ import { colors } from "../../tokens"
 // pull-down Mail and Notes use. The lesson's title and how long its link has left, Share and
 // Restart, then the player's settings (PlayerSettingsItems and the language menu) as submenus
 // with a check on the one in use: the ninja's character, the text size, the player's language,
-// and Sound as a switch in a language he speaks. The settings are kept in the web's
+// and Sound as a switch. The settings are kept in the web's
 // `learn:preferences`, so a choice means the same on both players. It runs the player's
 // direction, as the header around it does.
 
@@ -174,15 +173,13 @@ export function LessonMenu({
               ))}
             </Picker>
           ) : null}
-          {hasVoice(lessonLanguage) ? (
-            // The web's Sound item, as the system's switch: on until muted.
-            <Toggle
-              label={t.sound}
-              systemImage={sound ? "speaker.wave.2" : "speaker.slash"}
-              isOn={sound}
-              onIsOnChange={(on) => pick({ sound: on ? "on" : "off" })}
-            />
-          ) : null}
+          {/* The web's Sound item, as the system's switch: on until muted. */}
+          <Toggle
+            label={t.sound}
+            systemImage={sound ? "speaker.wave.2" : "speaker.slash"}
+            isOn={sound}
+            onIsOnChange={(on) => pick({ sound: on ? "on" : "off" })}
+          />
           {moderation ? (
             <>
               <Divider />
