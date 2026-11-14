@@ -90,7 +90,7 @@ import { useStreak } from "@/lib/use-streak"
 import { lessonUiLanguage } from "@/lib/ui-language"
 import { useAppStrings, useStringsFor } from "@/lib/use-strings"
 import { useNinjaVoice } from "@/lib/use-voice"
-import { effectsOn, speaks } from "@/lib/voice"
+import { speaks } from "@/lib/voice"
 import { visualDocument } from "@/lib/visual-frame"
 import { cn } from "@/lib/utils"
 import { measureAhead } from "@/lib/visual-height"
@@ -294,7 +294,8 @@ function Player({
   // The ninja's character from the learner's preferences (the web's, on the device).
   const ninja = ninjaOf(prefs)
   const soundOn = soundOf(prefs)
-  const sfx = effectsOn(soundOn, lesson.language)
+  // The sound effects follow the Sound setting, in every language.
+  const sfx = soundOn
   // After a right answer, Why? adds the explanation to the feedback; each screen starts closed.
   const [whyOpen, setWhyOpen] = useState(false)
   useEffect(() => setWhyOpen(false), [state.index])
@@ -314,7 +315,8 @@ function Player({
     whyOpen,
     level: ninja,
   })
-  // The system's success or error tap as an answer is checked (not a resumed one).
+  // The system's success or error tap as an answer is checked (not a resumed one), and with sound
+  // on a bright chime for a right answer or a soft low one for a miss.
   const q = state.question
   const checked = q?.result && q.phase !== "answering" ? q.result.correct : null
   const checkedKey = `${state.run}:${state.index}:${q?.attempts ?? 0}:${q?.phase ?? ""}`
@@ -323,7 +325,8 @@ function Player({
     if (checked === null || lastHaptic.current === checkedKey) return
     lastHaptic.current = checkedKey
     resultHaptic(checked)
-  }, [checked, checkedKey])
+    if (sfx) playEffect(checked ? "correct" : "incorrect")
+  }, [checked, checkedKey, sfx])
   // Phase 3: he says the line heading the feedback, once per check (not a resumed one).
   // His body for the question feedback: on a phone the web shows him only in a screen's slot (the
   // intro, the wrap-up), so the tray shows his line without him. To show him reacting there, render
@@ -337,9 +340,9 @@ function Player({
     pickLine,
     on: speaks(ninja, soundOn, lesson.language),
   })
-  // The whoosh is loaded ahead, so it starts with the press.
+  // The effects are loaded ahead, so each starts with the press.
   useEffect(() => {
-    if (sfx) preloadEffects(["vanish"])
+    if (sfx) preloadEffects(["vanish", "correct", "incorrect"])
   }, [sfx])
   const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null)
   // The window the screens scroll in, and how far they're scrolled.

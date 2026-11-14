@@ -4,10 +4,11 @@ import {
   type AudioPlayer,
 } from "expo-audio"
 
-// The player's sounds, after the web's (packages/player/src/sound.ts): the ninja's lines, streamed
-// from the web app's /voice/en/ and loaded ahead so each starts with the feedback, and the sound
-// effects (the whoosh as the intro vanishes, the streak's lantern lighting and its flame burning),
-// bundled with the app so they start at once and play offline. Everything follows the learner's
+// The player's sounds, after the web's (packages/player/src/sound.ts): the sound effects (a right
+// answer and a miss, the whoosh as the intro vanishes, the streak's lantern lighting and its flame
+// burning), bundled with the app so they start at once and play offline, and the ninja's lines
+// (while his voice is on: NINJA_VOICE), streamed from the web app's /voice/en/ and loaded ahead so
+// each starts with the feedback. Everything follows the learner's
 // Sound setting (the callers check it), and the system's: the session is iOS's ambient one, so the
 // silent switch mutes the app and music from another app keeps playing under it, as a learning
 // app's taps and voice should.
@@ -16,6 +17,10 @@ import {
 export const SFX = {
   /** The wind as the intro vanishes. */
   vanish: require("../../assets/sfx/vanish.mp3") as number,
+  /** A right answer: two bright rising notes. */
+  correct: require("../../assets/sfx/correct.mp3") as number,
+  /** A miss: two soft falling notes. */
+  incorrect: require("../../assets/sfx/incorrect.mp3") as number,
   /** The streak's lantern lighting: a soft puff as the wick catches, a crackle, a warm glow. */
   lantern: require("../../assets/sfx/lantern.mp3") as number,
   /** Its flame burning, a 4 s seamless loop, quieter than the lighting. */

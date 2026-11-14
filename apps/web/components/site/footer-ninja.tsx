@@ -9,6 +9,7 @@ import {
   footerClip,
 } from "@workspace/player/footer-lines"
 import { Ninja, useEmote, type NinjaMood } from "@workspace/player/ninja"
+import { NINJA_VOICE } from "@workspace/player-core/voices"
 import { Button } from "@workspace/ui/components/button"
 import { Toggle } from "@workspace/ui/components/toggle"
 
@@ -39,8 +40,9 @@ function saveSound(on: boolean) {
 
 /**
  * The ninja at the top of the footer: click him and he says his next line with its own emote, in
- * the player's green speech bubble (`TOAST` in packages/player), aloud if the sound is on. The sound
- * starts off and stays as the visitor left it. He's pulled back by the empty edge of his drawing,
+ * the player's green speech bubble (`TOAST` in packages/player). While his voice is on (NINJA_VOICE)
+ * the bubble has a sound toggle and he says it aloud; the sound starts off and stays as the visitor
+ * left it. He's pulled back by the empty edge of his drawing,
  * so he lines up with the name below, and he's drawn with room around him for his moves.
  */
 export function FooterNinja({
@@ -70,7 +72,7 @@ export function FooterNinja({
     setAt(next)
     emote(EMOTES[next]!)
     stop()
-    const clip = sound ? footerClip(FOOTER_LINES[next]!) : null
+    const clip = NINJA_VOICE && sound ? footerClip(FOOTER_LINES[next]!) : null
     if (!clip) return
     audio.current = new Audio(clip)
     audio.current.play().catch(() => {})
@@ -104,15 +106,17 @@ export function FooterNinja({
           </p>
         </div>
         {/* Just the icon, as tall as the text's line, so the bubble keeps its one-line height. */}
-        <Toggle
-          aria-label="Ninja's voice"
-          size="sm"
-          className="h-5 min-w-5 shrink-0 rounded-full px-0 text-foreground/70 hover:bg-transparent hover:text-foreground aria-pressed:bg-transparent data-selected:bg-transparent"
-          isSelected={sound}
-          onChange={changeSound}
-        >
-          {sound ? <Volume2 /> : <VolumeX />}
-        </Toggle>
+        {NINJA_VOICE ? (
+          <Toggle
+            aria-label="Ninja's voice"
+            size="sm"
+            className="h-5 min-w-5 shrink-0 rounded-full px-0 text-foreground/70 hover:bg-transparent hover:text-foreground aria-pressed:bg-transparent data-selected:bg-transparent"
+            isSelected={sound}
+            onChange={changeSound}
+          >
+            {sound ? <Volume2 /> : <VolumeX />}
+          </Toggle>
+        ) : null}
       </div>
     </div>
   )

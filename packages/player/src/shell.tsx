@@ -66,7 +66,6 @@ import {
   type TextSize,
   type Theme,
 } from "@workspace/player-core/strings"
-import { hasVoice } from "@workspace/player-core/voices"
 
 // The frame around every lesson screen: header (home, title menu, progress, Share), the player's
 // settings at the end of the tray, footer (credit and app settings), and the Theory panel. Layout
@@ -103,7 +102,7 @@ export interface Preferences {
   uiLanguage?: string
   /** Whether the tray of action buttons under the lesson is open (it is until closed). */
   tray?: "open" | "closed"
-  /** The ninja's voice (on until muted). */
+  /** The player's sounds (on until muted). */
   sound?: "on" | "off"
   /** The ninja's character (Sensei until changed). */
   ninja?: NinjaLevel
@@ -870,9 +869,9 @@ const NINJA_PREVIEW: Record<NinjaLevel, NinjaMood> = {
 }
 
 /**
- * Settings that change how the lesson plays, in the tray. The ninja's and sound (his voice) sit at
- * the start, under the corner he lives in; text size sits at the end, before the language. Sound
- * shows only in a language he speaks.
+ * Settings that change how the lesson plays, in the tray. The ninja's and sound (the sounds of a
+ * right answer and a miss) sit at the start, under the corner he lives in; text size sits at the
+ * end, before the language.
  */
 export function PlayerSettings({
   side,
@@ -886,7 +885,6 @@ export function PlayerSettings({
   onPrefs: (patch: Partial<Preferences>) => void
   t: Strings
 }) {
-  const { lang = "en" } = usePlayer()
   const sound = prefs.sound ?? "on"
   const ninja = prefs.ninja ?? "sensei"
   if (side === "start")
@@ -897,20 +895,18 @@ export function PlayerSettings({
           onChange={(ninja) => onPrefs({ ninja })}
           t={t}
         />
-        {hasVoice(lang) ? (
-          <Button
-            variant="ghost"
-            size="lg"
-            className={cn(TRAY_BUTTON, TRAY_GHOST)}
-            aria-label={`${t.sound}: ${sound === "on" ? t.sound : t.muted}`}
-            onPress={() => onPrefs({ sound: sound === "on" ? "off" : "on" })}
-          >
-            {sound === "on" ? <Volume2Icon /> : <VolumeXIcon />}
-            <span className="max-sm:sr-only">
-              {sound === "on" ? t.sound : t.muted}
-            </span>
-          </Button>
-        ) : null}
+        <Button
+          variant="ghost"
+          size="lg"
+          className={cn(TRAY_BUTTON, TRAY_GHOST)}
+          aria-label={`${t.sound}: ${sound === "on" ? t.sound : t.muted}`}
+          onPress={() => onPrefs({ sound: sound === "on" ? "off" : "on" })}
+        >
+          {sound === "on" ? <Volume2Icon /> : <VolumeXIcon />}
+          <span className="max-sm:sr-only">
+            {sound === "on" ? t.sound : t.muted}
+          </span>
+        </Button>
       </>
     )
   return (
@@ -968,7 +964,6 @@ export function PlayerSettingsItems({
   onPrefs: (patch: Partial<Preferences>) => void
   t: Strings
 }) {
-  const { lang = "en" } = usePlayer()
   const sound = prefs.sound ?? "on"
   const ninja = prefs.ninja ?? "sensei"
   return (
@@ -1020,16 +1015,14 @@ export function PlayerSettingsItems({
           ))}
         </DropdownMenuSubContent>
       </DropdownMenuSub>
-      {hasVoice(lang) ? (
-        <DropdownMenuItem
-          textValue={sound === "on" ? t.sound : t.muted}
-          aria-label={`${t.sound}: ${sound === "on" ? t.sound : t.muted}`}
-          onAction={() => onPrefs({ sound: sound === "on" ? "off" : "on" })}
-        >
-          {sound === "on" ? <Volume2Icon /> : <VolumeXIcon />}
-          {sound === "on" ? t.sound : t.muted}
-        </DropdownMenuItem>
-      ) : null}
+      <DropdownMenuItem
+        textValue={sound === "on" ? t.sound : t.muted}
+        aria-label={`${t.sound}: ${sound === "on" ? t.sound : t.muted}`}
+        onAction={() => onPrefs({ sound: sound === "on" ? "off" : "on" })}
+      >
+        {sound === "on" ? <Volume2Icon /> : <VolumeXIcon />}
+        {sound === "on" ? t.sound : t.muted}
+      </DropdownMenuItem>
     </>
   )
 }

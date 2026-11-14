@@ -157,7 +157,7 @@ import {
   characterFor,
   clipFor,
   createLinePicker,
-  hasVoice,
+  NINJA_VOICE,
   nextClips,
   voiceLines,
   type LinePicker,
@@ -772,11 +772,11 @@ function Player({
   // "Start lesson" makes the intro vanish in a puff of smoke before the first kata arrives.
   const [vanishing, setVanishing] = React.useState(false)
   const vanishingRef = React.useRef(false)
-  // A whoosh of wind as he goes, loaded ahead so it starts with the press. It follows the Sound
-  // setting, which shows only in a language he speaks.
-  const whooshOn = soundOn && hasVoice(lang)
+  // A whoosh of wind as he goes, and the sounds of a right answer and a miss, loaded ahead so each
+  // starts with what it follows. They follow the Sound setting.
+  const whooshOn = soundOn
   React.useEffect(() => {
-    if (whooshOn) preloadSounds([VANISH_SOUND])
+    if (whooshOn) preloadSounds([VANISH_SOUND, CORRECT_SOUND, INCORRECT_SOUND])
   }, [whooshOn])
   const vanishIntro = React.useCallback(() => {
     if (vanishingRef.current) return
@@ -1067,11 +1067,7 @@ function Player({
                     ninja={ninja !== "off"}
                     level={ninja}
                     pickLine={pickLine}
-                    speak={
-                      ninja !== "off" &&
-                      soundOn &&
-                      !(resumed && sameFeedback(state, resumed))
-                    }
+                    sound={soundOn && !(resumed && sameFeedback(state, resumed))}
                     onConceptDone={
                       stepsLeft
                         ? () => setConceptStep((n) => n + 1)
@@ -1865,13 +1861,13 @@ function LikeLesson() {
 type Tone = "neutral" | "good" | "warn"
 
 /**
- * Plays the ninja's line: `src` is its clip (null when he stays quiet), `key` names the piece of
- * feedback, so the same line said again later plays again. A new line, a muted player, or leaving
- * the screen stops the one playing.
+ * Plays a piece of feedback's sound (a right answer's or a miss's, or the ninja's line): `src` is
+ * its clip (null to stay quiet), `key` names the piece of feedback, so the same sound for a later
+ * one plays again. A new one, a muted player, or leaving the screen stops the one playing.
  */
-function useSpokenLine(src: string | null, key: string | undefined) {
+function useFeedbackSound(src: string | null, key: string | undefined) {
   // The browser may refuse before the learner has pressed anything, or the clip may not load: then
-  // he just doesn't speak.
+  // it just stays quiet.
   React.useEffect(() => (src ? playSound(src) : undefined), [src, key])
 }
 
@@ -1910,7 +1906,7 @@ export function ActionArea({
   ninja = true,
   level = "sensei",
   pickLine: picker,
-  speak = false,
+  sound = false,
   onConceptDone,
   onStart,
   onStreakDone,
@@ -1940,8 +1936,8 @@ export function ActionArea({
   level?: NinjaLevel
   /** The lesson's line picker, shared across screens so lines don't repeat. A demo of one kata can omit it. */
   pickLine?: LinePicker
-  /** The ninja says his line out loud (the player, with sound on and the ninja not Off). */
-  speak?: boolean
+  /** The feedback is heard: a right answer's sound or a miss's (the player, with sound on). */
+  sound?: boolean
   /** "Got it" on a concept: the player animates the card away before moving on. */
   onConceptDone?: () => void
   /** Starts the lesson from the intro (the player makes the intro vanish first). */
@@ -2143,8 +2139,19 @@ export function ActionArea({
         primaryRef.current?.focus()
       })
   }
-  // He says the line that heads the feedback, once per piece of feedback.
-  useSpokenLine(
+  // A checked answer is heard, once per piece of feedback: a bright chime for a right one, a soft
+  // low one for a miss. The answer shown after the last miss gets none.
+  useFeedbackSound(
+    !sound || tone === "neutral"
+      ? null
+      : tone === "good"
+        ? CORRECT_SOUND
+        : INCORRECT_SOUND,
+    said.key
+  )
+  // With his voice on, he also says the line that heads the feedback.
+  const speak = NINJA_VOICE && sound && ninja
+  useFeedbackSound(
     speak && said.line && title === said.line ? clipFor(lang, said.line) : null,
     said.key
   )
@@ -2402,6 +2409,10 @@ const goStraightOn = () =>
 
 /** The wind as the intro vanishes (ElevenLabs Sound Effects, "an extended whoosh of wind sweeping past"). */
 const VANISH_SOUND = "/sfx/vanish.mp3"
+/** A right answer: two bright rising notes (ElevenLabs Sound Effects, a marimba and glockenspiel chime). */
+const CORRECT_SOUND = "/sfx/correct.mp3"
+/** A miss: two soft falling notes (ElevenLabs Sound Effects, a muted marimba, raised a fifth to carry on small speakers). */
+const INCORRECT_SOUND = "/sfx/incorrect.mp3"
 
 /** Whether a media query matches, following changes. False until mounted. */
 function useMedia(query: string): boolean {

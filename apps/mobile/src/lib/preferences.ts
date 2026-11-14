@@ -11,7 +11,7 @@ export interface Preferences {
   textSize?: TextSize
   uiLanguage?: string
   tray?: "open" | "closed"
-  /** The ninja's voice and the player's sound effects (on until muted). */
+  /** The player's sound effects, and the ninja's voice while it's on (on until muted). */
   sound?: "on" | "off"
   /** The ninja's character (Sensei until changed). */
   ninja?: NinjaLevel
