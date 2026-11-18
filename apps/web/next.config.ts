@@ -29,12 +29,39 @@ const LOCALES = [
 ]
 
 // Requests that don't accept HTML (curl, agents) get Markdown for the home page and docs.
-// The router's own RSC requests don't ask for HTML either, so they're left out.
+// The router's own RSC requests don't ask for HTML either, so they're left out. So are the crawlers
+// that build link previews (X, Slack, LinkedIn…): they send `Accept: */*` like curl does, but read
+// the card's title and image from the HTML's meta tags, so Markdown leaves a shared link bare.
+const PREVIEW_CRAWLERS = [
+  "Twitterbot",
+  "facebookexternalhit",
+  "Facebot",
+  "LinkedInBot",
+  "Slackbot",
+  "Slack-ImgProxy",
+  "Discordbot",
+  "WhatsApp",
+  "TelegramBot",
+  "Pinterest",
+  "redditbot",
+  "Mastodon",
+  "Bluesky",
+  "SkypeUriPreview",
+  "Iframely",
+  "Embedly",
+]
 const NOT_HTML = {
   has: [
     { type: "header" as const, key: "accept", value: "^(?!.*text/html).*$" },
   ],
-  missing: [{ type: "header" as const, key: "rsc" }],
+  missing: [
+    { type: "header" as const, key: "rsc" },
+    {
+      type: "header" as const,
+      key: "user-agent",
+      value: `.*(${PREVIEW_CRAWLERS.join("|")}).*`,
+    },
+  ],
 }
 
 // Lesson pages show LLM-written HTML in sandboxed frames (see HtmlFrame in packages/player). A srcdoc
@@ -161,7 +188,7 @@ const nextConfig: NextConfig = {
     return [
       ...["/", "/docs", "/docs/:path*"].map((source) => ({
         source,
-        headers: [{ key: "Vary", value: "Accept" }],
+        headers: [{ key: "Vary", value: "Accept, User-Agent" }],
       })),
       ...["/l/:path*", "/lessons/:path*"].map((source) => ({
         source,

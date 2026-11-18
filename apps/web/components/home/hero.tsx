@@ -9,7 +9,8 @@ import { HeroDemo } from "./hero-demo"
 import { RotatingWord } from "./rotating-word"
 import { SetupAgents, SetupPicker } from "./setup-picker"
 
-const TOPICS = ["design", "coding", "data", "math", "science", "history"]
+// Everyday subjects first: a page that opens on "coding" beside a terminal reads as a coding tool.
+const TOPICS = ["Spanish", "chess", "investing", "history", "design", "coding"]
 
 export function Hero() {
   const setup = useSetup()
@@ -29,9 +30,10 @@ export function Hero() {
           with your agent
         </h1>
         <p className="max-w-xl text-base text-pretty text-muted-foreground sm:text-lg">
-          Give your agent an article, notes, docs, a transcript, or code. It
-          writes one short lesson you play in the browser, and gives you a link
-          to share. Free, no account.
+          Ask your agent for a lesson on anything: Spanish greetings, compound
+          interest, the article you just read. It writes one short, interactive
+          lesson you play in the browser, and gives you a link to share. Free,
+          no account.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <CopyButton text={SETUPS[setup].prompt} size="lg">

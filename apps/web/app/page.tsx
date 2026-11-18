@@ -6,6 +6,7 @@ import { Hero } from "@/components/home/hero"
 import { MadeThisWeek } from "@/components/home/made-this-week"
 import { SectionDivider } from "@/components/home/section-divider"
 import { SetupPicker } from "@/components/home/setup-picker"
+import { UseCases } from "@/components/home/use-cases"
 import { SiteFooter } from "@/components/site/site-footer"
 import { JsonLd } from "@/components/site/json-ld"
 import { SiteHeader } from "@/components/site/site-header"
@@ -25,6 +26,8 @@ export default function HomePage() {
       <JsonLd data={homeJsonLd()} />
       <main className="flex-1">
         <Hero />
+        <SectionDivider />
+        <UseCases />
         <MadeThisWeek />
         <SectionDivider />
         <Faq />

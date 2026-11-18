@@ -7,6 +7,10 @@ export const FAQ: { q: string; a: string }[] = [
     a: "A skill for your AI agent. Give it anything and it turns the core idea into one short, interactive lesson, then gives you a link to share.",
   },
   {
+    q: "Who is it for?",
+    a: "Anyone learning something or teaching it, on any subject: a language, chess, money, history, design, code. Learn for yourself, turn what you're reading into practice, onboard your team, or send a class one link. You need an AI agent or a chat app to make a lesson; playing one only needs a browser.",
+  },
+  {
     q: "What can I turn into a lesson?",
     a: "A topic, an article, notes, docs, a meeting transcript, or code. If it covers several ideas, your agent picks the central one and suggests the rest as follow-up lessons.",
   },

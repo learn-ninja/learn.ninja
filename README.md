@@ -6,7 +6,7 @@
 
 **Vibe learn anything with your agent.**
 
-Give your AI agent an article, notes, docs, a transcript, or code. It writes one short, interactive lesson and gives you a link to share. Free, no account.
+Ask your AI agent for a lesson on anything: Spanish greetings, compound interest, the article you just read. It writes one short, interactive lesson and gives you a link to share. Free, no account.
 
 [![CI](https://github.com/learn-ninja/learn.ninja/actions/workflows/ci.yml/badge.svg)](https://github.com/learn-ninja/learn.ninja/actions/workflows/ci.yml) [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE) [![Docs](https://img.shields.io/badge/docs-learn.ninja-black)](https://learn.ninja/docs)
 

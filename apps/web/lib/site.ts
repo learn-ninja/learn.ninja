@@ -6,7 +6,7 @@ export const SITE = {
   url: "https://learn.ninja",
   tagline: "Vibe learn anything with your agent",
   description:
-    "Give your AI agent an article, notes, docs, a transcript, or code. It writes one short, interactive lesson and gives you a link to share. Free, no account.",
+    "Ask your AI agent for a lesson on anything: Spanish greetings, compound interest, the article you just read. It writes one short, interactive lesson and gives you a link to share. Free, no account.",
   /** The source code (Apache-2.0), linked from the footer, the docs, and the legal pages. */
   repo: "https://github.com/learn-ninja/learn.ninja",
   /** The contact named on the Privacy and Terms pages. */
@@ -25,6 +25,34 @@ export const SITE = {
   youtubeUrl: "https://www.youtube.com/@learndotninja",
   instagramUrl: "https://www.instagram.com/learndotninja",
 }
+
+/**
+ * Who learn.ninja is for, each with something to ask an agent: the home page's cards under the
+ * hero, and the same list in /index.md. Kept free of developer words on purpose, since the setup
+ * (a skill, a terminal) already makes the page look like a coding tool.
+ */
+export const USE_CASES = [
+  {
+    title: "Learn something new",
+    body: "Pick up a language, a game, or a skill for yourself, a few minutes at a time.",
+    prompt: "Teach me Spanish greetings",
+  },
+  {
+    title: "Understand what you read",
+    body: "Turn an article, a paper, or a video transcript into practice, so it sticks.",
+    prompt: "Make a lesson from this article",
+  },
+  {
+    title: "Teach your team",
+    body: "Turn docs, a process, or a codebase into onboarding people finish.",
+    prompt: "Turn our onboarding docs into a lesson",
+  },
+  {
+    title: "Share with a class",
+    body: "Send students or an audience one link. They play it in the browser, no account.",
+    prompt: "Make a lesson on photosynthesis for 8th graders",
+  },
+] as const
 
 export const INSTALL_COMMAND = "npx skills add https://learn.ninja -g"
 
