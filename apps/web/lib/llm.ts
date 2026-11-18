@@ -4,7 +4,7 @@ import { SUBJECTS } from "@workspace/spec"
 
 import { FAQ } from "@/lib/faq"
 import { getLesson } from "@/lib/lessons"
-import { AGENTS, INSTALL_COMMAND, MCP_URL, SITE } from "@/lib/site"
+import { AGENTS, INSTALL_COMMAND, MCP_URL, SITE, USE_CASES } from "@/lib/site"
 import { docsPages } from "@/lib/docs-nav"
 import { source } from "@/lib/source"
 
@@ -97,6 +97,10 @@ ${SITE.tagline}.
 
 ${SITE.description}
 
+## Who it's for
+
+${USE_CASES.map((u) => `- **${u.title}.** ${u.body} Ask: "${u.prompt}".`).join("\n")}
+
 ## Get started
 
 Install the skill in your agent:
@@ -105,7 +109,7 @@ Install the skill in your agent:
 ${INSTALL_COMMAND}
 \`\`\`
 
-Then ask it for a lesson: "Make me a lesson from this article", "Teach me how map differs from forEach". It replies with a link to share.
+Then ask it for a lesson: "Make me a lesson from this article", "Teach me Spanish greetings". It replies with a link to share.
 
 Works with any agent that supports skills: ${AGENTS.map((a) => a.name).join(", ")}.
 
