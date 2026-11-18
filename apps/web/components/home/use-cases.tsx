@@ -11,18 +11,12 @@ export function UseCases() {
       aria-labelledby="use-cases-heading"
       className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-4 py-20 sm:px-6 sm:py-28"
     >
-      <div className="flex flex-col gap-2">
-        <h2
-          id="use-cases-heading"
-          className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
-        >
-          Who it&apos;s for
-        </h2>
-        <p className="max-w-xl text-base text-pretty text-muted-foreground sm:text-lg">
-          Anyone learning something or teaching it, on any subject. Tell your
-          agent what you want and it does the rest.
-        </p>
-      </div>
+      <h2
+        id="use-cases-heading"
+        className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl"
+      >
+        Who it&apos;s for
+      </h2>
       <ul className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
         {USE_CASES.map((useCase) => (
           <li

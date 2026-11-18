@@ -34,23 +34,23 @@ export const SITE = {
 export const USE_CASES = [
   {
     title: "Learn something new",
-    body: "Pick up a language, a game, or a skill for yourself, a few minutes at a time.",
+    body: "A language, a game, or a skill, in minutes.",
     prompt: "Teach me Spanish greetings",
   },
   {
     title: "Understand what you read",
-    body: "Turn an article, a paper, or a video transcript into practice, so it sticks.",
+    body: "Turn an article or a transcript into practice.",
     prompt: "Make a lesson from this article",
   },
   {
     title: "Teach your team",
-    body: "Turn docs, a process, or a codebase into onboarding people finish.",
-    prompt: "Turn our onboarding docs into a lesson",
+    body: "Turn docs or a process into onboarding.",
+    prompt: "Make a lesson from our handbook",
   },
   {
     title: "Share with a class",
-    body: "Send students or an audience one link. They play it in the browser, no account.",
-    prompt: "Make a lesson on photosynthesis for 8th graders",
+    body: "One link, played in the browser. No account.",
+    prompt: "Teach my class photosynthesis",
   },
 ] as const
 
