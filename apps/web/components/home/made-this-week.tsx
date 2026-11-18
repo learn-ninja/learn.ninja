@@ -1,5 +1,6 @@
 import { ButtonLink } from "@/components/site/button-link"
-import { recentLessons } from "@/lib/explore/cache"
+import { EXPLORE_PAGE_SIZE, recentLessons } from "@/lib/explore/cache"
+import { mixSubjects } from "@/lib/explore/mix"
 
 import { LessonCards } from "./lesson-cards"
 import { SectionDivider } from "./section-divider"
@@ -9,13 +10,14 @@ import { SectionDivider } from "./section-divider"
 // staggered rows that run past the page's column and fade at the window's edges; on phones and
 // tablets the rows drift slowly, opposite ways, and loop (lesson-cards.css). Drawn as HTML, not
 // the card images, so the words are text and the page doesn't load ten PNGs. The heading keeps
-// the column; only the cards leave it.
+// the column; only the cards leave it. The ten are picked from Explore's newest page with at most
+// two per subject (mixSubjects), so one person's path on one subject doesn't fill both rows.
 
 /** How many cards: two rows of five, so the rows are wider than any window the page is read in. */
 const COUNT = 10
 
 export async function MadeThisWeek() {
-  const lessons = await recentLessons(COUNT)
+  const lessons = mixSubjects(await recentLessons(EXPLORE_PAGE_SIZE), COUNT)
   if (lessons.length < 4) return null
   // The section brings its own divider, so there's no stray line when it's left out.
   return (
